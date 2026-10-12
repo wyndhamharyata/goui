@@ -11,12 +11,12 @@ const manifest = JSON.parse(readFileSync(join(extensionDir, "manifest.json"), "u
 const peakText = "Preamp: 0 dB\nFilter 1: ON PK Fc 1000 Hz Gain 6.0 dB Q 1.0";
 
 // Chrome derives the id from the public key in the manifest, so the test knows it before launch.
-function extensionIdFromKey(key) {
+function deriveExtensionId(key) {
   const digest = createHash("sha256").update(Buffer.from(key, "base64")).digest("hex").slice(0, 32);
   return [...digest].map((digit) => String.fromCharCode(97 + parseInt(digit, 16))).join("");
 }
 
-const extensionId = extensionIdFromKey(manifest.key);
+const extensionId = deriveExtensionId(manifest.key);
 
 async function openBrowser() {
   const server = createServer((request, response) => {
@@ -68,7 +68,7 @@ async function openPanel(context, port, toneHz) {
 }
 
 // The wait comes first, so a reading taken before the engine reacts to the last step never counts.
-async function steadyLevel(page) {
+async function readSteadyLevel(page) {
   const reactionMs = 400;
   await page.waitForTimeout(reactionMs);
   let previous = null;
@@ -92,18 +92,18 @@ journey("given auto preamp off, an AutoEQ peak at 1 kHz plays a 1 kHz tone 6 dB 
 
   await panel.click("#tabs [data-tab=tune]");
   await panel.click("#chips [data-index='0']");
-  const withPeak = await steadyLevel(panel);
+  const withPeak = await readSteadyLevel(panel);
   await panel.fill("#gainInput", "0");
-  const withoutPeak = await steadyLevel(panel);
+  const withoutPeak = await readSteadyLevel(panel);
 
   expect(withPeak - withoutPeak).toBeGreaterThan(5.4);
   expect(withPeak - withoutPeak).toBeLessThan(6.6);
 
   await panel.click("#tall");
   await panel.fill("#gainInput", "6");
-  const withPeakTall = await steadyLevel(panel);
+  const withPeakTall = await readSteadyLevel(panel);
   await panel.click("#bandOn");
-  const withoutPeakTall = await steadyLevel(panel);
+  const withoutPeakTall = await readSteadyLevel(panel);
 
   expect(withPeakTall - withoutPeakTall).toBeGreaterThan(5.4);
   expect(withPeakTall - withoutPeakTall).toBeLessThan(6.6);
@@ -111,13 +111,13 @@ journey("given auto preamp off, an AutoEQ peak at 1 kHz plays a 1 kHz tone 6 dB 
 
 journey("given auto preamp on, a 6 dB peak keeps the tone level, and a manual 0 dB preamp lets it through", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
-  const flat = await steadyLevel(panel);
+  const flat = await readSteadyLevel(panel);
 
   await panel.click("#tabs [data-tab=library]");
   await panel.click("#libraryActions [data-action=paste]");
   await panel.fill("#libraryText", peakText);
   await panel.click("#applyText");
-  const withAutoPreamp = await steadyLevel(panel);
+  const withAutoPreamp = await readSteadyLevel(panel);
   expect(Math.abs(withAutoPreamp - flat)).toBeLessThan(0.6);
 
   await panel.click("#tabs [data-tab=listen]");
@@ -125,7 +125,7 @@ journey("given auto preamp on, a 6 dB peak keeps the tone level, and a manual 0 
     slider.value = "0";
     slider.dispatchEvent(new Event("input", { bubbles: true }));
   });
-  const withManualPreamp = await steadyLevel(panel);
+  const withManualPreamp = await readSteadyLevel(panel);
   expect(withManualPreamp - flat).toBeGreaterThan(5.4);
   expect(withManualPreamp - flat).toBeLessThan(6.6);
 });
@@ -144,11 +144,11 @@ journey("given a saved sound, loading it from the library brings the boost back"
   await panel.click("#tabs [data-tab=tune]");
   await panel.click("#chips [data-index='0']");
   await panel.fill("#gainInput", "0");
-  const flat = await steadyLevel(panel);
+  const flat = await readSteadyLevel(panel);
 
   await panel.click("#tabs [data-tab=library]");
   await panel.locator("#libraryResults .item", { hasText: "voice" }).click();
-  const peaked = await steadyLevel(panel);
+  const peaked = await readSteadyLevel(panel);
 
   expect(peaked - flat).toBeGreaterThan(5.4);
   expect(peaked - flat).toBeLessThan(6.6);
@@ -172,17 +172,17 @@ journey("given a headphone search from the sound card, the pick boosts the tone,
 
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
-  const flat = await steadyLevel(panel);
+  const flat = await readSteadyLevel(panel);
 
   await panel.click("#soundCard");
   await panel.fill("#librarySearch", "fixture");
   await panel.locator("#libraryResults .item", { hasText: "Fixture Phone" }).click();
-  await expect(panel.locator("#profileName")).toBeVisible();
-  await expect(panel.locator("#profileName")).toHaveText("Fixture Phone (ANC On)");
-  await expect(panel.locator("#profileKind")).toHaveText("AutoEQ headphones");
+  await expect(panel.locator("#soundName")).toBeVisible();
+  await expect(panel.locator("#soundName")).toHaveText("Fixture Phone (ANC On)");
+  await expect(panel.locator("#soundKind")).toHaveText("AutoEQ headphones");
   await expect(panel.locator("#librarySearch")).toHaveValue("");
 
-  const peaked = await steadyLevel(panel);
+  const peaked = await readSteadyLevel(panel);
   expect(peaked - flat).toBeGreaterThan(5.4);
   expect(peaked - flat).toBeLessThan(6.6);
 
@@ -195,17 +195,17 @@ journey("given a headphone search from the sound card, the pick boosts the tone,
 journey("given Vocals at +6 dB, a 2.5 kHz tone plays 6 dB louder and stays so on a new sound", async (context, port) => {
   const panel = await openPanel(context, port, 2500);
   await panel.click("#autoPreamp");
-  const flat = await steadyLevel(panel);
+  const flat = await readSteadyLevel(panel);
 
   await panel.locator("#vocals").focus();
   for (let press = 0; press < 12; press += 1) await panel.keyboard.press("ArrowRight");
-  const boosted = await steadyLevel(panel);
+  const boosted = await readSteadyLevel(panel);
   expect(boosted - flat).toBeGreaterThan(5.4);
   expect(boosted - flat).toBeLessThan(6.6);
 
   await panel.click("#tabs [data-tab=library]");
   await panel.locator("#libraryResults .item", { hasText: "Warm" }).click();
-  const afterSwitch = await steadyLevel(panel);
+  const afterSwitch = await readSteadyLevel(panel);
   expect(afterSwitch - flat).toBeGreaterThan(5.4);
   expect(afterSwitch - flat).toBeLessThan(6.6);
 });
@@ -213,7 +213,7 @@ journey("given Vocals at +6 dB, a 2.5 kHz tone plays 6 dB louder and stays so on
 journey("given a saved sound you then edit, the card says edited and Update keeps the edit", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
-  const flat = await steadyLevel(panel);
+  const flat = await readSteadyLevel(panel);
 
   await panel.click("#tabs [data-tab=library]");
   await panel.click("#libraryActions [data-action=paste]");
@@ -226,18 +226,18 @@ journey("given a saved sound you then edit, the card says edited and Update keep
   await panel.click("#tabs [data-tab=tune]");
   await panel.click("#chips [data-index='0']");
   await panel.fill("#gainInput", "0");
-  await expect(panel.locator("#profileKind")).toHaveText("Saved, edited");
+  await expect(panel.locator("#soundKind")).toHaveText("Saved, edited");
 
   await panel.click("#tabs [data-tab=library]");
   await panel.click("#libraryActions [data-action=save]");
   await expect(panel.locator("#saveName")).toHaveValue("voice");
   await expect(panel.locator("#saveButton")).toHaveText("Update");
   await panel.click("#saveButton");
-  await expect(panel.locator("#profileKind")).toHaveText("Saved");
+  await expect(panel.locator("#soundKind")).toHaveText("Saved");
 
   await panel.locator("#libraryResults .item", { hasText: "Clear vocals" }).click();
   await panel.locator("#libraryResults .item", { hasText: "voice" }).click();
-  const reloaded = await steadyLevel(panel);
+  const reloaded = await readSteadyLevel(panel);
   expect(Math.abs(reloaded - flat)).toBeLessThan(0.6);
 });
 

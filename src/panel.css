@@ -288,7 +288,7 @@ textarea {
   display: block;
 }
 
-.profile {
+.sound-name {
   font-size: 14px;
 }
 
@@ -347,32 +347,32 @@ textarea {
   padding: 0 8px;
 }
 
-.macro {
+.slider {
   display: grid;
   grid-template-columns: 84px minmax(0, 1fr) 54px;
   align-items: center;
   gap: 8px;
 }
 
-.macro.preamp {
+.slider.preamp {
   grid-template-columns: 84px minmax(0, 1fr) 54px auto;
   border-top: 1px solid var(--line);
   padding-top: 6px;
 }
 
-.macro small {
+.slider small {
   display: block;
   color: var(--muted);
   font-size: 10px;
 }
 
-.macro input {
+.slider input {
   width: 100%;
   min-width: 0;
   accent-color: var(--accent);
 }
 
-.macro output {
+.slider output {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }

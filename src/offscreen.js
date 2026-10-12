@@ -6,7 +6,7 @@ let sourceNode;
 let chainNodes = [];
 let analyserNode;
 let preampNode;
-let filterNodes = [];
+let bandNodes = [];
 let telemetryTimer;
 let config = { enabled: true, preampDb: 0, bands: [] };
 
@@ -17,7 +17,7 @@ function gainFromDb(gainDb) {
   return 10 ** (gainDb / 20);
 }
 
-function activeBands() {
+function listActiveBands() {
   return config.bands.filter((band) => band.on);
 }
 
@@ -25,7 +25,7 @@ function buildChain() {
   sourceNode.disconnect();
   for (const node of chainNodes) node.disconnect();
   chainNodes = [];
-  filterNodes = [];
+  bandNodes = [];
 
   analyserNode = audioContext.createAnalyser();
   analyserNode.fftSize = 8192;
@@ -44,45 +44,45 @@ function buildChain() {
   node.connect(preampNode);
   node = preampNode;
 
-  for (const band of activeBands()) {
-    const filter = makeBiquad(audioContext, band);
-    node.connect(filter);
-    node = filter;
-    filterNodes.push(filter);
+  for (const band of listActiveBands()) {
+    const bandNode = makeBiquad(audioContext, band);
+    node.connect(bandNode);
+    node = bandNode;
+    bandNodes.push(bandNode);
   }
 
   node.connect(analyserNode);
   analyserNode.connect(audioContext.destination);
-  chainNodes = [preampNode, ...filterNodes, analyserNode];
+  chainNodes = [preampNode, ...bandNodes, analyserNode];
 }
 
 // Only a change here needs new nodes. A new frequency, gain or Q moves the nodes that exist.
-function chainLayout() {
+function readChainLayout() {
   const parts = config.bands.map((band) => [band.type, band.on]);
   return JSON.stringify([parts, config.enabled]);
 }
 
-function updateFilters() {
+function updateBandNodes() {
   const now = audioContext.currentTime;
   const rampSeconds = 0.01;
   preampNode.gain.setTargetAtTime(gainFromDb(config.preampDb), now, rampSeconds);
-  activeBands().forEach((band, index) => {
-    const filter = filterNodes[index];
-    filter.frequency.setTargetAtTime(band.frequencyHz, now, rampSeconds);
-    filter.Q.setTargetAtTime(biquadQ(band), now, rampSeconds);
-    if (hasGain(band.type)) filter.gain.setTargetAtTime(band.gainDb, now, rampSeconds);
+  listActiveBands().forEach((band, index) => {
+    const bandNode = bandNodes[index];
+    bandNode.frequency.setTargetAtTime(band.frequencyHz, now, rampSeconds);
+    bandNode.Q.setTargetAtTime(biquadQ(band), now, rampSeconds);
+    if (hasGain(band.type)) bandNode.gain.setTargetAtTime(band.gainDb, now, rampSeconds);
   });
 }
 
 function applyConfig(next) {
-  const previous = chainLayout();
+  const previous = readChainLayout();
   config = next;
   if (!audioContext) return;
-  if (chainLayout() !== previous) {
+  if (readChainLayout() !== previous) {
     buildChain();
     return;
   }
-  if (config.enabled) updateFilters();
+  if (config.enabled) updateBandNodes();
 }
 
 function readLevelDb(buffer) {

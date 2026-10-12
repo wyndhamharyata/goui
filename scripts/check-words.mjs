@@ -30,7 +30,7 @@ const causalWords = new Set(["because", "hence", "therefore"]);
 const skippedFolders = new Set([".git", "node_modules", "playwright-report", "test-results"]);
 const skippedFiles = new Set(["package-lock.json", join("scripts", "check-words.mjs")]);
 
-function toLines(source, kind) {
+function splitLines(source, kind) {
   return source.split("\n").map((text, index) => ({ text, kind, line: index + 1 }));
 }
 
@@ -61,15 +61,15 @@ function blankCode(markdown) {
 }
 
 const readers = {
-  ".css": (source) => toLines(source, "name"),
-  ".html": (source) => toLines(source, "text"),
+  ".css": (source) => splitLines(source, "name"),
+  ".html": (source) => splitLines(source, "text"),
   ".js": readScript,
-  ".json": (source) => toLines(source, "text"),
-  ".md": (source) => toLines(blankCode(source), "doc"),
+  ".json": (source) => splitLines(source, "text"),
+  ".md": (source) => splitLines(blankCode(source), "doc"),
   ".mjs": readScript,
 };
 
-function punctuationProblems(text, kind) {
+function findPunctuationProblems(text, kind) {
   const problems = [];
   if (kind !== "name" && (text.includes("\u2014") || text.includes("\u2013"))) problems.push("em or en dash");
   if ((kind === "doc" || kind === "comment") && text.includes(";")) problems.push("semicolon");
@@ -91,7 +91,7 @@ function findProblems(text, kind) {
     if (spaced.includes(` ${phrase} `)) problems.push(`"${phrase}"`);
   }
   if (/ worth [a-z]+ing /.test(spaced)) problems.push(`"worth ...ing"`);
-  return problems.concat(punctuationProblems(text, kind));
+  return problems.concat(findPunctuationProblems(text, kind));
 }
 
 function listFiles(folder) {

@@ -32,7 +32,7 @@ async function startCaptureForTab(target) {
   const reply = await chrome.runtime.sendMessage({ type: "audio:start", streamId });
 
   if (!reply || !reply.ok) {
-    const state = { capturing: false, error: reply ? reply.error : "The audio did not start." };
+    const state = { isCapturing: false, error: reply ? reply.error : "The audio did not start." };
     await publishCapture(state);
     return state;
   }
@@ -40,14 +40,14 @@ async function startCaptureForTab(target) {
   const stored = await chrome.storage.local.get("config");
   if (stored.config) await chrome.runtime.sendMessage({ type: "audio:config", config: stored.config });
 
-  const state = { capturing: true, title: target.title || "Capturing" };
+  const state = { isCapturing: true, title: target.title || "Capturing" };
   await publishCapture(state);
   return state;
 }
 
 async function stopCapture() {
   await chrome.runtime.sendMessage({ type: "audio:stop" }).catch(() => {});
-  const state = { capturing: false };
+  const state = { isCapturing: false };
   await publishCapture(state);
   return state;
 }
@@ -58,10 +58,10 @@ chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
 
   if (!tab.id || !/^https?:/.test(tab.url || "")) {
-    publishCapture({ capturing: false, error: "Open a web page with audio, then click the icon." });
+    publishCapture({ isCapturing: false, error: "Open a web page with audio, then click the icon." });
     return;
   }
-  startCaptureForTab(tab).catch((error) => publishCapture({ capturing: false, error: error.message }));
+  startCaptureForTab(tab).catch((error) => publishCapture({ isCapturing: false, error: error.message }));
 });
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
@@ -69,19 +69,19 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
   if (message.type === "capture:start") {
     readTargetTab()
       .then((target) => {
-        if (!target) return publishCapture({ capturing: false, error: "No web page in this window to capture." });
+        if (!target) return publishCapture({ isCapturing: false, error: "No web page in this window to capture." });
         return startCaptureForTab(target);
       })
       .then(respond, (error) => {
         const isNotInvoked = error.message.includes("has not been invoked");
-        const state = { capturing: false, error: isNotInvoked ? notInvokedHint : error.message };
+        const state = { isCapturing: false, error: isNotInvoked ? notInvokedHint : error.message };
         publishCapture(state);
         respond(state);
       });
     return true;
   }
   if (message.type === "capture:stop") {
-    stopCapture().then(respond, (error) => respond({ capturing: false, error: error.message }));
+    stopCapture().then(respond, (error) => respond({ isCapturing: false, error: error.message }));
     return true;
   }
   return false;

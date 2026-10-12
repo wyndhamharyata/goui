@@ -23,7 +23,7 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 **Listen**
 
 - The card at the top shows the sound you use. Press it to open the Library and pick another.
-- Bass, Vocals and Treble nudge the sound. They stay when you pick another profile.
+- Bass, Vocals and Treble nudge the sound. They stay when you pick another sound.
 - The preamp follows the largest boost, so the sound never clips. Move the slider to set it by hand.
   Press **Auto** to give it back.
 

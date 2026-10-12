@@ -46,10 +46,10 @@ export function defaultConfig() {
     enabled: true,
     preampDb: 0,
     autoPreamp: true,
-    profileName: "Flat",
-    profileKind: "Starter sound",
+    soundName: "Flat",
+    soundKind: "Starter sound",
     isEdited: false,
-    macros: { bassDb: 0, vocalsDb: 0, trebleDb: 0 },
+    sliders: { bassDb: 0, vocalsDb: 0, trebleDb: 0 },
     bands: [],
   };
 }
@@ -68,30 +68,33 @@ function cleanBand(raw) {
   };
 }
 
-// Used on a stored config and on an imported preset, so a bad file cannot reach the audio chain.
+// Used on a stored config and on an imported saved sound, so a bad file cannot reach the audio chain.
 export function sanitizeConfig(raw) {
   if (!raw || typeof raw !== "object") return defaultConfig();
-  const macros = raw.macros || {};
-  const macroDb = (value) => clamp(Number(value) || 0, -6, 6);
+  // A config stored before the rename uses macros, profileName and profileKind.
+  const sliders = raw.sliders || raw.macros || {};
+  const soundName = raw.soundName ?? raw.profileName;
+  const soundKind = raw.soundKind ?? raw.profileKind;
+  const sliderDb = (value) => clamp(Number(value) || 0, -6, 6);
   return {
     enabled: raw.enabled !== false,
     preampDb: clamp(Number(raw.preampDb) || 0, -24, 12),
     autoPreamp: raw.autoPreamp !== false,
-    profileName: typeof raw.profileName === "string" ? raw.profileName : "Custom",
-    profileKind: typeof raw.profileKind === "string" ? raw.profileKind : "Your sound",
+    soundName: typeof soundName === "string" ? soundName : "Custom",
+    soundKind: typeof soundKind === "string" ? soundKind : "Your sound",
     isEdited: raw.isEdited === true,
-    macros: { bassDb: macroDb(macros.bassDb), vocalsDb: macroDb(macros.vocalsDb), trebleDb: macroDb(macros.trebleDb) },
+    sliders: { bassDb: sliderDb(sliders.bassDb), vocalsDb: sliderDb(sliders.vocalsDb), trebleDb: sliderDb(sliders.trebleDb) },
     bands: Array.isArray(raw.bands) ? raw.bands.map(cleanBand) : [],
   };
 }
 
-// The three Listen sliders, as bands on top of the profile. They stay in the chain at 0 dB, so a
+// The three Listen sliders, as bands on top of the sound's own bands. They stay in the chain at 0 dB, so a
 // slider move never rebuilds the audio nodes.
-export function macroBands(macros) {
+export function sliderBands(sliders) {
   return [
-    { on: true, type: "LSC", frequencyHz: 105, gainDb: macros.bassDb, q: 0.71 },
-    { on: true, type: "PK", frequencyHz: 2500, gainDb: macros.vocalsDb, q: 0.9 },
-    { on: true, type: "HSC", frequencyHz: 8000, gainDb: macros.trebleDb, q: 0.71 },
+    { on: true, type: "LSC", frequencyHz: 105, gainDb: sliders.bassDb, q: 0.71 },
+    { on: true, type: "PK", frequencyHz: 2500, gainDb: sliders.vocalsDb, q: 0.9 },
+    { on: true, type: "HSC", frequencyHz: 8000, gainDb: sliders.trebleDb, q: 0.71 },
   ];
 }
 
@@ -102,12 +105,12 @@ export function biquadQ(band) {
 }
 
 export function makeBiquad(context, band) {
-  const filter = context.createBiquadFilter();
-  filter.type = audioNodeType[band.type];
-  filter.frequency.value = band.frequencyHz;
-  filter.Q.value = biquadQ(band);
-  if (hasGain(band.type)) filter.gain.value = band.gainDb;
-  return filter;
+  const node = context.createBiquadFilter();
+  node.type = audioNodeType[band.type];
+  node.frequency.value = band.frequencyHz;
+  node.Q.value = biquadQ(band);
+  if (hasGain(band.type)) node.gain.value = band.gainDb;
+  return node;
 }
 
 // The panel draws with the same nodes the engine plays, so the curve matches the sound.
@@ -129,9 +132,9 @@ export function maxBoostDb(context, bands) {
   return Math.max(0, ...responseDb(context, bands, sweepHz));
 }
 
-// What the audio chain plays: the profile, the sliders on top, and the preamp the panel shows.
+// What the audio chain plays: the sound's bands, the sliders on top, and the preamp the panel shows.
 export function engineConfig(config, context) {
-  const bands = [...config.bands, ...macroBands(config.macros)];
+  const bands = [...config.bands, ...sliderBands(config.sliders)];
   const preampDb = config.autoPreamp ? 0 - maxBoostDb(context, bands) : config.preampDb;
   return { enabled: config.enabled, preampDb, bands };
 }

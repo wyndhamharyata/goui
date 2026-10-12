@@ -14,7 +14,7 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 - `src/graph.js` draws the curve as SVG. It uses the same Web Audio filters the engine plays, so
   the picture matches the sound.
 - `engineConfig` in `src/shared/filters.js` turns a stored config into what the engine plays: the
-  profile bands, the three Listen sliders as fixed bands, and the auto preamp.
+  sound's bands, the three Listen sliders as fixed bands, and the auto preamp.
 - Playwright runs the tests at side panel width. ESLint and `scripts/check-words.mjs` run the lint.
 
 ## Commands

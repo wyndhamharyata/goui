@@ -13,7 +13,7 @@ function crc32(buffer) {
   return (crc ^ 0xff_ff_ff_ff) >>> 0;
 }
 
-function chunk(type, data) {
+function makeChunk(type, data) {
   const head = Buffer.from(type, "ascii");
   const body = Buffer.concat([head, data]);
   const length = Buffer.alloc(4);
@@ -27,8 +27,10 @@ function encodePng(width, height, rgba) {
   const header = Buffer.alloc(13);
   header.writeUInt32BE(width, 0);
   header.writeUInt32BE(height, 4);
-  header[8] = 8;
-  header[9] = 6;
+  const bitDepth = 8;
+  const colorTypeRgba = 6;
+  header[8] = bitDepth;
+  header[9] = colorTypeRgba;
   const rows = [];
   for (let y = 0; y < height; y += 1) {
     rows.push(Buffer.from([0]));
@@ -36,32 +38,32 @@ function encodePng(width, height, rgba) {
   }
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk("IHDR", header),
-    chunk("IDAT", deflateSync(Buffer.concat(rows), { level: 9 })),
-    chunk("IEND", Buffer.alloc(0)),
+    makeChunk("IHDR", header),
+    makeChunk("IDAT", deflateSync(Buffer.concat(rows), { level: 9 })),
+    makeChunk("IEND", Buffer.alloc(0)),
   ]);
 }
 
-function mix(start, end, at) {
+function mixColor(start, end, at) {
   return start.map((value, index) => value + (end[index] - value) * at);
 }
 
-function insideRoundedSquare(x, y, size) {
+function isInsideRoundedSquare(x, y, size) {
   const radius = size * 0.22;
   const far = size - radius;
   const cornerX = Math.min(Math.max(x, radius), far);
   const cornerY = Math.min(Math.max(y, radius), far);
-  const dx = x - cornerX;
-  const dy = y - cornerY;
-  return dx * dx + dy * dy <= radius * radius;
+  const distanceX = x - cornerX;
+  const distanceY = y - cornerY;
+  return distanceX * distanceX + distanceY * distanceY <= radius * radius;
 }
 
 const bars = [0.34, 0.6, 0.46, 0.74, 0.4];
 
 function sampleColor(x, y, size) {
-  if (!insideRoundedSquare(x, y, size)) return [0, 0, 0, 0];
+  if (!isInsideRoundedSquare(x, y, size)) return [0, 0, 0, 0];
 
-  const background = mix([27, 34, 51], [14, 16, 20], y / size);
+  const background = mixColor([27, 34, 51], [14, 16, 20], y / size);
   const barWidth = size * 0.098;
   const barGap = size * 0.058;
   const totalWidth = bars.length * barWidth + (bars.length - 1) * barGap;
@@ -72,7 +74,7 @@ function sampleColor(x, y, size) {
     const left = firstBarX + index * (barWidth + barGap);
     const barTop = baseY - (bars[index] * size);
     if (x >= left && x <= left + barWidth && y >= barTop && y <= baseY) {
-      return mix([91, 140, 255], [176, 107, 255], (y - barTop) / (baseY - barTop));
+      return mixColor([91, 140, 255], [176, 107, 255], (y - barTop) / (baseY - barTop));
     }
   }
   return background;
@@ -80,11 +82,11 @@ function sampleColor(x, y, size) {
 
 function samplePixel(x, y, size) {
   const total = [0, 0, 0, 0];
-  for (let sy = 0; sy < samplesPerAxis; sy += 1) {
-    for (let sx = 0; sx < samplesPerAxis; sx += 1) {
-      const px = x + ((sx + 0.5) / samplesPerAxis);
-      const py = y + ((sy + 0.5) / samplesPerAxis);
-      const color = sampleColor(px, py, size);
+  for (let sampleY = 0; sampleY < samplesPerAxis; sampleY += 1) {
+    for (let sampleX = 0; sampleX < samplesPerAxis; sampleX += 1) {
+      const pointX = x + ((sampleX + 0.5) / samplesPerAxis);
+      const pointY = y + ((sampleY + 0.5) / samplesPerAxis);
+      const color = sampleColor(pointX, pointY, size);
       for (let channelIndex = 0; channelIndex < 4; channelIndex += 1) {
         total[channelIndex] += color[channelIndex];
       }

@@ -5,7 +5,7 @@ import {
   defaultConfig,
   engineConfig,
   hasGain,
-  macroBands,
+  sliderBands,
   maxBoostDb,
   newBand,
   parseAutoEq,
@@ -15,7 +15,7 @@ import {
   toAutoEq,
   typeLabels,
 } from "./shared/filters.js";
-import { hzLabel, makeGraph, octavesFromQ, signedDb, typeColor } from "./graph.js";
+import { formatHz, makeGraph, qToOctaves, formatDb, typeColor } from "./graph.js";
 
 const byId = (id) => document.getElementById(id);
 const offlineContext = new OfflineAudioContext(1, 1, 48_000);
@@ -42,11 +42,11 @@ const starterSounds = [
 ];
 
 let config = defaultConfig();
-let presets = {};
+let savedSounds = {};
 let spectrumDb = [];
-let capturing = false;
-let selected = -1;
-let solo = -1;
+let isCapturing = false;
+let selectedIndex = -1;
+let soloIndex = -1;
 let isBypassed = false;
 let saveTimer = 0;
 let autoEqItems = null;
@@ -56,26 +56,26 @@ let openAction = "";
 const commonTypes = ["PK", "LSC", "HSC", "HP", "LP"];
 
 // What the panel draws is what the engine plays, with the A/B button and Solo applied.
-function curveBands() {
+function listCurveBands() {
   if (isBypassed || !config.enabled) return [];
-  if (config.bands[solo]) return [{ ...config.bands[solo], on: true }];
-  return [...config.bands, ...macroBands(config.macros)];
+  if (config.bands[soloIndex]) return [{ ...config.bands[soloIndex], on: true }];
+  return [...config.bands, ...sliderBands(config.sliders)];
 }
 
 const graphHooks = {
   bands: () => config.bands,
-  curveBands,
+  listCurveBands,
   spectrum: () => spectrumDb,
-  selected: () => selected,
+  selectedIndex: () => selectedIndex,
   isBypassed: () => isBypassed || !config.enabled,
   select: (index) => {
-    selected = index;
+    selectedIndex = index;
     refresh();
   },
   changed: () => commitEdit(),
   addBand: (frequencyHz, gainDb) => {
     config.bands.push({ ...newBand(frequencyHz), gainDb });
-    selected = config.bands.length - 1;
+    selectedIndex = config.bands.length - 1;
     commitEdit();
   },
 };
@@ -87,9 +87,9 @@ const tuneGraph = makeGraph(byId("tuneGraph"), { height: 210, tallHeight: 440, i
 function sendAudio() {
   let value = config;
   if (isBypassed) value = { ...config, enabled: false };
-  if (!isBypassed && config.bands[solo]) {
-    const bands = config.bands.map((band, index) => ({ ...band, on: index === solo }));
-    value = { ...config, bands, macros: { bassDb: 0, vocalsDb: 0, trebleDb: 0 } };
+  if (!isBypassed && config.bands[soloIndex]) {
+    const bands = config.bands.map((band, index) => ({ ...band, on: index === soloIndex }));
+    value = { ...config, bands, sliders: { bassDb: 0, vocalsDb: 0, trebleDb: 0 } };
   }
   chrome.runtime.sendMessage({ type: "audio:config", config: value }).catch(() => {});
 }
@@ -125,17 +125,17 @@ function setField(id, value) {
 
 function renderSound() {
   const engine = engineConfig(config, offlineContext);
-  byId("profileName").textContent = config.profileName;
-  byId("profileKind").textContent = config.isEdited ? `${config.profileKind}, edited` : config.profileKind;
+  byId("soundName").textContent = config.soundName;
+  byId("soundKind").textContent = config.isEdited ? `${config.soundKind}, edited` : config.soundKind;
   byId("enabled").checked = config.enabled;
 
   for (const name of ["bass", "vocals", "treble"]) {
-    setField(name, config.macros[`${name}Db`]);
-    byId(`${name}Value`).textContent = `${signedDb(config.macros[`${name}Db`])} dB`;
+    setField(name, config.sliders[`${name}Db`]);
+    byId(`${name}Value`).textContent = `${formatDb(config.sliders[`${name}Db`])} dB`;
   }
 
   setField("preamp", engine.preampDb.toFixed(1));
-  byId("preampValue").textContent = `${signedDb(engine.preampDb)} dB`;
+  byId("preampValue").textContent = `${formatDb(engine.preampDb)} dB`;
   byId("autoPreamp").classList.toggle("on", config.autoPreamp);
   byId("preampNote").textContent = config.autoPreamp ? "Auto" : "Manual";
 
@@ -152,13 +152,13 @@ function renderChips() {
   config.bands.forEach((band, index) => {
     const chip = document.createElement("button");
     chip.className = "chip";
-    chip.classList.toggle("on", index === selected);
+    chip.classList.toggle("on", index === selectedIndex);
     chip.classList.toggle("muted", !band.on);
     chip.dataset.index = index;
     const number = document.createElement("i");
     number.style.background = typeColor[band.type];
     number.textContent = index + 1;
-    chip.append(number, hzLabel(band.frequencyHz));
+    chip.append(number, formatHz(band.frequencyHz));
     chips.append(chip);
   });
   const add = document.createElement("button");
@@ -169,20 +169,20 @@ function renderChips() {
   chips.scrollLeft = scrollLeft;
 }
 
-function qHint(band) {
-  if (band.type === "PK") return `Q, ${octavesFromQ(band.q).toFixed(1)} octaves wide`;
+function describeQ(band) {
+  if (band.type === "PK") return `Q, ${qToOctaves(band.q).toFixed(1)} octaves wide`;
   if (audioNodeType[band.type].endsWith("shelf")) return "Q, not used by a shelf yet";
   return "Q";
 }
 
 function renderInspector() {
-  const band = config.bands[selected];
+  const band = config.bands[selectedIndex];
   byId("inspectorEmpty").hidden = Boolean(band);
   byId("inspectorBody").hidden = !band;
   if (!band) return;
 
   const title = byId("bandTitle");
-  title.textContent = `${selected + 1}. ${typeLabels[band.type]}`;
+  title.textContent = `${selectedIndex + 1}. ${typeLabels[band.type]}`;
   title.style.color = typeColor[band.type];
   setField("bandType", band.type);
   const isCommon = commonTypes.includes(band.type);
@@ -193,13 +193,13 @@ function renderInspector() {
   }
   byId("bandOn").textContent = band.on ? "On" : "Off";
   byId("bandOn").classList.toggle("on", band.on);
-  byId("bandSolo").classList.toggle("on", solo === selected);
+  byId("bandSolo").classList.toggle("on", soloIndex === selectedIndex);
 
   setField("frequencyInput", Math.round(band.frequencyHz));
-  setField("gainInput", signedDb(band.gainDb));
+  setField("gainInput", formatDb(band.gainDb));
   setField("qInput", band.q.toFixed(2));
   byId("gainInput").disabled = !hasGain(band.type);
-  byId("qHint").textContent = qHint(band);
+  byId("qHint").textContent = describeQ(band);
 }
 
 function renderTable() {
@@ -213,7 +213,7 @@ function renderTable() {
   const rows = config.bands.map((band, index) => {
     const row = document.createElement("tr");
     row.dataset.index = index;
-    row.classList.toggle("on", index === selected);
+    row.classList.toggle("on", index === selectedIndex);
     const number = document.createElement("span");
     number.className = "number";
     number.style.color = typeColor[band.type];
@@ -222,7 +222,7 @@ function renderTable() {
     name.append(number, typeLabels[band.type]);
     row.append(name);
 
-    const gain = hasGain(band.type) ? signedDb(band.gainDb) : "";
+    const gain = hasGain(band.type) ? formatDb(band.gainDb) : "";
     for (const value of [Math.round(band.frequencyHz), gain, band.q.toFixed(2)]) {
       const cell = document.createElement("td");
       cell.textContent = value;
@@ -248,49 +248,49 @@ function renderPills() {
 
 function markCurrent() {
   for (const item of document.querySelectorAll(".results .item")) {
-    item.classList.toggle("on", item.firstChild.textContent === config.profileName);
+    item.classList.toggle("on", item.firstChild.textContent === config.soundName);
   }
 }
 
-function applyProfile(name, kind, bands, preampDb) {
-  config.profileName = name;
-  config.profileKind = kind;
+function applySound(name, kind, bands, preampDb) {
+  config.soundName = name;
+  config.soundKind = kind;
   config.isEdited = false;
   config.bands = sanitizeConfig({ bands }).bands;
   if (preampDb !== undefined) config.preampDb = preampDb;
-  selected = -1;
-  solo = -1;
+  selectedIndex = -1;
+  soloIndex = -1;
   commit();
   markCurrent();
 }
 
 // A saved sound keeps everything, the sliders and the preamp too. Only the EQ switch stays as it is.
-function loadPreset(name) {
-  config = { ...sanitizeConfig(presets[name]), enabled: config.enabled, profileName: name, profileKind: "Saved", isEdited: false };
-  selected = -1;
-  solo = -1;
+function loadSavedSound(name) {
+  config = { ...sanitizeConfig(savedSounds[name]), enabled: config.enabled, soundName: name, soundKind: "Saved", isEdited: false };
+  selectedIndex = -1;
+  soloIndex = -1;
   commit();
   markCurrent();
 }
 
-function deletePreset(name) {
-  delete presets[name];
-  chrome.storage.local.set({ presets });
+function deleteSavedSound(name) {
+  delete savedSounds[name];
+  chrome.storage.local.set({ savedSounds });
   searchLibrary();
 }
 
-function savePreset() {
+function saveSound() {
   const name = byId("saveName").value.trim();
   if (!name) {
     byId("libraryHint").textContent = "Give the sound a name first.";
     return;
   }
-  const isUpdate = Boolean(presets[name]);
-  config.profileName = name;
-  config.profileKind = "Saved";
+  const isUpdate = Boolean(savedSounds[name]);
+  config.soundName = name;
+  config.soundKind = "Saved";
   config.isEdited = false;
-  presets[name] = structuredClone(config);
-  chrome.storage.local.set({ presets });
+  savedSounds[name] = structuredClone(config);
+  chrome.storage.local.set({ savedSounds });
   commit();
   searchLibrary();
   openLibraryAction("");
@@ -329,7 +329,7 @@ async function loadHeadphone(item, hint) {
     return false;
   }
   const parsed = parseAutoEq(await response.text());
-  applyProfile(item.name, "AutoEQ headphones", parsed.bands, parsed.preampDb);
+  applySound(item.name, "AutoEQ headphones", parsed.bands, parsed.preampDb);
   hint.textContent = "";
   return true;
 }
@@ -344,14 +344,14 @@ async function pickFromSearch(load) {
   showTab("listen");
 }
 
-function bandCount(bands) {
+function countBands(bands) {
   return bands.length === 1 ? "1 band" : `${bands.length} bands`;
 }
 
-function resultItem(label, detail, onPick, onRemove) {
+function makeResultItem(label, detail, onPick, onRemove) {
   const button = document.createElement("button");
   button.className = "item";
-  button.classList.toggle("on", label === config.profileName);
+  button.classList.toggle("on", label === config.soundName);
   const name = document.createElement("span");
   name.textContent = label;
   const small = document.createElement("small");
@@ -396,12 +396,12 @@ async function searchLibrary() {
   if (list.dataset.query !== text) return;
 
   const matches = (name) => name.toLowerCase().includes(text);
-  const saved = Object.keys(presets).filter(matches).map((name) =>
-    resultItem(name, bandCount(presets[name].bands), () => pickFromSearch(() => loadPreset(name)), () => deletePreset(name)));
+  const saved = Object.keys(savedSounds).filter(matches).map((name) =>
+    makeResultItem(name, countBands(savedSounds[name].bands), () => pickFromSearch(() => loadSavedSound(name)), () => deleteSavedSound(name)));
   const headphoneItems = headphones.map((item) =>
-    resultItem(item.name, "AutoEQ", () => pickFromSearch(() => loadHeadphone(item, hint))));
+    makeResultItem(item.name, "AutoEQ", () => pickFromSearch(() => loadHeadphone(item, hint))));
   const starterItems = starterSounds.filter((sound) => matches(sound.name)).map((sound) =>
-    resultItem(sound.name, bandCount(sound.bands), () => pickFromSearch(() => applyProfile(sound.name, "Starter sound", sound.bands))));
+    makeResultItem(sound.name, countBands(sound.bands), () => pickFromSearch(() => applySound(sound.name, "Starter sound", sound.bands))));
 
   list.replaceChildren();
   appendSection(list, "Saved", saved);
@@ -422,7 +422,7 @@ function applyText(name, kind) {
     }
     commit();
     markCurrent();
-    hint.textContent = `Applied ${config.profileName}.`;
+    hint.textContent = `Applied ${config.soundName}.`;
     return;
   }
   const parsed = parseAutoEq(text);
@@ -430,7 +430,7 @@ function applyText(name, kind) {
     hint.textContent = "No AutoEQ filters found in that text.";
     return;
   }
-  applyProfile(name, kind, parsed.bands, parsed.preampDb);
+  applySound(name, kind, parsed.bands, parsed.preampDb);
   hint.textContent = `Applied ${parsed.bands.length} bands.`;
 }
 
@@ -445,7 +445,7 @@ function exportAutoEq() {
 // The name of a saved sound is filled in, so Save writes the edit back to it.
 function renderSaveButton() {
   const name = byId("saveName").value.trim();
-  byId("saveButton").textContent = presets[name] ? "Update" : "Save";
+  byId("saveButton").textContent = savedSounds[name] ? "Update" : "Save";
 }
 
 // Each Library button opens its own row under the list. A second press closes it.
@@ -459,7 +459,7 @@ function openLibraryAction(action) {
   byId("libraryHint").textContent = "";
 
   if (openAction === "save") {
-    byId("saveName").value = config.profileName;
+    byId("saveName").value = config.soundName;
     renderSaveButton();
     byId("saveName").focus();
   }
@@ -472,10 +472,10 @@ function openLibraryAction(action) {
 
 function applyCaptureState(state) {
   if (!state) return;
-  capturing = Boolean(state.capturing);
-  byId("capture").textContent = capturing ? "Stop" : "Start";
+  isCapturing = Boolean(state.isCapturing);
+  byId("capture").textContent = isCapturing ? "Stop" : "Start";
   const status = byId("status");
-  status.textContent = state.error || (capturing ? state.title || "Capturing" : "No audio");
+  status.textContent = state.error || (isCapturing ? state.title || "Capturing" : "No audio");
   status.title = status.textContent;
 }
 
@@ -540,16 +540,16 @@ byId("enabled").addEventListener("change", (event) => {
 });
 
 byId("capture").addEventListener("click", async () => {
-  applyCaptureState(await chrome.runtime.sendMessage({ type: capturing ? "capture:stop" : "capture:start" }));
+  applyCaptureState(await chrome.runtime.sendMessage({ type: isCapturing ? "capture:stop" : "capture:start" }));
 });
 
-byId("macros").addEventListener("input", (event) => {
+byId("sliders").addEventListener("input", (event) => {
   const value = Number(event.target.value);
   if (event.target.id === "preamp") {
     config.autoPreamp = false;
     config.preampDb = value;
   } else {
-    config.macros[`${event.target.id}Db`] = value;
+    config.sliders[`${event.target.id}Db`] = value;
   }
   commitEdit();
 });
@@ -582,7 +582,7 @@ byId("chips").addEventListener("click", (event) => {
   if (!chip) return;
   if (chip.dataset.index === "add") {
     config.bands.push(newBand(1000));
-    selected = config.bands.length - 1;
+    selectedIndex = config.bands.length - 1;
     commitEdit();
     return;
   }
@@ -604,14 +604,14 @@ byId("table").addEventListener("click", (event) => {
 byId("inspector").addEventListener("click", (event) => {
   const button = event.target.closest("[data-step]");
   if (!button) return;
-  steps[button.dataset.step](config.bands[selected], Number(button.dataset.direction));
+  steps[button.dataset.step](config.bands[selectedIndex], Number(button.dataset.direction));
   commitEdit();
 });
 
 byId("inspector").addEventListener("input", (event) => {
   const edit = fieldEdits[event.target.id];
   if (!edit) return;
-  edit(config.bands[selected], Number(event.target.value.replace(",", ".")));
+  edit(config.bands[selectedIndex], Number(event.target.value.replace(",", ".")));
   commitEdit();
 });
 
@@ -623,29 +623,29 @@ byId("bandSegments").addEventListener("click", (event) => {
     renderInspector();
     return;
   }
-  config.bands[selected].type = button.dataset.type;
+  config.bands[selectedIndex].type = button.dataset.type;
   commitEdit();
 });
 
 byId("bandType").addEventListener("change", (event) => {
-  config.bands[selected].type = event.target.value;
+  config.bands[selectedIndex].type = event.target.value;
   commitEdit();
 });
 
 byId("bandOn").addEventListener("click", () => {
-  config.bands[selected].on = !config.bands[selected].on;
+  config.bands[selectedIndex].on = !config.bands[selectedIndex].on;
   commitEdit();
 });
 
 byId("bandSolo").addEventListener("click", () => {
-  solo = solo === selected ? -1 : selected;
+  soloIndex = soloIndex === selectedIndex ? -1 : selectedIndex;
   commit();
 });
 
 byId("bandDelete").addEventListener("click", () => {
-  config.bands.splice(selected, 1);
-  selected = -1;
-  solo = -1;
+  config.bands.splice(selectedIndex, 1);
+  selectedIndex = -1;
+  soloIndex = -1;
   commitEdit();
 });
 
@@ -662,7 +662,7 @@ byId("libraryActions").addEventListener("click", (event) => {
   else openLibraryAction(button.dataset.action);
 });
 
-byId("saveButton").addEventListener("click", savePreset);
+byId("saveButton").addEventListener("click", saveSound);
 byId("saveName").addEventListener("input", renderSaveButton);
 byId("applyText").addEventListener("click", () => applyText("Pasted AutoEQ", "Pasted"));
 byId("exportAutoEq").addEventListener("click", exportAutoEq);
@@ -688,9 +688,10 @@ chrome.runtime.onMessage.addListener((message) => {
 async function hydrate() {
   for (const type of bandTypes) byId("bandType").append(new Option(typeLabels[type], type));
 
-  const stored = await chrome.storage.local.get(["config", "presets", "view", "tab"]);
+  const stored = await chrome.storage.local.get(["config", "savedSounds", "presets", "view", "tab"]);
   if (stored.config) config = sanitizeConfig(stored.config);
-  presets = stored.presets || {};
+  // Saved sounds stored before the rename are under presets.
+  savedSounds = stored.savedSounds || stored.presets || {};
   tuneGraph.setVertical(stored.view === "vertical");
   listenGraph.setVertical(tuneGraph.vertical);
   showTab(stored.tab || "listen");
