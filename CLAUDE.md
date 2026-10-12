@@ -78,7 +78,8 @@ The default is no comment. Write one line only when it holds one of these:
 - The unit of a bare number, when a name cannot hold it.
 
 Never write a banner, an ALL-CAPS label, step narration such as `// Step 1`, a label such as
-`// Main logic`, JSDoc that repeats the signature, commented-out code, or a TODO with no named task.
+`// Main logic`, prose inside a JSDoc block, commented-out code, or a TODO with no named task. A
+JSDoc block holds types only (rule 10).
 If a line needs a comment to say what it does, rename it or split it.
 
 ## 4. A name is a full word.
@@ -116,12 +117,12 @@ If a line needs a comment to say what it does, rename it or split it.
 
 ## 7. Functions, constants and files
 
-- Write a function only when more than 3 places use it and its body is longer than one line.
-  Otherwise write the code where it is used.
-- Write a named constant or a shared object type only when more than 4 places use it.
+- When two or more places do the same work, pull it into one function. Two copies drift apart.
+- A one-line body counts when two copies could disagree, such as a formula, a selector or a rule
+  about when something is off. A plain call with a new name does not count.
+- Write a named constant or a shared object type when two or more places use it.
 - Before you write a new file or helper, ask one question. If you deleted it and put its code back
   where it is used, would the code be harder to follow? If not, do not write it.
-- A small copy is better than a shared helper with one or two users.
 - Each Chrome context gets its own file: the side panel, the offscreen document, the service worker
   and the how-to page (`src/intro.html`). Code that two contexts both need goes in one shared file.
   `src/guide.css` draws the pictures of the browser toolbar for both the guide and the panel.
@@ -150,9 +151,26 @@ If a line needs a comment to say what it does, rename it or split it.
 - Fewer lines wins a tie. A named value that saves the reader time stays, even when it costs a line.
 - Run the formatter only on the files you changed.
 
+## 10. JSDoc gives types and nothing else.
+
+- A function gets a JSDoc block when two or more places use it, or when another file imports it.
+- A function also gets one when it passes data to a higher layer: a message to another Chrome
+  context, the reply to one, a hook the graph calls in the panel, or a fetch.
+- The block holds one `@param {Type} name` for each parameter. It holds `@returns {Type}` when the
+  function returns a value. An async function returns `Promise<Type>`.
+- No prose in the block. No description after a name. The reason for the code stays in a `//`
+  comment above the block (rule 3).
+- A type that two or more places use is a `@typedef` in the file that owns it.
+  `src/shared/filters.js` owns the band, layer and config types. Another file names them as
+  `import("./shared/filters.js").Band`.
+- `npm run lint` checks that every export has a block, that each type parses and is known, and that
+  no block holds prose. A person checks the functions with two callers.
+
 ## Differences from the global rules
 
 - Comments allow a formula source and a unit note, as well as a reason (rule 3).
+- JSDoc holds types for shared functions, with no prose (rule 10).
+- Two places doing the same work are enough for a helper (rule 7).
 - A number with an unclear meaning gets a local name (rule 5).
 - Deep modules and the 15-branch limit replace the push for small functions (rules 6 and 7).
 - Fewer lines is a tie-breaker, not a target (rule 9).
@@ -162,12 +180,8 @@ If a line needs a comment to say what it does, rename it or split it.
 
 Each one names the rule it breaks and the reason.
 
-- `qStepRatio` in `src/shared/filters.js` has two readers, against rule 7. The graph wheel and the
-  inspector stepper both nudge Q, and two copies of the step would drift apart, as the Q limits did.
 - The render and event functions in `src/panel.js` and `src/graph.js` have one caller each,
   against rule 7. Folded into their callers, those callers would pass the 15-branch limit. Their
   names are also what a reader scans the file for.
-- `qToOctaves` in `src/graph.js` has two readers, against rule 7. It holds the RBJ bandwidth
-  formula, and two copies of a formula can disagree.
 - Each word list at the top of `scripts/check-words.mjs` has one reader, against rule 7.
   The lists are data. A person edits them there, next to each other, when rule 2 changes.
