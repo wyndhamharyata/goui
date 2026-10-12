@@ -78,7 +78,8 @@ const graphHooks = {
   },
 };
 
-const listenGraph = makeGraph(byId("listenGraph"), { height: 96, interactive: false }, graphHooks);
+// The Listen graph is a preview. It matches the Tune graph in size and follows its zoom and turn.
+const listenGraph = makeGraph(byId("listenGraph"), { height: 210, tallHeight: 440, interactive: false, regions: true }, graphHooks);
 const tuneGraph = makeGraph(byId("tuneGraph"), { height: 210, tallHeight: 440, interactive: true }, graphHooks);
 
 function sendAudio() {
@@ -560,12 +561,16 @@ byId("autoPreamp").addEventListener("click", () => {
 
 byId("zoom").addEventListener("click", (event) => {
   const button = event.target.closest("[data-zoom]");
-  if (button) tuneGraph.setZoom(button.dataset.zoom);
+  if (button) {
+    tuneGraph.setZoom(button.dataset.zoom);
+    listenGraph.setZoom(button.dataset.zoom);
+  }
   renderPills();
 });
 
 byId("tall").addEventListener("click", () => {
   tuneGraph.setVertical(!tuneGraph.vertical);
+  listenGraph.setVertical(tuneGraph.vertical);
   chrome.storage.local.set({ view: tuneGraph.vertical ? "vertical" : "horizontal" });
   renderPills();
 });
@@ -685,6 +690,7 @@ async function hydrate() {
   if (stored.config) config = sanitizeConfig(stored.config);
   presets = stored.presets || {};
   tuneGraph.setVertical(stored.view === "vertical");
+  listenGraph.setVertical(tuneGraph.vertical);
   showTab(stored.tab || "listen");
   renderPills();
   sendAudio();

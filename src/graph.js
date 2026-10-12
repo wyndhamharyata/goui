@@ -161,31 +161,23 @@ export function makeGraph(host, options, hooks) {
     return parts.join("");
   }
 
+  // Music falls about 3 dB per octave. Adding that back stands the spectrum upright. The mirror
+  // around 0 dB keeps it even on both sides of the center line, so a normal song looks full.
   function drawSpectrum(size, frequencies) {
     const spectrumDb = hooks.spectrum();
     if (spectrumDb.length === 0) return "";
-    if (graph.vertical) return drawMirroredSpectrum(size, frequencies, spectrumDb);
-    const points = Array.from(frequencies, (frequencyHz, index) => {
-      const level = clamp((spectrumAt(spectrumDb, frequencyHz) + 100) / 100, 0, 1) * 0.85;
-      return `${size.left + ((index / 120) * size.plotWidth)},${size.top + (size.plotHeight * (1 - level))}`;
-    });
-    const floor = [`${size.left + size.plotWidth},${size.top + size.plotHeight}`, `${size.left},${size.top + size.plotHeight}`];
-    return `<polygon points="${[...points, ...floor].join(" ")}" fill="rgba(91,140,255,0.12)"/>`;
-  }
-
-  // Music falls about 3 dB per octave. Adding that back stands the spectrum upright, and the mirror
-  // around 0 dB keeps it even on both sides of the center line.
-  function drawMirroredSpectrum(size, frequencies, spectrumDb) {
-    const right = [];
-    const left = [];
+    const rise = (graph.vertical ? size.plotWidth : size.plotHeight) * 0.45;
+    const above = [];
+    const below = [];
     for (const frequencyHz of frequencies) {
       const levelDb = spectrumAt(spectrumDb, frequencyHz) + (3 * Math.log2(frequencyHz / 1000));
-      const halfWidth = clamp((levelDb + 100) / 90, 0, 1) * size.plotWidth * 0.45;
+      const half = clamp((levelDb + 100) / 90, 0, 1) * rise;
       const center = place(frequencyHz, 0, size);
-      right.push(`${center.x + halfWidth},${center.y}`);
-      left.unshift(`${center.x - halfWidth},${center.y}`);
+      const isTall = graph.vertical;
+      above.push(`${isTall ? center.x + half : center.x},${isTall ? center.y : center.y - half}`);
+      below.unshift(`${isTall ? center.x - half : center.x},${isTall ? center.y : center.y + half}`);
     }
-    return `<polygon points="${[...right, ...left].join(" ")}" fill="rgba(150,165,200,0.13)"/>`;
+    return `<polygon points="${[...above, ...below].join(" ")}" fill="rgba(150,165,200,0.13)"/>`;
   }
 
   function drawLoudness(size, frequencies, curveDb) {
@@ -274,7 +266,7 @@ export function makeGraph(host, options, hooks) {
     const pill = showsPoints && band ? drawPill(size, band) : "";
     host.innerHTML = `<svg viewBox="0 0 ${size.width} ${size.height}" height="${size.height}">
       <defs><clipPath id="${clipId}"><rect x="${size.left}" y="${size.top}" width="${size.plotWidth}" height="${size.plotHeight}"/></clipPath></defs>
-      ${showsPoints ? drawRegions(size) : ""}${drawFrequencyGrid(size)}${drawGainGrid(size)}
+      ${options.regions === false ? "" : drawRegions(size)}${drawFrequencyGrid(size)}${drawGainGrid(size)}
       <g clip-path="url(#${clipId})">${drawSpectrum(size, frequencies)}${drawLoudness(size, frequencies, curveDb)}${selected}${curve}</g>
       ${nodes}${pill}${drawHover(size)}
     </svg>`;

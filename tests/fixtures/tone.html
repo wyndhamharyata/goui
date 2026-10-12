@@ -7,14 +7,29 @@
   <body>
     <button id="play">Play</button>
     <script>
+      function tone(context) {
+        const source = context.createOscillator();
+        source.frequency.value = Number(new URLSearchParams(location.search).get("hz")) || 1000;
+        return source;
+      }
+
+      function noise(context) {
+        const buffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
+        const samples = buffer.getChannelData(0);
+        for (let index = 0; index < samples.length; index += 1) samples[index] = Math.random() * 2 - 1;
+        const source = context.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        return source;
+      }
+
       document.getElementById("play").addEventListener("click", () => {
         const context = new AudioContext();
-        const tone = context.createOscillator();
-        tone.frequency.value = Number(new URLSearchParams(location.search).get("hz")) || 1000;
         const level = context.createGain();
         level.gain.value = 0.1;
-        tone.connect(level).connect(context.destination);
-        tone.start();
+        const source = new URLSearchParams(location.search).has("noise") ? noise(context) : tone(context);
+        source.connect(level).connect(context.destination);
+        source.start();
         document.title = `playing ${context.state}`;
       });
     </script>
