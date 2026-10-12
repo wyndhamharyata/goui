@@ -9,9 +9,13 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 - Manifest V3, plain JavaScript, no build step. Load the folder with "Load unpacked".
 - `chrome.tabCapture` takes the tab's audio. An offscreen document runs the Web Audio chain and
   plays the result.
-- The side panel uses a narrow vertical layout. The curve fills the panel width, with a live
-  spectrum behind it and the band list below it.
-- Playwright runs the tests. ESLint and `scripts/check-words.mjs` run the lint.
+- The side panel has three tabs: Listen, Tune and Library. From 900 px wide they show as three
+  columns. `design/ux-proposals.html` holds the mock the panel follows.
+- `src/graph.js` draws the curve as SVG. It uses the same Web Audio filters the engine plays, so
+  the picture matches the sound.
+- `engineConfig` in `src/shared/filters.js` turns a stored config into what the engine plays: the
+  profile bands, the three Listen sliders as fixed bands, and the auto preamp.
+- Playwright runs the tests at side panel width. ESLint and `scripts/check-words.mjs` run the lint.
 
 ## Commands
 
