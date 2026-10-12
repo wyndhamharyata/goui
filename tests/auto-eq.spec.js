@@ -54,17 +54,45 @@ function journey(name, run) {
   });
 }
 
-async function openPanel(context, port, toneHz) {
+async function openTone(context, port, toneHz) {
   const tone = await context.newPage();
   await tone.goto(`http://localhost:${port}/?hz=${toneHz}`);
   await tone.click("#play");
   expect(await tone.title()).toBe("playing running");
+  return tone;
+}
 
+// Playwright cannot press the toolbar icon. The journey fires the icon's own click event with the
+// tab instead, so the same code runs as for a real click.
+async function pressIcon(context, page) {
+  const worker = context.serviceWorkers()[0] || await context.waitForEvent("serviceworker");
+  await worker.evaluate(async (url) => {
+    const tabs = await chrome.tabs.query({});
+    chrome.action.onClicked.dispatch(tabs.find((tab) => tab.url === url));
+  }, page.url());
+}
+
+async function readBadge(context, page) {
+  const worker = context.serviceWorkers()[0];
+  return worker.evaluate(async (url) => {
+    const tabs = await chrome.tabs.query({});
+    return chrome.action.getBadgeText({ tabId: tabs.find((tab) => tab.url === url).id });
+  }, page.url());
+}
+
+async function openPanel(context, port, toneHz) {
+  const tone = await openTone(context, port, toneHz);
   const panel = await context.newPage();
   await panel.goto(`chrome-extension://${extensionId}/src/panel.html`);
-  await panel.click("#capture");
-  await expect(panel.locator("#status")).not.toHaveText("No audio");
+  await expect(panel.locator("#status")).toContainText("Click the goui icon");
+  await pressIcon(context, tone);
+  await expect(panel.locator("#status")).toHaveText("playing running");
   return panel;
+}
+
+async function holdCompare(panel) {
+  await panel.locator("#compare").hover();
+  await panel.mouse.down();
 }
 
 // The wait comes first, so a reading taken before the engine reacts to the last step never counts.
@@ -455,4 +483,46 @@ journey("given the Add band chip under My ear, a new 6 dB band at 1 kHz plays in
   await expect(panel.locator(".layer", { hasText: "My ear" })).toHaveCount(1);
   await panel.fill("#gainInput", "6");
   expectAbout6Db(await readSteadyLevel(panel) - flat);
+});
+
+journey("given goui hears a tab, a click on its icon turns goui off, and a second click brings the 6 dB peak back", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  const tone = context.pages().find((page) => page.url().includes("?hz=1000"));
+  await panel.click("#autoPreamp");
+  const flat = await readSteadyLevel(panel);
+  await pasteInto(panel, "headphone", peakText);
+  expectAbout6Db(await readSteadyLevel(panel) - flat);
+  expect(await readBadge(context, tone)).toBe("ON");
+
+  await pressIcon(context, tone);
+  await expect(panel.locator("#status")).toContainText("Click the goui icon");
+  await expect.poll(() => readBadge(context, tone)).toBe("");
+
+  await pressIcon(context, tone);
+  await expect(panel.locator("#status")).toHaveText("playing running");
+  expectAbout6Db(await readSteadyLevel(panel) - flat);
+});
+
+journey("given goui hears a 1 kHz tab, a click on the icon of a 5 kHz tab moves goui there, and closing it turns goui off", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  const low = context.pages().find((page) => page.url().includes("?hz=1000"));
+  await panel.click("#autoPreamp");
+  await pasteInto(panel, "headphone", peakText);
+  const withPeak = await readSteadyLevel(panel);
+  await holdCompare(panel);
+  expectAbout6Db(withPeak - await readSteadyLevel(panel));
+  await panel.mouse.up();
+
+  // The 1 kHz peak barely touches a 5 kHz tone, so the EQ on and off read the same there.
+  const high = await openTone(context, port, 5000);
+  await pressIcon(context, high);
+  await expect.poll(() => readBadge(context, high)).toBe("ON");
+  await expect.poll(() => readBadge(context, low)).toBe("");
+  const highWithPeak = await readSteadyLevel(panel);
+  await holdCompare(panel);
+  expect(Math.abs(highWithPeak - await readSteadyLevel(panel))).toBeLessThan(0.6);
+  await panel.mouse.up();
+
+  await high.close();
+  await expect(panel.locator("#status")).toContainText("Click the goui icon");
 });

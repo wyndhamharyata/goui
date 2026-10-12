@@ -1,14 +1,6 @@
 // Chrome keeps this setting from older builds. With it on, an icon click never reaches onClicked.
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => {});
 
-// The panel itself is never the target. In a test it is an extension page in a normal tab.
-async function readTargetTab() {
-  const tabs = await chrome.tabs.query({ currentWindow: true });
-  const webPages = tabs.filter((tab) => tab.url && (tab.url.startsWith("http://") || tab.url.startsWith("https://")));
-  const [newest] = webPages.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
-  return newest;
-}
-
 async function openOffscreenDocument() {
   if (await chrome.offscreen.hasDocument()) return;
   await chrome.offscreen.createDocument({
@@ -18,7 +10,14 @@ async function openOffscreenDocument() {
   });
 }
 
+// The badge shows on the icon of the captured tab only, so each tab shows whether goui hears it.
 async function publishCapture(state) {
+  const { capture: previous } = await chrome.storage.session.get("capture");
+  if (previous && previous.tabId) chrome.action.setBadgeText({ tabId: previous.tabId, text: "" }).catch(() => {});
+  if (state.isCapturing) {
+    chrome.action.setBadgeBackgroundColor({ tabId: state.tabId, color: "#43d39e" }).catch(() => {});
+    chrome.action.setBadgeText({ tabId: state.tabId, text: "ON" }).catch(() => {});
+  }
   await chrome.storage.session.set({ capture: state });
   chrome.runtime.sendMessage({ type: "capture:state", state }).catch(() => {});
 }
@@ -38,7 +37,7 @@ async function startCaptureForTab(target) {
   const stored = await chrome.storage.local.get("config");
   if (stored.config) await chrome.runtime.sendMessage({ type: "audio:config", config: stored.config });
 
-  const state = { isCapturing: true, title: target.title || "Capturing" };
+  const state = { isCapturing: true, tabId: target.id, title: target.title || "Capturing" };
   await publishCapture(state);
   return state;
 }
@@ -51,39 +50,28 @@ async function stopCapture() {
 }
 
 // The click is what invokes the extension for the tab, which grants the right to take its audio.
-// Open the panel first, while the gesture is fresh, then start the capture right away.
-chrome.action.onClicked.addListener((tab) => {
+// Open the panel first, while the gesture is fresh. A click on the tab goui hears turns it off. A
+// click on any other tab moves goui there.
+chrome.action.onClicked.addListener(async (tab) => {
   chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
+
+  const { capture } = await chrome.storage.session.get("capture");
+  const isHeardTab = Boolean(capture && capture.isCapturing) && capture.tabId === tab.id;
+  if (isHeardTab) {
+    stopCapture();
+    return;
+  }
 
   const url = tab.url || "";
   const isWebPage = url.startsWith("http://") || url.startsWith("https://");
   if (!tab.id || !isWebPage) {
-    publishCapture({ isCapturing: false, error: "Open a web page with audio, then click the icon." });
+    publishCapture({ isCapturing: false, error: "Open a web page with audio, then click the goui icon." });
     return;
   }
   startCaptureForTab(tab).catch((error) => publishCapture({ isCapturing: false, error: error.message }));
 });
 
-chrome.runtime.onMessage.addListener((message, sender, respond) => {
-  if (!message || !message.type) return false;
-  if (message.type === "capture:start") {
-    readTargetTab()
-      .then((target) => {
-        if (!target) return publishCapture({ isCapturing: false, error: "No web page in this window to capture." });
-        return startCaptureForTab(target);
-      })
-      .then(respond, (error) => {
-        const isNotInvoked = error.message.includes("has not been invoked");
-        const hint = "Click the goui icon in the toolbar while you are on the page you want to EQ.";
-        const state = { isCapturing: false, error: isNotInvoked ? hint : error.message };
-        publishCapture(state);
-        respond(state);
-      });
-    return true;
-  }
-  if (message.type === "capture:stop") {
-    stopCapture().then(respond, (error) => respond({ isCapturing: false, error: error.message }));
-    return true;
-  }
-  return false;
+chrome.tabs.onRemoved.addListener(async (tabId) => {
+  const { capture } = await chrome.storage.session.get("capture");
+  if (capture && capture.tabId === tabId) stopCapture();
 });

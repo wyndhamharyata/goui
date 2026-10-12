@@ -13,12 +13,18 @@ every band on the graph.
 4. Click the toolbar icon on a page that plays audio. The side panel opens and the capture starts
    for that page.
 
-The icon click is what grants the extension the right to take the audio of that tab. To capture
-another tab, click the icon on that tab.
+The icon is the on and off switch. Chrome only lets an extension take a tab's audio after you click
+its icon on that tab, so the panel has no Start button.
+
+- Click the icon on the tab goui hears to turn goui off.
+- Click the icon on another tab to move goui there.
+- The icon shows a green ON badge on the tab goui hears.
+- Closing that tab turns goui off.
 
 ## Use it
 
-The header is on every tab. Hold **A/B** to hear the sound without the EQ. The switch turns the EQ
+The header is on every tab. It shows the title of the tab goui hears, or what to click when goui hears
+nothing. Hold **A/B** to hear the sound without the EQ. The switch turns the EQ
 on or off. The level is the output in dB. Its light turns red when the EQ can clip.
 
 **Listen**
@@ -88,6 +94,7 @@ wants, and goui keeps the two apart.
 
 - The Web Audio shelf filters take no Q. An AutoEQ shelf keeps its corner frequency and gain and
   drops its Q. The inspector says so on a shelf.
-- The tests open the panel as a normal tab and start capture with a launch flag.
+- The tests open the panel as a normal tab. They fire the icon's own click event in the service
+  worker, since Playwright cannot press the toolbar icon. A launch flag lets that click capture.
 - The extension can only change audio inside the browser. For system audio, use a tool such as
   SoundSource.

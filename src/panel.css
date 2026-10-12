@@ -199,6 +199,11 @@ textarea {
   text-overflow: ellipsis;
 }
 
+.source.instruction {
+  white-space: normal;
+  color: var(--text);
+}
+
 .meter {
   font-variant-numeric: tabular-nums;
 }

@@ -8,7 +8,8 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 
 - Manifest V3, plain JavaScript, no build step. Load the folder with "Load unpacked".
 - `chrome.tabCapture` takes the tab's audio. An offscreen document runs the Web Audio chain and
-  plays the result.
+  plays the result. Chrome allows the capture only after a click on the toolbar icon, so the icon is
+  the on and off switch and the panel has no Start button.
 - The side panel has three tabs: Listen, Tune and Library. From 900 px wide they show as three
   columns. `design/ux-proposals.html` holds the mock the panel follows.
 - `src/graph.js` draws the curve as SVG. It uses the same Web Audio filters the engine plays, so

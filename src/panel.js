@@ -51,7 +51,6 @@ let config = defaultConfig();
 // stay as they are when you pick one.
 const presets = { headphone: {}, ear: {} };
 let spectrumDb = [];
-let isCapturing = false;
 let selectedIndex = -1;
 let soloIndex = -1;
 let isBypassed = false;
@@ -680,13 +679,14 @@ const libraryActions = {
   },
 };
 
+const idleInstruction = "Click the goui icon in the toolbar while you are on the tab you want to EQ.";
+
 function applyCaptureState(state) {
-  if (!state) return;
-  isCapturing = Boolean(state.isCapturing);
-  byId("capture").textContent = isCapturing ? "Stop" : "Start";
+  const isCapturing = Boolean(state.isCapturing);
   const status = byId("status");
-  status.textContent = state.error || (isCapturing ? state.title || "Capturing" : "No audio");
-  status.title = status.textContent;
+  status.textContent = state.error || (isCapturing ? state.title : idleInstruction);
+  status.classList.toggle("instruction", !isCapturing);
+  status.title = isCapturing ? "Click the goui icon on this tab to turn goui off, or on another tab to move it there." : "";
 }
 
 function showTelemetry(message) {
@@ -743,10 +743,6 @@ byId("compare").addEventListener("pointerleave", () => setBypass(false));
 byId("enabled").addEventListener("change", (event) => {
   config.enabled = event.target.checked;
   commit();
-});
-
-byId("capture").addEventListener("click", async () => {
-  applyCaptureState(await chrome.runtime.sendMessage({ type: isCapturing ? "capture:stop" : "capture:start" }));
 });
 
 byId("sliders").addEventListener("input", (event) => {
@@ -933,7 +929,7 @@ async function hydrate() {
   renderEarList();
 
   const session = await chrome.storage.session.get("capture");
-  applyCaptureState(session.capture);
+  applyCaptureState(session.capture || { isCapturing: false });
 }
 
 hydrate();
