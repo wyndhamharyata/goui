@@ -1,4 +1,4 @@
-import { clamp, hasGain, responseDb } from "./shared/filters.js";
+import { clamp, hasGain, qRange, qStepRatio, responseDb } from "./shared/filters.js";
 
 const rangeDb = 15;
 const ticksHz = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10_000, 20_000];
@@ -310,7 +310,7 @@ export function makeGraph(host, options, hooks) {
 
   function widenBand(band, point) {
     const octaves = 2 * Math.abs(Math.log2(read(point.x, point.y, point.size).frequencyHz / band.frequencyHz));
-    band.q = clamp(qFromOctaves(Math.max(octaves, 0.05)), 0.2, 12);
+    band.q = clamp(qFromOctaves(Math.max(octaves, 0.05)), ...qRange);
   }
 
   if (options.interactive) {
@@ -367,7 +367,7 @@ export function makeGraph(host, options, hooks) {
       if (!target) return;
       event.preventDefault();
       const band = hooks.bands()[target.index];
-      band.q = clamp(band.q * (event.deltaY < 0 ? 1.12 : 1 / 1.12), 0.2, 12);
+      band.q = clamp(band.q * (event.deltaY < 0 ? qStepRatio : 1 / qStepRatio), ...qRange);
       hooks.select(target.index);
       hooks.changed();
     }, { passive: false });

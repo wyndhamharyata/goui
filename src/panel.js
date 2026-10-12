@@ -9,6 +9,8 @@ import {
   maxBoostDb,
   newBand,
   parseAutoEq,
+  qRange,
+  qStepRatio,
   sanitizeConfig,
   toAutoEq,
   typeLabels,
@@ -502,7 +504,7 @@ const steps = {
     if (hasGain(band.type)) band.gainDb = clamp(Math.round((band.gainDb + (direction * 0.5)) * 10) / 10, -20, 20);
   },
   q: (band, direction) => {
-    band.q = clamp(band.q * (1.12 ** direction), 0.1, 18);
+    band.q = clamp(band.q * (qStepRatio ** direction), ...qRange);
   },
 };
 
@@ -514,7 +516,7 @@ const fieldEdits = {
     band.gainDb = clamp(value || 0, -20, 20);
   },
   qInput: (band, value) => {
-    band.q = clamp(value || 1, 0.1, 18);
+    band.q = clamp(value || 1, ...qRange);
   },
 };
 

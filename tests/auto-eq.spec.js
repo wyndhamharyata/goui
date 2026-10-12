@@ -67,7 +67,10 @@ async function openPanel(context, port, toneHz) {
   return panel;
 }
 
+// The wait comes first, so a reading taken before the engine reacts to the last step never counts.
 async function steadyLevel(page) {
+  const reactionMs = 400;
+  await page.waitForTimeout(reactionMs);
   let previous = null;
   for (let attempt = 0; attempt < 75; attempt += 1) {
     const reading = Number(await page.locator("#level").textContent());

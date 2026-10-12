@@ -155,5 +155,7 @@ If a line needs a comment to say what it does, rename it or split it.
 
 Each one names the rule it breaks and the reason.
 
+- `qStepRatio` in `src/shared/filters.js` has two readers, against rule 7. The graph wheel and the
+  inspector stepper both nudge Q, and two copies of the step would drift apart, as the Q limits did.
 - Each word list at the top of `scripts/check-words.mjs` has one reader, against rule 7.
   The lists are data. A person edits them there, next to each other, when rule 2 changes.

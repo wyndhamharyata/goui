@@ -33,6 +33,10 @@ export function hasGain(type) {
   return typesWithGain.has(type);
 }
 
+// Every place that sets a Q uses these, so a typed Q and a dragged Q keep the same range.
+export const qRange = [0.1, 18];
+export const qStepRatio = 1.12;
+
 export function clamp(value, low, high) {
   return Math.min(Math.max(value, low), high);
 }
@@ -61,7 +65,7 @@ function cleanBand(raw) {
     type: raw && bandTypes.includes(raw.type) ? raw.type : "PK",
     frequencyHz: clamp(Number(raw && raw.frequencyHz) || 1000, 20, 20_000),
     gainDb: clamp(Number(raw && raw.gainDb) || 0, -20, 20),
-    q: clamp(Number(raw && raw.q) || 0.71, 0.1, 18),
+    q: clamp(Number(raw && raw.q) || 0.71, ...qRange),
   };
 }
 
