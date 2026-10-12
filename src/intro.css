@@ -1,22 +1,7 @@
-:root {
-  --bg: #0e1013;
-  --panel: #161a20;
-  --line: #262d38;
-  --text: #e6e9ef;
-  --muted: #8993a2;
-  --accent: #5b8cff;
-}
-
-* {
-  box-sizing: border-box;
-}
-
 html,
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 /* One content width for the header, the paragraphs, the diagram and every grid. */
@@ -93,7 +78,7 @@ h2 {
 }
 
 .flow-box.ear {
-  border-color: #ffd166;
+  border-color: var(--ear);
 }
 
 .flow-icon {

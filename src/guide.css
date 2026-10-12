@@ -12,8 +12,8 @@
   flex-direction: column;
   gap: 8px;
   padding: 10px;
-  background: #161a20;
-  border: 1px solid #262d38;
+  background: var(--panel);
+  border: 1px solid var(--line);
   border-radius: 10px;
   counter-increment: step;
 }
@@ -34,7 +34,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #5b8cff;
+  background: var(--accent);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -46,12 +46,12 @@
 }
 
 .guide-text span {
-  color: #8993a2;
+  color: var(--muted);
 }
 
 .guide-step.optional .guide-text::before {
-  background: #ffd166;
-  color: #0e1013;
+  background: var(--ear);
+  color: var(--bg);
 }
 
 /* The pictures below are drawn in HTML. They stand in for the browser's own toolbar and menus. */
@@ -118,8 +118,8 @@
   bottom: -5px;
   padding: 0 3px;
   border-radius: 3px;
-  background: #43d39e;
-  color: #0e1013;
+  background: var(--good);
+  color: var(--bg);
   font-size: 8px;
   font-style: normal;
   font-weight: 800;
@@ -195,10 +195,10 @@
 .mock-row,
 .mock-button {
   padding: 4px 8px;
-  border: 1px solid #262d38;
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: #1c2129;
-  color: #e6e9ef;
+  background: var(--panel-2);
+  color: var(--text);
   font-size: 11px;
 }
 
@@ -208,7 +208,7 @@
 }
 
 .mock-row small {
-  color: #8993a2;
+  color: var(--muted);
 }
 
 .mock-button {
@@ -221,7 +221,7 @@
   align-items: center;
   gap: 5px;
   margin: auto 0;
-  color: #8993a2;
+  color: var(--muted);
 }
 
 .mock-graph {
@@ -234,13 +234,13 @@
   width: 16px;
   height: 16px;
   fill: #fff;
-  stroke: #0e1013;
+  stroke: var(--bg);
   stroke-width: 1.5;
 }
 
 /* The thing to press, ringed in the accent colour. */
 .focus {
-  outline: 2px solid #5b8cff;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;
   animation: pulse 1.6s ease-in-out infinite;

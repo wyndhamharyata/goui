@@ -1,19 +1,7 @@
 :root {
-  --bg: #0e1013;
-  --panel: #161a20;
-  --panel-2: #1c2129;
-  --line: #262d38;
-  --text: #e6e9ef;
-  --muted: #8993a2;
-  --accent: #5b8cff;
   --peak: #b06bff;
   --hold: #ff9f43;
-  --good: #43d39e;
   --danger: #ff6b6b;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 /* A class that sets display would otherwise override the hidden attribute. */
@@ -23,10 +11,8 @@
 
 html,
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .app {
@@ -680,8 +666,8 @@ button:disabled {
 }
 
 .preset-section[data-role="ear"] .step {
-  background: #ffd166;
-  color: #0e1013;
+  background: var(--ear);
+  color: var(--bg);
 }
 
 /* Until goui first hears a tab, the panel shows how to start instead of the EQ. */

@@ -1,3 +1,5 @@
+import { messageTypes, trySendMessage } from "./shared/messages.js";
+
 // The how-to page opens once, on the first install. A later reload of the folder does not open it.
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason !== "install") return;
@@ -25,13 +27,18 @@ async function publishCapture(state) {
     chrome.action.setBadgeText({ tabId: state.tabId, text: "ON" }).catch(() => {});
   }
   await chrome.storage.session.set({ capture: state });
-  chrome.runtime.sendMessage({ type: "capture:state", state }).catch(() => {});
+  trySendMessage({ type: messageTypes.captureState, state });
+}
+
+async function isHeardTab(tabId) {
+  const { capture } = await chrome.storage.session.get("capture");
+  return Boolean(capture && capture.isCapturing) && capture.tabId === tabId;
 }
 
 async function startCaptureForTab(target) {
   await openOffscreenDocument();
   const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: target.id });
-  const reply = await chrome.runtime.sendMessage({ type: "audio:start", streamId });
+  const reply = await chrome.runtime.sendMessage({ type: messageTypes.audioStart, streamId });
 
   const isStarted = Boolean(reply && reply.ok);
   if (!isStarted) {
@@ -41,7 +48,7 @@ async function startCaptureForTab(target) {
   }
 
   const stored = await chrome.storage.local.get("config");
-  if (stored.config) await chrome.runtime.sendMessage({ type: "audio:config", config: stored.config });
+  if (stored.config) await chrome.runtime.sendMessage({ type: messageTypes.audioConfig, config: stored.config });
 
   const state = { isCapturing: true, tabId: target.id, title: target.title || "Capturing" };
   await publishCapture(state);
@@ -49,7 +56,7 @@ async function startCaptureForTab(target) {
 }
 
 async function stopCapture() {
-  await chrome.runtime.sendMessage({ type: "audio:stop" }).catch(() => {});
+  await trySendMessage({ type: messageTypes.audioStop });
   const state = { isCapturing: false };
   await publishCapture(state);
   return state;
@@ -61,9 +68,7 @@ async function stopCapture() {
 chrome.action.onClicked.addListener(async (tab) => {
   chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
 
-  const { capture } = await chrome.storage.session.get("capture");
-  const isHeardTab = Boolean(capture && capture.isCapturing) && capture.tabId === tab.id;
-  if (isHeardTab) {
+  if (await isHeardTab(tab.id)) {
     stopCapture();
     return;
   }
@@ -78,6 +83,5 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {
-  const { capture } = await chrome.storage.session.get("capture");
-  if (capture && capture.tabId === tabId) stopCapture();
+  if (await isHeardTab(tabId)) stopCapture();
 });

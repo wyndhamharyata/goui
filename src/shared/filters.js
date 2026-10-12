@@ -36,6 +36,13 @@ export function hasGain(type) {
 // Every place that sets a Q uses these, so a typed Q and a dragged Q keep the same range.
 export const qRange = [0.1, 18];
 export const qStepRatio = 1.12;
+export const frequencyRangeHz = [20, 20_000];
+export const gainRangeDb = [-20, 20];
+
+// Gains move in steps of 0.1 dB, the step an AutoEQ file and the gain field show.
+export function roundGainDb(gainDb) {
+  return Math.round(gainDb * 10) / 10;
+}
 
 export function clamp(value, low, high) {
   return Math.min(Math.max(value, low), high);
@@ -44,17 +51,19 @@ export function clamp(value, low, high) {
 export const layerOrder = ["headphone", "ear"];
 export const layerLabels = { headphone: "Headphone", ear: "My ear" };
 
-function emptyLayer(name, source) {
-  return { on: true, source, name, isEdited: false, bands: [] };
+export function makeLayer(name, source, bands = []) {
+  return { on: true, source, name, isEdited: false, bands };
 }
+
+export const flatSliders = { bassDb: 0, vocalsDb: 0, trebleDb: 0 };
 
 export function defaultConfig() {
   return {
     enabled: true,
     preampDb: 0,
     autoPreamp: true,
-    sliders: { bassDb: 0, vocalsDb: 0, trebleDb: 0 },
-    layers: { headphone: emptyLayer("Flat", "Starter sound") },
+    sliders: { ...flatSliders },
+    layers: { headphone: makeLayer("Flat", "Starter sound") },
   };
 }
 
@@ -68,8 +77,8 @@ export function cleanBands(raw) {
   return bands.filter((band) => band && typeof band === "object").map((band) => ({
     on: band.on !== false,
     type: bandTypes.includes(band.type) ? band.type : "PK",
-    frequencyHz: clamp(Number(band.frequencyHz) || 1000, 20, 20_000),
-    gainDb: clamp(Number(band.gainDb) || 0, -20, 20),
+    frequencyHz: clamp(Number(band.frequencyHz) || 1000, ...frequencyRangeHz),
+    gainDb: clamp(Number(band.gainDb) || 0, ...gainRangeDb),
     q: clamp(Number(band.q) || 0.71, ...qRange),
   }));
 }
@@ -115,16 +124,15 @@ export function sanitizeConfig(raw) {
 }
 
 // Every layer that is on, in a fixed order. The engine plays these, and the panel draws them.
-export function layerBands(config) {
-  return layerOrder.flatMap((role) => {
-    const layer = config.layers[role];
-    return layer && layer.on ? layer.bands : [];
-  });
+export function listOnLayers(config) {
+  return layerOrder
+    .filter((role) => config.layers[role] && config.layers[role].on)
+    .map((role) => ({ role, bands: config.layers[role].bands }));
 }
 
 // The three Listen sliders, as bands on top of the sound's own bands. They stay in the chain at
 // 0 dB, so a slider move never rebuilds the audio nodes.
-export function sliderBands(sliders) {
+function sliderBands(sliders) {
   return [
     { on: true, type: "LSC", frequencyHz: 105, gainDb: sliders.bassDb, q: 0.71 },
     { on: true, type: "PK", frequencyHz: 2500, gainDb: sliders.vocalsDb, q: 0.9 },
@@ -162,21 +170,35 @@ export function responseDb(bands, frequencies) {
   return totals;
 }
 
-export function maxBoostDb(bands) {
-  const sweepHz = Float32Array.from({ length: 121 }, (_, index) => 20 * 1000 ** (index / 120));
-  return Math.max(0, ...responseDb(bands, sweepHz));
+// Points from 20 Hz to 20 kHz, evenly spaced on a log scale.
+export function logSweepHz(pointCount) {
+  return Float32Array.from({ length: pointCount }, (_, index) => 20 * 1000 ** (index / (pointCount - 1)));
 }
 
-// What the audio chain plays: every layer that is on, the sliders on top, and the preamp.
+export function maxBoostDb(bands) {
+  return Math.max(0, ...responseDb(bands, logSweepHz(121)));
+}
+
+// Auto preamp lowers the sound by its highest boost, so the loudest frequency never clips.
+export function autoPreampDb(bands) {
+  return 0 - maxBoostDb(bands);
+}
+
+// Every layer that is on, then the sliders on top.
+export function listPlayedBands(config) {
+  return [...listOnLayers(config).flatMap((layer) => layer.bands), ...sliderBands(config.sliders)];
+}
+
+// What the audio chain plays: the played bands and the preamp.
 export function engineConfig(config) {
-  const bands = [...layerBands(config), ...sliderBands(config.sliders)];
-  const preampDb = config.autoPreamp ? 0 - maxBoostDb(bands) : config.preampDb;
+  const bands = listPlayedBands(config);
+  const preampDb = config.autoPreamp ? autoPreampDb(bands) : config.preampDb;
   return { enabled: config.enabled, preampDb, bands };
 }
 
 // Export writes one flat file, so another app can read the merged sound.
 export function flatBands(config) {
-  return [...layerBands(config), ...sliderBands(config.sliders)].filter((band) => !hasGain(band.type) || band.gainDb !== 0);
+  return listPlayedBands(config).filter((band) => !hasGain(band.type) || band.gainDb !== 0);
 }
 
 const typeAliases = { PEAK: "PK", PEAKING: "PK", LOWPASS: "LP", HIGHPASS: "HP", NOTCH: "NO" };

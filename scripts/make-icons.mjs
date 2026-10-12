@@ -48,16 +48,6 @@ function mixColor(start, end, at) {
   return start.map((value, index) => value + (end[index] - value) * at);
 }
 
-function isInsideRoundedSquare(x, y, size) {
-  const radius = size * 0.22;
-  const far = size - radius;
-  const cornerX = Math.min(Math.max(x, radius), far);
-  const cornerY = Math.min(Math.max(y, radius), far);
-  const distanceX = x - cornerX;
-  const distanceY = y - cornerY;
-  return distanceX * distanceX + distanceY * distanceY <= radius * radius;
-}
-
 function isInsideRoundedRect(x, y, rect) {
   const nearX = Math.min(Math.max(x, rect.left + rect.radius), rect.right - rect.radius);
   const nearY = Math.min(Math.max(y, rect.top + rect.radius), rect.bottom - rect.radius);
@@ -71,9 +61,10 @@ const bars = [0.4, 0.62, 0.48, 0.7];
 // The tile carries its own colour and the bars are white, so the icon reads on a light toolbar and
 // on a dark one. A dark tile would disappear on a dark toolbar.
 function sampleColor(x, y, size) {
-  if (!isInsideRoundedSquare(x, y, size)) return [0, 0, 0, 0];
+  const tile = { left: 0, top: 0, right: size, bottom: size, radius: size * 0.22 };
+  if (!isInsideRoundedRect(x, y, tile)) return [0, 0, 0, 0];
 
-  const tile = mixColor([74, 122, 224], [143, 82, 216], y / size);
+  const tileColor = mixColor([74, 122, 224], [143, 82, 216], y / size);
   const barWidth = size * 0.13;
   const barGap = size * 0.075;
   const totalWidth = (bars.length * barWidth) + ((bars.length - 1) * barGap);
@@ -87,7 +78,7 @@ function sampleColor(x, y, size) {
     if (isInsideRoundedRect(x, y, bar)) return [255, 255, 255, 255];
   }
   // The tile keeps alpha 255. A three-value colour would write alpha 0 and the icon would be invisible.
-  return [...tile, 255];
+  return [...tileColor, 255];
 }
 
 function samplePixel(x, y, size) {

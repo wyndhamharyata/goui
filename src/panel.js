@@ -1,31 +1,60 @@
 import {
   audioNodeType,
+  autoPreampDb,
   bandTypes,
   clamp,
   cleanBands,
   defaultConfig,
   engineConfig,
   flatBands,
+  flatSliders,
+  frequencyRangeHz,
+  gainRangeDb,
   hasGain,
-  layerBands,
   layerLabels,
   layerOrder,
+  listOnLayers,
+  listPlayedBands,
+  makeLayer,
   maxBoostDb,
   newBand,
   parseAutoEq,
   qRange,
   qStepRatio,
+  roundGainDb,
   sanitizeConfig,
-  sliderBands,
   toAutoEq,
   typeLabels,
 } from "./shared/filters.js";
+import { messageTypes, trySendMessage } from "./shared/messages.js";
 import { formatDb, formatHz, layerColor, makeGraph, qToOctaves, typeColor } from "./graph.js";
 
 const byId = (id) => document.getElementById(id);
 const sectionOf = (role) => document.querySelector(`.preset-section[data-role="${role}"]`);
 const partOf = (role, name) => sectionOf(role).querySelector(`.${name}`);
 const autoEqBase = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master/results/";
+// The source a layer shows once it matches one of your presets.
+const savedSource = "Saved";
+
+function makeElement(tag, { className = "", text = "", title = "" } = {}) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text !== "") element.textContent = text;
+  if (title) element.title = title;
+  return element;
+}
+
+function debounce(run, waitMs) {
+  let timer = 0;
+  return () => {
+    clearTimeout(timer);
+    timer = setTimeout(run, waitMs);
+  };
+}
+
+function showHint(role, text) {
+  partOf(role, "action-hint").textContent = text;
+}
 
 const starterSounds = [
   { name: "Flat", bands: [] },
@@ -54,7 +83,6 @@ let spectrumDb = [];
 let selectedIndex = -1;
 let soloIndex = -1;
 let isBypassed = false;
-let saveTimer = 0;
 let autoEqItems = null;
 let isMoreOpen = false;
 const openActions = { headphone: "", ear: "" };
@@ -78,26 +106,39 @@ function roleAt(index) {
   return entry && entry.role;
 }
 
+// Holding A/B and the main switch both silence the EQ. The graph then draws a flat line.
+function isEqOff() {
+  return isBypassed || !config.enabled;
+}
+
 // What the panel draws is what the engine plays, with the A/B button and Solo applied.
 function listCurveBands() {
-  if (isBypassed || !config.enabled) return [];
+  if (isEqOff()) return [];
   const soloed = bandAt(soloIndex);
   if (soloed) return [{ ...soloed, on: true }];
-  return [...layerBands(config), ...sliderBands(config.sliders)];
+  return listPlayedBands(config);
 }
 
 // Each layer's own curve, for the dashed lines under the total.
 function listCurveLayers() {
-  if (isBypassed || !config.enabled || soloIndex >= 0) return [];
-  return layerOrder
-    .filter((role) => config.layers[role] && config.layers[role].on)
-    .map((role) => ({ role, bands: config.layers[role].bands }));
+  if (isEqOff() || soloIndex >= 0) return [];
+  return listOnLayers(config);
+}
+
+// Solo follows the chosen band, so both go together.
+function unselectBand() {
+  selectedIndex = -1;
+  soloIndex = -1;
+}
+
+function removeEarLayer() {
+  delete config.layers.ear;
+  unselectBand();
+  commit();
 }
 
 function addBandToLayer(role, frequencyHz, gainDb) {
-  if (!config.layers[role]) {
-    config.layers[role] = { on: true, source: "Your bands", name: "My ear tuning", isEdited: false, bands: [] };
-  }
+  config.layers[role] ??= makeLayer("My ear tuning", "Your bands");
   const band = { ...newBand(frequencyHz), gainDb };
   config.layers[role].bands.push(band);
   selectedIndex = listBandEntries().findIndex((entry) => entry.band === band);
@@ -110,7 +151,7 @@ const graphHooks = {
   curveLayers: listCurveLayers,
   spectrum: () => spectrumDb,
   selectedIndex: () => selectedIndex,
-  isBypassed: () => isBypassed || !config.enabled,
+  isBypassed: isEqOff,
   select: (index) => {
     selectedIndex = index;
     refresh();
@@ -123,6 +164,7 @@ const graphHooks = {
 // The Listen graph is a preview. It matches the Tune graph in size and follows its zoom and turn.
 const listenGraph = makeGraph(byId("listenGraph"), { height: 210, tallHeight: 440, interactive: false, regions: true, layerCurves: true }, graphHooks);
 const tuneGraph = makeGraph(byId("tuneGraph"), { height: 210, tallHeight: 440, interactive: true, layerCurves: true }, graphHooks);
+const graphs = [listenGraph, tuneGraph];
 
 function sendAudio() {
   let value = config;
@@ -135,17 +177,18 @@ function sendAudio() {
       const layer = config.layers[role];
       if (layer) layers[role] = { ...layer, on: true, bands: layer.bands.map((band) => ({ ...band, on: band === soloed })) };
     }
-    value = { ...config, layers, sliders: { bassDb: 0, vocalsDb: 0, trebleDb: 0 } };
+    value = { ...config, layers, sliders: flatSliders };
   }
-  chrome.runtime.sendMessage({ type: "audio:config", config: value }).catch(() => {});
+  trySendMessage({ type: messageTypes.audioConfig, config: value });
 }
+
+const storageWaitMs = 120;
+const storeConfig = debounce(() => chrome.storage.local.set({ config }), storageWaitMs);
 
 // The sound follows every edit at once. Only the storage write waits for the edits to pause.
 function commit() {
   sendAudio();
-  const storageWaitMs = 120;
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => chrome.storage.local.set({ config }), storageWaitMs);
+  storeConfig();
   refresh();
 }
 
@@ -158,8 +201,7 @@ function commitEdit(role) {
 }
 
 function refresh() {
-  listenGraph.render();
-  tuneGraph.render();
+  for (const graph of graphs) graph.render();
   renderLayers();
   renderPresetCards();
   renderSound();
@@ -174,6 +216,15 @@ function setField(id, value) {
   if (field !== document.activeElement) field.value = value;
 }
 
+function describeLayerName(layer) {
+  return layer.isEdited ? `${layer.name}, edited` : layer.name;
+}
+
+function openLibrarySection(role) {
+  showTab("library");
+  sectionOf(role).scrollIntoView({ block: "start" });
+}
+
 // The stack on Listen. One row per layer, each with its own switch, its source and its name.
 function renderLayers() {
   const host = byId("layers");
@@ -181,67 +232,46 @@ function renderLayers() {
   for (const role of layerOrder) {
     const layer = config.layers[role];
     if (!layer) continue;
-    const row = document.createElement("div");
-    row.className = layer.on ? "layer" : "layer off";
+    const row = makeElement("div", { className: layer.on ? "layer" : "layer off" });
 
-    const toggle = document.createElement("label");
-    toggle.className = "switch";
-    toggle.title = `Turn the ${layerLabels[role]} layer on or off`;
-    const box = document.createElement("input");
+    const toggle = makeElement("label", { className: "switch", title: `Turn the ${layerLabels[role]} layer on or off` });
+    const box = makeElement("input");
     box.type = "checkbox";
     box.checked = layer.on;
     box.addEventListener("change", () => {
       layer.on = box.checked;
       commit();
     });
-    const track = document.createElement("span");
-    track.className = "track";
-    toggle.append(box, track);
+    toggle.append(box, makeElement("span", { className: "track" }));
 
-    const text = document.createElement("div");
-    text.className = "grow";
-    const caption = document.createElement("small");
-    caption.className = "caption";
-    const mark = document.createElement("i");
-    mark.className = "layer-mark";
+    const caption = makeElement("small", { className: "caption" });
+    const mark = makeElement("i", { className: "layer-mark" });
     mark.style.borderColor = layerColor[role];
     caption.append(mark, `${layerLabels[role]} · ${layer.source}`);
-    const name = document.createElement("b");
-    name.textContent = layer.isEdited ? `${layer.name}, edited` : layer.name;
-    text.append(caption, name);
+    const text = makeElement("div", { className: "grow" });
+    text.append(caption, makeElement("b", { text: describeLayerName(layer) }));
 
-    const change = document.createElement("button");
+    const change = makeElement("button", { text: "Change" });
     change.dataset.role = role;
-    change.textContent = "Change";
-    change.addEventListener("click", () => {
-      showTab("library");
-      sectionOf(role).scrollIntoView({ block: "start" });
-    });
+    change.addEventListener("click", () => openLibrarySection(role));
 
     row.append(toggle, text, change);
     if (role === "ear") {
-      const remove = document.createElement("button");
-      remove.title = "Take the ear layer off";
-      remove.textContent = "×";
-      remove.addEventListener("click", () => {
-        delete config.layers.ear;
-        selectedIndex = -1;
-        soloIndex = -1;
-        commit();
-      });
+      const remove = makeElement("button", { text: "×", title: "Take the ear layer off" });
+      remove.addEventListener("click", removeEarLayer);
       row.append(remove);
     }
     host.append(row);
   }
 
   if (!config.layers.ear) {
-    const add = document.createElement("button");
+    const add = makeElement("button", {
+      text: "Add your ear tuning on top",
+      title: "Open My ear in the Library, to paste an eqbyear result or pick a saved ear preset",
+    });
     add.id = "addEar";
-    add.title = "Open My ear in the Library, to paste an eqbyear result or pick a saved ear preset";
-    add.textContent = "Add your ear tuning on top";
     add.addEventListener("click", () => {
-      showTab("library");
-      sectionOf("ear").scrollIntoView({ block: "start" });
+      openLibrarySection("ear");
       if (openActions.ear !== "paste") openLibraryAction("ear", "paste");
     });
     host.append(add);
@@ -270,42 +300,32 @@ function renderSound() {
   byId("meter").title = isClipping ? `The EQ can clip by ${headroomDb.toFixed(1)} dB. Turn the preamp down or press Auto.` : "Output level. No clipping.";
 }
 
-// One row per layer, each with its own label, its own Add band chip and its own sideways scroll.
+// One row per layer, each with its own label and its own Add band chip.
 function renderChips() {
   const host = byId("chips");
   host.replaceChildren();
   let index = 0;
   for (const role of layerOrder) {
-    const row = document.createElement("div");
-    row.className = "chip-row";
-    const label = document.createElement("span");
-    label.className = "chip-label";
+    const row = makeElement("div", { className: "chip-row" });
+    const label = makeElement("span", { className: "chip-label", text: layerLabels[role] });
     label.style.color = layerColor[role];
-    label.textContent = layerLabels[role];
-    const track = document.createElement("div");
-    track.className = "chip-track";
-    track.dataset.role = role;
+    const track = makeElement("div", { className: "chip-track" });
 
     const layer = config.layers[role];
     for (const band of layer ? layer.bands : []) {
-      const chip = document.createElement("button");
-      chip.className = "chip";
+      const chip = makeElement("button", { className: "chip" });
       chip.classList.toggle("on", index === selectedIndex);
       chip.classList.toggle("muted", !band.on);
       chip.dataset.index = index;
-      const number = document.createElement("i");
+      const number = makeElement("i", { text: index + 1 });
       number.style.background = typeColor[band.type];
-      number.textContent = index + 1;
       chip.append(number, formatHz(band.frequencyHz));
       track.append(chip);
       index += 1;
     }
 
-    const add = document.createElement("button");
-    add.className = "chip add";
+    const add = makeElement("button", { className: "chip add", text: "Add band", title: `Make a new band in ${layerLabels[role]}` });
     add.dataset.add = role;
-    add.title = `Make a new band in ${layerLabels[role]}`;
-    add.textContent = "Add band";
     track.append(add);
     row.append(label, track);
     host.append(row);
@@ -347,31 +367,21 @@ function renderInspector() {
 
 function renderTable() {
   const table = byId("table");
-  const head = document.createElement("tr");
-  for (const label of ["Band", "Hz", "dB", "Q"]) {
-    const cell = document.createElement("th");
-    cell.textContent = label;
-    head.append(cell);
-  }
+  const head = makeElement("tr");
+  for (const label of ["Band", "Hz", "dB", "Q"]) head.append(makeElement("th", { text: label }));
   const rows = listBandEntries().map((entry, index) => {
     const band = entry.band;
-    const row = document.createElement("tr");
+    const row = makeElement("tr");
     row.dataset.index = index;
     row.classList.toggle("on", index === selectedIndex);
-    const number = document.createElement("span");
-    number.className = "number";
+    const number = makeElement("span", { className: "number", text: index + 1 });
     number.style.color = typeColor[band.type];
-    number.textContent = index + 1;
-    const name = document.createElement("td");
+    const name = makeElement("td");
     name.append(number, typeLabels[band.type]);
     row.append(name);
 
     const gain = hasGain(band.type) ? formatDb(band.gainDb) : "";
-    for (const value of [Math.round(band.frequencyHz), gain, band.q.toFixed(2)]) {
-      const cell = document.createElement("td");
-      cell.textContent = value;
-      row.append(cell);
-    }
+    for (const value of [Math.round(band.frequencyHz), gain, band.q.toFixed(2)]) row.append(makeElement("td", { text: value }));
     return row;
   });
   table.replaceChildren(head, ...rows);
@@ -390,16 +400,19 @@ function renderPills() {
   byId("tall").classList.toggle("on", tuneGraph.vertical);
 }
 
+function isSavedPreset(role) {
+  const layer = config.layers[role];
+  return Boolean(layer) && layer.source === savedSource && Boolean(presets[role][layer.name]);
+}
+
 // Each Library section shows what plays in its layer now, and whether that is one of your presets.
 function renderPresetCard(role) {
   const layer = config.layers[role];
-  const isSaved = Boolean(layer) && layer.source === "Saved" && Boolean(presets[role][layer.name]);
+  const isSaved = isSavedPreset(role);
   let caption = "Nothing yet";
   if (layer) caption = isSaved ? "Your preset" : `${layer.source}, not saved yet`;
   partOf(role, "current-caption").textContent = caption;
-  let name = "No ear tuning";
-  if (layer) name = layer.isEdited ? `${layer.name}, edited` : layer.name;
-  partOf(role, "current-name").textContent = name;
+  partOf(role, "current-name").textContent = layer ? describeLayerName(layer) : "No ear tuning";
 
   const save = partOf(role, "save");
   save.textContent = isSaved ? "Save changes" : "Save";
@@ -417,35 +430,37 @@ function renderPresetCards() {
 // A headphone file's own preamp is kept, since a lone headphone file needs it. Auto preamp
 // overrides it either way.
 function placeBands(sound, role) {
-  config.layers[role] = { on: true, source: sound.source, name: sound.name, isEdited: false, bands: cleanBands(sound.bands) };
+  config.layers[role] = makeLayer(sound.name, sound.source, cleanBands(sound.bands));
   if (role === "headphone" && sound.preampDb !== undefined) config.preampDb = sound.preampDb;
-  selectedIndex = -1;
-  soloIndex = -1;
+  unselectBand();
   commit();
+}
+
+function storePresets(role) {
+  chrome.storage.local.set({ [`${role}Presets`]: presets[role] });
+  renderList[role]();
 }
 
 function savePreset(role, name) {
   const layer = config.layers[role];
   const isUpdate = Boolean(presets[role][name]);
   presets[role][name] = { bands: structuredClone(layer.bands) };
-  chrome.storage.local.set({ [`${role}Presets`]: presets[role] });
   layer.name = name;
-  layer.source = "Saved";
+  layer.source = savedSource;
   layer.isEdited = false;
   openLibraryAction(role, "");
   commit();
-  renderList[role]();
-  partOf(role, "action-hint").textContent = `${isUpdate ? "Updated" : "Saved"} ${name}.`;
+  storePresets(role);
+  showHint(role, `${isUpdate ? "Updated" : "Saved"} ${name}.`);
 }
 
 function deletePreset(role, name) {
   delete presets[role][name];
-  chrome.storage.local.set({ [`${role}Presets`]: presets[role] });
   // The layer keeps its bands. It is no longer a saved preset, so Save asks for a name again.
   const layer = config.layers[role];
-  if (layer && layer.source === "Saved" && layer.name === name) layer.source = "Deleted preset";
+  if (layer && layer.source === savedSource && layer.name === name) layer.source = "Deleted preset";
   commit();
-  renderList[role]();
+  storePresets(role);
 }
 
 async function loadAutoEqIndex() {
@@ -503,33 +518,29 @@ function countBands(bands) {
 }
 
 function makeResultItem(label, detail, onPick, onRemove) {
-  const button = document.createElement("button");
-  button.className = "item";
+  const button = makeElement("button", { className: "item" });
   button.dataset.name = label;
-  const name = document.createElement("span");
-  name.textContent = label;
-  const small = document.createElement("small");
-  small.textContent = detail;
-  button.append(name, small);
+  button.append(makeElement("span", { text: label }), makeElement("small", { text: detail }));
   button.addEventListener("click", onPick);
   if (!onRemove) return button;
 
-  const remove = document.createElement("button");
-  remove.className = "remove";
-  remove.textContent = "×";
-  remove.title = `Delete ${label}`;
+  const remove = makeElement("button", { className: "remove", text: "×", title: `Delete ${label}` });
   remove.addEventListener("click", onRemove);
-  const row = document.createElement("div");
-  row.className = "result-row";
+  const row = makeElement("div", { className: "result-row" });
   row.append(button, remove);
   return row;
 }
 
+// A row for one of your presets. The headphone list passes its search step as `pick`, so a pick
+// there also ends the search.
+function makePresetItem(role, name, pick) {
+  const place = () => placeBands({ name, source: savedSource, bands: presets[role][name].bands }, role);
+  return makeResultItem(name, countBands(presets[role][name].bands), () => pick(place), () => deletePreset(role, name));
+}
+
 function appendSection(list, title, items) {
   if (items.length === 0) return;
-  const heading = document.createElement("h4");
-  heading.textContent = title;
-  list.append(heading, ...items);
+  list.append(makeElement("h4", { text: title }), ...items);
 }
 
 async function findHeadphones(text, hint) {
@@ -547,14 +558,9 @@ async function searchLibrary() {
   list.dataset.query = text;
   const matches = (name) => name.toLowerCase().includes(text);
 
-  const saved = Object.keys(presets.headphone).filter(matches).map((name) => makeResultItem(name, countBands(presets.headphone[name].bands),
-    () => pickFromSearch(() => placeBands({ name, source: "Saved", bands: presets.headphone[name].bands }, "headphone")),
-    () => deletePreset("headphone", name)));
+  const saved = Object.keys(presets.headphone).filter(matches).map((name) => makePresetItem("headphone", name, pickFromSearch));
   if (saved.length === 0 && text === "") {
-    const note = document.createElement("p");
-    note.className = "hint";
-    note.textContent = "Nothing saved yet. Pick your headphone, then press Save.";
-    saved.push(note);
+    saved.push(makeElement("p", { className: "hint", text: "Nothing saved yet. Pick your headphone, then press Save." }));
   }
   const starterItems = starterSounds.filter((sound) => matches(sound.name)).map((sound) => makeResultItem(sound.name, countBands(sound.bands),
     () => pickFromSearch(() => placeBands({ name: sound.name, source: "Starter sound", bands: sound.bands }, "headphone"))));
@@ -579,21 +585,11 @@ async function searchLibrary() {
 
 function renderEarList() {
   const list = partOf("ear", "results");
-  const items = Object.keys(presets.ear).map((name) => makeResultItem(name, countBands(presets.ear[name].bands),
-    () => placeBands({ name, source: "Saved", bands: presets.ear[name].bands }, "ear"),
-    () => deletePreset("ear", name)));
+  const items = Object.keys(presets.ear).map((name) => makePresetItem("ear", name, (place) => place()));
   if (items.length === 0) {
-    const note = document.createElement("p");
-    note.className = "hint";
-    note.textContent = "Nothing saved yet. Run the test, paste the result, then press Save.";
-    items.push(note);
+    items.push(makeElement("p", { className: "hint", text: "Nothing saved yet. Run the test, paste the result, then press Save." }));
   }
-  const turnOff = makeResultItem("No ear tuning", "Headphone only", () => {
-    delete config.layers.ear;
-    selectedIndex = -1;
-    soloIndex = -1;
-    commit();
-  });
+  const turnOff = makeResultItem("No ear tuning", "Headphone only", removeEarLayer);
   list.replaceChildren();
   appendSection(list, "Your ear presets", items);
   list.append(turnOff);
@@ -604,13 +600,12 @@ const renderList = { headphone: searchLibrary, ear: renderEarList };
 
 function applyText(role, name, source) {
   const parsed = parseAutoEq(partOf(role, "text").value);
-  const hint = partOf(role, "action-hint");
   if (parsed.bands.length === 0) {
-    hint.textContent = "No AutoEQ filters found in that text.";
+    showHint(role, "No AutoEQ filters found in that text.");
     return;
   }
   placeBands({ name, source, bands: parsed.bands, preampDb: parsed.preampDb }, role);
-  hint.textContent = `Applied ${countBands(parsed.bands)} to ${layerLabels[role]}. Press Save to keep it.`;
+  showHint(role, `Applied ${countBands(parsed.bands)} to ${layerLabels[role]}. Press Save to keep it.`);
 }
 
 function renderSaveButton(role) {
@@ -627,7 +622,7 @@ function openLibraryAction(role, action) {
   partOf(role, "drawer").hidden = open !== "paste" && open !== "export";
   partOf(role, "apply").hidden = open !== "paste";
   for (const button of partOf(role, "library-actions").children) button.classList.toggle("on", button.dataset.action === open);
-  partOf(role, "action-hint").textContent = "";
+  showHint(role, "");
 
   const layer = config.layers[role];
   const text = partOf(role, "text");
@@ -639,8 +634,8 @@ function openLibraryAction(role, action) {
   }
   if (open === "export") {
     const bands = layer ? layer.bands : [];
-    text.value = toAutoEq({ preampDb: 0 - maxBoostDb(bands), bands });
-    partOf(role, "action-hint").textContent = `${layerLabels[role]} alone, as AutoEQ text. Copy it out.`;
+    text.value = toAutoEq({ preampDb: autoPreampDb(bands), bands });
+    showHint(role, `${layerLabels[role]} alone, as AutoEQ text. Copy it out.`);
   }
   if (open === "paste") {
     text.value = "";
@@ -652,16 +647,14 @@ const pastedNames = { headphone: "Pasted headphone", ear: "Pasted ear tuning" };
 
 const libraryActions = {
   save: (role) => {
-    const layer = config.layers[role];
-    const isSaved = layer.source === "Saved" && Boolean(presets[role][layer.name]);
-    if (isSaved) savePreset(role, layer.name);
+    if (isSavedPreset(role)) savePreset(role, config.layers[role].name);
     else openLibraryAction(role, "save");
   },
   saveAs: (role) => openLibraryAction(role, "saveAs"),
   confirmSave: (role) => {
     const name = partOf(role, "save-name").value.trim();
     if (name) savePreset(role, name);
-    else partOf(role, "action-hint").textContent = "Give the preset a name first.";
+    else showHint(role, "Give the preset a name first.");
   },
   import: (role) => partOf(role, "import-file").click(),
   paste: (role) => openLibraryAction(role, "paste"),
@@ -672,7 +665,7 @@ const libraryActions = {
     if (config.layers.ear) config.layers.ear.on = false;
     commit();
     chrome.tabs.create({ url: "https://eqbyear.com" });
-    partOf("ear", "action-hint").textContent = "eqbyear is open in a new tab, with My ear off. Click the goui icon on that tab, run the test, then Paste the result here.";
+    showHint("ear", "eqbyear is open in a new tab, with My ear off. Click the goui icon on that tab, run the test, then Paste the result here.");
   },
 };
 
@@ -697,8 +690,7 @@ function showTelemetry(message) {
   const newShare = 0.3;
   const previous = spectrumDb;
   spectrumDb = message.spectrumDb.map((db, index) => (previous.length ? ((1 - newShare) * previous[index]) + (newShare * db) : db));
-  listenGraph.renderSpectrum();
-  tuneGraph.renderSpectrum();
+  for (const graph of graphs) graph.renderSpectrum();
 }
 
 function setBypass(isOn) {
@@ -711,10 +703,10 @@ function setBypass(isOn) {
 
 const steps = {
   frequency: (band, direction) => {
-    band.frequencyHz = Math.round(clamp(band.frequencyHz * (2 ** (direction / 12)), 20, 20_000));
+    band.frequencyHz = Math.round(clamp(band.frequencyHz * (2 ** (direction / 12)), ...frequencyRangeHz));
   },
   gain: (band, direction) => {
-    if (hasGain(band.type)) band.gainDb = clamp(Math.round((band.gainDb + (direction * 0.5)) * 10) / 10, -20, 20);
+    if (hasGain(band.type)) band.gainDb = clamp(roundGainDb(band.gainDb + (direction * 0.5)), ...gainRangeDb);
   },
   q: (band, direction) => {
     band.q = clamp(band.q * (qStepRatio ** direction), ...qRange);
@@ -723,10 +715,10 @@ const steps = {
 
 const fieldEdits = {
   frequencyInput: (band, value) => {
-    band.frequencyHz = clamp(value || 1000, 20, 20_000);
+    band.frequencyHz = clamp(value || 1000, ...frequencyRangeHz);
   },
   gainInput: (band, value) => {
-    band.gainDb = clamp(value || 0, -20, 20);
+    band.gainDb = clamp(value || 0, ...gainRangeDb);
   },
   qInput: (band, value) => {
     band.q = clamp(value || 1, ...qRange);
@@ -771,16 +763,13 @@ byId("autoPreamp").addEventListener("click", () => {
 
 byId("zoom").addEventListener("click", (event) => {
   const button = event.target.closest("[data-zoom]");
-  if (button) {
-    tuneGraph.setZoom(button.dataset.zoom);
-    listenGraph.setZoom(button.dataset.zoom);
-  }
+  if (button) for (const graph of graphs) graph.setZoom(button.dataset.zoom);
   renderPills();
 });
 
 byId("tall").addEventListener("click", () => {
-  tuneGraph.setVertical(!tuneGraph.vertical);
-  listenGraph.setVertical(tuneGraph.vertical);
+  const isVertical = !tuneGraph.vertical;
+  for (const graph of graphs) graph.setVertical(isVertical);
   chrome.storage.local.set({ view: tuneGraph.vertical ? "vertical" : "horizontal" });
   renderPills();
 });
@@ -848,8 +837,7 @@ byId("bandDelete").addEventListener("click", () => {
   const role = roleAt(selectedIndex);
   const layer = config.layers[role];
   layer.bands.splice(layer.bands.indexOf(bandAt(selectedIndex)), 1);
-  selectedIndex = -1;
-  soloIndex = -1;
+  unselectBand();
   commitEdit(role);
 });
 
@@ -872,12 +860,8 @@ for (const role of layerOrder) {
   });
 }
 
-let searchTimer = 0;
-partOf("headphone", "search").addEventListener("input", () => {
-  const typingPauseMs = 150;
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(searchLibrary, typingPauseMs);
-});
+const typingPauseMs = 150;
+partOf("headphone", "search").addEventListener("input", debounce(searchLibrary, typingPauseMs));
 
 byId("exportAll").addEventListener("click", () => {
   const whole = byId("wholeText");
@@ -886,8 +870,8 @@ byId("exportAll").addEventListener("click", () => {
 });
 
 chrome.runtime.onMessage.addListener((message) => {
-  if (message && message.type === "capture:state") applyCaptureState(message.state);
-  if (message && message.type === "audio:telemetry") showTelemetry(message);
+  if (message && message.type === messageTypes.captureState) applyCaptureState(message.state);
+  if (message && message.type === messageTypes.audioTelemetry) showTelemetry(message);
   return false;
 });
 
@@ -919,8 +903,7 @@ async function hydrate() {
   byId("app").dataset.started = stored.hasCaptured ? "yes" : "no";
   if (stored.config) config = sanitizeConfig(stored.config);
   await readPresets(stored);
-  tuneGraph.setVertical(stored.view === "vertical");
-  listenGraph.setVertical(tuneGraph.vertical);
+  for (const graph of graphs) graph.setVertical(stored.view === "vertical");
   showTab(stored.tab || "listen");
   renderPills();
   sendAudio();

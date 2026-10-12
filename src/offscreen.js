@@ -1,4 +1,5 @@
-import { biquadQ, engineConfig, hasGain, makeBiquad, sanitizeConfig } from "./shared/filters.js";
+import { biquadQ, engineConfig, hasGain, logSweepHz, makeBiquad, sanitizeConfig } from "./shared/filters.js";
+import { messageTypes, trySendMessage } from "./shared/messages.js";
 
 let audioContext;
 let mediaStream;
@@ -10,7 +11,8 @@ let bandNodes = [];
 let telemetryTimer;
 let config = { enabled: true, preampDb: 0, bands: [] };
 
-const spectrumPoints = 128;
+// The panel reads these points back on the same log scale.
+const spectrumHz = logSweepHz(128);
 
 function listActiveBands() {
   return config.bands.filter((band) => band.on);
@@ -19,36 +21,22 @@ function listActiveBands() {
 function buildChain() {
   sourceNode.disconnect();
   for (const node of chainNodes) node.disconnect();
-  chainNodes = [];
-  bandNodes = [];
 
   analyserNode = audioContext.createAnalyser();
   analyserNode.fftSize = 8192;
   analyserNode.smoothingTimeConstant = 0;
-
-  if (!config.enabled) {
-    sourceNode.connect(analyserNode);
-    analyserNode.connect(audioContext.destination);
-    chainNodes = [analyserNode];
-    return;
-  }
-
-  let node = sourceNode;
   preampNode = audioContext.createGain();
   preampNode.gain.value = 10 ** (config.preampDb / 20);
-  node.connect(preampNode);
-  node = preampNode;
 
-  for (const band of listActiveBands()) {
-    const bandNode = makeBiquad(audioContext, band);
-    node.connect(bandNode);
-    node = bandNode;
-    bandNodes.push(bandNode);
+  // With the EQ off, the tab plays straight into the analyser, so the level still reads.
+  bandNodes = [];
+  chainNodes = [analyserNode];
+  if (config.enabled) {
+    bandNodes = listActiveBands().map((band) => makeBiquad(audioContext, band));
+    chainNodes = [preampNode, ...bandNodes, analyserNode];
   }
-
-  node.connect(analyserNode);
-  analyserNode.connect(audioContext.destination);
-  chainNodes = [preampNode, ...bandNodes, analyserNode];
+  const path = [sourceNode, ...chainNodes, audioContext.destination];
+  for (let index = 1; index < path.length; index += 1) path[index - 1].connect(path[index]);
 }
 
 // Only a change here needs new nodes. A new frequency, gain or Q moves the nodes that exist.
@@ -92,8 +80,7 @@ function readSpectrum(bins) {
   analyserNode.getFloatFrequencyData(bins);
   const hzPerBin = audioContext.sampleRate / analyserNode.fftSize;
   const points = [];
-  for (let index = 0; index < spectrumPoints; index += 1) {
-    const frequencyHz = 20 * 1000 ** (index / (spectrumPoints - 1));
+  for (const frequencyHz of spectrumHz) {
     const bin = Math.min(Math.round(frequencyHz / hzPerBin), bins.length - 1);
     points.push(Number.isFinite(bins[bin]) ? bins[bin] : -120);
   }
@@ -103,9 +90,7 @@ function readSpectrum(bins) {
 function sendTelemetry() {
   const levelDb = readLevelDb(new Float32Array(analyserNode.fftSize));
   const spectrumDb = readSpectrum(new Float32Array(analyserNode.frequencyBinCount));
-  chrome.runtime
-    .sendMessage({ type: "audio:telemetry", levelDb, spectrumDb })
-    .catch(() => {});
+  trySendMessage({ type: messageTypes.audioTelemetry, levelDb, spectrumDb });
 }
 
 async function start(streamId) {
@@ -132,20 +117,19 @@ async function stop() {
   return { ok: true };
 }
 
-chrome.runtime.onMessage.addListener((message, sender, respond) => {
-  if (!message || !message.type) return false;
-  if (message.type === "audio:start") {
-    start(message.streamId).then(respond, (error) => respond({ ok: false, error: error.message }));
-    return true;
-  }
-  if (message.type === "audio:stop") {
-    stop().then(respond, (error) => respond({ ok: false, error: error.message }));
-    return true;
-  }
-  if (message.type === "audio:config") {
+const handlers = new Map([
+  [messageTypes.audioStart, (message) => start(message.streamId)],
+  [messageTypes.audioStop, () => stop()],
+  [messageTypes.audioConfig, async (message) => {
     applyConfig(engineConfig(sanitizeConfig(message.config)));
-    respond({ ok: true });
-    return true;
-  }
-  return false;
+    return { ok: true };
+  }],
+]);
+
+// Every handler answers with a reply, or with the error that stopped it.
+chrome.runtime.onMessage.addListener((message, sender, respond) => {
+  const handle = message && handlers.get(message.type);
+  if (!handle) return false;
+  handle(message).then(respond, (error) => respond({ ok: false, error: error.message }));
+  return true;
 });
