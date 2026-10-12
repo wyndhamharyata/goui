@@ -1,7 +1,10 @@
 // Draws the pictures in docs/images. Each one is written as an SVG and as a PNG, so the README shows
 // a PNG anywhere and a person can edit the SVG by hand.
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+
+// The pictures name the zip of the version in the manifest, so they match the latest release.
+const zipName = `goui-${JSON.parse(readFileSync("manifest.json", "utf8")).version}.zip`;
 
 const palette = {
   bg: "#0e1013",
@@ -200,7 +203,7 @@ function pictureDownload(x, y, width) {
   parts.push(rect({ x: x + 92, y: y + 37, width: 56, height: 18, radius: 9, fill: palette.panel, stroke: palette.line }));
   parts.push(text({ x: x + 120, y: y + 50, content: "Latest", size: 9, fill: palette.good, anchor: "middle" }));
   parts.push(rect({ x: x + 12, y: y + 62, width: width - 24, height: 34, radius: 8, fill: palette.panel, stroke: palette.line }));
-  parts.push(text({ x: x + 22, y: y + 83, content: "goui-0.1.0.zip", size: 10, font: monoFont }));
+  parts.push(text({ x: x + 22, y: y + 83, content: zipName, size: 10, font: monoFont }));
   parts.push(circle({ cx: x + width - 30, cy: y + 79, r: 12, fill: palette.accent }));
   parts.push(downloadGlyph(x + width - 36, y + 73, 12));
   parts.push(cursor(x + width - 34, y + 94));
@@ -338,7 +341,7 @@ function makeDownload() {
   const height = 330;
   const parts = [
     text({ x: 32, y: 44, content: "Step 1. Download the zip", size: 19, weight: 700, font: headFont }),
-    text({ x: 32, y: 68, content: "Open the Releases page on GitHub. Press goui-0.1.0.zip under the newest release.", size: 13, fill: palette.muted }),
+    text({ x: 32, y: 68, content: `Open the Releases page on GitHub. Press ${zipName} under the newest release.`, size: 13, fill: palette.muted }),
     text({ x: 32, y: 88, content: "Unzip the file after the download. Double clicking it is enough.", size: 13, fill: palette.muted }),
   ];
   parts.push(rect({ x: 32, y: 108, width: 398, height: 150, radius: 12, fill: palette.panel, stroke: palette.line }));
@@ -347,7 +350,7 @@ function makeDownload() {
   parts.push(rect({ x: 140, y: 152, width: 62, height: 20, radius: 10, fill: palette.panel2, stroke: palette.line }));
   parts.push(text({ x: 171, y: 166, content: "Latest", size: 10, fill: palette.good, anchor: "middle" }));
   parts.push(rect({ x: 48, y: 184, width: 366, height: 40, radius: 8, fill: palette.panel2, stroke: palette.line }));
-  parts.push(text({ x: 64, y: 209, content: "goui-0.1.0.zip", size: 12, font: monoFont }));
+  parts.push(text({ x: 64, y: 209, content: zipName, size: 12, font: monoFont }));
   parts.push(rect({ x: 312, y: 192, width: 88, height: 24, radius: 6, fill: palette.accent }));
   parts.push(text({ x: 356, y: 208, content: "Download", size: 11, weight: 700, fill: "#ffffff", anchor: "middle" }));
   parts.push(cursor(392, 218));

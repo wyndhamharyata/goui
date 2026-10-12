@@ -30,8 +30,8 @@ a zip, unzip it, then point Chrome at the folder.
 ![The Releases page, with the zip and a Download button.](docs/images/install-download.png)
 
 Open the [Releases page](https://github.com/wyndhamharyata/goui/releases/latest). Under the newest
-release, press the file named **goui-0.1.1.zip**. Unzip it after the download. Double clicking the
-file is enough.
+release, press the zip file whose name starts with **goui-**. The numbers after it are the version.
+Unzip it after the download. Double clicking the file is enough.
 
 Keep the unzipped folder where it is. Chrome reads it from there on every start, so a move or a
 delete turns goui off.
@@ -195,6 +195,10 @@ SVG and as a PNG. Edit the SVG by hand, or edit the script and run `npm run imag
 The release zip is built by `scripts/make-extension-zip.mjs`. It holds the `manifest.json`, the
 `src` folder, the `icons` folder, the licence and the notices, all inside one `goui` folder. A person
 who unzips it gets a folder to point Chrome at.
+
+To cut a release, raise `version` in `manifest.json`, then run `npm run images` and `npm run zip`.
+Commit and push, then attach `dist/goui-<version>.zip` to a new release named after the version.
+Past releases stay as they are, and GitHub marks the newest one as Latest.
 
 The tests open the panel as a normal tab. They fire the icon's own click event in the service
 worker, since Playwright cannot press the toolbar icon. A launch flag lets that click capture.
