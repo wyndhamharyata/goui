@@ -135,10 +135,18 @@ test("given a headphone search, the chosen profile boosts the tone and exports a
 
   try {
     // Stand in for the AutoEQ repository.
+    const profilePath = "/fake/rig/Fixture%20Phone%20(ANC%20On)/Fixture%20Phone%20(ANC%20On)%20ParametricEQ.txt";
     await context.route("https://raw.githubusercontent.com/**", (route) => {
-      const isIndex = route.request().url().endsWith("INDEX.md");
-      const body = readFileSync(join(here, "fixtures", isIndex ? "autoeq-index.md" : "fixture-phone.txt"));
-      route.fulfill({ contentType: "text/plain", body });
+      const url = route.request().url();
+      if (url.endsWith("INDEX.md")) {
+        route.fulfill({ contentType: "text/plain", body: readFileSync(join(here, "fixtures", "autoeq-index.md")) });
+        return;
+      }
+      if (url.endsWith(profilePath)) {
+        route.fulfill({ contentType: "text/plain", body: readFileSync(join(here, "fixtures", "fixture-phone.txt")) });
+        return;
+      }
+      route.fulfill({ status: 404, body: "404: Not Found" });
     });
 
     const tone = await context.newPage();

@@ -561,7 +561,8 @@ let autoEqItems = null;
 function parseAutoEqIndex(text) {
   const items = [];
   for (const line of text.split("\n")) {
-    const match = line.match(/^- \[(.+?)\]\(\.\/(.+?)\)/);
+    // The path can hold brackets of its own, such as "(ANC Off)", so it runs to the last ") by ".
+    const match = line.match(/^- \[(.+?)\]\(\.\/(.+)\) by /);
     if (match) items.push({ name: match[1], path: match[2] });
   }
   return items;
@@ -594,9 +595,9 @@ function renderSearchResults(items) {
 async function applySearchResult(item) {
   importHint.textContent = `Loading ${item.name}...`;
   const file = encodeURIComponent(`${item.name} ParametricEQ.txt`);
-  const response = await fetch(`${autoEqBase}${item.path}/${file}`);
-  if (!response.ok) {
-    importHint.textContent = "That profile did not load.";
+  const response = await fetch(`${autoEqBase}${item.path}/${file}`).catch(() => null);
+  if (!response || !response.ok) {
+    importHint.textContent = `${item.name} did not load. Check the network and try again.`;
     return;
   }
   autoEqText.value = await response.text();
