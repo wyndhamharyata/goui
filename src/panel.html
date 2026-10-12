@@ -33,13 +33,13 @@
       <div class="panes">
         <section class="pane" data-pane="listen">
           <h4 class="column-title">Listen</h4>
-          <div class="card">
-            <small class="caption">Your sound</small>
-            <b id="profileName" class="profile">Flat</b>
-            <input type="search" id="listenSearch" placeholder="Search your headphones, for example HD 600" />
-            <div class="results" id="listenResults"></div>
-            <p class="hint" id="listenHint"></p>
-          </div>
+          <button class="card sound" id="soundCard" title="Open the Library to pick another sound">
+            <span class="grow">
+              <small class="caption" id="profileKind">Starter sound</small>
+              <b id="profileName" class="profile">Flat</b>
+            </span>
+            <span class="change">Change</span>
+          </button>
           <div class="card"><div class="graph" id="listenGraph"></div></div>
           <div class="card" id="macros">
             <label class="macro">
@@ -82,10 +82,11 @@
               <span><i class="swatch" style="background: rgba(91, 140, 255, 0.3)"></i>Live sound</span>
               <span><i class="swatch" style="background: rgba(255, 122, 144, 0.5)"></i>Louder</span>
               <span><i class="swatch" style="background: rgba(79, 163, 255, 0.5)"></i>Quieter</span>
+              <span><i class="swatch" style="background: rgba(176, 107, 255, 0.35)"></i>Selected band</span>
               <span><i class="swatch" style="height: 0; border-top: 2px dashed #b06bff"></i>Band width (Q)</span>
               <span><i class="swatch round" style="background: #b06bff"></i>Peak</span>
               <span><i class="swatch round" style="background: #2ec4b6"></i>Shelf</span>
-              <span><i class="swatch round" style="background: #ff9f43"></i>Pass and notch</span>
+              <span><i class="swatch round" style="background: #ff9f43"></i>Cut and notch</span>
             </div>
           </div>
           <div class="chips" id="chips"></div>
@@ -98,20 +99,28 @@
                 <button id="bandSolo" class="small" title="Hear this band alone">Solo</button>
                 <button id="bandDelete" class="small" title="Delete this band">Delete</button>
               </div>
-              <select id="bandType"></select>
+              <div class="segments" id="bandSegments">
+                <button data-type="PK">Peak</button>
+                <button data-type="LSC">Low shelf</button>
+                <button data-type="HSC">High shelf</button>
+                <button data-type="HP">Low cut</button>
+                <button data-type="LP">High cut</button>
+                <button id="moreTypes" class="more" title="More band types">More</button>
+              </div>
+              <select id="bandType" hidden></select>
               <div class="stepper">
                 <button data-step="frequency" data-direction="-1" title="One semitone lower">-</button>
-                <label><input type="number" id="frequencyInput" min="20" max="20000" step="1" /><small>Hz</small></label>
+                <label><input type="text" inputmode="decimal" id="frequencyInput" /><small>frequency, Hz</small></label>
                 <button data-step="frequency" data-direction="1" title="One semitone higher">+</button>
               </div>
               <div class="stepper">
                 <button data-step="gain" data-direction="-1" title="0.5 dB lower">-</button>
-                <label><input type="number" id="gainInput" min="-20" max="20" step="0.1" /><small>dB</small></label>
+                <label><input type="text" inputmode="decimal" id="gainInput" /><small>gain, dB</small></label>
                 <button data-step="gain" data-direction="1" title="0.5 dB higher">+</button>
               </div>
               <div class="stepper">
                 <button data-step="q" data-direction="-1" title="Wider band">-</button>
-                <label><input type="number" id="qInput" min="0.1" max="18" step="0.01" /><small id="qHint">Q</small></label>
+                <label><input type="text" inputmode="decimal" id="qInput" /><small id="qHint">Q</small></label>
                 <button data-step="q" data-direction="1" title="Narrower band">+</button>
               </div>
             </div>
@@ -125,22 +134,30 @@
         <section class="pane" data-pane="library">
           <h4 class="column-title">Library</h4>
           <div class="card">
-            <input type="search" id="librarySearch" placeholder="Search your sounds and the AutoEQ headphones" />
+            <input type="search" id="librarySearch" placeholder="Search your headphones, for example HD 600" />
             <div class="results" id="libraryResults"></div>
             <p class="hint" id="librarySearchHint"></p>
-          </div>
-          <div class="card">
-            <div class="row">
+            <div class="library-actions" id="libraryActions">
+              <button data-action="save" title="Keep the sound you hear under a name">Save</button>
+              <button data-action="import" title="Load a ParametricEQ.txt or a JSON file">Import</button>
+              <button data-action="paste" title="Paste AutoEQ text or JSON">Paste</button>
+              <button data-action="export" title="Copy the sound you hear as AutoEQ text or JSON">Export</button>
+            </div>
+            <div class="row" id="saveRow" hidden>
               <input type="text" id="saveName" placeholder="Name for the sound you hear" />
-              <button id="saveButton">Save</button>
+              <button id="saveButton" class="on">Save</button>
             </div>
-            <textarea id="libraryText" spellcheck="false" placeholder="Paste AutoEQ text or JSON here"></textarea>
-            <input type="file" id="importFile" accept=".txt,.json,text/plain,application/json" />
-            <div class="row">
-              <button id="applyText" class="grow">Apply</button>
-              <button id="exportAutoEq" class="quiet grow" title="Write the sound you hear as AutoEQ text">AutoEQ text</button>
-              <button id="exportJson" class="quiet grow" title="Write the sound you hear as JSON">JSON</button>
+            <div class="drawer" id="textDrawer" hidden>
+              <textarea id="libraryText" spellcheck="false" placeholder="Paste AutoEQ text or JSON here"></textarea>
+              <div class="row" id="pasteActions">
+                <button id="applyText" class="on grow">Apply</button>
+              </div>
+              <div class="row" id="exportActions">
+                <button id="exportAutoEq" class="grow">AutoEQ text</button>
+                <button id="exportJson" class="grow">JSON</button>
+              </div>
             </div>
+            <input type="file" id="importFile" accept=".txt,.json,text/plain,application/json" hidden />
             <p class="hint" id="libraryHint"></p>
           </div>
         </section>

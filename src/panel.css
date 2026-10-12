@@ -272,8 +272,27 @@ textarea {
 }
 
 /* Listen */
+.sound {
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+}
+
+.sound .caption {
+  display: block;
+}
+
 .profile {
-  font-size: 15px;
+  font-size: 14px;
+}
+
+.change {
+  flex: none;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel-2);
 }
 
 .results h4 {
@@ -464,21 +483,54 @@ textarea {
 
 .stepper label {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  padding: 3px 0;
 }
 
 .stepper input {
+  padding: 0;
   text-align: center;
   border: none;
   background: none;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
 
 .stepper small {
-  flex: none;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 9px;
+}
+
+.segments {
+  display: flex;
+  gap: 3px;
+}
+
+.segments button {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 0;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.segments .more {
+  flex: none;
+  padding: 5px 6px;
+}
+
+/* Library */
+.library-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .band-table {

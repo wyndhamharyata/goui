@@ -6,8 +6,8 @@ export const typeLabels = {
   HSC: "High shelf",
   LSF: "Low shelf (slope)",
   HSF: "High shelf (slope)",
-  LP: "Low pass",
-  HP: "High pass",
+  LP: "High cut",
+  HP: "Low cut",
   BP: "Band pass",
   NO: "Notch",
   AP: "All pass",
@@ -44,6 +44,7 @@ export function defaultConfig() {
     autoPreamp: true,
     limiter: false,
     profileName: "Flat",
+    profileKind: "Starter sound",
     macros: { bassDb: 0, vocalsDb: 0, trebleDb: 0 },
     bands: [],
   };
@@ -74,6 +75,7 @@ export function sanitizeConfig(raw) {
     autoPreamp: raw.autoPreamp !== false,
     limiter: !!raw.limiter,
     profileName: typeof raw.profileName === "string" ? raw.profileName : "Custom",
+    profileKind: typeof raw.profileKind === "string" ? raw.profileKind : "Your sound",
     macros: { bassDb: macroDb(macros.bassDb), vocalsDb: macroDb(macros.vocalsDb), trebleDb: macroDb(macros.trebleDb) },
     bands: Array.isArray(raw.bands) ? raw.bands.map(cleanBand) : [],
   };

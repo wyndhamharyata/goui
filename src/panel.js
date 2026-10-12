@@ -48,6 +48,10 @@ let solo = -1;
 let isBypassed = false;
 let saveTimer = 0;
 let autoEqItems = null;
+let isMoreOpen = false;
+let openAction = "";
+
+const commonTypes = ["PK", "LSC", "HSC", "HP", "LP"];
 
 // What the panel draws is what the engine plays, with the A/B button and Solo applied.
 function curveBands() {
@@ -113,6 +117,7 @@ function setField(id, value) {
 function renderSound() {
   const engine = engineConfig(config, offlineContext);
   byId("profileName").textContent = config.profileName;
+  byId("profileKind").textContent = config.profileKind;
   byId("enabled").checked = config.enabled;
 
   for (const name of ["bass", "vocals", "treble"]) {
@@ -171,12 +176,18 @@ function renderInspector() {
   title.textContent = `${selected + 1}. ${typeLabels[band.type]}`;
   title.style.color = typeColor[band.type];
   setField("bandType", band.type);
+  const isCommon = commonTypes.includes(band.type);
+  byId("bandType").hidden = isCommon && !isMoreOpen;
+  byId("moreTypes").classList.toggle("on", !byId("bandType").hidden);
+  for (const button of byId("bandSegments").querySelectorAll("[data-type]")) {
+    button.classList.toggle("on", button.dataset.type === band.type);
+  }
   byId("bandOn").textContent = band.on ? "On" : "Off";
   byId("bandOn").classList.toggle("on", band.on);
   byId("bandSolo").classList.toggle("on", solo === selected);
 
   setField("frequencyInput", Math.round(band.frequencyHz));
-  setField("gainInput", band.gainDb.toFixed(1));
+  setField("gainInput", signedDb(band.gainDb));
   setField("qInput", band.q.toFixed(2));
   byId("gainInput").disabled = !hasGain(band.type);
   byId("qHint").textContent = qHint(band);
@@ -224,8 +235,9 @@ function markCurrent() {
   }
 }
 
-function applyProfile(name, bands, preampDb) {
+function applyProfile(name, kind, bands, preampDb) {
   config.profileName = name;
+  config.profileKind = kind;
   config.bands = sanitizeConfig({ bands }).bands;
   if (preampDb !== undefined) config.preampDb = preampDb;
   selected = -1;
@@ -236,7 +248,7 @@ function applyProfile(name, bands, preampDb) {
 
 // A saved sound keeps everything, the sliders and the preamp too. Only the EQ switch stays as it is.
 function loadPreset(name) {
-  config = { ...sanitizeConfig(presets[name]), enabled: config.enabled, profileName: name };
+  config = { ...sanitizeConfig(presets[name]), enabled: config.enabled, profileName: name, profileKind: "Saved" };
   selected = -1;
   solo = -1;
   commit();
@@ -246,7 +258,7 @@ function loadPreset(name) {
 function deletePreset(name) {
   delete presets[name];
   chrome.storage.local.set({ presets });
-  searchBoth();
+  searchLibrary();
 }
 
 function savePreset() {
@@ -256,10 +268,13 @@ function savePreset() {
     return;
   }
   config.profileName = name;
+  config.profileKind = "Saved";
   presets[name] = structuredClone(config);
   chrome.storage.local.set({ presets });
   commit();
-  searchBoth();
+  searchLibrary();
+  openLibraryAction("");
+  byId("saveName").value = "";
   byId("libraryHint").textContent = `Saved ${name}.`;
 }
 
@@ -292,11 +307,22 @@ async function loadHeadphone(item, hint) {
   const response = await fetch(`${autoEqBase}${item.path}/${file}`).catch(() => null);
   if (!response || !response.ok) {
     hint.textContent = `${item.name} did not load. Check the network and try again.`;
-    return;
+    return false;
   }
   const parsed = parseAutoEq(await response.text());
-  applyProfile(item.name, parsed.bands, parsed.preampDb);
-  hint.textContent = `Loaded ${item.name}.`;
+  applyProfile(item.name, "AutoEQ headphones", parsed.bands, parsed.preampDb);
+  hint.textContent = "";
+  return true;
+}
+
+// A pick from a typed search is the end of that search. The box empties and Listen shows the sound.
+async function pickFromSearch(load) {
+  const isLoaded = await load();
+  const box = byId("librarySearch");
+  if (isLoaded === false || !box.value.trim()) return;
+  box.value = "";
+  searchLibrary();
+  showTab("listen");
 }
 
 function bandCount(bands) {
@@ -340,37 +366,32 @@ async function findHeadphones(text, hint) {
   return (items || []).filter((item) => item.name.toLowerCase().includes(text)).slice(0, 20);
 }
 
-// Listen shows results only once you type. Library also lists your sounds when the box is empty.
-async function search(list, hint, query, isLibrary) {
-  const text = query.trim().toLowerCase();
+// An empty box lists your saved sounds and the starter sounds. Typing also searches the headphones.
+async function searchLibrary() {
+  const list = byId("libraryResults");
+  const hint = byId("librarySearchHint");
+  const text = byId("librarySearch").value.trim().toLowerCase();
   list.dataset.query = text;
-  if (!isLibrary && !text) {
-    list.replaceChildren();
-    hint.textContent = "";
-    return;
-  }
+  hint.textContent = "";
   const headphones = text.length >= 2 ? await findHeadphones(text, hint) : [];
   if (list.dataset.query !== text) return;
 
   const matches = (name) => name.toLowerCase().includes(text);
-  const saved = Object.keys(presets).filter(matches).map((name) => {
-    const onRemove = isLibrary ? () => deletePreset(name) : null;
-    return resultItem(name, bandCount(presets[name].bands), () => loadPreset(name), onRemove);
-  });
-  const starters = starterSounds.filter((sound) => matches(sound.name));
+  const saved = Object.keys(presets).filter(matches).map((name) =>
+    resultItem(name, bandCount(presets[name].bands), () => pickFromSearch(() => loadPreset(name)), () => deletePreset(name)));
+  const headphoneItems = headphones.map((item) =>
+    resultItem(item.name, "AutoEQ", () => pickFromSearch(() => loadHeadphone(item, hint))));
+  const starterItems = starterSounds.filter((sound) => matches(sound.name)).map((sound) =>
+    resultItem(sound.name, bandCount(sound.bands), () => pickFromSearch(() => applyProfile(sound.name, "Starter sound", sound.bands))));
+
   list.replaceChildren();
   appendSection(list, "Saved", saved);
-  appendSection(list, "AutoEQ headphones", headphones.map((item) => resultItem(item.name, "AutoEQ", () => loadHeadphone(item, hint))));
-  appendSection(list, "Starter sounds", starters.map((sound) => resultItem(sound.name, bandCount(sound.bands), () => applyProfile(sound.name, sound.bands))));
+  appendSection(list, "AutoEQ headphones", headphoneItems);
+  appendSection(list, "Starter sounds", starterItems);
   if (list.children.length === 0) hint.textContent = "No sound by that name.";
 }
 
-function searchBoth() {
-  search(byId("listenResults"), byId("listenHint"), byId("listenSearch").value, false);
-  search(byId("libraryResults"), byId("librarySearchHint"), byId("librarySearch").value, true);
-}
-
-function applyText(name) {
+function applyText(name, kind) {
   const text = byId("libraryText").value.trim();
   const hint = byId("libraryHint");
   if (text.startsWith("{")) {
@@ -390,7 +411,7 @@ function applyText(name) {
     hint.textContent = "No AutoEQ filters found in that text.";
     return;
   }
-  applyProfile(name, parsed.bands, parsed.preampDb);
+  applyProfile(name, kind, parsed.bands, parsed.preampDb);
   hint.textContent = `Applied ${parsed.bands.length} bands.`;
 }
 
@@ -400,6 +421,24 @@ function exportAutoEq() {
   const bands = engine.bands.filter((band) => !hasGain(band.type) || band.gainDb !== 0);
   byId("libraryText").value = toAutoEq({ preampDb: engine.preampDb, bands });
   byId("libraryHint").textContent = "The sound you hear, as AutoEQ text. Copy it out.";
+}
+
+// Each Library button opens its own row under the list. A second press closes it.
+function openLibraryAction(action) {
+  openAction = openAction === action ? "" : action;
+  byId("saveRow").hidden = openAction !== "save";
+  byId("textDrawer").hidden = openAction !== "paste" && openAction !== "export";
+  byId("pasteActions").hidden = openAction !== "paste";
+  byId("exportActions").hidden = openAction !== "export";
+  for (const button of byId("libraryActions").children) button.classList.toggle("on", button.dataset.action === openAction);
+  byId("libraryHint").textContent = "";
+
+  if (openAction === "save") byId("saveName").focus();
+  if (openAction === "export") exportAutoEq();
+  if (openAction === "paste") {
+    byId("libraryText").value = "";
+    byId("libraryText").focus();
+  }
 }
 
 function applyCaptureState(state) {
@@ -451,6 +490,11 @@ const fieldEdits = {
     band.q = clamp(value || 1, 0.1, 18);
   },
 };
+
+byId("soundCard").addEventListener("click", () => {
+  showTab("library");
+  byId("librarySearch").focus();
+});
 
 byId("tabs").addEventListener("click", (event) => {
   const button = event.target.closest("[data-tab]");
@@ -527,7 +571,19 @@ byId("inspector").addEventListener("click", (event) => {
 byId("inspector").addEventListener("input", (event) => {
   const edit = fieldEdits[event.target.id];
   if (!edit) return;
-  edit(config.bands[selected], Number(event.target.value));
+  edit(config.bands[selected], Number(event.target.value.replace(",", ".")));
+  commit();
+});
+
+byId("bandSegments").addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (!button) return;
+  if (button.id === "moreTypes") {
+    isMoreOpen = !isMoreOpen;
+    renderInspector();
+    return;
+  }
+  config.bands[selected].type = button.dataset.type;
   commit();
 });
 
@@ -553,19 +609,21 @@ byId("bandDelete").addEventListener("click", () => {
   commit();
 });
 
-for (const [inputId, listId, hintId, isLibrary] of [
-  ["listenSearch", "listenResults", "listenHint", false],
-  ["librarySearch", "libraryResults", "librarySearchHint", true],
-]) {
-  let timer = 0;
-  byId(inputId).addEventListener("input", (event) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => search(byId(listId), byId(hintId), event.target.value, isLibrary), 150);
-  });
-}
+let searchTimer = 0;
+byId("librarySearch").addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(searchLibrary, 150);
+});
+
+byId("libraryActions").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+  if (button.dataset.action === "import") byId("importFile").click();
+  else openLibraryAction(button.dataset.action);
+});
 
 byId("saveButton").addEventListener("click", savePreset);
-byId("applyText").addEventListener("click", () => applyText("Pasted AutoEQ"));
+byId("applyText").addEventListener("click", () => applyText("Pasted AutoEQ", "Pasted"));
 byId("exportAutoEq").addEventListener("click", exportAutoEq);
 byId("exportJson").addEventListener("click", () => {
   byId("libraryText").value = JSON.stringify(config, null, 2);
@@ -577,7 +635,7 @@ byId("importFile").addEventListener("change", async (event) => {
   if (!file) return;
   byId("libraryText").value = await file.text();
   const dot = file.name.lastIndexOf(".");
-  applyText(dot > 0 ? file.name.slice(0, dot) : file.name);
+  applyText(dot > 0 ? file.name.slice(0, dot) : file.name, "From a file");
 });
 
 chrome.runtime.onMessage.addListener((message) => {
@@ -597,7 +655,7 @@ async function hydrate() {
   renderPills();
   sendAudio();
   refresh();
-  searchBoth();
+  searchLibrary();
 
   const session = await chrome.storage.session.get("capture");
   applyCaptureState(session.capture);

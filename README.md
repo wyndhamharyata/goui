@@ -22,7 +22,7 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 
 **Listen**
 
-- Type your headphone model in the search box and pick it from the list.
+- The card at the top shows the sound you use. Press it to open the Library and pick another.
 - Bass, Vocals and Treble nudge the sound. They stay when you pick another profile.
 - The preamp follows the largest boost, so the sound never clips. Move the slider to set it by hand.
   Press **Auto** to give it back.
@@ -37,10 +37,12 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 
 **Library**
 
-- Search your saved sounds, the AutoEQ headphones and a few starter sounds.
+- Type your headphone model to search the AutoEQ headphones. A pick clears the search and takes you
+  back to Listen.
+- With the box empty, the list shows your saved sounds and a few starter sounds.
 - **Save** keeps the sound you hear under a name, sliders and preamp included.
-- Paste AutoEQ text or JSON into the box and press **Apply**, or choose a file.
-- **AutoEQ text** and **JSON** write the sound you hear into the box, for use in other apps.
+- **Import** loads a `ParametricEQ.txt` or JSON file. **Paste** takes the same text.
+- **Export** writes the sound you hear as AutoEQ text or JSON, for use in other apps.
 
 On a panel 900 px or wider, the three tabs show side by side.
 

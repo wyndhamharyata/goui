@@ -83,6 +83,7 @@ journey("given auto preamp off, an AutoEQ peak at 1 kHz plays a 1 kHz tone 6 dB 
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
   await panel.click("#tabs [data-tab=library]");
+  await panel.click("#libraryActions [data-action=paste]");
   await panel.fill("#libraryText", peakText);
   await panel.click("#applyText");
 
@@ -110,6 +111,7 @@ journey("given auto preamp on, a 6 dB peak keeps the tone level, and a manual 0 
   const flat = await steadyLevel(panel);
 
   await panel.click("#tabs [data-tab=library]");
+  await panel.click("#libraryActions [data-action=paste]");
   await panel.fill("#libraryText", peakText);
   await panel.click("#applyText");
   const withAutoPreamp = await steadyLevel(panel);
@@ -129,8 +131,10 @@ journey("given a saved sound, loading it from the library brings the boost back"
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
   await panel.click("#tabs [data-tab=library]");
+  await panel.click("#libraryActions [data-action=paste]");
   await panel.fill("#libraryText", peakText);
   await panel.click("#applyText");
+  await panel.click("#libraryActions [data-action=save]");
   await panel.fill("#saveName", "voice");
   await panel.click("#saveButton");
 
@@ -147,7 +151,7 @@ journey("given a saved sound, loading it from the library brings the boost back"
   expect(peaked - flat).toBeLessThan(6.6);
 });
 
-journey("given a headphone search on Listen, the chosen profile boosts the tone and exports as AutoEQ text", async (context, port) => {
+journey("given a headphone search from the sound card, the pick boosts the tone, clears the search and exports", async (context, port) => {
   // Stand in for the AutoEQ repository.
   const profilePath = "/fake/rig/Fixture%20Phone%20(ANC%20On)/Fixture%20Phone%20(ANC%20On)%20ParametricEQ.txt";
   await context.route("https://raw.githubusercontent.com/**", (route) => {
@@ -167,16 +171,20 @@ journey("given a headphone search on Listen, the chosen profile boosts the tone 
   await panel.click("#autoPreamp");
   const flat = await steadyLevel(panel);
 
-  await panel.fill("#listenSearch", "fixture");
-  await panel.locator("#listenResults .item", { hasText: "Fixture Phone" }).click();
+  await panel.click("#soundCard");
+  await panel.fill("#librarySearch", "fixture");
+  await panel.locator("#libraryResults .item", { hasText: "Fixture Phone" }).click();
+  await expect(panel.locator("#profileName")).toBeVisible();
   await expect(panel.locator("#profileName")).toHaveText("Fixture Phone (ANC On)");
+  await expect(panel.locator("#profileKind")).toHaveText("AutoEQ headphones");
+  await expect(panel.locator("#librarySearch")).toHaveValue("");
 
   const peaked = await steadyLevel(panel);
   expect(peaked - flat).toBeGreaterThan(5.4);
   expect(peaked - flat).toBeLessThan(6.6);
 
   await panel.click("#tabs [data-tab=library]");
-  await panel.click("#exportAutoEq");
+  await panel.click("#libraryActions [data-action=export]");
   await expect(panel.locator("#libraryText")).toHaveValue(/Preamp: 0.0 dB/);
   await expect(panel.locator("#libraryText")).toHaveValue(/Filter 1: ON PK Fc 1000 Hz Gain 6.0 dB/);
 });
