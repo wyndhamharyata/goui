@@ -7,73 +7,144 @@
     <link rel="stylesheet" href="panel.css" />
   </head>
   <body>
-    <div class="app">
-      <header>
-        <span class="brand">goui</span>
-        <div class="head-right">
-          <button id="viewToggle" class="view" title="Rotate the graph between horizontal and vertical">↔</button>
-          <label class="switch">
+    <div class="app" id="app" data-showing="listen">
+      <header class="head">
+        <div class="row">
+          <span class="brand">goui</span>
+          <button id="compare" class="hold" title="Hold to hear the sound without the EQ">A/B</button>
+          <label class="switch" title="Turn the EQ on or off">
             <input type="checkbox" id="enabled" />
             <span class="track"></span>
-            <span class="label">EQ</span>
           </label>
+        </div>
+        <div class="row">
+          <button id="capture" class="small">Start</button>
+          <span id="status" class="source">No audio</span>
+          <span class="meter" id="meter"><i id="clip" class="dot"></i><span id="level">--</span> dB</span>
         </div>
       </header>
 
-      <div class="stage">
-        <canvas id="curve"></canvas>
-        <div class="readout"><span id="level">--</span><span class="unit">dB</span></div>
+      <nav class="tabs" id="tabs">
+        <button data-tab="listen">Listen</button>
+        <button data-tab="tune">Tune</button>
+        <button data-tab="library">Library</button>
+      </nav>
+
+      <div class="panes">
+        <section class="pane" data-pane="listen">
+          <h4 class="column-title">Listen</h4>
+          <div class="card">
+            <small class="caption">Your sound</small>
+            <b id="profileName" class="profile">Flat</b>
+            <input type="search" id="listenSearch" placeholder="Search your headphones, for example HD 600" />
+            <div class="results" id="listenResults"></div>
+            <p class="hint" id="listenHint"></p>
+          </div>
+          <div class="card"><div class="graph" id="listenGraph"></div></div>
+          <div class="card" id="macros">
+            <label class="macro">
+              <span>Bass<small>Below 120 Hz</small></span>
+              <input type="range" id="bass" min="-6" max="6" step="0.5" value="0" />
+              <output id="bassValue">0.0 dB</output>
+            </label>
+            <label class="macro">
+              <span>Vocals<small>Around 2.5 kHz</small></span>
+              <input type="range" id="vocals" min="-6" max="6" step="0.5" value="0" />
+              <output id="vocalsValue">0.0 dB</output>
+            </label>
+            <label class="macro">
+              <span>Treble<small>Above 8 kHz</small></span>
+              <input type="range" id="treble" min="-6" max="6" step="0.5" value="0" />
+              <output id="trebleValue">0.0 dB</output>
+            </label>
+            <div class="macro preamp">
+              <span>Preamp<small id="preampNote">Auto</small></span>
+              <input type="range" id="preamp" min="-24" max="12" step="0.1" value="0" />
+              <output id="preampValue">0.0 dB</output>
+              <button id="autoPreamp" class="small" title="Set the preamp from the largest boost, so the sound never clips">Auto</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="pane" data-pane="tune">
+          <h4 class="column-title">Tune</h4>
+          <div class="pills" id="zoom">
+            <button data-zoom="all">All</button>
+            <button data-zoom="lows">Lows</button>
+            <button data-zoom="mids">Mids</button>
+            <button data-zoom="highs">Highs</button>
+            <button id="tall" title="Turn the graph so frequency runs down the panel">Tall</button>
+          </div>
+          <div class="card">
+            <div class="graph" id="tuneGraph"></div>
+            <div class="legend">
+              <span><i class="swatch" style="height: 2px; background: #5b8cff"></i>EQ curve</span>
+              <span><i class="swatch" style="background: rgba(91, 140, 255, 0.3)"></i>Live sound</span>
+              <span><i class="swatch" style="background: rgba(255, 122, 144, 0.5)"></i>Louder</span>
+              <span><i class="swatch" style="background: rgba(79, 163, 255, 0.5)"></i>Quieter</span>
+              <span><i class="swatch" style="height: 0; border-top: 2px dashed #b06bff"></i>Band width (Q)</span>
+              <span><i class="swatch round" style="background: #b06bff"></i>Peak</span>
+              <span><i class="swatch round" style="background: #2ec4b6"></i>Shelf</span>
+              <span><i class="swatch round" style="background: #ff9f43"></i>Pass and notch</span>
+            </div>
+          </div>
+          <div class="chips" id="chips"></div>
+          <div class="card" id="inspector">
+            <p class="hint" id="inspectorEmpty">Tap a point or a chip to tune that band. Double click the graph to make a new band.</p>
+            <div id="inspectorBody" hidden>
+              <div class="row">
+                <b id="bandTitle" class="grow"></b>
+                <button id="bandOn" class="small">On</button>
+                <button id="bandSolo" class="small" title="Hear this band alone">Solo</button>
+                <button id="bandDelete" class="small" title="Delete this band">Delete</button>
+              </div>
+              <select id="bandType"></select>
+              <div class="stepper">
+                <button data-step="frequency" data-direction="-1" title="One semitone lower">-</button>
+                <label><input type="number" id="frequencyInput" min="20" max="20000" step="1" /><small>Hz</small></label>
+                <button data-step="frequency" data-direction="1" title="One semitone higher">+</button>
+              </div>
+              <div class="stepper">
+                <button data-step="gain" data-direction="-1" title="0.5 dB lower">-</button>
+                <label><input type="number" id="gainInput" min="-20" max="20" step="0.1" /><small>dB</small></label>
+                <button data-step="gain" data-direction="1" title="0.5 dB higher">+</button>
+              </div>
+              <div class="stepper">
+                <button data-step="q" data-direction="-1" title="Wider band">-</button>
+                <label><input type="number" id="qInput" min="0.1" max="18" step="0.01" /><small id="qHint">Q</small></label>
+                <button data-step="q" data-direction="1" title="Narrower band">+</button>
+              </div>
+            </div>
+          </div>
+          <details class="card">
+            <summary>Number table</summary>
+            <table class="band-table" id="table"></table>
+          </details>
+        </section>
+
+        <section class="pane" data-pane="library">
+          <h4 class="column-title">Library</h4>
+          <div class="card">
+            <input type="search" id="librarySearch" placeholder="Search your sounds and the AutoEQ headphones" />
+            <div class="results" id="libraryResults"></div>
+            <p class="hint" id="librarySearchHint"></p>
+          </div>
+          <div class="card">
+            <div class="row">
+              <input type="text" id="saveName" placeholder="Name for the sound you hear" />
+              <button id="saveButton">Save</button>
+            </div>
+            <textarea id="libraryText" spellcheck="false" placeholder="Paste AutoEQ text or JSON here"></textarea>
+            <input type="file" id="importFile" accept=".txt,.json,text/plain,application/json" />
+            <div class="row">
+              <button id="applyText" class="grow">Apply</button>
+              <button id="exportAutoEq" class="quiet grow" title="Write the sound you hear as AutoEQ text">AutoEQ text</button>
+              <button id="exportJson" class="quiet grow" title="Write the sound you hear as JSON">JSON</button>
+            </div>
+            <p class="hint" id="libraryHint"></p>
+          </div>
+        </section>
       </div>
-
-      <div class="capture">
-        <button id="capture">Start capture</button>
-        <span id="status">No audio</span>
-      </div>
-
-      <div class="preamp">
-        <span class="caption">Preamp</span>
-        <input type="range" id="preamp" min="-24" max="12" step="0.1" value="0" />
-        <span id="preampValue">0.0</span>
-        <span class="unit">dB</span>
-      </div>
-
-      <div class="bands" id="bands"></div>
-
-      <div class="actions">
-        <button id="addBand">Add band</button>
-        <button id="bypass" class="quiet" title="Hold to hear the audio without the EQ">Bypass</button>
-        <button id="importToggle" class="quiet">AutoEQ</button>
-        <button id="presetToggle" class="quiet">Presets</button>
-      </div>
-
-      <section class="panel" id="importPanel" hidden>
-        <textarea id="autoEqText" spellcheck="false" placeholder="Preamp: -6.2 dB&#10;Filter 1: ON PK Fc 105 Hz Gain -3.1 dB Q 0.70"></textarea>
-        <div class="row">
-          <input type="file" id="autoEqFile" accept=".txt,text/plain" />
-          <button id="exportAutoEq" class="quiet">Export current</button>
-          <button id="applyAutoEq">Apply</button>
-        </div>
-        <div class="row">
-          <input type="text" id="searchText" placeholder="Search a headphone model" />
-          <button id="searchButton" class="quiet">Search</button>
-        </div>
-        <div class="preset-list" id="searchResults"></div>
-        <div class="hint" id="importHint"></div>
-      </section>
-
-      <section class="panel" id="presetPanel" hidden>
-        <div class="row">
-          <input type="text" id="presetName" placeholder="Preset name" />
-          <button id="presetSave">Save</button>
-        </div>
-        <div class="preset-list" id="presetList"></div>
-        <textarea id="presetJson" spellcheck="false" placeholder="Preset JSON"></textarea>
-        <div class="row">
-          <button id="presetExport" class="quiet">Current to JSON</button>
-          <button id="presetImport" class="quiet">JSON to current</button>
-        </div>
-        <div class="hint" id="presetHint"></div>
-      </section>
     </div>
 
     <script type="module" src="panel.js"></script>

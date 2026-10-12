@@ -10,7 +10,7 @@
       document.getElementById("play").addEventListener("click", () => {
         const context = new AudioContext();
         const tone = context.createOscillator();
-        tone.frequency.value = 1000;
+        tone.frequency.value = Number(new URLSearchParams(location.search).get("hz")) || 1000;
         const level = context.createGain();
         level.gain.value = 0.1;
         tone.connect(level).connect(context.destination);

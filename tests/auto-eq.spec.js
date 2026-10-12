@@ -8,6 +8,7 @@ import { join } from "node:path";
 const here = import.meta.dirname;
 const extensionDir = join(here, "..");
 const manifest = JSON.parse(readFileSync(join(extensionDir, "manifest.json"), "utf8"));
+const peakText = "Preamp: 0 dB\nFilter 1: ON PK Fc 1000 Hz Gain 6.0 dB Q 1.0";
 
 // Chrome derives the id from the public key in the manifest, so the test knows it before launch.
 function extensionIdFromKey(key) {
@@ -27,6 +28,7 @@ async function openBrowser() {
   const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), "goui-")), {
     channel: "chromium",
     headless: true,
+    viewport: { width: 400, height: 900 },
     ignoreDefaultArgs: ["--mute-audio"],
     args: [
       `--disable-extensions-except=${extensionDir}`,
@@ -37,6 +39,32 @@ async function openBrowser() {
     ],
   });
   return { context, server, port: server.address().port };
+}
+
+function journey(name, run) {
+  test(name, async () => {
+    test.setTimeout(60_000);
+    const { context, server, port } = await openBrowser();
+    try {
+      await run(context, port);
+    } finally {
+      await context.close();
+      server.close();
+    }
+  });
+}
+
+async function openPanel(context, port, toneHz) {
+  const tone = await context.newPage();
+  await tone.goto(`http://localhost:${port}/?hz=${toneHz}`);
+  await tone.click("#play");
+  expect(await tone.title()).toBe("playing running");
+
+  const panel = await context.newPage();
+  await panel.goto(`chrome-extension://${extensionId}/src/panel.html`);
+  await panel.click("#capture");
+  await expect(panel.locator("#status")).not.toHaveText("No audio");
+  return panel;
 }
 
 async function steadyLevel(page) {
@@ -51,130 +79,122 @@ async function steadyLevel(page) {
   throw new Error("The level did not settle.");
 }
 
-test("given an AutoEQ file with a 1 kHz peak, a 1 kHz tone plays 6 dB louder", async () => {
-  test.setTimeout(60_000);
-  const { context, server, port } = await openBrowser();
+journey("given auto preamp off, an AutoEQ peak at 1 kHz plays a 1 kHz tone 6 dB louder in both views", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  await panel.click("#autoPreamp");
+  await panel.click("#tabs [data-tab=library]");
+  await panel.fill("#libraryText", peakText);
+  await panel.click("#applyText");
 
-  try {
-    const tone = await context.newPage();
-    await tone.goto(`http://localhost:${port}/`);
-    await tone.click("#play");
-    expect(await tone.title()).toBe("playing running");
+  await panel.click("#tabs [data-tab=tune]");
+  await panel.click("#chips [data-index='0']");
+  const withPeak = await steadyLevel(panel);
+  await panel.fill("#gainInput", "0");
+  const withoutPeak = await steadyLevel(panel);
 
-    const panel = await context.newPage();
-    await panel.goto(`chrome-extension://${extensionId}/src/panel.html`);
-    await panel.click("#capture");
-    await expect(panel.locator("#status")).not.toHaveText("No audio");
+  expect(withPeak - withoutPeak).toBeGreaterThan(5.4);
+  expect(withPeak - withoutPeak).toBeLessThan(6.6);
 
-    await panel.click("#importToggle");
-    await panel.fill("#autoEqText", "Preamp: 0 dB\nFilter 1: ON PK Fc 1000 Hz Gain 6.0 dB Q 1.0");
-    await panel.click("#applyAutoEq");
-    await expect(panel.locator(".band").first()).toContainText("Peak");
+  await panel.click("#tall");
+  await panel.fill("#gainInput", "6");
+  const withPeakTall = await steadyLevel(panel);
+  await panel.click("#bandOn");
+  const withoutPeakTall = await steadyLevel(panel);
 
-    const withPeak = await steadyLevel(panel);
-    await panel.locator(".band input[type=number]").nth(1).fill("0");
-    const withoutPeak = await steadyLevel(panel);
-
-    expect(withPeak - withoutPeak).toBeGreaterThan(5.4);
-    expect(withPeak - withoutPeak).toBeLessThan(6.6);
-
-    // The same journey in the rotated view. The audio path must not change with the view.
-    await panel.click("#viewToggle");
-    await panel.locator(".band input[type=number]").nth(1).fill("6");
-    const withPeakVertical = await steadyLevel(panel);
-    await panel.locator(".band .on").first().uncheck();
-    const withoutPeakVertical = await steadyLevel(panel);
-
-    expect(withPeakVertical - withoutPeakVertical).toBeGreaterThan(5.4);
-    expect(withPeakVertical - withoutPeakVertical).toBeLessThan(6.6);
-  } finally {
-    await context.close();
-    server.close();
-  }
+  expect(withPeakTall - withoutPeakTall).toBeGreaterThan(5.4);
+  expect(withPeakTall - withoutPeakTall).toBeLessThan(6.6);
 });
 
-test("given a saved preset, loading it brings the boost back", async () => {
-  test.setTimeout(60_000);
-  const { context, server, port } = await openBrowser();
+journey("given auto preamp on, a 6 dB peak keeps the tone level, and a manual 0 dB preamp lets it through", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  const flat = await steadyLevel(panel);
 
-  try {
-    const tone = await context.newPage();
-    await tone.goto(`http://localhost:${port}/`);
-    await tone.click("#play");
+  await panel.click("#tabs [data-tab=library]");
+  await panel.fill("#libraryText", peakText);
+  await panel.click("#applyText");
+  const withAutoPreamp = await steadyLevel(panel);
+  expect(Math.abs(withAutoPreamp - flat)).toBeLessThan(0.6);
 
-    const panel = await context.newPage();
-    await panel.goto(`chrome-extension://${extensionId}/src/panel.html`);
-    await panel.click("#capture");
-    await expect(panel.locator("#status")).not.toHaveText("No audio");
-
-    await panel.click("#importToggle");
-    await panel.fill("#autoEqText", "Filter 1: ON PK Fc 1000 Hz Gain 6.0 dB Q 1.0");
-    await panel.click("#applyAutoEq");
-
-    await panel.click("#presetToggle");
-    await panel.fill("#presetName", "voice");
-    await panel.click("#presetSave");
-
-    await panel.locator(".band .on").first().uncheck();
-    const flat = await steadyLevel(panel);
-
-    await panel.locator(".chip-item button", { hasText: "voice" }).click();
-    const peaked = await steadyLevel(panel);
-
-    expect(peaked - flat).toBeGreaterThan(5.4);
-    expect(peaked - flat).toBeLessThan(6.6);
-  } finally {
-    await context.close();
-    server.close();
-  }
+  await panel.click("#tabs [data-tab=listen]");
+  await panel.locator("#preamp").evaluate((slider) => {
+    slider.value = "0";
+    slider.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  const withManualPreamp = await steadyLevel(panel);
+  expect(withManualPreamp - flat).toBeGreaterThan(5.4);
+  expect(withManualPreamp - flat).toBeLessThan(6.6);
 });
 
-test("given a headphone search, the chosen profile boosts the tone and exports as AutoEQ text", async () => {
-  test.setTimeout(60_000);
-  const { context, server, port } = await openBrowser();
+journey("given a saved sound, loading it from the library brings the boost back", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  await panel.click("#autoPreamp");
+  await panel.click("#tabs [data-tab=library]");
+  await panel.fill("#libraryText", peakText);
+  await panel.click("#applyText");
+  await panel.fill("#saveName", "voice");
+  await panel.click("#saveButton");
 
-  try {
-    // Stand in for the AutoEQ repository.
-    const profilePath = "/fake/rig/Fixture%20Phone%20(ANC%20On)/Fixture%20Phone%20(ANC%20On)%20ParametricEQ.txt";
-    await context.route("https://raw.githubusercontent.com/**", (route) => {
-      const url = route.request().url();
-      if (url.endsWith("INDEX.md")) {
-        route.fulfill({ contentType: "text/plain", body: readFileSync(join(here, "fixtures", "autoeq-index.md")) });
-        return;
-      }
-      if (url.endsWith(profilePath)) {
-        route.fulfill({ contentType: "text/plain", body: readFileSync(join(here, "fixtures", "fixture-phone.txt")) });
-        return;
-      }
-      route.fulfill({ status: 404, body: "404: Not Found" });
-    });
+  await panel.click("#tabs [data-tab=tune]");
+  await panel.click("#chips [data-index='0']");
+  await panel.fill("#gainInput", "0");
+  const flat = await steadyLevel(panel);
 
-    const tone = await context.newPage();
-    await tone.goto(`http://localhost:${port}/`);
-    await tone.click("#play");
+  await panel.click("#tabs [data-tab=library]");
+  await panel.locator("#libraryResults .item", { hasText: "voice" }).click();
+  const peaked = await steadyLevel(panel);
 
-    const panel = await context.newPage();
-    await panel.goto(`chrome-extension://${extensionId}/src/panel.html`);
-    await panel.click("#capture");
-    await expect(panel.locator("#status")).not.toHaveText("No audio");
+  expect(peaked - flat).toBeGreaterThan(5.4);
+  expect(peaked - flat).toBeLessThan(6.6);
+});
 
-    const flat = await steadyLevel(panel);
+journey("given a headphone search on Listen, the chosen profile boosts the tone and exports as AutoEQ text", async (context, port) => {
+  // Stand in for the AutoEQ repository.
+  const profilePath = "/fake/rig/Fixture%20Phone%20(ANC%20On)/Fixture%20Phone%20(ANC%20On)%20ParametricEQ.txt";
+  await context.route("https://raw.githubusercontent.com/**", (route) => {
+    const url = route.request().url();
+    if (url.endsWith("INDEX.md")) {
+      route.fulfill({ contentType: "text/plain", body: readFileSync(join(here, "fixtures", "autoeq-index.md")) });
+      return;
+    }
+    if (url.endsWith(profilePath)) {
+      route.fulfill({ contentType: "text/plain", body: readFileSync(join(here, "fixtures", "fixture-phone.txt")) });
+      return;
+    }
+    route.fulfill({ status: 404, body: "404: Not Found" });
+  });
 
-    await panel.click("#importToggle");
-    await panel.fill("#searchText", "fixture");
-    await panel.click("#searchButton");
-    await panel.locator("#searchResults button").first().click();
-    await expect(panel.locator(".band").first()).toContainText("Peak");
+  const panel = await openPanel(context, port, 1000);
+  await panel.click("#autoPreamp");
+  const flat = await steadyLevel(panel);
 
-    const peaked = await steadyLevel(panel);
-    expect(peaked - flat).toBeGreaterThan(5.4);
-    expect(peaked - flat).toBeLessThan(6.6);
+  await panel.fill("#listenSearch", "fixture");
+  await panel.locator("#listenResults .item", { hasText: "Fixture Phone" }).click();
+  await expect(panel.locator("#profileName")).toHaveText("Fixture Phone (ANC On)");
 
-    await panel.click("#exportAutoEq");
-    await expect(panel.locator("#autoEqText")).toHaveValue(/Preamp: 0.0 dB/);
-    await expect(panel.locator("#autoEqText")).toHaveValue(/Filter 1: ON PK Fc 1000 Hz Gain 6.0 dB/);
-  } finally {
-    await context.close();
-    server.close();
-  }
+  const peaked = await steadyLevel(panel);
+  expect(peaked - flat).toBeGreaterThan(5.4);
+  expect(peaked - flat).toBeLessThan(6.6);
+
+  await panel.click("#tabs [data-tab=library]");
+  await panel.click("#exportAutoEq");
+  await expect(panel.locator("#libraryText")).toHaveValue(/Preamp: 0.0 dB/);
+  await expect(panel.locator("#libraryText")).toHaveValue(/Filter 1: ON PK Fc 1000 Hz Gain 6.0 dB/);
+});
+
+journey("given Vocals at +6 dB, a 2.5 kHz tone plays 6 dB louder and stays so on a new sound", async (context, port) => {
+  const panel = await openPanel(context, port, 2500);
+  await panel.click("#autoPreamp");
+  const flat = await steadyLevel(panel);
+
+  await panel.locator("#vocals").focus();
+  for (let press = 0; press < 12; press += 1) await panel.keyboard.press("ArrowRight");
+  const boosted = await steadyLevel(panel);
+  expect(boosted - flat).toBeGreaterThan(5.4);
+  expect(boosted - flat).toBeLessThan(6.6);
+
+  await panel.click("#tabs [data-tab=library]");
+  await panel.locator("#libraryResults .item", { hasText: "Warm" }).click();
+  const afterSwitch = await steadyLevel(panel);
+  expect(afterSwitch - flat).toBeGreaterThan(5.4);
+  expect(afterSwitch - flat).toBeLessThan(6.6);
 });

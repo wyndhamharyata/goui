@@ -38,7 +38,15 @@ export function clamp(value, low, high) {
 }
 
 export function defaultConfig() {
-  return { enabled: true, preampDb: 0, limiter: false, bands: [] };
+  return {
+    enabled: true,
+    preampDb: 0,
+    autoPreamp: true,
+    limiter: false,
+    profileName: "Flat",
+    macros: { bassDb: 0, vocalsDb: 0, trebleDb: 0 },
+    bands: [],
+  };
 }
 
 export function newBand(frequencyHz) {
@@ -58,12 +66,68 @@ function cleanBand(raw) {
 // Used on a stored config and on an imported preset, so a bad file cannot reach the audio chain.
 export function sanitizeConfig(raw) {
   if (!raw || typeof raw !== "object") return defaultConfig();
+  const macros = raw.macros || {};
+  const macroDb = (value) => clamp(Number(value) || 0, -6, 6);
   return {
     enabled: raw.enabled !== false,
     preampDb: clamp(Number(raw.preampDb) || 0, -24, 12),
+    autoPreamp: raw.autoPreamp !== false,
     limiter: !!raw.limiter,
+    profileName: typeof raw.profileName === "string" ? raw.profileName : "Custom",
+    macros: { bassDb: macroDb(macros.bassDb), vocalsDb: macroDb(macros.vocalsDb), trebleDb: macroDb(macros.trebleDb) },
     bands: Array.isArray(raw.bands) ? raw.bands.map(cleanBand) : [],
   };
+}
+
+// The three Listen sliders, as bands on top of the profile. They stay in the chain at 0 dB, so a
+// slider move never rebuilds the audio nodes.
+export function macroBands(macros) {
+  return [
+    { on: true, type: "LSC", frequencyHz: 105, gainDb: macros.bassDb, q: 0.71 },
+    { on: true, type: "PK", frequencyHz: 2500, gainDb: macros.vocalsDb, q: 0.9 },
+    { on: true, type: "HSC", frequencyHz: 8000, gainDb: macros.trebleDb, q: 0.71 },
+  ];
+}
+
+// The Web Audio low and high pass read Q in dB. AutoEQ writes a plain Q, as the other types do.
+export function biquadQ(band) {
+  const readsDb = band.type === "LP" || band.type === "HP";
+  return readsDb ? 20 * Math.log10(band.q) : band.q;
+}
+
+export function makeBiquad(context, band) {
+  const filter = context.createBiquadFilter();
+  filter.type = audioNodeType[band.type];
+  filter.frequency.value = band.frequencyHz;
+  filter.Q.value = biquadQ(band);
+  if (hasGain(band.type)) filter.gain.value = band.gainDb;
+  return filter;
+}
+
+// The panel draws with the same nodes the engine plays, so the curve matches the sound.
+export function responseDb(context, bands, frequencies) {
+  const totals = new Float32Array(frequencies.length);
+  const magnitudes = new Float32Array(frequencies.length);
+  const phases = new Float32Array(frequencies.length);
+  for (const band of bands) {
+    if (!band.on) continue;
+    makeBiquad(context, band).getFrequencyResponse(frequencies, magnitudes, phases);
+    for (let index = 0; index < totals.length; index += 1) totals[index] += 20 * Math.log10(magnitudes[index]);
+  }
+  return totals;
+}
+
+const sweepHz = Float32Array.from({ length: 121 }, (_, index) => 20 * 1000 ** (index / 120));
+
+export function maxBoostDb(context, bands) {
+  return Math.max(0, ...responseDb(context, bands, sweepHz));
+}
+
+// What the audio chain plays: the profile, the sliders on top, and the preamp the panel shows.
+export function engineConfig(config, context) {
+  const bands = [...config.bands, ...macroBands(config.macros)];
+  const preampDb = config.autoPreamp ? 0 - maxBoostDb(context, bands) : config.preampDb;
+  return { enabled: config.enabled, limiter: config.limiter, preampDb, bands };
 }
 
 const autoEqLine =

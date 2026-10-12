@@ -1,4 +1,4 @@
-import { audioNodeType, bandTypes, hasGain } from "./shared/filters.js";
+import { bandTypes, biquadQ, engineConfig, hasGain, makeBiquad, sanitizeConfig } from "./shared/filters.js";
 
 let audioContext;
 let mediaStream;
@@ -11,6 +11,7 @@ let telemetryTimer;
 let config = { enabled: true, preampDb: 0, limiter: false, bands: [] };
 
 const spectrumPoints = 128;
+const offlineContext = new OfflineAudioContext(1, 1, 48_000);
 
 function gainFromDb(gainDb) {
   return 10 ** (gainDb / 20);
@@ -44,11 +45,7 @@ function buildChain() {
   node = preampNode;
 
   for (const band of activeBands()) {
-    const filter = audioContext.createBiquadFilter();
-    filter.type = audioNodeType[band.type];
-    filter.frequency.value = band.frequencyHz;
-    filter.Q.value = band.q;
-    if (hasGain(band.type)) filter.gain.value = band.gainDb;
+    const filter = makeBiquad(audioContext, band);
     node.connect(filter);
     node = filter;
     filterNodes.push(filter);
@@ -81,7 +78,7 @@ function updateFilters() {
   activeBands().forEach((band, index) => {
     const filter = filterNodes[index];
     filter.frequency.setTargetAtTime(band.frequencyHz, now, rampSeconds);
-    filter.Q.setTargetAtTime(band.q, now, rampSeconds);
+    filter.Q.setTargetAtTime(biquadQ(band), now, rampSeconds);
     if (hasGain(band.type)) filter.gain.setTargetAtTime(band.gainDb, now, rampSeconds);
   });
 }
@@ -159,7 +156,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
     return true;
   }
   if (message.type === "audio:config") {
-    applyConfig(message.config);
+    applyConfig(engineConfig(sanitizeConfig(message.config), offlineContext));
     respond({ ok: true, bands: config.bands.length });
     return true;
   }
