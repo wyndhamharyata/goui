@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>goui, how to use it</title>
+    <link rel="icon" href="../icons/icon128.png" />
+    <link rel="stylesheet" href="intro.css" />
+  </head>
+  <body>
+    <main class="doc">
+      <header class="intro-head">
+        <img src="../icons/icon128.png" alt="" width="64" height="64" />
+        <div>
+          <h1>goui</h1>
+          <p class="pitch">
+            A parametric EQ for the audio of a browser tab. Start from an AutoEQ profile for your
+            headphone. Then tune the sound to your own ear.
+          </p>
+        </div>
+      </header>
+
+      <section>
+        <h2>What it is for</h2>
+        <ul>
+          <li>
+            goui runs the audio of one browser tab through an equalizer. You then hear that tab
+            through your own headphones.
+          </li>
+          <li>
+            The first step is an AutoEQ profile for your headphone. That profile makes the headphone
+            sound neutral.
+          </li>
+          <li>
+            The second step is your own ear. An eqbyear test measures what your ear still wants. goui
+            keeps that correction apart from the headphone profile. You can then hear each one alone.
+          </li>
+          <li>
+            goui changes the sound inside the browser. It cannot change other apps. For the whole
+            computer, use a tool such as SoundSource.
+          </li>
+          <li>
+            Your presets stay on this computer. The only download is the AutoEQ headphone list from
+            GitHub.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Step by step</h2>
+        <ol>
+          <li>
+            <b>Pin goui.</b> Click the Extensions icon in the toolbar. It looks like a puzzle piece.
+            Press the pin beside goui. The goui icon then stays in the toolbar.
+          </li>
+          <li><b>Open a tab that plays audio.</b> Music, a video, a radio stream.</li>
+          <li>
+            <b>Click the goui icon on that tab.</b> The side panel opens. goui starts hearing that
+            tab. The icon shows a green ON badge.
+          </li>
+          <li>
+            <b>Pick your headphone.</b> In the Library, under 1 Headphone, type your model. Pick it
+            from the AutoEQ list. Press <b>Save</b> to keep it as your preset.
+          </li>
+          <li>
+            <b>Measure your ear.</b> This step is optional. Under 2 My ear, press
+            <b>Measure my ear with eqbyear</b>. Run the test in the tab that opens. Paste the result
+            back. Press <b>Save</b> to keep it.
+          </li>
+          <li>
+            <b>Fine-tune by hand.</b> In Tune, drag a point to move a band. In Listen, the three
+            sliders change the bass, the vocals and the treble.
+          </li>
+          <li>
+            <b>Turn goui off.</b> Click the goui icon on that tab again. Closing the tab also turns
+            goui off.
+          </li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Further reading</h2>
+        <ul>
+          <li>
+            <a href="https://github.com/jaakkopasanen/AutoEQ" target="_blank" rel="noreferrer">
+              AutoEQ</a
+            >, the project behind the headphone profiles.
+          </li>
+          <li>
+            <a href="https://eqbyear.com" target="_blank" rel="noreferrer">eqbyear</a>, the hearing
+            test for the My ear layer.
+          </li>
+          <li>
+            <a
+              href="https://en.wikipedia.org/wiki/Equalization_(audio)"
+              target="_blank"
+              rel="noreferrer"
+              >Equalization</a
+            >, the general idea behind every band in the graph.
+          </li>
+        </ul>
+      </section>
+
+      <button id="close" class="primary">Close this tab</button>
+    </main>
+    <script type="module" src="intro.js"></script>
+  </body>
+</html>

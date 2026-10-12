@@ -58,26 +58,36 @@ function isInsideRoundedSquare(x, y, size) {
   return distanceX * distanceX + distanceY * distanceY <= radius * radius;
 }
 
-const bars = [0.34, 0.6, 0.46, 0.74, 0.4];
+function isInsideRoundedRect(x, y, rect) {
+  const nearX = Math.min(Math.max(x, rect.left + rect.radius), rect.right - rect.radius);
+  const nearY = Math.min(Math.max(y, rect.top + rect.radius), rect.bottom - rect.radius);
+  const distanceX = x - nearX;
+  const distanceY = y - nearY;
+  return (distanceX * distanceX) + (distanceY * distanceY) <= rect.radius * rect.radius;
+}
 
+const bars = [0.4, 0.62, 0.48, 0.7];
+
+// The tile carries its own colour and the bars are white, so the icon reads on a light toolbar and
+// on a dark one. A dark tile would disappear on a dark toolbar.
 function sampleColor(x, y, size) {
   if (!isInsideRoundedSquare(x, y, size)) return [0, 0, 0, 0];
 
-  const background = mixColor([27, 34, 51], [14, 16, 20], y / size);
-  const barWidth = size * 0.098;
-  const barGap = size * 0.058;
-  const totalWidth = bars.length * barWidth + (bars.length - 1) * barGap;
+  const tile = mixColor([74, 122, 224], [143, 82, 216], y / size);
+  const barWidth = size * 0.13;
+  const barGap = size * 0.075;
+  const totalWidth = (bars.length * barWidth) + ((bars.length - 1) * barGap);
   const firstBarX = (size - totalWidth) / 2;
   const baseY = size * 0.76;
 
   for (let index = 0; index < bars.length; index += 1) {
-    const left = firstBarX + index * (barWidth + barGap);
-    const barTop = baseY - (bars[index] * size);
-    if (x >= left && x <= left + barWidth && y >= barTop && y <= baseY) {
-      return mixColor([91, 140, 255], [176, 107, 255], (y - barTop) / (baseY - barTop));
-    }
+    const left = firstBarX + (index * (barWidth + barGap));
+    const top = baseY - (bars[index] * size);
+    const bar = { left, top, right: left + barWidth, bottom: baseY, radius: barWidth / 2 };
+    if (isInsideRoundedRect(x, y, bar)) return [255, 255, 255, 255];
   }
-  return background;
+  // The tile keeps alpha 255. A three-value colour would write alpha 0 and the icon would be invisible.
+  return [...tile, 255];
 }
 
 function samplePixel(x, y, size) {

@@ -10,8 +10,13 @@ every band on the graph.
 1. Open `brave://extensions` or `chrome://extensions`.
 2. Turn on Developer mode.
 3. Choose Load unpacked and pick this folder.
-4. Click the toolbar icon on a page that plays audio. The side panel opens and the capture starts
-   for that page.
+4. Pin goui. Click the Extensions icon in the toolbar. It looks like a puzzle piece. Press the pin
+   beside goui.
+5. Open a page that plays audio and click the goui icon on it. The side panel opens and goui starts
+   hearing that page.
+
+A how-to page opens once, on the first install. The **?** button in the panel opens it again. It
+covers what goui is for, the steps above, and links to AutoEQ and eqbyear.
 
 The icon is the on and off switch. Chrome only lets an extension take a tab's audio after you click
 its icon on that tab, so the panel has no Start button.

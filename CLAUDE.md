@@ -122,8 +122,8 @@ If a line needs a comment to say what it does, rename it or split it.
 - Before you write a new file or helper, ask one question. If you deleted it and put its code back
   where it is used, would the code be harder to follow? If not, do not write it.
 - A small copy is better than a shared helper with one or two users.
-- Each Chrome context gets its own file: the side panel, the offscreen document and the service
-  worker. Code that two contexts both need goes in one shared file.
+- Each Chrome context gets its own file: the side panel, the offscreen document, the service worker
+  and the how-to page (`src/intro.html`). Code that two contexts both need goes in one shared file.
 
 ## 8. Tests are user journeys.
 

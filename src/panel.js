@@ -736,6 +736,8 @@ byId("tabs").addEventListener("click", (event) => {
   if (button) showTab(button.dataset.tab);
 });
 
+byId("help").addEventListener("click", () => chrome.tabs.create({ url: chrome.runtime.getURL("src/intro.html") }));
+
 byId("compare").addEventListener("pointerdown", () => setBypass(true));
 byId("compare").addEventListener("pointerup", () => setBypass(false));
 byId("compare").addEventListener("pointerleave", () => setBypass(false));

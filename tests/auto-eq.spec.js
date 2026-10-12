@@ -526,3 +526,17 @@ journey("given goui hears a 1 kHz tab, a click on the icon of a 5 kHz tab moves 
   await high.close();
   await expect(panel.locator("#status")).toContainText("Click the goui icon");
 });
+
+journey("given the panel, the help button opens the how-to page with the pin step and the reading links", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  const opened = context.waitForEvent("page");
+  await panel.click("#help");
+  const intro = await opened;
+  await intro.waitForLoadState();
+  expect(intro.url()).toContain("src/intro.html");
+  await expect(intro.locator("h1")).toHaveText("goui");
+  await expect(intro.locator("body")).toContainText("Pin goui");
+  await expect(intro.locator("body")).toContainText("Measure my ear with eqbyear");
+  await expect(intro.locator("a[href='https://github.com/jaakkopasanen/AutoEQ']")).toHaveCount(1);
+  await expect(intro.locator("a[href='https://eqbyear.com']")).toHaveCount(1);
+});

@@ -1,3 +1,9 @@
+// The how-to page opens once, on the first install. A later reload of the folder does not open it.
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason !== "install") return;
+  chrome.tabs.create({ url: chrome.runtime.getURL("src/intro.html") });
+});
+
 // Chrome keeps this setting from older builds. With it on, an icon click never reaches onClicked.
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => {});
 
