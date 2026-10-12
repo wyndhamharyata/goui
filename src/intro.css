@@ -19,19 +19,26 @@ body {
   font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* One content width for the header, the paragraphs, the diagram and every grid. */
 .doc {
-  max-width: 760px;
+  max-width: 880px;
   margin: 0 auto;
   padding: 32px 24px 48px;
 }
 
 .intro-head {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.intro-brand {
+  display: flex;
   align-items: center;
   gap: 14px;
 }
 
-.intro-head img {
+.intro-brand img {
   border-radius: 13px;
 }
 
@@ -49,8 +56,7 @@ h2 {
 }
 
 .pitch {
-  max-width: 600px;
-  margin: 2px 0 0;
+  margin: 0;
   color: var(--muted);
 }
 
@@ -60,17 +66,17 @@ h2 {
 
 .flow {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
 
 .flow-box {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  min-width: 96px;
+  min-width: 0;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -97,26 +103,27 @@ h2 {
 }
 
 .flow-arrow {
+  flex: none;
   color: var(--muted);
 }
 
 .lead {
-  max-width: 620px;
   margin: 14px 0 0;
 }
 
-
 .guide-steps.grid {
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
 }
 
-.guide-text {
-  margin: 0;
+/* A card left alone in the last row fills that row, so both edges stay straight. */
+.guide-steps.grid > .guide-step:last-child:nth-child(3n + 1),
+.links > a:last-child:nth-child(3n + 1) {
+  grid-column: 1 / -1;
 }
 
 .links {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
 
@@ -151,7 +158,25 @@ h2 {
   cursor: pointer;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 719px) {
+  .guide-steps.grid,
+  .links {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* With two columns the odd card of four is the one left alone. */
+  .guide-steps.grid > .guide-step:last-child:nth-child(3n + 1),
+  .links > a:last-child:nth-child(3n + 1) {
+    grid-column: auto;
+  }
+
+  .guide-steps.grid > .guide-step:last-child:nth-child(2n + 1),
+  .links > a:last-child:nth-child(2n + 1) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 559px) {
   .flow {
     flex-direction: column;
     align-items: stretch;
@@ -160,5 +185,15 @@ h2 {
   .flow-arrow {
     align-self: center;
     transform: rotate(90deg);
+  }
+
+  .guide-steps.grid,
+  .links {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-steps.grid > .guide-step:last-child,
+  .links > a:last-child {
+    grid-column: auto;
   }
 }

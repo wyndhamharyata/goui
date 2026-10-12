@@ -18,10 +18,12 @@
   counter-increment: step;
 }
 
+/* The text drops to the bottom of the card, so cards in a row read as one line. */
 .guide-text {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  margin-top: auto;
 }
 
 .guide-text::before {
