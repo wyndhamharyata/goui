@@ -86,8 +86,9 @@ const tuneGraph = makeGraph(byId("tuneGraph"), { height: 210, tallHeight: 440, i
 
 function sendAudio() {
   let value = config;
+  const isSoloing = !isBypassed && Boolean(config.bands[soloIndex]);
   if (isBypassed) value = { ...config, enabled: false };
-  if (!isBypassed && config.bands[soloIndex]) {
+  if (isSoloing) {
     const bands = config.bands.map((band, index) => ({ ...band, on: index === soloIndex }));
     value = { ...config, bands, sliders: { bassDb: 0, vocalsDb: 0, trebleDb: 0 } };
   }
@@ -97,8 +98,9 @@ function sendAudio() {
 // The sound follows every edit at once. Only the storage write waits for the edits to pause.
 function commit() {
   sendAudio();
+  const storageWaitMs = 120;
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => chrome.storage.local.set({ config }), 120);
+  saveTimer = setTimeout(() => chrome.storage.local.set({ config }), storageWaitMs);
   refresh();
 }
 
@@ -139,8 +141,10 @@ function renderSound() {
   byId("autoPreamp").classList.toggle("on", config.autoPreamp);
   byId("preampNote").textContent = config.autoPreamp ? "Auto" : "Manual";
 
+  // A rounding margin, so a boost that auto preamp offsets exactly never shows red.
+  const clipMarginDb = 0.05;
   const headroomDb = maxBoostDb(offlineContext, engine.bands) + engine.preampDb;
-  const isClipping = config.enabled && headroomDb > 0.05;
+  const isClipping = config.enabled && headroomDb > clipMarginDb;
   byId("clip").classList.toggle("red", isClipping);
   byId("meter").title = isClipping ? `The EQ can clip by ${headroomDb.toFixed(1)} dB. Turn the preamp down or press Auto.` : "Output level. No clipping.";
 }
@@ -339,9 +343,11 @@ async function loadHeadphone(item, hint) {
 
 // A pick from a typed search is the end of that search. The box empties and Listen shows the sound.
 async function pickFromSearch(load) {
-  const isLoaded = await load();
+  // Only a headphone download can fail. Its loader then returns false. The other loaders return nothing.
+  const isLoaded = (await load()) !== false;
   const box = byId("librarySearch");
-  if (isLoaded === false || !box.value.trim()) return;
+  const isTypedSearch = box.value.trim() !== "";
+  if (!isLoaded || !isTypedSearch) return;
   box.value = "";
   searchLibrary();
   showTab("listen");
@@ -485,8 +491,9 @@ function applyCaptureState(state) {
 function showTelemetry(message) {
   byId("level").textContent = message.levelDb <= -120 ? "--" : message.levelDb.toFixed(1);
   // Each reading is raw. Blending with the last frame keeps the spectrum calm to look at.
+  const newShare = 0.3;
   const previous = spectrumDb;
-  spectrumDb = message.spectrumDb.map((db, index) => (previous.length ? (0.7 * previous[index]) + (0.3 * db) : db));
+  spectrumDb = message.spectrumDb.map((db, index) => (previous.length ? ((1 - newShare) * previous[index]) + (newShare * db) : db));
   listenGraph.render();
   tuneGraph.render();
 }
@@ -654,8 +661,9 @@ byId("bandDelete").addEventListener("click", () => {
 
 let searchTimer = 0;
 byId("librarySearch").addEventListener("input", () => {
+  const typingPauseMs = 150;
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(searchLibrary, 150);
+  searchTimer = setTimeout(searchLibrary, typingPauseMs);
 });
 
 byId("libraryActions").addEventListener("click", (event) => {

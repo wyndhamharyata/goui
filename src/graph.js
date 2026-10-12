@@ -134,12 +134,14 @@ export function makeGraph(host, options, hooks) {
     let lastLabelAt = -Infinity;
     for (const frequencyHz of ticksHz) {
       const ratio = frequencyToRatio(frequencyHz);
-      if (ratio < -0.001 || ratio > 1.001) continue;
+      const isInView = ratio > -0.001 && ratio < 1.001;
+      if (!isInView) continue;
       const [low, high] = findGainAxisEnds(frequencyHz, size);
       const opacity = majorTicksHz.includes(frequencyHz) ? 0.13 : 0.05;
       parts.push(makeLine(low, high, `stroke="rgba(255,255,255,${opacity})"`));
       const labelAt = graph.vertical ? low.y : low.x;
-      if (labelAt - lastLabelAt < 26) continue;
+      const minLabelSpacingPx = 26;
+      if (labelAt - lastLabelAt < minLabelSpacingPx) continue;
       lastLabelAt = labelAt;
       const spot = graph.vertical ? { x: 4, y: low.y + 3 } : { x: low.x, y: size.height - 4 };
       parts.push(makeText(spot, formatHz(frequencyHz), `text-anchor="${graph.vertical ? "start" : "middle"}"`));
@@ -238,7 +240,8 @@ export function makeGraph(host, options, hooks) {
     const point = placePoint(band.frequencyHz, hasGain(band.type) ? band.gainDb : 0, size);
     const gain = hasGain(band.type) ? `${formatDb(band.gainDb)} dB  ` : "";
     const content = `${formatHz(band.frequencyHz)} Hz  ${gain}Q ${band.q.toFixed(2)}`;
-    const width = (content.length * 5.6) + 12;
+    const charWidthPx = 5.6;
+    const width = (content.length * charWidthPx) + 12;
     const x = clamp(point.x - (width / 2), 2, size.width - width - 2);
     const y = point.y > size.top + 30 ? point.y - 30 : point.y + 16;
     return `<rect x="${x}" y="${y}" width="${width}" height="16" rx="8" fill="#0e1013" stroke="${typeColor[band.type]}"/>`
@@ -252,7 +255,8 @@ export function makeGraph(host, options, hooks) {
     const [low, high] = findGainAxisEnds(reading.frequencyHz, size);
     const dot = placePoint(reading.frequencyHz, valueDb, size);
     const content = `${formatHz(reading.frequencyHz)} Hz  ${formatDb(valueDb)} dB`;
-    const width = (content.length * 5.6) + 10;
+    const charWidthPx = 5.6;
+    const width = (content.length * charWidthPx) + 10;
     const x = size.left + size.plotWidth - width;
     const y = size.top + (graph.vertical ? 2 : 16);
     return makeLine(low, high, `stroke="rgba(255,255,255,0.25)"`)
@@ -290,9 +294,11 @@ export function makeGraph(host, options, hooks) {
   }
 
   function findTarget(point) {
-    const isNear = (item, radius) => Math.hypot(item.x - point.x, item.y - point.y) < radius;
-    if (graph.handles.some((handle) => isNear(handle, 12))) return { kind: "width", index: hooks.selectedIndex() };
-    const node = [...graph.nodes].reverse().find((item) => isNear(item, 14));
+    const isNear = (item, radiusPx) => Math.hypot(item.x - point.x, item.y - point.y) < radiusPx;
+    const handleRadiusPx = 12;
+    const pointRadiusPx = 14;
+    if (graph.handles.some((handle) => isNear(handle, handleRadiusPx))) return { kind: "width", index: hooks.selectedIndex() };
+    const node = [...graph.nodes].reverse().find((item) => isNear(item, pointRadiusPx));
     return node ? { kind: "move", index: node.index } : null;
   }
 

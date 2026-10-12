@@ -31,7 +31,8 @@ async function startCaptureForTab(target) {
   const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: target.id });
   const reply = await chrome.runtime.sendMessage({ type: "audio:start", streamId });
 
-  if (!reply || !reply.ok) {
+  const isStarted = Boolean(reply && reply.ok);
+  if (!isStarted) {
     const state = { isCapturing: false, error: reply ? reply.error : "The audio did not start." };
     await publishCapture(state);
     return state;

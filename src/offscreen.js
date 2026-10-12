@@ -121,7 +121,8 @@ async function start(streamId) {
   audioContext = new AudioContext();
   sourceNode = audioContext.createMediaStreamSource(mediaStream);
   buildChain();
-  telemetryTimer = setInterval(sendTelemetry, 50);
+  const telemetryIntervalMs = 50;
+  telemetryTimer = setInterval(sendTelemetry, telemetryIntervalMs);
   return { ok: true };
 }
 
