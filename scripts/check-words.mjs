@@ -2,6 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { tokenize } from "espree";
 
+/** @typedef {{ text: string, kind: string, line: number }} Piece */
+
 const bannedWords = new Set([
   "absent", "adds", "bail", "bailed", "bailing", "bails", "clearing", "critically", "freeze",
   "freezes", "frozen", "gap", "gaps", "gate", "gated", "gates", "gating", "guard", "guarded",
@@ -30,10 +32,19 @@ const causalWords = new Set(["because", "hence", "therefore"]);
 const skippedFolders = new Set([".git", "node_modules", "playwright-report", "test-results"]);
 const skippedFiles = new Set(["package-lock.json", join("scripts", "check-words.mjs")]);
 
+/**
+ * @param {string} source
+ * @param {string} kind
+ * @returns {Piece[]}
+ */
 function splitLines(source, kind) {
   return source.split("\n").map((text, index) => ({ text, kind, line: index + 1 }));
 }
 
+/**
+ * @param {string} source
+ * @returns {Piece[]}
+ */
 function readScript(source) {
   const tokens = tokenize(source, {
     ecmaVersion: "latest",
@@ -94,6 +105,10 @@ function findProblems(text, kind) {
   return problems.concat(findPunctuationProblems(text, kind));
 }
 
+/**
+ * @param {string} folder
+ * @returns {string[]}
+ */
 function listFiles(folder) {
   return readdirSync(folder, { withFileTypes: true }).flatMap((entry) => {
     const path = join(folder, entry.name);

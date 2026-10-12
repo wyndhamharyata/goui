@@ -1,3 +1,42 @@
+/** @typedef {"PK" | "LSC" | "HSC" | "LSF" | "HSF" | "LP" | "HP" | "BP" | "NO" | "AP"} BandType */
+
+/** @typedef {"headphone" | "ear"} LayerRole */
+
+/**
+ * @typedef {object} Band
+ * @property {boolean} on
+ * @property {BandType} type
+ * @property {number} frequencyHz
+ * @property {number} gainDb
+ * @property {number} q
+ */
+
+/**
+ * @typedef {object} Layer
+ * @property {boolean} on
+ * @property {string} source
+ * @property {string} name
+ * @property {boolean} isEdited
+ * @property {Band[]} bands
+ */
+
+/** @typedef {{ bassDb: number, vocalsDb: number, trebleDb: number }} Sliders */
+
+/**
+ * @typedef {object} Config
+ * @property {boolean} enabled
+ * @property {number} preampDb
+ * @property {boolean} autoPreamp
+ * @property {Sliders} sliders
+ * @property {{ headphone: Layer, ear?: Layer }} layers
+ */
+
+/** @typedef {{ enabled: boolean, preampDb: number, bands: Band[] }} EngineConfig */
+
+/** @typedef {{ role: LayerRole, bands: Band[] }} LayerBands */
+
+/** @typedef {{ preampDb: number, bands: Band[] }} AutoEqFile */
+
 export const bandTypes = ["PK", "LSC", "HSC", "LSF", "HSF", "LP", "HP", "BP", "NO", "AP"];
 
 export const typeLabels = {
@@ -29,6 +68,10 @@ export const audioNodeType = {
 
 const typesWithGain = new Set(["PK", "LSC", "HSC", "LSF", "HSF"]);
 
+/**
+ * @param {BandType} type
+ * @returns {boolean}
+ */
 export function hasGain(type) {
   return typesWithGain.has(type);
 }
@@ -40,10 +83,20 @@ export const frequencyRangeHz = [20, 20_000];
 export const gainRangeDb = [-20, 20];
 
 // Gains move in steps of 0.1 dB, the step an AutoEQ file and the gain field show.
+/**
+ * @param {number} gainDb
+ * @returns {number}
+ */
 export function roundGainDb(gainDb) {
   return Math.round(gainDb * 10) / 10;
 }
 
+/**
+ * @param {number} value
+ * @param {number} low
+ * @param {number} high
+ * @returns {number}
+ */
 export function clamp(value, low, high) {
   return Math.min(Math.max(value, low), high);
 }
@@ -51,12 +104,19 @@ export function clamp(value, low, high) {
 export const layerOrder = ["headphone", "ear"];
 export const layerLabels = { headphone: "Headphone", ear: "My ear" };
 
+/**
+ * @param {string} name
+ * @param {string} source
+ * @param {Band[]} [bands]
+ * @returns {Layer}
+ */
 export function makeLayer(name, source, bands = []) {
   return { on: true, source, name, isEdited: false, bands };
 }
 
 export const flatSliders = { bassDb: 0, vocalsDb: 0, trebleDb: 0 };
 
+/** @returns {Config} */
 export function defaultConfig() {
   return {
     enabled: true,
@@ -67,11 +127,19 @@ export function defaultConfig() {
   };
 }
 
+/**
+ * @param {number} frequencyHz
+ * @returns {Band}
+ */
 export function newBand(frequencyHz) {
   return { on: true, type: "PK", frequencyHz: frequencyHz || 1000, gainDb: 0, q: 1 };
 }
 
 // A layer's bands, cleaned one by one, so a bad file cannot reach the audio chain.
+/**
+ * @param {unknown} raw
+ * @returns {Band[]}
+ */
 export function cleanBands(raw) {
   const bands = Array.isArray(raw) ? raw : [];
   return bands.filter((band) => band && typeof band === "object").map((band) => ({
@@ -83,6 +151,11 @@ export function cleanBands(raw) {
   }));
 }
 
+/**
+ * @param {unknown} raw
+ * @param {string} fallbackName
+ * @returns {Layer}
+ */
 function cleanLayer(raw, fallbackName) {
   return {
     on: !raw || raw.on !== false,
@@ -94,9 +167,17 @@ function cleanLayer(raw, fallbackName) {
 }
 
 // Used on a stored config and on an imported saved sound, so a bad file cannot reach the audio chain.
+/**
+ * @param {unknown} raw
+ * @returns {Config}
+ */
 export function sanitizeConfig(raw) {
   if (!raw || typeof raw !== "object") return defaultConfig();
   const sliders = raw.sliders || raw.macros || {};
+  /**
+   * @param {unknown} value
+   * @returns {number}
+   */
   const sliderDb = (value) => clamp(Number(value) || 0, -6, 6);
 
   // A config stored before the layers holds one flat list. That list becomes the headphone layer.
@@ -124,6 +205,10 @@ export function sanitizeConfig(raw) {
 }
 
 // Every layer that is on, in a fixed order. The engine plays these, and the panel draws them.
+/**
+ * @param {Config} config
+ * @returns {LayerBands[]}
+ */
 export function listOnLayers(config) {
   return layerOrder
     .filter((role) => config.layers[role] && config.layers[role].on)
@@ -141,11 +226,20 @@ function sliderBands(sliders) {
 }
 
 // The Web Audio low and high pass read Q in dB. AutoEQ writes a plain Q, as the other types do.
+/**
+ * @param {Band} band
+ * @returns {number}
+ */
 export function biquadQ(band) {
   const readsDb = band.type === "LP" || band.type === "HP";
   return readsDb ? 20 * Math.log10(band.q) : band.q;
 }
 
+/**
+ * @param {BaseAudioContext} context
+ * @param {Band} band
+ * @returns {BiquadFilterNode}
+ */
 export function makeBiquad(context, band) {
   const node = context.createBiquadFilter();
   node.type = audioNodeType[band.type];
@@ -158,6 +252,11 @@ export function makeBiquad(context, band) {
 // The panel draws with the same nodes the engine plays, so the curve matches the sound.
 const offlineContext = new OfflineAudioContext(1, 1, 48_000);
 
+/**
+ * @param {Band[]} bands
+ * @param {Float32Array} frequencies
+ * @returns {Float32Array}
+ */
 export function responseDb(bands, frequencies) {
   const totals = new Float32Array(frequencies.length);
   const magnitudes = new Float32Array(frequencies.length);
@@ -171,25 +270,45 @@ export function responseDb(bands, frequencies) {
 }
 
 // Points from 20 Hz to 20 kHz, evenly spaced on a log scale.
+/**
+ * @param {number} pointCount
+ * @returns {Float32Array}
+ */
 export function logSweepHz(pointCount) {
   return Float32Array.from({ length: pointCount }, (_, index) => 20 * 1000 ** (index / (pointCount - 1)));
 }
 
+/**
+ * @param {Band[]} bands
+ * @returns {number}
+ */
 export function maxBoostDb(bands) {
   return Math.max(0, ...responseDb(bands, logSweepHz(121)));
 }
 
 // Auto preamp lowers the sound by its highest boost, so the loudest frequency never clips.
+/**
+ * @param {Band[]} bands
+ * @returns {number}
+ */
 export function autoPreampDb(bands) {
   return 0 - maxBoostDb(bands);
 }
 
 // Every layer that is on, then the sliders on top.
+/**
+ * @param {Config} config
+ * @returns {Band[]}
+ */
 export function listPlayedBands(config) {
   return [...listOnLayers(config).flatMap((layer) => layer.bands), ...sliderBands(config.sliders)];
 }
 
 // What the audio chain plays: the played bands and the preamp.
+/**
+ * @param {Config} config
+ * @returns {EngineConfig}
+ */
 export function engineConfig(config) {
   const bands = listPlayedBands(config);
   const preampDb = config.autoPreamp ? autoPreampDb(bands) : config.preampDb;
@@ -197,6 +316,10 @@ export function engineConfig(config) {
 }
 
 // Export writes one flat file, so another app can read the merged sound.
+/**
+ * @param {Config} config
+ * @returns {Band[]}
+ */
 export function flatBands(config) {
   return listPlayedBands(config).filter((band) => !hasGain(band.type) || band.gainDb !== 0);
 }
@@ -204,6 +327,10 @@ export function flatBands(config) {
 const typeAliases = { PEAK: "PK", PEAKING: "PK", LOWPASS: "LP", HIGHPASS: "HP", NOTCH: "NO" };
 
 // An AutoEQ line reads "Filter 1: ON PK Fc 105 Hz Gain -3.1 dB Q 0.70", with Gain and Q optional.
+/**
+ * @param {string} text
+ * @returns {AutoEqFile}
+ */
 export function parseAutoEq(text) {
   const bands = [];
   let preampDb = 0;
@@ -216,6 +343,10 @@ export function parseAutoEq(text) {
     }
     if (label !== "filter") continue;
 
+    /**
+     * @param {string} name
+     * @returns {number | undefined}
+     */
     const readAfter = (name) => {
       const at = words.findIndex((word) => word.toLowerCase() === name);
       return at < 0 ? undefined : Number(words[at + 1]);
@@ -231,9 +362,13 @@ export function parseAutoEq(text) {
   return { bands, preampDb };
 }
 
-export function toAutoEq(config) {
-  const lines = [`Preamp: ${config.preampDb.toFixed(1)} dB`];
-  config.bands.forEach((band, index) => {
+/**
+ * @param {AutoEqFile} file
+ * @returns {string}
+ */
+export function toAutoEq(file) {
+  const lines = [`Preamp: ${file.preampDb.toFixed(1)} dB`];
+  file.bands.forEach((band, index) => {
     const on = band.on ? "ON" : "OFF";
     const gain = hasGain(band.type) ? ` Gain ${band.gainDb.toFixed(1)} dB` : "";
     lines.push(`Filter ${index + 1}: ${on} ${band.type} Fc ${Math.round(band.frequencyHz)} Hz${gain} Q ${band.q.toFixed(2)}`);

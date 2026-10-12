@@ -159,7 +159,9 @@ If a line needs a comment to say what it does, rename it or split it.
 - A function also gets one when it passes data to a higher layer: a message to another Chrome
   context, the reply to one, a hook the graph calls in the panel, or a fetch.
 - The block holds one `@param {Type} name` for each parameter. It holds `@returns {Type}` when the
-  function returns a value. An async function returns `Promise<Type>`.
+  function returns a value. An async function returns `Promise<Type>`. A function with no
+  parameter and no return value needs no block.
+- A hook object or a lookup table of functions that another layer calls takes one `@type` line.
 - No prose in the block. No description after a name. The reason for the code stays in a `//`
   comment above the block (rule 3).
 - A type that two or more places use is a `@typedef` in the file that owns it.

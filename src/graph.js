@@ -1,5 +1,50 @@
 import { clamp, frequencyRangeHz, hasGain, qRange, qStepRatio, responseDb, roundGainDb } from "./shared/filters.js";
 
+/** @typedef {import("./shared/filters.js").Band} Band */
+
+/** @typedef {import("./shared/filters.js").LayerBands} LayerBands */
+
+/** @typedef {{ role: import("./shared/filters.js").LayerRole, band: Band }} BandEntry */
+
+/** @typedef {{ x: number, y: number }} Point */
+
+/** @typedef {{ width: number, height: number, left: number, top: number, plotWidth: number, plotHeight: number }} PlotSize */
+
+/** @typedef {{ x: number, y: number, size: PlotSize }} PointerPoint */
+
+/**
+ * @typedef {object} GraphOptions
+ * @property {number} height
+ * @property {number} tallHeight
+ * @property {boolean} interactive
+ * @property {boolean} [regions]
+ * @property {boolean} [layerCurves]
+ */
+
+/**
+ * @typedef {object} GraphHooks
+ * @property {() => BandEntry[]} bands
+ * @property {() => Band[]} listCurveBands
+ * @property {() => LayerBands[]} curveLayers
+ * @property {() => number[]} spectrum
+ * @property {() => number} selectedIndex
+ * @property {() => boolean} isBypassed
+ * @property {(index: number) => void} select
+ * @property {() => void} changed
+ * @property {(frequencyHz: number, gainDb: number) => void} addBand
+ */
+
+/**
+ * @typedef {object} Graph
+ * @property {() => void} render
+ * @property {() => void} renderSpectrum
+ * @property {() => void} renderHover
+ * @property {string} zoom
+ * @property {boolean} vertical
+ * @property {(zoom: string) => void} setZoom
+ * @property {(vertical: boolean) => void} setVertical
+ */
+
 const rangeDb = 15;
 const ticksHz = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10_000, 20_000];
 const majorTicksHz = [100, 1000, 10_000];
@@ -36,41 +81,73 @@ export const typeColor = {
 
 export const layerColor = { headphone: "#a9b8ff", ear: "#ffd166" };
 
+/**
+ * @param {number} frequencyHz
+ * @returns {string}
+ */
 export function formatHz(frequencyHz) {
   if (frequencyHz >= 1000) return `${Math.round(frequencyHz / 100) / 10}k`;
   return `${Math.round(frequencyHz)}`;
 }
 
+/**
+ * @param {number} gainDb
+ * @returns {string}
+ */
 export function formatDb(gainDb) {
   return `${gainDb > 0 ? "+" : ""}${gainDb.toFixed(1)}`;
 }
 
 // BW = (2 / ln2) * asinh(1 / (2Q)), RBJ Audio EQ Cookbook, with BW in octaves.
+/**
+ * @param {number} q
+ * @returns {number}
+ */
 export function qToOctaves(q) {
   return (2 / Math.LN2) * Math.asinh(1 / (2 * q));
 }
 
 // The engine sends its points from logSweepHz, from 20 Hz to 20 kHz on a log scale.
+/**
+ * @param {number[]} spectrumDb
+ * @param {number} frequencyHz
+ * @returns {number}
+ */
 function readSpectrumDb(spectrumDb, frequencyHz) {
   const position = (Math.log(frequencyHz / 20) / Math.log(1000)) * (spectrumDb.length - 1);
   return spectrumDb[clamp(Math.round(position), 0, spectrumDb.length - 1)];
 }
 
 // A band with no gain draws its point on the 0 dB line.
+/**
+ * @param {Band} band
+ * @returns {number}
+ */
 function drawnGainDb(band) {
   return hasGain(band.type) ? band.gainDb : 0;
 }
 
 // A graph that is not interactive draws no points and takes no input.
+/**
+ * @param {HTMLElement} host
+ * @param {GraphOptions} options
+ * @param {GraphHooks} hooks
+ * @returns {Graph}
+ */
 export function makeGraph(host, options, hooks) {
   const graph = { zoom: "all", vertical: false, hover: null, drag: null, nodes: [], handles: [] };
   const clipId = `clip-${host.id}`;
 
+  /**
+   * @param {number} index
+   * @returns {Band | undefined}
+   */
   function bandAt(index) {
     const entry = hooks.bands()[index];
     return entry && entry.band;
   }
 
+  /** @returns {PlotSize} */
   function measurePlot() {
     const height = graph.vertical ? options.tallHeight : options.height;
     const top = graph.vertical ? 16 : 8;
@@ -78,16 +155,30 @@ export function makeGraph(host, options, hooks) {
     return { width: host.clientWidth, height, left: 30, top, plotWidth: host.clientWidth - 38, plotHeight: height - top - bottom };
   }
 
+  /**
+   * @param {number} frequencyHz
+   * @returns {number}
+   */
   function frequencyToRatio(frequencyHz) {
     const [lowHz, highHz] = zooms[graph.zoom];
     return Math.log(frequencyHz / lowHz) / Math.log(highHz / lowHz);
   }
 
+  /**
+   * @param {number} ratio
+   * @returns {number}
+   */
   function ratioToFrequency(ratio) {
     const [lowHz, highHz] = zooms[graph.zoom];
     return clamp(lowHz * (highHz / lowHz) ** ratio, ...frequencyRangeHz);
   }
 
+  /**
+   * @param {number} frequencyHz
+   * @param {number} gainDb
+   * @param {PlotSize} size
+   * @returns {Point}
+   */
   function placePoint(frequencyHz, gainDb, size) {
     const along = frequencyToRatio(frequencyHz);
     const across = (clamp(gainDb, -rangeDb, rangeDb) + rangeDb) / (2 * rangeDb);
@@ -95,28 +186,58 @@ export function makeGraph(host, options, hooks) {
     return { x: size.left + (along * size.plotWidth), y: size.top + ((1 - across) * size.plotHeight) };
   }
 
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {PlotSize} size
+   * @returns {{ frequencyHz: number, gainDb: number }}
+   */
   function readPoint(x, y, size) {
     const along = graph.vertical ? (y - size.top) / size.plotHeight : (x - size.left) / size.plotWidth;
     const across = graph.vertical ? (x - size.left) / size.plotWidth : 1 - ((y - size.top) / size.plotHeight);
     return { frequencyHz: ratioToFrequency(along), gainDb: clamp((across * 2 * rangeDb) - rangeDb, -rangeDb, rangeDb) };
   }
 
+  /**
+   * @param {Point} from
+   * @param {Point} to
+   * @param {string} style
+   * @returns {string}
+   */
   function makeLine(from, to, style) {
     return `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" ${style}/>`;
   }
 
+  /**
+   * @param {Point} point
+   * @param {string} content
+   * @param {string} style
+   * @returns {string}
+   */
   function makeText(point, content, style) {
     return `<text x="${point.x}" y="${point.y}" fill="rgba(255,255,255,0.45)" font-size="9" ${style}>${content}</text>`;
   }
 
+  /**
+   * @param {number} frequencyHz
+   * @param {PlotSize} size
+   * @returns {Point[]}
+   */
   function findGainAxisEnds(frequencyHz, size) {
     return [placePoint(frequencyHz, -rangeDb, size), placePoint(frequencyHz, rangeDb, size)];
   }
 
+  /** @returns {Float32Array} */
   function sweepFrequencies() {
     return Float32Array.from({ length: 121 }, (_, index) => ratioToFrequency(index / 120));
   }
 
+  /**
+   * @param {Float32Array} frequencies
+   * @param {ArrayLike<number>} valuesDb
+   * @param {PlotSize} size
+   * @returns {string[]}
+   */
   function tracePoints(frequencies, valuesDb, size) {
     return Array.from(frequencies, (frequencyHz, index) => {
       const point = placePoint(frequencyHz, valuesDb[index], size);
@@ -125,6 +246,13 @@ export function makeGraph(host, options, hooks) {
   }
 
   // The area between the 0 dB line and a curve.
+  /**
+   * @param {PlotSize} size
+   * @param {Float32Array} frequencies
+   * @param {ArrayLike<number>} valuesDb
+   * @param {string} fill
+   * @returns {string}
+   */
   function drawArea(size, frequencies, valuesDb, fill) {
     const start = placePoint(frequencies[0], 0, size);
     const end = placePoint(frequencies.at(-1), 0, size);
@@ -132,6 +260,13 @@ export function makeGraph(host, options, hooks) {
     return `<polygon points="${start.x},${start.y} ${edge.join(" ")} ${end.x},${end.y}" ${fill}/>`;
   }
 
+  /**
+   * @param {PlotSize} size
+   * @param {Float32Array} frequencies
+   * @param {ArrayLike<number>} valuesDb
+   * @param {string} stroke
+   * @returns {string}
+   */
   function drawCurve(size, frequencies, valuesDb, stroke) {
     return `<polyline points="${tracePoints(frequencies, valuesDb, size).join(" ")}" fill="none" ${stroke}/>`;
   }
@@ -186,6 +321,11 @@ export function makeGraph(host, options, hooks) {
     return parts.join("");
   }
 
+  /**
+   * @param {PlotSize} size
+   * @param {Float32Array} frequencies
+   * @returns {string}
+   */
   function drawSpectrum(size, frequencies) {
     const spectrumDb = hooks.spectrum();
     if (spectrumDb.length === 0) return "";
@@ -268,6 +408,10 @@ export function makeGraph(host, options, hooks) {
       + `<text x="${x + (width / 2)}" y="${y + 11}" text-anchor="middle" font-size="9.5" fill="${textColor}">${content}</text>`;
   }
 
+  /**
+   * @param {PlotSize} size
+   * @returns {string}
+   */
   function drawHover(size) {
     if (!graph.hover || graph.drag) return "";
     const reading = readPoint(graph.hover.x, graph.hover.y, size);
@@ -296,10 +440,14 @@ export function makeGraph(host, options, hooks) {
   // A spectrum frame or a hover move redraws its own group alone. Replacing the whole SVG would
   // remove the element under the pointer, and the browser then reads a press as cancelled and sends
   // no click.
+  /**
+   * @param {string} name
+   * @param {(size: PlotSize) => string} draw
+   */
   function renderGroup(name, draw) {
     const group = host.querySelector(`[data-${name}]`);
-    if (!group) return render();
-    group.innerHTML = draw(measurePlot());
+    if (group) group.innerHTML = draw(measurePlot());
+    else render();
   }
 
   function renderSpectrum() {
@@ -333,12 +481,25 @@ export function makeGraph(host, options, hooks) {
     </svg>`;
   }
 
+  /**
+   * @param {MouseEvent} event
+   * @returns {PointerPoint}
+   */
   function readPointer(event) {
     const bounds = host.getBoundingClientRect();
     return { x: event.clientX - bounds.left, y: event.clientY - bounds.top, size: measurePlot() };
   }
 
+  /**
+   * @param {PointerPoint} point
+   * @returns {{ kind: "width" | "move", index: number } | null}
+   */
   function findTarget(point) {
+    /**
+     * @param {Point} item
+     * @param {number} radiusPx
+     * @returns {boolean}
+     */
     const isNear = (item, radiusPx) => Math.hypot(item.x - point.x, item.y - point.y) < radiusPx;
     const handleRadiusPx = 12;
     const pointRadiusPx = 14;

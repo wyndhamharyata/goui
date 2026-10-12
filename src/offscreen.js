@@ -1,6 +1,8 @@
 import { biquadQ, engineConfig, hasGain, logSweepHz, makeBiquad, sanitizeConfig } from "./shared/filters.js";
 import { messageTypes, trySendMessage } from "./shared/messages.js";
 
+/** @typedef {import("./shared/messages.js").AudioReply} AudioReply */
+
 let audioContext;
 let mediaStream;
 let sourceNode;
@@ -14,6 +16,7 @@ let config = { enabled: true, preampDb: 0, bands: [] };
 // The panel reads these points back on the same log scale.
 const spectrumHz = logSweepHz(128);
 
+/** @returns {import("./shared/filters.js").Band[]} */
 function listActiveBands() {
   return config.bands.filter((band) => band.on);
 }
@@ -40,6 +43,7 @@ function buildChain() {
 }
 
 // Only a change here needs new nodes. A new frequency, gain or Q moves the nodes that exist.
+/** @returns {string} */
 function readChainLayout() {
   const parts = config.bands.map((band) => [band.type, band.on]);
   return JSON.stringify([parts, config.enabled]);
@@ -93,6 +97,10 @@ function sendTelemetry() {
   trySendMessage({ type: messageTypes.audioTelemetry, levelDb, spectrumDb });
 }
 
+/**
+ * @param {string} streamId
+ * @returns {Promise<AudioReply>}
+ */
 async function start(streamId) {
   await stop();
   mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -106,6 +114,7 @@ async function start(streamId) {
   return { ok: true };
 }
 
+/** @returns {Promise<AudioReply>} */
 async function stop() {
   if (telemetryTimer) clearInterval(telemetryTimer);
   telemetryTimer = undefined;
@@ -117,6 +126,7 @@ async function stop() {
   return { ok: true };
 }
 
+/** @type {Map<string, (message: import("./shared/messages.js").Message) => Promise<AudioReply>>} */
 const handlers = new Map([
   [messageTypes.audioStart, (message) => start(message.streamId)],
   [messageTypes.audioStop, () => stop()],

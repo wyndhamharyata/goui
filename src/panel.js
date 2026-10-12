@@ -29,14 +29,45 @@ import {
 import { messageTypes, trySendMessage } from "./shared/messages.js";
 import { formatDb, formatHz, layerColor, makeGraph, qToOctaves, typeColor } from "./graph.js";
 
+/** @typedef {import("./shared/filters.js").Band} Band */
+
+/** @typedef {import("./shared/filters.js").Layer} Layer */
+
+/** @typedef {import("./shared/filters.js").LayerRole} LayerRole */
+
+/** @typedef {import("./shared/filters.js").LayerBands} LayerBands */
+
+/** @typedef {import("./graph.js").BandEntry} BandEntry */
+
+/** @typedef {{ name: string, path: string, source: string }} AutoEqItem */
+
+/**
+ * @param {string} id
+ * @returns {HTMLElement}
+ */
 const byId = (id) => document.getElementById(id);
+/**
+ * @param {LayerRole} role
+ * @returns {HTMLElement}
+ */
 const sectionOf = (role) => document.querySelector(`.preset-section[data-role="${role}"]`);
+/**
+ * @param {LayerRole} role
+ * @param {string} name
+ * @returns {HTMLElement}
+ */
 const partOf = (role, name) => sectionOf(role).querySelector(`.${name}`);
 const autoEqBase = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master/results/";
 // The source a layer shows once it matches one of your presets.
 const savedSource = "Saved";
 
-function makeElement(tag, { className = "", text = "", title = "" } = {}) {
+/**
+ * @param {string} tag
+ * @param {{ className?: string, text?: string | number, title?: string }} [options]
+ * @returns {HTMLElement}
+ */
+function makeElement(tag, options = {}) {
+  const { className = "", text = "", title = "" } = options;
   const element = document.createElement(tag);
   if (className) element.className = className;
   if (text !== "") element.textContent = text;
@@ -44,6 +75,11 @@ function makeElement(tag, { className = "", text = "", title = "" } = {}) {
   return element;
 }
 
+/**
+ * @param {() => void} run
+ * @param {number} waitMs
+ * @returns {() => void}
+ */
 function debounce(run, waitMs) {
   let timer = 0;
   return () => {
@@ -52,6 +88,10 @@ function debounce(run, waitMs) {
   };
 }
 
+/**
+ * @param {LayerRole} role
+ * @param {string} text
+ */
 function showHint(role, text) {
   partOf(role, "action-hint").textContent = text;
 }
@@ -89,6 +129,7 @@ const openActions = { headphone: "", ear: "" };
 
 // Every band in the panel, in layer order, with the layer it belongs to. A layer that is off keeps
 // its bands, so they can still be edited while it is silent.
+/** @returns {BandEntry[]} */
 function listBandEntries() {
   return layerOrder.flatMap((role) => {
     const layer = config.layers[role];
@@ -96,22 +137,32 @@ function listBandEntries() {
   });
 }
 
+/**
+ * @param {number} index
+ * @returns {Band | undefined}
+ */
 function bandAt(index) {
   const entry = listBandEntries()[index];
   return entry && entry.band;
 }
 
+/**
+ * @param {number} index
+ * @returns {LayerRole | undefined}
+ */
 function roleAt(index) {
   const entry = listBandEntries()[index];
   return entry && entry.role;
 }
 
 // Holding A/B and the main switch both silence the EQ. The graph then draws a flat line.
+/** @returns {boolean} */
 function isEqOff() {
   return isBypassed || !config.enabled;
 }
 
 // What the panel draws is what the engine plays, with the A/B button and Solo applied.
+/** @returns {Band[]} */
 function listCurveBands() {
   if (isEqOff()) return [];
   const soloed = bandAt(soloIndex);
@@ -120,6 +171,7 @@ function listCurveBands() {
 }
 
 // Each layer's own curve, for the dashed lines under the total.
+/** @returns {LayerBands[]} */
 function listCurveLayers() {
   if (isEqOff() || soloIndex >= 0) return [];
   return listOnLayers(config);
@@ -137,6 +189,11 @@ function removeEarLayer() {
   commit();
 }
 
+/**
+ * @param {LayerRole} role
+ * @param {number} frequencyHz
+ * @param {number} gainDb
+ */
 function addBandToLayer(role, frequencyHz, gainDb) {
   config.layers[role] ??= makeLayer("My ear tuning", "Your bands");
   const band = { ...newBand(frequencyHz), gainDb };
@@ -145,6 +202,7 @@ function addBandToLayer(role, frequencyHz, gainDb) {
   commitEdit(role);
 }
 
+/** @type {import("./graph.js").GraphHooks} */
 const graphHooks = {
   bands: listBandEntries,
   listCurveBands,
@@ -194,6 +252,7 @@ function commit() {
 
 // A change to a layer's bands. Its row then says the sound differs from the one you picked. Pass
 // null for a change that belongs to the sliders or the preamp, which no layer owns.
+/** @param {LayerRole | null} [role] */
 function commitEdit(role) {
   const markedRole = role === null ? null : role || roleAt(selectedIndex);
   if (markedRole && config.layers[markedRole]) config.layers[markedRole].isEdited = true;
@@ -211,15 +270,24 @@ function refresh() {
 }
 
 // A field the person is typing in keeps their text.
+/**
+ * @param {string} id
+ * @param {string | number} value
+ */
 function setField(id, value) {
   const field = byId(id);
   if (field !== document.activeElement) field.value = value;
 }
 
+/**
+ * @param {Layer} layer
+ * @returns {string}
+ */
 function describeLayerName(layer) {
   return layer.isEdited ? `${layer.name}, edited` : layer.name;
 }
 
+/** @param {LayerRole} role */
 function openLibrarySection(role) {
   showTab("library");
   sectionOf(role).scrollIntoView({ block: "start" });
@@ -387,6 +455,7 @@ function renderTable() {
   table.replaceChildren(head, ...rows);
 }
 
+/** @param {string} name */
 function showTab(name) {
   byId("app").dataset.showing = name;
   for (const button of byId("tabs").children) button.classList.toggle("on", button.dataset.tab === name);
@@ -400,6 +469,10 @@ function renderPills() {
   byId("tall").classList.toggle("on", tuneGraph.vertical);
 }
 
+/**
+ * @param {LayerRole} role
+ * @returns {boolean}
+ */
 function isSavedPreset(role) {
   const layer = config.layers[role];
   return Boolean(layer) && layer.source === savedSource && Boolean(presets[role][layer.name]);
@@ -429,6 +502,10 @@ function renderPresetCards() {
 
 // A headphone file's own preamp is kept, since a lone headphone file needs it. Auto preamp
 // overrides it either way.
+/**
+ * @param {{ name: string, source: string, bands: Band[], preampDb?: number }} sound
+ * @param {LayerRole} role
+ */
 function placeBands(sound, role) {
   config.layers[role] = makeLayer(sound.name, sound.source, cleanBands(sound.bands));
   if (role === "headphone" && sound.preampDb !== undefined) config.preampDb = sound.preampDb;
@@ -436,11 +513,16 @@ function placeBands(sound, role) {
   commit();
 }
 
+/** @param {LayerRole} role */
 function storePresets(role) {
   chrome.storage.local.set({ [`${role}Presets`]: presets[role] });
   renderList[role]();
 }
 
+/**
+ * @param {LayerRole} role
+ * @param {string} name
+ */
 function savePreset(role, name) {
   const layer = config.layers[role];
   const isUpdate = Boolean(presets[role][name]);
@@ -463,6 +545,7 @@ function deletePreset(role, name) {
   storePresets(role);
 }
 
+/** @returns {Promise<AutoEqItem[]>} */
 async function loadAutoEqIndex() {
   if (autoEqItems) return autoEqItems;
   const cached = await chrome.storage.local.get(["autoEqIndex", "autoEqIndexAt"]);
@@ -487,6 +570,11 @@ async function loadAutoEqIndex() {
   return autoEqItems;
 }
 
+/**
+ * @param {AutoEqItem} item
+ * @param {HTMLElement} hint
+ * @returns {Promise<boolean>}
+ */
 async function loadHeadphone(item, hint) {
   hint.textContent = `Loading ${item.name}...`;
   const file = encodeURIComponent(`${item.name} ParametricEQ.txt`);
@@ -502,6 +590,7 @@ async function loadHeadphone(item, hint) {
 }
 
 // A pick from a typed search is the end of that search. The box empties and Listen shows the sound.
+/** @param {() => (Promise<boolean> | void)} load */
 async function pickFromSearch(load) {
   // Only a headphone download can fail. Its loader then returns false. The other loaders return nothing.
   const isLoaded = (await load()) !== false;
@@ -513,10 +602,21 @@ async function pickFromSearch(load) {
   showTab("listen");
 }
 
+/**
+ * @param {Band[]} bands
+ * @returns {string}
+ */
 function countBands(bands) {
   return bands.length === 1 ? "1 band" : `${bands.length} bands`;
 }
 
+/**
+ * @param {string} label
+ * @param {string} detail
+ * @param {() => void} onPick
+ * @param {() => void} [onRemove]
+ * @returns {HTMLElement}
+ */
 function makeResultItem(label, detail, onPick, onRemove) {
   const button = makeElement("button", { className: "item" });
   button.dataset.name = label;
@@ -533,16 +633,32 @@ function makeResultItem(label, detail, onPick, onRemove) {
 
 // A row for one of your presets. The headphone list passes its search step as `pick`, so a pick
 // there also ends the search.
+/**
+ * @param {LayerRole} role
+ * @param {string} name
+ * @param {(place: () => void) => void} pick
+ * @returns {HTMLElement}
+ */
 function makePresetItem(role, name, pick) {
   const place = () => placeBands({ name, source: savedSource, bands: presets[role][name].bands }, role);
   return makeResultItem(name, countBands(presets[role][name].bands), () => pick(place), () => deletePreset(role, name));
 }
 
+/**
+ * @param {HTMLElement} list
+ * @param {string} title
+ * @param {HTMLElement[]} items
+ */
 function appendSection(list, title, items) {
   if (items.length === 0) return;
   list.append(makeElement("h4", { text: title }), ...items);
 }
 
+/**
+ * @param {string} text
+ * @param {HTMLElement} hint
+ * @returns {Promise<AutoEqItem[]>}
+ */
 async function findHeadphones(text, hint) {
   hint.textContent = "Searching AutoEQ...";
   const items = await loadAutoEqIndex().catch(() => null);
@@ -556,6 +672,10 @@ async function searchLibrary() {
   const hint = partOf("headphone", "search-hint");
   const text = partOf("headphone", "search").value.trim().toLowerCase();
   list.dataset.query = text;
+  /**
+   * @param {string} name
+   * @returns {boolean}
+   */
   const matches = (name) => name.toLowerCase().includes(text);
 
   const saved = Object.keys(presets.headphone).filter(matches).map((name) => makePresetItem("headphone", name, pickFromSearch));
@@ -566,6 +686,7 @@ async function searchLibrary() {
     () => pickFromSearch(() => placeBands({ name: sound.name, source: "Starter sound", bands: sound.bands }, "headphone"))));
 
   // Your presets and the starter sounds show at once. The AutoEQ list joins once it loads.
+  /** @param {HTMLElement[]} headphoneItems */
   const show = (headphoneItems) => {
     list.replaceChildren();
     appendSection(list, "Your headphone presets", saved);
@@ -598,6 +719,11 @@ function renderEarList() {
 
 const renderList = { headphone: searchLibrary, ear: renderEarList };
 
+/**
+ * @param {LayerRole} role
+ * @param {string} name
+ * @param {string} source
+ */
 function applyText(role, name, source) {
   const parsed = parseAutoEq(partOf(role, "text").value);
   if (parsed.bands.length === 0) {
@@ -608,12 +734,17 @@ function applyText(role, name, source) {
   showHint(role, `Applied ${countBands(parsed.bands)} to ${layerLabels[role]}. Press Save to keep it.`);
 }
 
+/** @param {LayerRole} role */
 function renderSaveButton(role) {
   const name = partOf(role, "save-name").value.trim();
   partOf(role, "confirm-save").textContent = presets[role][name] ? "Replace" : "Save";
 }
 
 // Each section button opens its own row. A second press closes it.
+/**
+ * @param {LayerRole} role
+ * @param {string} action
+ */
 function openLibraryAction(role, action) {
   const open = openActions[role] === action ? "" : action;
   openActions[role] = open;
@@ -671,6 +802,7 @@ const libraryActions = {
 
 const idleInstruction = "Click the goui icon in the toolbar while you are on the tab you want to EQ.";
 
+/** @param {import("./shared/messages.js").CaptureState} state */
 function applyCaptureState(state) {
   const isCapturing = Boolean(state.isCapturing);
   // The first tab goui hears ends the guide for good.
@@ -693,6 +825,7 @@ function showTelemetry(message) {
   for (const graph of graphs) graph.renderSpectrum();
 }
 
+/** @param {boolean} isOn */
 function setBypass(isOn) {
   if (isBypassed === isOn) return;
   isBypassed = isOn;

@@ -5,6 +5,12 @@ import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+/** @typedef {import("@playwright/test").Page} Page */
+
+/** @typedef {import("@playwright/test").BrowserContext} BrowserContext */
+
+/** @typedef {import("@playwright/test").Locator} Locator */
+
 const here = import.meta.dirname;
 const extensionDir = join(here, "..");
 const manifest = JSON.parse(readFileSync(join(extensionDir, "manifest.json"), "utf8"));
@@ -19,6 +25,10 @@ function deriveExtensionId(key) {
 const extensionId = deriveExtensionId(manifest.key);
 const panelUrl = `chrome-extension://${extensionId}/src/panel.html`;
 
+/**
+ * @param {string} name
+ * @returns {Buffer}
+ */
 function readFixture(name) {
   return readFileSync(join(here, "fixtures", name));
 }
@@ -46,6 +56,10 @@ async function openBrowser() {
   return { context, server, port: server.address().port };
 }
 
+/**
+ * @param {string} name
+ * @param {(context: BrowserContext, port: number) => Promise<void>} run
+ */
 function journey(name, run) {
   test(name, async () => {
     test.setTimeout(60_000);
@@ -59,6 +73,12 @@ function journey(name, run) {
   });
 }
 
+/**
+ * @param {BrowserContext} context
+ * @param {number} port
+ * @param {number} toneHz
+ * @returns {Promise<Page>}
+ */
 async function openTone(context, port, toneHz) {
   const tone = await context.newPage();
   await tone.goto(`http://localhost:${port}/?hz=${toneHz}`);
@@ -68,16 +88,29 @@ async function openTone(context, port, toneHz) {
 }
 
 // The service worker can start after the pages, so the first read waits for it.
+/**
+ * @param {BrowserContext} context
+ * @returns {Promise<import("@playwright/test").Worker>}
+ */
 async function findWorker(context) {
   return context.serviceWorkers()[0] || context.waitForEvent("serviceworker");
 }
 
+/**
+ * @param {BrowserContext} context
+ * @param {number} toneHz
+ * @returns {Page | undefined}
+ */
 function findTone(context, toneHz) {
   return context.pages().find((page) => page.url().includes(`?hz=${toneHz}`));
 }
 
 // Playwright cannot press the toolbar icon. The journey fires the icon's own click event with the
 // tab instead, so the same code runs as for a real click.
+/**
+ * @param {BrowserContext} context
+ * @param {Page} page
+ */
 async function pressIcon(context, page) {
   const worker = await findWorker(context);
   await worker.evaluate(async (url) => {
@@ -86,6 +119,11 @@ async function pressIcon(context, page) {
   }, page.url());
 }
 
+/**
+ * @param {BrowserContext} context
+ * @param {Page} page
+ * @returns {Promise<string>}
+ */
 async function readBadge(context, page) {
   const worker = await findWorker(context);
   return worker.evaluate(async (url) => {
@@ -94,6 +132,12 @@ async function readBadge(context, page) {
   }, page.url());
 }
 
+/**
+ * @param {BrowserContext} context
+ * @param {number} port
+ * @param {number} toneHz
+ * @returns {Promise<Page>}
+ */
 async function openPanel(context, port, toneHz) {
   const tone = await openTone(context, port, toneHz);
   const panel = await context.newPage();
@@ -104,12 +148,17 @@ async function openPanel(context, port, toneHz) {
   return panel;
 }
 
+/** @param {Page} panel */
 async function holdCompare(panel) {
   await panel.locator("#compare").hover();
   await panel.mouse.down();
 }
 
 // The wait comes first, so a reading taken before the engine reacts to the last step never counts.
+/**
+ * @param {Page} page
+ * @returns {Promise<number>}
+ */
 async function readSteadyLevel(page) {
   const reactionMs = 400;
   await page.waitForTimeout(reactionMs);
@@ -126,20 +175,40 @@ async function readSteadyLevel(page) {
 
 const earCutText = "Filter 1: ON PK Fc 1000 Hz Gain -6.0 dB Q 1.0";
 
+/**
+ * @param {Page} panel
+ * @param {string} name
+ * @returns {Promise<void>}
+ */
 function openTab(panel, name) {
   return panel.click(`#tabs [data-tab=${name}]`);
 }
 
+/**
+ * @param {Page} panel
+ * @param {string} label
+ * @returns {Locator}
+ */
 function layerRow(panel, label) {
   return panel.locator(".layer", { hasText: label });
 }
 
+/**
+ * @param {Page} panel
+ * @param {string} role
+ * @returns {Locator}
+ */
 function sectionOf(panel, role) {
   return panel.locator(`.preset-section[data-role=${role}]`);
 }
 
 // Paste AutoEQ text into one layer's section, the way a person copies it from autoeq.app or
 // eqbyear. A second press on Paste closes the box, so the button is pressed only while it is closed.
+/**
+ * @param {Page} panel
+ * @param {string} role
+ * @param {string} text
+ */
 async function pasteInto(panel, role, text) {
   await openTab(panel, "library");
   const section = sectionOf(panel, role);
@@ -148,6 +217,11 @@ async function pasteInto(panel, role, text) {
   await section.locator("[data-action=apply]").click();
 }
 
+/**
+ * @param {Page} panel
+ * @param {string} role
+ * @param {string} name
+ */
 async function saveAs(panel, role, name) {
   await openTab(panel, "library");
   const section = sectionOf(panel, role);
@@ -156,16 +230,31 @@ async function saveAs(panel, role, name) {
   await section.locator("[data-action=confirmSave]").click();
 }
 
+/**
+ * @param {Page} panel
+ * @param {string} role
+ * @param {string} name
+ */
 async function pick(panel, role, name) {
   await openTab(panel, "library");
   await sectionOf(panel, role).locator(`.item[data-name="${name}"]`).click();
 }
 
+/**
+ * @param {Page} panel
+ * @param {string} label
+ * @returns {Locator}
+ */
 function layerSwitch(panel, label) {
   return layerRow(panel, label).locator("input");
 }
 
 // The switch lives in the Listen pane, so the tab comes first. A hidden input cannot be clicked.
+/**
+ * @param {Page} panel
+ * @param {string} label
+ * @param {boolean} isOn
+ */
 async function setLayer(panel, label, isOn) {
   await openTab(panel, "listen");
   const input = layerSwitch(panel, label);
@@ -173,11 +262,16 @@ async function setLayer(panel, label, isOn) {
   await expect.poll(() => input.isChecked()).toBe(isOn);
 }
 
+/** @param {number} differenceDb */
 function expectAbout6Db(differenceDb) {
   expect(differenceDb).toBeGreaterThan(5.4);
   expect(differenceDb).toBeLessThan(6.6);
 }
 
+/**
+ * @param {number} levelDb
+ * @param {number} flatDb
+ */
 function expectFlat(levelDb, flatDb) {
   expect(Math.abs(levelDb - flatDb)).toBeLessThan(0.6);
 }
@@ -450,6 +544,7 @@ journey("given a press on a point that wobbles 3 px, the tone keeps its boost, a
 
   // The graph draws a new SVG on each render, so the position is read in the same step that finds the
   // point. It is read until it holds still, since the graph redraws once the page scrollbar appears.
+  /** @returns {Promise<{ centerX: number, centerY: number }>} */
   const readPoint = () => panel.locator("#tuneGraph circle[r='7']").first().evaluate((circle) => {
     const bounds = circle.getBoundingClientRect();
     return { centerX: bounds.x + (bounds.width / 2), centerY: bounds.y + (bounds.height / 2) };

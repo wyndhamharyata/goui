@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import globals from "globals";
+import jsdoc from "eslint-plugin-jsdoc";
 import sonarjs from "eslint-plugin-sonarjs";
 import unicorn from "eslint-plugin-unicorn";
 
@@ -8,7 +9,7 @@ export default [
   { ignores: ["design/**", "node_modules/**", "playwright-report/**", "test-results/**"] },
   {
     files: ["**/*.{js,mjs}"],
-    plugins: { sonarjs, unicorn },
+    plugins: { jsdoc, sonarjs, unicorn },
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -47,6 +48,36 @@ export default [
       // Reads "Db" as "Database" and renames decibel names. That fights rule 5.
       "unicorn/name-replacements": "off",
       "unicorn/numeric-separators-style": "error",
+      // Rule 10. Every export has a JSDoc block, and a block holds types alone, with no prose.
+      "jsdoc/require-jsdoc": ["error", { publicOnly: true, require: { FunctionDeclaration: true } }],
+      "jsdoc/require-param": ["error", { checkDestructured: false }],
+      "jsdoc/require-param-type": "error",
+      "jsdoc/check-param-names": ["error", { checkDestructured: false }],
+      "jsdoc/require-returns": ["error", { forceReturnsWithAsync: false }],
+      "jsdoc/require-returns-type": "error",
+      "jsdoc/require-returns-check": "error",
+      "jsdoc/check-tag-names": "error",
+      "jsdoc/valid-types": "error",
+      "jsdoc/no-undefined-types": "error",
+      "jsdoc/no-restricted-syntax": [
+        "error",
+        {
+          contexts: [
+            {
+              comment: "JsdocBlock[description!=/^$/]",
+              message: "A JSDoc block holds types only. Put the reason in a line comment above it.",
+            },
+            {
+              comment: "JsdocBlock:has(JsdocTag[description!=/^$/])",
+              message: "A JSDoc tag holds a type and a name only, with no description.",
+            },
+            {
+              comment: "JsdocBlock:has(JsdocTag[tag!=/^(param|returns|typedef|property|type)$/])",
+              message: "A JSDoc block uses @param, @returns, @typedef, @property and @type only.",
+            },
+          ],
+        },
+      ],
     },
   },
   {

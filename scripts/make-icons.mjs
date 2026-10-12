@@ -13,6 +13,11 @@ function crc32(buffer) {
   return (crc ^ 0xff_ff_ff_ff) >>> 0;
 }
 
+/**
+ * @param {string} type
+ * @param {Buffer} data
+ * @returns {Buffer}
+ */
 function makeChunk(type, data) {
   const head = Buffer.from(type, "ascii");
   const body = Buffer.concat([head, data]);
@@ -48,6 +53,12 @@ function mixColor(start, end, at) {
   return start.map((value, index) => value + (end[index] - value) * at);
 }
 
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {{ left: number, top: number, right: number, bottom: number, radius: number }} rect
+ * @returns {boolean}
+ */
 function isInsideRoundedRect(x, y, rect) {
   const nearX = Math.min(Math.max(x, rect.left + rect.radius), rect.right - rect.radius);
   const nearY = Math.min(Math.max(y, rect.top + rect.radius), rect.bottom - rect.radius);

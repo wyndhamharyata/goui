@@ -1,5 +1,7 @@
 import { messageTypes, trySendMessage } from "./shared/messages.js";
 
+/** @typedef {import("./shared/messages.js").CaptureState} CaptureState */
+
 // The how-to page opens once, on the first install. A later reload of the folder does not open it.
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason !== "install") return;
@@ -19,6 +21,7 @@ async function openOffscreenDocument() {
 }
 
 // The badge shows on the icon of the captured tab only, so each tab shows whether goui hears it.
+/** @param {CaptureState} state */
 async function publishCapture(state) {
   const { capture: previous } = await chrome.storage.session.get("capture");
   if (previous && previous.tabId) chrome.action.setBadgeText({ tabId: previous.tabId, text: "" }).catch(() => {});
@@ -30,11 +33,19 @@ async function publishCapture(state) {
   trySendMessage({ type: messageTypes.captureState, state });
 }
 
+/**
+ * @param {number} tabId
+ * @returns {Promise<boolean>}
+ */
 async function isHeardTab(tabId) {
   const { capture } = await chrome.storage.session.get("capture");
   return Boolean(capture && capture.isCapturing) && capture.tabId === tabId;
 }
 
+/**
+ * @param {chrome.tabs.Tab} target
+ * @returns {Promise<CaptureState>}
+ */
 async function startCaptureForTab(target) {
   await openOffscreenDocument();
   const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: target.id });
@@ -55,6 +66,7 @@ async function startCaptureForTab(target) {
   return state;
 }
 
+/** @returns {Promise<CaptureState>} */
 async function stopCapture() {
   await trySendMessage({ type: messageTypes.audioStop });
   const state = { isCapturing: false };
