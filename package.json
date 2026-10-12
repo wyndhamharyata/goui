@@ -6,7 +6,8 @@
     "lint": "eslint . && node scripts/check-words.mjs",
     "test": "playwright test",
     "icons": "node scripts/make-icons.mjs",
-    "images": "node scripts/make-readme-images.mjs"
+    "images": "node scripts/make-readme-images.mjs",
+    "zip": "node scripts/make-extension-zip.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",

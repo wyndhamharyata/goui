@@ -20,23 +20,23 @@ clips.
 
 ## Install
 
-Chrome loads an unpacked extension from a folder on your computer. The first job is to get the
-folder. Then you point Chrome at it.
+goui is not in the Chrome Web Store. You add it by hand one time, in about two minutes. You download
+a zip, unzip it, then point Chrome at the folder.
 
-![Install goui in four steps: open Extensions, load the folder, pin goui, click the icon.](docs/images/install-flow.png)
+![Install goui in four steps: download the zip, load the folder, pin goui, click the icon.](docs/images/install-flow.png)
 
-### 1. Get the folder
+### 1. Download the zip
 
-Press **Code** on this page, then **Download ZIP**, and unzip the file. Or clone the repo if you
-have git:
+![The Releases page, with the zip and a Download button.](docs/images/install-download.png)
 
-```bash
-git clone https://github.com/wyndhamharyata/goui.git
-```
+Open the [Releases page](https://github.com/wyndhamharyata/goui/releases/latest). Under the newest
+release, press the file named **goui-0.1.0.zip**. Unzip it after the download. Double clicking the
+file is enough.
 
-Keep the folder where it is after this step. Chrome reads it from there on every start.
+Keep the unzipped folder where it is. Chrome reads it from there on every start, so a move or a
+delete turns goui off.
 
-### 2. Load the folder
+### 2. Load the folder in Chrome
 
 ![The extensions page with Developer mode on and its Load unpacked button.](docs/images/install-load-unpacked.png)
 
@@ -45,7 +45,8 @@ at the top right. Press **Load unpacked**.
 
 ![Pick the folder that holds manifest.json.](docs/images/install-pick-folder.png)
 
-Pick the goui folder itself, the one that holds `manifest.json`. A file inside it will not load.
+The button asks for a folder. Pick the goui folder, the one that holds `manifest.json`. A file
+inside it will not load.
 
 ### 3. Pin goui
 
@@ -139,28 +140,54 @@ wants, and goui keeps the two apart.
 3. Copy the result, return to goui, and **Paste** it into the My ear section.
 4. Press **Save** to keep it, then turn the ear layer on to hear the headphone plus your ear.
 
-## Develop
+## Notes
 
-| Command          | What it does                                                            |
-| ---------------- | ----------------------------------------------------------------------- |
-| `npm run lint`   | ESLint, then the word check.                                            |
-| `npm test`       | The browser journeys. Run `npx playwright install chromium` once first. |
-| `npm run icons`  | Rebuild the icon files.                                                 |
-| `npm run images` | Rebuild the pictures in `docs/images`.                                  |
+- Chrome warns about developer mode extensions on some starts. Choose the option that keeps them. The
+  warning is Chrome's own, and it does not mean goui is broken.
+- The Web Audio shelf filters take no Q. An AutoEQ shelf keeps its corner frequency and gain and
+  drops its Q. The inspector says so on a shelf.
+- The AutoEQ search reads the public index on GitHub. The result is kept for a week, so a second
+  search is fast.
+- The extension can only change audio inside the browser. For system audio, use a tool such as
+  SoundSource.
+
+## Credits
+
+goui stands on other people's work. `THIRD_PARTY_NOTICES.md` holds the full notices.
+
+- **AutoEQ** by Jaakko Pasanen. The headphone profiles and the search index come from AutoEQ. It is
+  under the MIT licence.
+- **EQByEar** at [eqbyear.com](https://eqbyear.com). The ear test, which goui opens in a new tab.
+- goui itself is under the MIT licence. See `LICENSE`.
+
+## Develop
 
 There is no build step. The extension is plain JavaScript, so a change to a file is live after you
 press the reload button on the extensions page.
 
+Clone the repo if you want to change the code:
+
+```bash
+git clone https://github.com/wyndhamharyata/goui.git
+cd goui
+npm install
+npx playwright install chromium
+```
+
+| Command          | What it does                                              |
+| ---------------- | --------------------------------------------------------- |
+| `npm run lint`   | ESLint, then the word check.                              |
+| `npm test`       | The browser journeys.                                     |
+| `npm run icons`  | Rebuild the icon files.                                   |
+| `npm run images` | Rebuild the pictures in `docs/images`.                    |
+| `npm run zip`    | Build `dist/goui-<version>.zip`, the file a release uses. |
+
 The pictures in `docs/images` are drawn by `scripts/make-readme-images.mjs`. Each one is written as an
 SVG and as a PNG. Edit the SVG by hand, or edit the script and run `npm run images`.
 
-## Notes
+The release zip is built by `scripts/make-extension-zip.mjs`. It holds the `manifest.json`, the
+`src` folder and the `icons` folder, all inside one `goui` folder. A person who unzips it gets a
+folder to point Chrome at.
 
-- The Web Audio shelf filters take no Q. An AutoEQ shelf keeps its corner frequency and gain and
-  drops its Q. The inspector says so on a shelf.
-- The tests open the panel as a normal tab. They fire the icon's own click event in the service
-  worker, since Playwright cannot press the toolbar icon. A launch flag lets that click capture.
-- The extension can only change audio inside the browser. For system audio, use a tool such as
-  SoundSource.
-- The AutoEQ search reads the public index on GitHub. The result is kept for a week, so a second
-  search is fast.
+The tests open the panel as a normal tab. They fire the icon's own click event in the service
+worker, since Playwright cannot press the toolbar icon. A launch flag lets that click capture.

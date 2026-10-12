@@ -5,8 +5,8 @@ import sonarjs from "eslint-plugin-sonarjs";
 import unicorn from "eslint-plugin-unicorn";
 
 export default [
-  // design/ holds throwaway HTML mocks that never ship in the extension.
-  { ignores: ["design/**", "node_modules/**", "playwright-report/**", "test-results/**"] },
+  // design/ holds throwaway HTML mocks, and dist/ holds the built release zip.
+  { ignores: ["design/**", "dist/**", "node_modules/**", "playwright-report/**", "test-results/**"] },
   {
     files: ["**/*.{js,mjs}"],
     plugins: { jsdoc, sonarjs, unicorn },

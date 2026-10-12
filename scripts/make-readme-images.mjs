@@ -86,6 +86,16 @@ function pinGlyph(x, y, size, color) {
   return `<g transform="translate(${x} ${y}) scale(${scale})"><path fill="${color}" d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h6v7l1 1 1-1v-7h6v-2c-1.66 0-3-1.34-3-3z"/></g>`;
 }
 
+function downloadGlyph(x, y, size) {
+  const scale = size / 16;
+  return `<g transform="translate(${x} ${y}) scale(${scale})"><path d="M7 0 h2 v6 h3 l-4 4.5 -4-4.5 h3 z" fill="#ffffff"/><rect x="1" y="12" width="14" height="2" fill="#ffffff"/></g>`;
+}
+
+function folderGlyph(x, y, size, color) {
+  const scale = size / 24;
+  return `<g transform="translate(${x} ${y}) scale(${scale})"><path fill="${color}" d="M4 4h6l2 3h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></g>`;
+}
+
 function cursor(x, y) {
   return `<g transform="translate(${x} ${y})"><path d="M0 0 l13 10.5 -6 0.7 3.2 6.8 -2.9 1.3 -3.1-6.9 -4.2 4z" fill="#ffffff" stroke="#000000" stroke-width="1.2"/></g>`;
 }
@@ -178,6 +188,25 @@ function pictureLoadUnpacked(x, y, width) {
   parts.push(rect({ x: x + 12, y: y + 124, width: width - 24, height: 24, radius: 6, fill: palette.accent }));
   parts.push(text({ x: x + width / 2, y: y + 140, content: "Load unpacked", size: 11, weight: 700, fill: "#ffffff", anchor: "middle" }));
   parts.push(cursor(x + 70, y + 146));
+  return parts.join("");
+}
+
+// One: the Releases page with the zip asset.
+function pictureDownload(x, y, width) {
+  const height = 158;
+  const parts = [rect({ x, y, width, height, radius: 10, fill: palette.panel2 })];
+  parts.push(text({ x: x + 14, y: y + 24, content: "github.com/goui/releases", size: 10, fill: palette.muted, font: monoFont }));
+  parts.push(text({ x: x + 14, y: y + 50, content: "Releases", size: 14, weight: 700 }));
+  parts.push(rect({ x: x + 92, y: y + 37, width: 56, height: 18, radius: 9, fill: palette.panel, stroke: palette.line }));
+  parts.push(text({ x: x + 120, y: y + 50, content: "Latest", size: 9, fill: palette.good, anchor: "middle" }));
+  parts.push(rect({ x: x + 12, y: y + 62, width: width - 24, height: 34, radius: 8, fill: palette.panel, stroke: palette.line }));
+  parts.push(text({ x: x + 22, y: y + 83, content: "goui-0.1.0.zip", size: 10, font: monoFont }));
+  parts.push(circle({ cx: x + width - 30, cy: y + 79, r: 12, fill: palette.accent }));
+  parts.push(downloadGlyph(x + width - 36, y + 73, 12));
+  parts.push(cursor(x + width - 34, y + 94));
+  parts.push(text({ x: x + 14, y: y + 116, content: "Unzip it. Double clicking is enough.", size: 10, fill: palette.muted }));
+  parts.push(folderGlyph(x + 14, y + 124, 16, palette.muted));
+  parts.push(text({ x: x + 36, y: y + 138, content: "the goui folder", size: 10, fill: palette.muted }));
   return parts.join("");
 }
 
@@ -275,14 +304,14 @@ function makeInstallFlow() {
   const cardWidth = 254;
   const gap = 32;
   const steps = [
-    { number: 1, title: "Open Extensions", note: "Go to chrome://extensions", picture: pictureLoadUnpacked },
-    { number: 2, title: "Load the folder", note: "Pick the goui folder", picture: picturePickFolder },
+    { number: 1, title: "Download the zip", note: "From the Releases page", picture: pictureDownload },
+    { number: 2, title: "Load the folder", note: "chrome://extensions", picture: pictureLoadUnpacked },
     { number: 3, title: "Pin goui", note: "Press the pin in the menu", picture: picturePin },
     { number: 4, title: "Click the icon", note: "The panel opens", picture: picturePanel },
   ];
   const parts = [
     text({ x: 40, y: 46, content: "Install goui in four steps", size: 20, weight: 700, font: headFont }),
-    text({ x: 40, y: 68, content: "Turn on Developer mode first. It is at the top right of the extensions page.", size: 13, fill: palette.muted }),
+    text({ x: 40, y: 68, content: "Download the zip and unzip it. Then load the folder in Chrome.", size: 13, fill: palette.muted }),
   ];
   steps.forEach((step, index) => {
     const x = 40 + (index * (cardWidth + gap));
@@ -296,7 +325,7 @@ function makeLoadUnpacked() {
   const width = 720;
   const height = 300;
   const parts = [
-    text({ x: 32, y: 44, content: "Step 1. Open the extensions page", size: 19, weight: 700, font: headFont }),
+    text({ x: 32, y: 44, content: "Step 2. Load the folder in Chrome", size: 19, weight: 700, font: headFont }),
     text({ x: 32, y: 68, content: "Type chrome://extensions in the address bar, or brave://extensions in Brave.", size: 13, fill: palette.muted }),
     text({ x: 32, y: 88, content: "Turn on Developer mode at the top right. The Load unpacked button then appears.", size: 13, fill: palette.muted }),
     pictureLoadUnpacked(32, 108, width - 64),
@@ -304,12 +333,40 @@ function makeLoadUnpacked() {
   return frame(width, height, parts.join(""));
 }
 
+function makeDownload() {
+  const width = 720;
+  const height = 330;
+  const parts = [
+    text({ x: 32, y: 44, content: "Step 1. Download the zip", size: 19, weight: 700, font: headFont }),
+    text({ x: 32, y: 68, content: "Open the Releases page on GitHub. Press goui-0.1.0.zip under the newest release.", size: 13, fill: palette.muted }),
+    text({ x: 32, y: 88, content: "Unzip the file after the download. Double clicking it is enough.", size: 13, fill: palette.muted }),
+  ];
+  parts.push(rect({ x: 32, y: 108, width: 398, height: 150, radius: 12, fill: palette.panel, stroke: palette.line }));
+  parts.push(text({ x: 48, y: 134, content: "github.com/wyndhamharyata/goui/releases", size: 11, fill: palette.muted, font: monoFont }));
+  parts.push(text({ x: 48, y: 168, content: "Releases", size: 16, weight: 700 }));
+  parts.push(rect({ x: 140, y: 152, width: 62, height: 20, radius: 10, fill: palette.panel2, stroke: palette.line }));
+  parts.push(text({ x: 171, y: 166, content: "Latest", size: 10, fill: palette.good, anchor: "middle" }));
+  parts.push(rect({ x: 48, y: 184, width: 366, height: 40, radius: 8, fill: palette.panel2, stroke: palette.line }));
+  parts.push(text({ x: 64, y: 209, content: "goui-0.1.0.zip", size: 12, font: monoFont }));
+  parts.push(rect({ x: 312, y: 192, width: 88, height: 24, radius: 6, fill: palette.accent }));
+  parts.push(text({ x: 356, y: 208, content: "Download", size: 11, weight: 700, fill: "#ffffff", anchor: "middle" }));
+  parts.push(cursor(392, 218));
+  parts.push(arrow(438, 486, 200));
+  parts.push(text({ x: 462, y: 188, content: "unzip", size: 11, fill: palette.muted, anchor: "middle" }));
+  parts.push(rect({ x: 490, y: 150, width: 198, height: 108, radius: 12, fill: palette.panel2, stroke: palette.line }));
+  parts.push(folderGlyph(510, 172, 44, palette.accent));
+  parts.push(text({ x: 566, y: 196, content: "goui", size: 15, weight: 700 }));
+  parts.push(text({ x: 566, y: 216, content: "the unzipped folder", size: 11, fill: palette.muted }));
+  parts.push(text({ x: 510, y: 240, content: "Keep it where it is.", size: 11, fill: palette.muted }));
+  return frame(width, height, parts.join(""));
+}
+
 function makePickFolder() {
   const width = 720;
   const height = 300;
   const parts = [
-    text({ x: 32, y: 44, content: "Step 2. Pick the goui folder", size: 19, weight: 700, font: headFont }),
-    text({ x: 32, y: 68, content: "Choose the folder that holds manifest.json. The folder itself, not a file inside it.", size: 13, fill: palette.muted }),
+    text({ x: 32, y: 44, content: "Pick the goui folder", size: 19, weight: 700, font: headFont }),
+    text({ x: 32, y: 68, content: "The Load unpacked button asks for a folder. Choose the one that holds manifest.json.", size: 13, fill: palette.muted }),
     text({ x: 32, y: 88, content: "Keep the folder where it is. Chrome reads it every time it starts.", size: 13, fill: palette.muted }),
     picturePickFolder(32, 108, width - 64),
   ];
@@ -348,6 +405,7 @@ function makeClickIcon() {
 }
 
 const images = {
+  "install-download": makeDownload(),
   "install-flow": makeInstallFlow(),
   "install-load-unpacked": makeLoadUnpacked(),
   "install-pick-folder": makePickFolder(),
