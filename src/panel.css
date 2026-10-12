@@ -425,15 +425,27 @@ textarea {
 /* The row scrolls sideways only. A vertical wheel turns into a sideways scroll in panel.js. */
 .chips {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip-track {
+  display: flex;
+  flex: 1;
   gap: 4px;
   overflow-x: auto;
-  overflow-y: hidden;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
   touch-action: pan-x;
 }
 
-.chips::-webkit-scrollbar {
+.chip-track::-webkit-scrollbar {
   display: none;
 }
 
@@ -529,7 +541,7 @@ textarea {
 
 .library-actions {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
 }
 
@@ -625,16 +637,51 @@ textarea {
   width: 100%;
 }
 
-.target {
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+  border-color: var(--line);
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.section-head b {
+  display: block;
+  font-size: 14px;
+}
+
+.step {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+.current {
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel-2);
 }
 
-.target > span {
-  color: var(--muted);
+.current .caption,
+.current b {
+  display: block;
 }
 
-.target button {
-  flex: 1;
+.preset-section[data-role="ear"] .step {
+  background: #ffd166;
+  color: #0e1013;
 }

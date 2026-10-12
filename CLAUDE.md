@@ -15,8 +15,11 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
   the picture matches the sound.
 - `engineConfig` in `src/shared/filters.js` turns a stored config into what the engine plays: the bands
   of every layer that is on, the three Listen sliders as fixed bands, and the auto preamp. A config
-  holds a `headphone` layer and an optional `ear` layer, each with its own switch and bands. Bands add
-  in dB, so the two layers merge exactly. `flatBands` is the same list for Export.
+  holds a `headphone` layer and an optional `ear` layer, each with its own switch and bands. Bands sum
+  in dB, so the two layers merge exactly. `flatBands` is the same list for the whole-sound export.
+- Each layer has its own preset list, under `headphonePresets` and `earPresets`. A preset holds bands
+  only. The sliders and the preamp stay as they are when you pick one. A sound saved before the two
+  lists splits into a headphone preset and, when it holds ear bands, an ear preset under that name.
 - Playwright runs the tests at side panel width. ESLint and `scripts/check-words.mjs` run the lint.
 
 ## Commands

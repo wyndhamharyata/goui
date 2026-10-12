@@ -63,7 +63,7 @@ export function newBand(frequencyHz) {
 }
 
 // A layer's bands, cleaned one by one, so a bad file cannot reach the audio chain.
-function cleanBands(raw) {
+export function cleanBands(raw) {
   const bands = Array.isArray(raw) ? raw : [];
   return bands.filter((band) => band && typeof band === "object").map((band) => ({
     on: band.on !== false,

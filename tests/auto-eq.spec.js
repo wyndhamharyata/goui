@@ -82,15 +82,33 @@ async function readSteadyLevel(page) {
   throw new Error("The level did not settle.");
 }
 
-// Paste AutoEQ text into a chosen layer, the way a person copies it from autoeq.app. A second
-// press on Paste closes the box, so the button is pressed only while the box is closed.
+const earCutText = "Filter 1: ON PK Fc 1000 Hz Gain -6.0 dB Q 1.0";
+
+function sectionOf(panel, role) {
+  return panel.locator(`.preset-section[data-role=${role}]`);
+}
+
+// Paste AutoEQ text into one layer's section, the way a person copies it from autoeq.app or
+// eqbyear. A second press on Paste closes the box, so the button is pressed only while it is closed.
 async function pasteInto(panel, role, text) {
   await panel.click("#tabs [data-tab=library]");
-  await panel.click(`#target [data-target=${role}]`);
-  const isPasteOpen = await panel.locator("#applyText").isVisible();
-  if (!isPasteOpen) await panel.click("#libraryActions [data-action=paste]");
-  await panel.fill("#libraryText", text);
-  await panel.click("#applyText");
+  const section = sectionOf(panel, role);
+  if (!(await section.locator("[data-action=apply]").isVisible())) await section.locator("[data-action=paste]").click();
+  await section.locator(".text").fill(text);
+  await section.locator("[data-action=apply]").click();
+}
+
+async function saveAs(panel, role, name) {
+  await panel.click("#tabs [data-tab=library]");
+  const section = sectionOf(panel, role);
+  await section.locator("[data-action=saveAs]").click();
+  await section.locator(".save-name").fill(name);
+  await section.locator("[data-action=confirmSave]").click();
+}
+
+async function pick(panel, role, name) {
+  await panel.click("#tabs [data-tab=library]");
+  await sectionOf(panel, role).locator(`.item[data-name="${name}"]`).click();
 }
 
 function layerSwitch(panel, label) {
@@ -110,13 +128,32 @@ function expectAbout6Db(differenceDb) {
   expect(differenceDb).toBeLessThan(6.6);
 }
 
-const earCutText = "Filter 1: ON PK Fc 1000 Hz Gain -6.0 dB Q 1.0";
+function expectFlat(levelDb, flatDb) {
+  expect(Math.abs(levelDb - flatDb)).toBeLessThan(0.6);
+}
+
+// Stand in for the AutoEQ repository. Other Phone has no profile, as a broken download.
+async function routeAutoEq(context) {
+  const profilePath = "/fake/rig/Fixture%20Phone%20(ANC%20On)/Fixture%20Phone%20(ANC%20On)%20ParametricEQ.txt";
+  await context.route("https://raw.githubusercontent.com/**", (route) => {
+    const url = route.request().url();
+    if (url.endsWith("INDEX.md")) {
+      route.fulfill({ contentType: "text/plain", body: readFileSync(join(here, "fixtures", "autoeq-index.md")) });
+      return;
+    }
+    if (url.endsWith(profilePath)) {
+      route.fulfill({ contentType: "text/plain", body: readFileSync(join(here, "fixtures", "fixture-phone.txt")) });
+      return;
+    }
+    route.fulfill({ status: 404, body: "404: Not Found" });
+  });
+}
 
 journey("given auto preamp off, an AutoEQ peak in the headphone layer plays a 1 kHz tone 6 dB louder in both views", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
   await pasteInto(panel, "headphone", "Not an AutoEQ file");
-  await expect(panel.locator("#libraryHint")).toHaveText("No AutoEQ filters found in that text.");
+  await expect(sectionOf(panel, "headphone").locator(".action-hint")).toHaveText("No AutoEQ filters found in that text.");
   await pasteInto(panel, "headphone", peakText);
 
   await panel.click("#tabs [data-tab=tune]");
@@ -137,7 +174,7 @@ journey("given auto preamp on, a 6 dB peak keeps the tone level, and a manual 0 
   const flat = await readSteadyLevel(panel);
 
   await pasteInto(panel, "headphone", peakText);
-  expect(Math.abs(await readSteadyLevel(panel) - flat)).toBeLessThan(0.6);
+  expectFlat(await readSteadyLevel(panel), flat);
 
   // Auto sets the preamp to -6.0 dB. Sixty presses of 0.1 dB bring it to 0 dB by hand.
   await panel.click("#tabs [data-tab=listen]");
@@ -157,39 +194,134 @@ journey("given a headphone boost and an ear cut at 1 kHz, the layers cancel and 
 
   await pasteInto(panel, "ear", earCutText);
   await expect(panel.locator(".layer", { hasText: "My ear" })).toHaveCount(1);
-  expect(Math.abs(await readSteadyLevel(panel) - flat)).toBeLessThan(0.6);
+  expectFlat(await readSteadyLevel(panel), flat);
 
   await setLayer(panel, "My ear", false);
   expectAbout6Db(await readSteadyLevel(panel) - flat);
   await setLayer(panel, "My ear", true);
-  expect(Math.abs(await readSteadyLevel(panel) - flat)).toBeLessThan(0.6);
+  expectFlat(await readSteadyLevel(panel), flat);
 });
 
-journey("given an ear layer, picking another headphone keeps the ear layer", async (context, port) => {
+journey("given an AutoEQ pick, Save keeps it under its headphone name, and picking it from your presets plays it again", async (context, port) => {
+  await routeAutoEq(context);
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
-  await pasteInto(panel, "headphone", peakText);
-  await pasteInto(panel, "ear", earCutText);
   const flat = await readSteadyLevel(panel);
-  expect(Math.abs(flat - await readSteadyLevel(panel))).toBeLessThan(0.6);
 
-  // The target decides where a pick goes, so the new headphone goes to the headphone layer.
   await panel.click("#tabs [data-tab=library]");
-  await panel.click("#target [data-target=headphone]");
-  await panel.locator("#libraryResults .item", { hasText: "Flat" }).click();
-  await expect(panel.locator(".layer", { hasText: "My ear" })).toHaveCount(1);
-  // The new headphone has no bands, so only the ear cut is left, 6 dB under the flat tone.
-  expect(await readSteadyLevel(panel) - flat).toBeLessThan(-5.4);
+  const headphone = sectionOf(panel, "headphone");
+  await headphone.locator(".search").fill("phone");
+  await expect(headphone.locator(".item[data-name='Fixture Phone (ANC On)']")).toContainText("AutoEQ, someone on a rig");
+  await headphone.locator(".item[data-name='Other Phone']").click();
+  await expect(headphone.locator(".search-hint")).toHaveText("Other Phone did not load. Check the network and try again.");
+
+  await headphone.locator(".item[data-name='Fixture Phone (ANC On)']").click();
+  await expect(panel.locator(".layer", { hasText: "Headphone" })).toContainText("Fixture Phone (ANC On)");
+  expectAbout6Db(await readSteadyLevel(panel) - flat);
+
+  await panel.click("#tabs [data-tab=library]");
+  await expect(headphone.locator(".search")).toHaveValue("");
+  await expect(headphone.locator(".current")).toContainText("AutoEQ, not saved yet");
+  await headphone.locator("[data-action=save]").click();
+  await expect(headphone.locator(".save-name")).toHaveValue("Fixture Phone (ANC On)");
+  await headphone.locator("[data-action=confirmSave]").click();
+  await expect(headphone.locator(".current")).toContainText("Your preset");
+
+  await pick(panel, "headphone", "Flat");
+  expectFlat(await readSteadyLevel(panel), flat);
+  await pick(panel, "headphone", "Fixture Phone (ANC On)");
+  expectAbout6Db(await readSteadyLevel(panel) - flat);
 });
 
-journey("given a headphone band and an ear band, Export writes both as one file", async (context, port) => {
+journey("given an edited headphone preset, Save changes writes over it and Save as new keeps a second one", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  await panel.click("#autoPreamp");
+  const flat = await readSteadyLevel(panel);
+  await pasteInto(panel, "headphone", peakText);
+  await saveAs(panel, "headphone", "voice");
+
+  await panel.click("#tabs [data-tab=tune]");
+  await panel.click("#chips [data-index='0']");
+  await panel.fill("#gainInput", "0");
+  await expect(panel.locator(".layer", { hasText: "Headphone" })).toContainText("voice, edited");
+
+  await panel.click("#tabs [data-tab=library]");
+  const headphone = sectionOf(panel, "headphone");
+  await expect(headphone.locator("[data-action=save]")).toHaveText("Save changes");
+  await headphone.locator("[data-action=save]").click();
+  await expect(headphone.locator(".action-hint")).toHaveText("Updated voice.");
+
+  await panel.click("#tabs [data-tab=tune]");
+  await panel.click("#chips [data-index='0']");
+  await panel.fill("#gainInput", "6");
+  await saveAs(panel, "headphone", "voice boosted");
+
+  await pick(panel, "headphone", "voice");
+  expectFlat(await readSteadyLevel(panel), flat);
+  await pick(panel, "headphone", "voice boosted");
+  expectAbout6Db(await readSteadyLevel(panel) - flat);
+});
+
+journey("given a saved ear preset, it stays on a new headphone, No ear tuning drops it, and Delete removes it", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  await panel.click("#autoPreamp");
+  const flat = await readSteadyLevel(panel);
+  await pasteInto(panel, "headphone", peakText);
+  await pasteInto(panel, "ear", earCutText);
+  await saveAs(panel, "ear", "my ear");
+  expectFlat(await readSteadyLevel(panel), flat);
+
+  // The new headphone has no bands, so only the ear cut is left, 6 dB under the flat tone.
+  await pick(panel, "headphone", "Flat");
+  await expect(panel.locator(".layer", { hasText: "My ear" })).toContainText("my ear");
+  expect(await readSteadyLevel(panel) - flat).toBeLessThan(-5.4);
+
+  await pick(panel, "headphone", "Warm");
+  await pick(panel, "ear", "No ear tuning");
+  await expect(panel.locator(".layer", { hasText: "My ear" })).toHaveCount(0);
+  await pasteInto(panel, "headphone", peakText);
+  expectAbout6Db(await readSteadyLevel(panel) - flat);
+  await pick(panel, "ear", "my ear");
+  expectFlat(await readSteadyLevel(panel), flat);
+
+  await sectionOf(panel, "ear").locator("[title='Delete my ear']").click();
+  await expect(sectionOf(panel, "ear").locator(".item[data-name='my ear']")).toHaveCount(0);
+});
+
+journey("given a headphone band and an ear band, each layer exports alone and the whole sound exports both", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
   await pasteInto(panel, "headphone", peakText);
   await pasteInto(panel, "ear", earCutText);
-  await panel.click("#libraryActions [data-action=export]");
-  await expect(panel.locator("#libraryText")).toHaveValue(/Filter 1: ON PK Fc 1000 Hz Gain 6.0 dB/);
-  await expect(panel.locator("#libraryText")).toHaveValue(/Filter 2: ON PK Fc 1000 Hz Gain -6.0 dB/);
+
+  const ear = sectionOf(panel, "ear");
+  await ear.locator("[data-action=export]").click();
+  await expect(ear.locator(".text")).toHaveValue(/Filter 1: ON PK Fc 1000 Hz Gain -6\.0 dB/);
+  await expect(ear.locator(".text")).not.toHaveValue(/Gain 6\.0 dB/);
+
+  await panel.click("#exportAll");
+  await expect(panel.locator("#wholeText")).toHaveValue(/Filter 1: ON PK Fc 1000 Hz Gain 6\.0 dB/);
+  await expect(panel.locator("#wholeText")).toHaveValue(/Filter 2: ON PK Fc 1000 Hz Gain -6\.0 dB/);
+});
+
+journey("given sounds saved by the build before the two lists, each one shows in both lists and plays", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  await panel.click("#autoPreamp");
+  const flat = await readSteadyLevel(panel);
+  const older = {
+    enabled: true,
+    layers: {
+      headphone: { on: true, source: "Saved", name: "old", bands: [{ on: true, type: "PK", frequencyHz: 1000, gainDb: 6, q: 1 }] },
+      ear: { on: true, source: "Pasted", name: "Pasted My ear", bands: [{ on: true, type: "PK", frequencyHz: 1000, gainDb: -6, q: 1 }] },
+    },
+  };
+  await panel.evaluate((sound) => chrome.storage.local.set({ savedSounds: { old: sound } }), older);
+  await panel.reload();
+
+  await pick(panel, "headphone", "old");
+  expectAbout6Db(await readSteadyLevel(panel) - flat);
+  await pick(panel, "ear", "old");
+  expectFlat(await readSteadyLevel(panel), flat);
 });
 
 journey("given an ear layer, the eqbyear button turns it off and opens the test in a new tab", async (context, port) => {
@@ -198,95 +330,22 @@ journey("given an ear layer, the eqbyear button turns it off and opens the test 
   await pasteInto(panel, "ear", earCutText);
   await expect.poll(() => layerSwitch(panel, "My ear").isChecked()).toBe(true);
 
-  await panel.click("#tabs [data-tab=listen]");
   await panel.click("#eqbyear");
   await expect.poll(() => layerSwitch(panel, "My ear").isChecked()).toBe(false);
   await expect.poll(() => context.pages().some((page) => page.url().startsWith("https://eqbyear.com"))).toBe(true);
-  await expect(panel.locator("#layerHint")).toContainText("Click the goui icon on that tab");
+  await expect(sectionOf(panel, "ear").locator(".action-hint")).toContainText("Click the goui icon on that tab");
 });
 
-journey("given a saved sound, loading it brings both layers back, and Delete removes it", async (context, port) => {
-  const panel = await openPanel(context, port, 1000);
-  await panel.click("#autoPreamp");
-  const flat = await readSteadyLevel(panel);
-  await pasteInto(panel, "headphone", peakText);
-  await pasteInto(panel, "ear", earCutText);
-  await panel.click("#libraryActions [data-action=save]");
-  await panel.fill("#saveName", "voice");
-  await panel.click("#saveButton");
-
-  await panel.click("#tabs [data-tab=listen]");
-  await panel.locator(".layer", { hasText: "My ear" }).locator("button", { hasText: "×" }).click();
-  expectAbout6Db(await readSteadyLevel(panel) - flat);
-
-  await panel.click("#tabs [data-tab=library]");
-  await panel.locator("#libraryResults .item", { hasText: "voice" }).click();
-  await expect(panel.locator(".layer", { hasText: "My ear" })).toHaveCount(1);
-  expect(Math.abs(await readSteadyLevel(panel) - flat)).toBeLessThan(0.6);
-
-  await panel.click("#libraryResults [title='Delete voice']");
-  await expect(panel.locator("#libraryResults .item", { hasText: "voice" })).toHaveCount(0);
-});
-
-journey("given a headphone search from the Library, a pick plays its peak in the chosen layer", async (context, port) => {
-  // Stand in for the AutoEQ repository. Other Phone has no profile, as a broken download.
-  const profilePath = "/fake/rig/Fixture%20Phone%20(ANC%20On)/Fixture%20Phone%20(ANC%20On)%20ParametricEQ.txt";
-  await context.route("https://raw.githubusercontent.com/**", (route) => {
-    const url = route.request().url();
-    if (url.endsWith("INDEX.md")) {
-      route.fulfill({ contentType: "text/plain", body: readFileSync(join(here, "fixtures", "autoeq-index.md")) });
-      return;
-    }
-    if (url.endsWith(profilePath)) {
-      route.fulfill({ contentType: "text/plain", body: readFileSync(join(here, "fixtures", "fixture-phone.txt")) });
-      return;
-    }
-    route.fulfill({ status: 404, body: "404: Not Found" });
-  });
-
-  const panel = await openPanel(context, port, 1000);
-  await panel.click("#autoPreamp");
-  const flat = await readSteadyLevel(panel);
-
-  // The target decides the layer, so this pick goes into My ear.
-  await panel.click("#tabs [data-tab=library]");
-  await panel.click("#target [data-target=ear]");
-  await panel.fill("#librarySearch", "phone");
-  await panel.locator("#libraryResults .item", { hasText: "Other Phone" }).click();
-  await expect(panel.locator("#librarySearchHint")).toHaveText("Other Phone did not load. Check the network and try again.");
-
-  await panel.locator("#libraryResults .item", { hasText: "Fixture Phone" }).click();
-  await expect(panel.locator(".layer", { hasText: "My ear" })).toContainText("Fixture Phone (ANC On)");
-  await expect(panel.locator("#librarySearch")).toHaveValue("");
-  expectAbout6Db(await readSteadyLevel(panel) - flat);
-});
-
-journey("given a saved sound stored as JSON, pasting it back brings both layers back", async (context, port) => {
-  const panel = await openPanel(context, port, 1000);
-  await panel.click("#autoPreamp");
-  const flat = await readSteadyLevel(panel);
-  await pasteInto(panel, "headphone", peakText);
-  await pasteInto(panel, "ear", earCutText);
-  await panel.click("#libraryActions [data-action=export]");
-  await panel.click("#exportJson");
-  const json = await panel.locator("#libraryText").inputValue();
-
-  await pasteInto(panel, "headphone", "Filter 1: ON PK Fc 300 Hz Gain 4.0 dB Q 1.0");
-  await pasteInto(panel, "ear", json);
-  expect(Math.abs(await readSteadyLevel(panel) - flat)).toBeLessThan(0.6);
-});
-
-journey("given a ParametricEQ.txt file, Import plays its 1 kHz peak in the chosen layer", async (context, port) => {
+journey("given a ParametricEQ.txt file, Import plays its 1 kHz peak in the headphone layer", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
   const flat = await readSteadyLevel(panel);
 
   await panel.click("#tabs [data-tab=library]");
-  await panel.click("#target [data-target=headphone]");
   const chooser = panel.waitForEvent("filechooser");
-  await panel.click("#libraryActions [data-action=import]");
+  await sectionOf(panel, "headphone").locator("[data-action=import]").click();
   await (await chooser).setFiles(join(here, "fixtures", "fixture-phone.txt"));
-  await expect(panel.locator(".layer", { hasText: "fixture-phone" })).toHaveCount(1);
+  await expect(panel.locator(".layer", { hasText: "Headphone" })).toContainText("fixture-phone");
   expectAbout6Db(await readSteadyLevel(panel) - flat);
 });
 
@@ -312,12 +371,12 @@ journey("given a 6 dB peak, holding A/B or turning the EQ off plays the 1 kHz to
 
   await panel.locator("#compare").hover();
   await panel.mouse.down();
-  expect(Math.abs(await readSteadyLevel(panel) - flat)).toBeLessThan(0.6);
+  expectFlat(await readSteadyLevel(panel), flat);
   await panel.mouse.up();
   expectAbout6Db(await readSteadyLevel(panel) - flat);
 
   await panel.click(".head .switch");
-  expect(Math.abs(await readSteadyLevel(panel) - flat)).toBeLessThan(0.6);
+  expectFlat(await readSteadyLevel(panel), flat);
 });
 
 journey("given Vocals at +6 dB, a 2.5 kHz tone plays 6 dB louder and stays so on a new headphone", async (context, port) => {
@@ -329,36 +388,8 @@ journey("given Vocals at +6 dB, a 2.5 kHz tone plays 6 dB louder and stays so on
   for (let press = 0; press < 12; press += 1) await panel.keyboard.press("ArrowRight");
   expectAbout6Db(await readSteadyLevel(panel) - flat);
 
-  await panel.click("#tabs [data-tab=library]");
-  await panel.locator("#libraryResults .item", { hasText: "Warm" }).click();
+  await pick(panel, "headphone", "Warm");
   expectAbout6Db(await readSteadyLevel(panel) - flat);
-});
-
-journey("given a saved sound you then edit, its layer row says edited and Update keeps the edit", async (context, port) => {
-  const panel = await openPanel(context, port, 1000);
-  await panel.click("#autoPreamp");
-  const flat = await readSteadyLevel(panel);
-
-  await pasteInto(panel, "headphone", peakText);
-  await panel.click("#libraryActions [data-action=save]");
-  await panel.fill("#saveName", "voice");
-  await panel.click("#saveButton");
-
-  await panel.click("#tabs [data-tab=tune]");
-  await panel.click("#chips [data-index='0']");
-  await panel.fill("#gainInput", "0");
-  await expect(panel.locator(".layer", { hasText: "Headphone" })).toContainText("voice, edited");
-
-  await panel.click("#tabs [data-tab=library]");
-  await panel.click("#libraryActions [data-action=save]");
-  await expect(panel.locator("#saveName")).toHaveValue("voice");
-  await expect(panel.locator("#saveButton")).toHaveText("Update");
-  await panel.click("#saveButton");
-  await expect(panel.locator(".layer", { hasText: "Headphone" })).toContainText("voice");
-
-  await panel.locator("#libraryResults .item", { hasText: "Clear vocals" }).click();
-  await panel.locator("#libraryResults .item", { hasText: "voice" }).click();
-  expect(Math.abs(await readSteadyLevel(panel) - flat)).toBeLessThan(0.6);
 });
 
 journey("given a press on a point that wobbles 3 px, the tone keeps its boost, and a 40 px drag moves the boost off it", async (context, port) => {
@@ -399,20 +430,29 @@ journey("given a press on a point that wobbles 3 px, the tone keeps its boost, a
   expect(withPeak - await readSteadyLevel(panel)).toBeGreaterThan(2);
 });
 
-journey("given My ear chosen, a double click on the graph puts a band in the ear layer", async (context, port) => {
+journey("given nothing selected, a double click on the graph puts a band in the headphone layer", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
   const flat = await readSteadyLevel(panel);
 
-  await panel.click("#tabs [data-tab=library]");
-  await panel.click("#target [data-target=ear]");
   await panel.click("#tabs [data-tab=tune]");
   const plot = await panel.locator("#tuneGraph").boundingBox();
   await panel.mouse.dblclick(plot.x + (plot.width * 0.6), plot.y + (plot.height * 0.5));
+  await expect(panel.locator("#bandTitle")).toContainText("Headphone ·");
+  await panel.fill("#frequencyInput", "1000");
+  await panel.fill("#gainInput", "6");
+  expectAbout6Db(await readSteadyLevel(panel) - flat);
+});
 
+journey("given the Add band chip under My ear, a new 6 dB band at 1 kHz plays in the ear layer", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  await panel.click("#autoPreamp");
+  const flat = await readSteadyLevel(panel);
+
+  await panel.click("#tabs [data-tab=tune]");
+  await panel.click("#chips [data-add=ear]");
   await expect(panel.locator("#bandTitle")).toContainText("My ear ·");
   await expect(panel.locator(".layer", { hasText: "My ear" })).toHaveCount(1);
-  await panel.fill("#frequencyInput", "1000");
   await panel.fill("#gainInput", "6");
   expectAbout6Db(await readSteadyLevel(panel) - flat);
 });

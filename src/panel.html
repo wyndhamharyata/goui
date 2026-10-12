@@ -34,8 +34,6 @@
         <section class="pane" data-pane="listen">
           <h4 class="column-title">Listen</h4>
           <div class="card" id="layers"></div>
-          <p class="hint" id="layerHint"></p>
-          <button id="eqbyear" class="wide" title="Open eqbyear.com in a new tab, with the ear layer off, to measure your ear">Measure my ear with eqbyear</button>
           <div class="card"><div class="graph" id="listenGraph"></div></div>
           <div class="card" id="sliders">
             <label class="slider">
@@ -129,37 +127,82 @@
 
         <section class="pane" data-pane="library">
           <h4 class="column-title">Library</h4>
+          <div class="card preset-section" data-role="headphone">
+            <div class="section-head">
+              <span class="step">1</span>
+              <div class="grow">
+                <b>Headphone</b>
+                <small class="caption">Makes your headphone sound neutral. Find it in AutoEQ below, then save it as your own preset.</small>
+              </div>
+            </div>
+            <div class="current">
+              <div class="grow">
+                <small class="caption current-caption"></small>
+                <b class="current-name"></b>
+              </div>
+              <button data-action="save" class="save">Save</button>
+              <button data-action="saveAs" class="save-as" title="Keep this as a new preset under another name">Save as new</button>
+            </div>
+            <div class="row save-row" hidden>
+              <input type="text" class="save-name" placeholder="Name for this headphone preset" />
+              <button data-action="confirmSave" class="confirm-save on">Save</button>
+            </div>
+            <div class="library-actions">
+              <button data-action="import" title="Load a ParametricEQ.txt file into the headphone layer">Import</button>
+              <button data-action="paste" title="Paste AutoEQ text into the headphone layer">Paste</button>
+              <button data-action="export" title="Copy the headphone layer as AutoEQ text">Export</button>
+            </div>
+            <div class="drawer" hidden>
+              <textarea class="text" spellcheck="false" placeholder="Paste AutoEQ text here"></textarea>
+              <button data-action="apply" class="apply on">Apply</button>
+            </div>
+            <input type="file" class="import-file" accept=".txt,text/plain" hidden />
+            <p class="hint action-hint"></p>
+            <input type="search" class="search" placeholder="Search AutoEQ or your presets, for example HD 600" />
+            <div class="results"></div>
+            <p class="hint search-hint"></p>
+          </div>
+
+          <div class="card preset-section" data-role="ear">
+            <div class="section-head">
+              <span class="step">2</span>
+              <div class="grow">
+                <b>My ear</b>
+                <small class="caption">Tunes the sound to your own hearing, on top of the headphone. Measure it with the eqbyear test, paste the result here, then save it.</small>
+              </div>
+            </div>
+            <div class="current">
+              <div class="grow">
+                <small class="caption current-caption"></small>
+                <b class="current-name"></b>
+              </div>
+              <button data-action="save" class="save">Save</button>
+              <button data-action="saveAs" class="save-as" title="Keep this as a new preset under another name">Save as new</button>
+            </div>
+            <div class="row save-row" hidden>
+              <input type="text" class="save-name" placeholder="Name for this ear preset" />
+              <button data-action="confirmSave" class="confirm-save on">Save</button>
+            </div>
+            <button data-action="measure" id="eqbyear" title="Open eqbyear.com in a new tab, with My ear off, to measure your ear">Measure my ear with eqbyear</button>
+            <div class="library-actions">
+              <button data-action="import" title="Load a ParametricEQ.txt file into the ear layer">Import</button>
+              <button data-action="paste" title="Paste AutoEQ text, such as an eqbyear result, into the ear layer">Paste</button>
+              <button data-action="export" title="Copy the ear layer as AutoEQ text">Export</button>
+            </div>
+            <div class="drawer" hidden>
+              <textarea class="text" spellcheck="false" placeholder="Paste the eqbyear result here"></textarea>
+              <button data-action="apply" class="apply on">Apply</button>
+            </div>
+            <input type="file" class="import-file" accept=".txt,text/plain" hidden />
+            <p class="hint action-hint"></p>
+            <div class="results"></div>
+          </div>
+
           <div class="card">
-            <input type="search" id="librarySearch" placeholder="Search your headphones, for example HD 600" />
-            <div class="results" id="libraryResults"></div>
-            <p class="hint" id="librarySearchHint"></p>
-            <div class="target" id="target">
-              <span>Put into</span>
-              <button data-target="headphone">Headphone</button>
-              <button data-target="ear">My ear</button>
-            </div>
-            <div class="library-actions" id="libraryActions">
-              <button data-action="save" title="Keep the sound you hear under a name">Save</button>
-              <button data-action="import" title="Load a ParametricEQ.txt or a JSON file">Import</button>
-              <button data-action="paste" title="Paste AutoEQ text or JSON">Paste</button>
-              <button data-action="export" title="Copy the sound you hear as AutoEQ text or JSON">Export</button>
-            </div>
-            <div class="row" id="saveRow" hidden>
-              <input type="text" id="saveName" placeholder="Name for the sound you hear" />
-              <button id="saveButton" class="on">Save</button>
-            </div>
-            <div class="drawer" id="textDrawer" hidden>
-              <textarea id="libraryText" spellcheck="false" placeholder="Paste AutoEQ text or JSON here"></textarea>
-              <div class="row" id="pasteActions">
-                <button id="applyText" class="on grow">Apply</button>
-              </div>
-              <div class="row" id="exportActions">
-                <button id="exportAutoEq" class="grow">AutoEQ text</button>
-                <button id="exportJson" class="grow">JSON</button>
-              </div>
-            </div>
-            <input type="file" id="importFile" accept=".txt,.json,text/plain,application/json" hidden />
-            <p class="hint" id="libraryHint"></p>
+            <b>Whole sound</b>
+            <small class="caption">Both layers and the sliders in one AutoEQ file, for other apps.</small>
+            <button id="exportAll">Export the whole sound</button>
+            <textarea id="wholeText" spellcheck="false" readonly hidden></textarea>
           </div>
         </section>
       </div>

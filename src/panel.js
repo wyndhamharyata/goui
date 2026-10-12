@@ -2,6 +2,7 @@ import {
   audioNodeType,
   bandTypes,
   clamp,
+  cleanBands,
   defaultConfig,
   engineConfig,
   flatBands,
@@ -22,6 +23,8 @@ import {
 import { formatDb, formatHz, layerColor, makeGraph, qToOctaves, typeColor } from "./graph.js";
 
 const byId = (id) => document.getElementById(id);
+const sectionOf = (role) => document.querySelector(`.preset-section[data-role="${role}"]`);
+const partOf = (role, name) => sectionOf(role).querySelector(`.${name}`);
 const autoEqBase = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master/results/";
 
 const starterSounds = [
@@ -44,7 +47,9 @@ const starterSounds = [
 ];
 
 let config = defaultConfig();
-let savedSounds = {};
+// Each layer has its own list of presets. A preset holds bands only. The sliders and the preamp
+// stay as they are when you pick one.
+const presets = { headphone: {}, ear: {} };
 let spectrumDb = [];
 let isCapturing = false;
 let selectedIndex = -1;
@@ -53,10 +58,7 @@ let isBypassed = false;
 let saveTimer = 0;
 let autoEqItems = null;
 let isMoreOpen = false;
-let openAction = "";
-// Where a pick from the Library goes. Paste, Import, an AutoEQ headphone and a starter sound all
-// join this layer. A saved sound brings back the whole stack.
-let target = "headphone";
+const openActions = { headphone: "", ear: "" };
 
 // Every band in the panel, in layer order, with the layer it belongs to. A layer that is off keeps
 // its bands, so they can still be edited while it is silent.
@@ -93,14 +95,12 @@ function listCurveLayers() {
     .map((role) => ({ role, bands: config.layers[role].bands }));
 }
 
-function addBandToTarget(frequencyHz, gainDb) {
-  const role = roleAt(selectedIndex) || target;
+function addBandToLayer(role, frequencyHz, gainDb) {
   if (!config.layers[role]) {
-    config.layers[role] = { on: true, source: "Your band", name: layerLabels[role], isEdited: false, bands: [] };
+    config.layers[role] = { on: true, source: "Your bands", name: "My ear tuning", isEdited: false, bands: [] };
   }
-  const layer = config.layers[role];
   const band = { ...newBand(frequencyHz), gainDb };
-  layer.bands.push(band);
+  config.layers[role].bands.push(band);
   selectedIndex = listBandEntries().findIndex((entry) => entry.band === band);
   commitEdit(role);
 }
@@ -117,7 +117,8 @@ const graphHooks = {
     refresh();
   },
   changed: () => commitEdit(),
-  addBand: addBandToTarget,
+  // A new band joins the layer of the selected band. With none selected it joins the headphone layer.
+  addBand: (frequencyHz, gainDb) => addBandToLayer(roleAt(selectedIndex) || "headphone", frequencyHz, gainDb),
 };
 
 // The Listen graph is a preview. It matches the Tune graph in size and follows its zoom and turn.
@@ -161,6 +162,7 @@ function refresh() {
   listenGraph.render();
   tuneGraph.render();
   renderLayers();
+  renderPresetCards();
   renderSound();
   renderChips();
   renderInspector();
@@ -213,10 +215,8 @@ function renderLayers() {
     change.dataset.role = role;
     change.textContent = "Change";
     change.addEventListener("click", () => {
-      target = role;
-      renderTarget();
       showTab("library");
-      byId("librarySearch").focus();
+      sectionOf(role).scrollIntoView({ block: "start" });
     });
 
     row.append(toggle, text, change);
@@ -238,21 +238,14 @@ function renderLayers() {
   if (!config.layers.ear) {
     const add = document.createElement("button");
     add.id = "addEar";
-    add.title = "Paste or import an eqbyear result into a new My ear layer";
+    add.title = "Open My ear in the Library, to paste an eqbyear result or pick a saved ear preset";
     add.textContent = "Add your ear tuning on top";
     add.addEventListener("click", () => {
-      target = "ear";
-      renderTarget();
       showTab("library");
-      openLibraryAction("paste");
+      sectionOf("ear").scrollIntoView({ block: "start" });
+      if (openActions.ear !== "paste") openLibraryAction("ear", "paste");
     });
     host.append(add);
-  }
-}
-
-function renderTarget() {
-  for (const button of byId("target").querySelectorAll("[data-target]")) {
-    button.classList.toggle("on", button.dataset.target === target);
   }
 }
 
@@ -278,36 +271,49 @@ function renderSound() {
   byId("meter").title = isClipping ? `The EQ can clip by ${headroomDb.toFixed(1)} dB. Turn the preamp down or press Auto.` : "Output level. No clipping.";
 }
 
+// One row per layer, each with its own label, its own Add band chip and its own sideways scroll.
 function renderChips() {
-  const chips = byId("chips");
-  const scrollLeft = chips.scrollLeft;
-  chips.replaceChildren();
-  listBandEntries().forEach((entry, index) => {
-    const previous = listBandEntries()[index - 1];
-    if (entry.role !== (previous && previous.role)) {
-      const label = document.createElement("span");
-      label.className = "chip-label";
-      label.style.color = layerColor[entry.role];
-      label.textContent = layerLabels[entry.role];
-      chips.append(label);
+  const host = byId("chips");
+  const scrollLeft = new Map();
+  for (const track of host.querySelectorAll(".chip-track")) scrollLeft.set(track.dataset.role, track.scrollLeft);
+  host.replaceChildren();
+  let index = 0;
+  for (const role of layerOrder) {
+    const row = document.createElement("div");
+    row.className = "chip-row";
+    const label = document.createElement("span");
+    label.className = "chip-label";
+    label.style.color = layerColor[role];
+    label.textContent = layerLabels[role];
+    const track = document.createElement("div");
+    track.className = "chip-track";
+    track.dataset.role = role;
+
+    const layer = config.layers[role];
+    for (const band of layer ? layer.bands : []) {
+      const chip = document.createElement("button");
+      chip.className = "chip";
+      chip.classList.toggle("on", index === selectedIndex);
+      chip.classList.toggle("muted", !band.on);
+      chip.dataset.index = index;
+      const number = document.createElement("i");
+      number.style.background = typeColor[band.type];
+      number.textContent = index + 1;
+      chip.append(number, formatHz(band.frequencyHz));
+      track.append(chip);
+      index += 1;
     }
-    const chip = document.createElement("button");
-    chip.className = "chip";
-    chip.classList.toggle("on", index === selectedIndex);
-    chip.classList.toggle("muted", !entry.band.on);
-    chip.dataset.index = index;
-    const number = document.createElement("i");
-    number.style.background = typeColor[entry.band.type];
-    number.textContent = index + 1;
-    chip.append(number, formatHz(entry.band.frequencyHz));
-    chips.append(chip);
-  });
-  const add = document.createElement("button");
-  add.className = "chip add";
-  add.dataset.index = "add";
-  add.textContent = "Add band";
-  chips.append(add);
-  chips.scrollLeft = scrollLeft;
+
+    const add = document.createElement("button");
+    add.className = "chip add";
+    add.dataset.add = role;
+    add.title = `Make a new band in ${layerLabels[role]}`;
+    add.textContent = "Add band";
+    track.append(add);
+    row.append(label, track);
+    host.append(row);
+    track.scrollLeft = scrollLeft.get(role) || 0;
+  }
 }
 
 function describeQ(band) {
@@ -388,61 +394,62 @@ function renderPills() {
   byId("tall").classList.toggle("on", tuneGraph.vertical);
 }
 
-function markCurrent() {
-  const currentName = config.layers[target] && config.layers[target].name;
-  for (const item of document.querySelectorAll(".results .item")) {
-    item.classList.toggle("on", item.firstChild.textContent === currentName);
+// Each Library section shows what plays in its layer now, and whether that is one of your presets.
+function renderPresetCard(role) {
+  const layer = config.layers[role];
+  const isSaved = Boolean(layer) && layer.source === "Saved" && Boolean(presets[role][layer.name]);
+  let caption = "Nothing yet";
+  if (layer) caption = isSaved ? "Your preset" : `${layer.source}, not saved yet`;
+  partOf(role, "current-caption").textContent = caption;
+  let name = "No ear tuning";
+  if (layer) name = layer.isEdited ? `${layer.name}, edited` : layer.name;
+  partOf(role, "current-name").textContent = name;
+
+  const save = partOf(role, "save");
+  save.textContent = isSaved ? "Save changes" : "Save";
+  save.disabled = !layer || (isSaved && !layer.isEdited);
+  partOf(role, "save-as").disabled = !layer;
+  for (const item of sectionOf(role).querySelectorAll(".item[data-name]")) {
+    item.classList.toggle("on", Boolean(layer) && item.dataset.name === layer.name);
   }
 }
 
-// A pick joins the layer the Library shows. A headphone file's own preamp is kept only when it
-// joins the headphone layer, where a lone file needs it. Auto preamp overrides it either way.
+function renderPresetCards() {
+  for (const role of layerOrder) renderPresetCard(role);
+}
+
+// A headphone file's own preamp is kept, since a lone headphone file needs it. Auto preamp
+// overrides it either way.
 function placeBands(sound, role) {
-  config.layers[role] = {
-    on: true,
-    source: sound.source,
-    name: sound.name,
-    isEdited: false,
-    bands: sanitizeConfig({ bands: sound.bands }).layers.headphone.bands,
-  };
+  config.layers[role] = { on: true, source: sound.source, name: sound.name, isEdited: false, bands: cleanBands(sound.bands) };
   if (role === "headphone" && sound.preampDb !== undefined) config.preampDb = sound.preampDb;
   selectedIndex = -1;
   soloIndex = -1;
   commit();
-  markCurrent();
 }
 
-// A saved sound keeps everything: both layers, the sliders and the preamp. Only the EQ switch stays.
-function loadSavedSound(name) {
-  config = { ...sanitizeConfig(savedSounds[name]), enabled: config.enabled };
-  selectedIndex = -1;
-  soloIndex = -1;
+function savePreset(role, name) {
+  const layer = config.layers[role];
+  const isUpdate = Boolean(presets[role][name]);
+  presets[role][name] = { bands: structuredClone(layer.bands) };
+  chrome.storage.local.set({ [`${role}Presets`]: presets[role] });
+  layer.name = name;
+  layer.source = "Saved";
+  layer.isEdited = false;
+  openLibraryAction(role, "");
   commit();
-  markCurrent();
+  renderList[role]();
+  partOf(role, "action-hint").textContent = `${isUpdate ? "Updated" : "Saved"} ${name}.`;
 }
 
-function deleteSavedSound(name) {
-  delete savedSounds[name];
-  chrome.storage.local.set({ savedSounds });
-  searchLibrary();
-}
-
-function saveSound() {
-  const name = byId("saveName").value.trim();
-  if (!name) {
-    byId("libraryHint").textContent = "Give the sound a name first.";
-    return;
-  }
-  const isUpdate = Boolean(savedSounds[name]);
-  config.layers.headphone.name = name;
-  config.layers.headphone.source = "Saved";
-  for (const role of layerOrder) if (config.layers[role]) config.layers[role].isEdited = false;
-  savedSounds[name] = structuredClone(config);
-  chrome.storage.local.set({ savedSounds });
+function deletePreset(role, name) {
+  delete presets[role][name];
+  chrome.storage.local.set({ [`${role}Presets`]: presets[role] });
+  // The layer keeps its bands. It is no longer a saved preset, so Save asks for a name again.
+  const layer = config.layers[role];
+  if (layer && layer.source === "Saved" && layer.name === name) layer.source = "Deleted preset";
   commit();
-  searchLibrary();
-  openLibraryAction("");
-  byId("libraryHint").textContent = `${isUpdate ? "Updated" : "Saved"} ${name}.`;
+  renderList[role]();
 }
 
 async function loadAutoEqIndex() {
@@ -463,7 +470,8 @@ async function loadAutoEqIndex() {
     const nameEnd = line.indexOf("](./");
     const pathEnd = line.lastIndexOf(") by ");
     const isEntry = line.startsWith("- [") && nameEnd > 0 && pathEnd > nameEnd;
-    if (isEntry) autoEqItems.push({ name: line.slice(3, nameEnd), path: line.slice(nameEnd + 4, pathEnd) });
+    // One headphone can have several measurements, one per source, so the source tells them apart.
+    if (isEntry) autoEqItems.push({ name: line.slice(3, nameEnd), path: line.slice(nameEnd + 4, pathEnd), source: line.slice(pathEnd + 5).trim() });
   }
   return autoEqItems;
 }
@@ -477,7 +485,7 @@ async function loadHeadphone(item, hint) {
     return false;
   }
   const parsed = parseAutoEq(await response.text());
-  placeBands({ name: item.name, source: "AutoEQ headphones", bands: parsed.bands, preampDb: parsed.preampDb }, target);
+  placeBands({ name: item.name, source: "AutoEQ", bands: parsed.bands, preampDb: parsed.preampDb }, "headphone");
   hint.textContent = "";
   return true;
 }
@@ -486,7 +494,7 @@ async function loadHeadphone(item, hint) {
 async function pickFromSearch(load) {
   // Only a headphone download can fail. Its loader then returns false. The other loaders return nothing.
   const isLoaded = (await load()) !== false;
-  const box = byId("librarySearch");
+  const box = partOf("headphone", "search");
   const isTypedSearch = box.value.trim() !== "";
   if (!isLoaded || !isTypedSearch) return;
   box.value = "";
@@ -498,16 +506,10 @@ function countBands(bands) {
   return bands.length === 1 ? "1 band" : `${bands.length} bands`;
 }
 
-// A saved sound holds both layers, so its count is every band in every layer.
-function countSavedBands(sound) {
-  const bands = layerOrder.flatMap((role) => (sound.layers[role] ? sound.layers[role].bands : []));
-  return countBands(bands);
-}
-
 function makeResultItem(label, detail, onPick, onRemove) {
   const button = document.createElement("button");
   button.className = "item";
-  button.classList.toggle("on", Boolean(config.layers[target]) && label === config.layers[target].name);
+  button.dataset.name = label;
   const name = document.createElement("span");
   name.textContent = label;
   const small = document.createElement("small");
@@ -535,95 +537,148 @@ function appendSection(list, title, items) {
 }
 
 async function findHeadphones(text, hint) {
-  hint.textContent = "Searching...";
+  hint.textContent = "Searching AutoEQ...";
   const items = await loadAutoEqIndex().catch(() => null);
   hint.textContent = items ? "" : "The AutoEQ list did not load. Check the network.";
   return (items || []).filter((item) => item.name.toLowerCase().includes(text)).slice(0, 20);
 }
 
-// An empty box lists your saved sounds and the starter sounds. Typing also searches the headphones.
+// An empty box lists your headphone presets and the starter sounds. Typing also searches AutoEQ.
 async function searchLibrary() {
-  const list = byId("libraryResults");
-  const hint = byId("librarySearchHint");
-  const text = byId("librarySearch").value.trim().toLowerCase();
+  const list = partOf("headphone", "results");
+  const hint = partOf("headphone", "search-hint");
+  const text = partOf("headphone", "search").value.trim().toLowerCase();
   list.dataset.query = text;
-  hint.textContent = "";
-  const headphones = text.length >= 2 ? await findHeadphones(text, hint) : [];
-  if (list.dataset.query !== text) return;
-
   const matches = (name) => name.toLowerCase().includes(text);
-  const saved = Object.keys(savedSounds).filter(matches).map((name) =>
-    makeResultItem(name, countSavedBands(savedSounds[name]), () => pickFromSearch(() => loadSavedSound(name)), () => deleteSavedSound(name)));
-  const headphoneItems = headphones.map((item) =>
-    makeResultItem(item.name, "AutoEQ", () => pickFromSearch(() => loadHeadphone(item, hint))));
-  const starterItems = starterSounds.filter((sound) => matches(sound.name)).map((sound) =>
-    makeResultItem(sound.name, countBands(sound.bands), () => pickFromSearch(() => placeBands({ name: sound.name, source: "Starter sound", bands: sound.bands }, target))));
 
-  list.replaceChildren();
-  appendSection(list, "Saved", saved);
-  appendSection(list, "AutoEQ headphones", headphoneItems);
-  appendSection(list, "Starter sounds", starterItems);
+  const saved = Object.keys(presets.headphone).filter(matches).map((name) => makeResultItem(name, countBands(presets.headphone[name].bands),
+    () => pickFromSearch(() => placeBands({ name, source: "Saved", bands: presets.headphone[name].bands }, "headphone")),
+    () => deletePreset("headphone", name)));
+  if (saved.length === 0 && text === "") {
+    const note = document.createElement("p");
+    note.className = "hint";
+    note.textContent = "Nothing saved yet. Pick your headphone, then press Save.";
+    saved.push(note);
+  }
+  const starterItems = starterSounds.filter((sound) => matches(sound.name)).map((sound) => makeResultItem(sound.name, countBands(sound.bands),
+    () => pickFromSearch(() => placeBands({ name: sound.name, source: "Starter sound", bands: sound.bands }, "headphone"))));
+
+  // Your presets and the starter sounds show at once. The AutoEQ list joins once it loads.
+  const show = (headphoneItems) => {
+    list.replaceChildren();
+    appendSection(list, "Your headphone presets", saved);
+    appendSection(list, "AutoEQ headphones", headphoneItems);
+    appendSection(list, "Starter sounds", starterItems);
+    renderPresetCards();
+  };
+  show([]);
+  hint.textContent = "";
+  if (text.length < 2) return;
+
+  const headphones = await findHeadphones(text, hint);
+  if (list.dataset.query !== text) return;
+  show(headphones.map((item) => makeResultItem(item.name, `AutoEQ, ${item.source}`, () => pickFromSearch(() => loadHeadphone(item, hint)))));
   if (list.children.length === 0) hint.textContent = "No sound by that name.";
 }
 
-function applyText(name, kind) {
-  const text = byId("libraryText").value.trim();
-  const hint = byId("libraryHint");
-  if (text.startsWith("{")) {
-    try {
-      config = { ...sanitizeConfig(JSON.parse(text)), enabled: config.enabled };
-    } catch {
-      hint.textContent = "That text is not valid JSON.";
-      return;
-    }
-    commit();
-    markCurrent();
-    hint.textContent = "Applied the JSON.";
-    return;
+function renderEarList() {
+  const list = partOf("ear", "results");
+  const items = Object.keys(presets.ear).map((name) => makeResultItem(name, countBands(presets.ear[name].bands),
+    () => placeBands({ name, source: "Saved", bands: presets.ear[name].bands }, "ear"),
+    () => deletePreset("ear", name)));
+  if (items.length === 0) {
+    const note = document.createElement("p");
+    note.className = "hint";
+    note.textContent = "Nothing saved yet. Run the test, paste the result, then press Save.";
+    items.push(note);
   }
-  const parsed = parseAutoEq(text);
+  const turnOff = makeResultItem("No ear tuning", "Headphone only", () => {
+    delete config.layers.ear;
+    selectedIndex = -1;
+    soloIndex = -1;
+    commit();
+  });
+  list.replaceChildren();
+  appendSection(list, "Your ear presets", items);
+  list.append(turnOff);
+  renderPresetCards();
+}
+
+const renderList = { headphone: searchLibrary, ear: renderEarList };
+
+function applyText(role, name, source) {
+  const parsed = parseAutoEq(partOf(role, "text").value);
+  const hint = partOf(role, "action-hint");
   if (parsed.bands.length === 0) {
     hint.textContent = "No AutoEQ filters found in that text.";
     return;
   }
-  placeBands({ name, source: kind, bands: parsed.bands, preampDb: parsed.preampDb }, target);
-  hint.textContent = `Applied ${parsed.bands.length} bands to ${layerLabels[target]}.`;
+  placeBands({ name, source, bands: parsed.bands, preampDb: parsed.preampDb }, role);
+  hint.textContent = `Applied ${countBands(parsed.bands)} to ${layerLabels[role]}. Press Save to keep it.`;
 }
 
-// Export always writes one flat file, both layers merged, so another app can read the sound.
-function exportAutoEq() {
-  const engine = engineConfig(config);
-  byId("libraryText").value = toAutoEq({ preampDb: engine.preampDb, bands: flatBands(config) });
-  byId("libraryHint").textContent = "Both layers as one AutoEQ file. Copy it out.";
+function renderSaveButton(role) {
+  const name = partOf(role, "save-name").value.trim();
+  partOf(role, "confirm-save").textContent = presets[role][name] ? "Replace" : "Save";
 }
 
-// The name of a saved sound is filled in, so Save writes the edit back to it.
-function renderSaveButton() {
-  const name = byId("saveName").value.trim();
-  byId("saveButton").textContent = savedSounds[name] ? "Update" : "Save";
-}
+// Each section button opens its own row. A second press closes it.
+function openLibraryAction(role, action) {
+  const open = openActions[role] === action ? "" : action;
+  openActions[role] = open;
+  const isNaming = open === "save" || open === "saveAs";
+  partOf(role, "save-row").hidden = !isNaming;
+  partOf(role, "drawer").hidden = open !== "paste" && open !== "export";
+  partOf(role, "apply").hidden = open !== "paste";
+  for (const button of partOf(role, "library-actions").children) button.classList.toggle("on", button.dataset.action === open);
+  partOf(role, "action-hint").textContent = "";
 
-// Each Library button opens its own row under the list. A second press closes it.
-function openLibraryAction(action) {
-  openAction = openAction === action ? "" : action;
-  byId("saveRow").hidden = openAction !== "save";
-  byId("textDrawer").hidden = openAction !== "paste" && openAction !== "export";
-  byId("pasteActions").hidden = openAction !== "paste";
-  byId("exportActions").hidden = openAction !== "export";
-  for (const button of byId("libraryActions").children) button.classList.toggle("on", button.dataset.action === openAction);
-  byId("libraryHint").textContent = "";
-
-  if (openAction === "save") {
-    byId("saveName").value = config.layers.headphone.name;
-    renderSaveButton();
-    byId("saveName").focus();
+  const layer = config.layers[role];
+  const text = partOf(role, "text");
+  if (isNaming) {
+    // Save fills in the current name, so an AutoEQ pick saves under its headphone name.
+    partOf(role, "save-name").value = open === "save" ? layer.name : "";
+    renderSaveButton(role);
+    partOf(role, "save-name").focus();
   }
-  if (openAction === "export") exportAutoEq();
-  if (openAction === "paste") {
-    byId("libraryText").value = "";
-    byId("libraryText").focus();
+  if (open === "export") {
+    const bands = layer ? layer.bands : [];
+    text.value = toAutoEq({ preampDb: 0 - maxBoostDb(bands), bands });
+    partOf(role, "action-hint").textContent = `${layerLabels[role]} alone, as AutoEQ text. Copy it out.`;
+  }
+  if (open === "paste") {
+    text.value = "";
+    text.focus();
   }
 }
+
+const pastedNames = { headphone: "Pasted headphone", ear: "Pasted ear tuning" };
+
+const libraryActions = {
+  save: (role) => {
+    const layer = config.layers[role];
+    const isSaved = layer.source === "Saved" && Boolean(presets[role][layer.name]);
+    if (isSaved) savePreset(role, layer.name);
+    else openLibraryAction(role, "save");
+  },
+  saveAs: (role) => openLibraryAction(role, "saveAs"),
+  confirmSave: (role) => {
+    const name = partOf(role, "save-name").value.trim();
+    if (name) savePreset(role, name);
+    else partOf(role, "action-hint").textContent = "Give the preset a name first.";
+  },
+  import: (role) => partOf(role, "import-file").click(),
+  paste: (role) => openLibraryAction(role, "paste"),
+  export: (role) => openLibraryAction(role, "export"),
+  apply: (role) => applyText(role, pastedNames[role], "Pasted"),
+  // The test measures what you hear, so My ear comes off first. The headphone layer stays on.
+  measure: () => {
+    if (config.layers.ear) config.layers.ear.on = false;
+    commit();
+    chrome.tabs.create({ url: "https://eqbyear.com" });
+    partOf("ear", "action-hint").textContent = "eqbyear is open in a new tab, with My ear off. Click the goui icon on that tab, run the test, then Paste the result here.";
+  },
+};
 
 function applyCaptureState(state) {
   if (!state) return;
@@ -675,15 +730,6 @@ const fieldEdits = {
     band.q = clamp(value || 1, ...qRange);
   },
 };
-
-byId("target").addEventListener("click", (event) => {
-  const button = event.target.closest("[data-target]");
-  if (!button) return;
-  target = button.dataset.target;
-  renderTarget();
-  markCurrent();
-  searchLibrary();
-});
 
 byId("tabs").addEventListener("click", (event) => {
   const button = event.target.closest("[data-tab]");
@@ -738,10 +784,10 @@ byId("tall").addEventListener("click", () => {
 });
 
 byId("chips").addEventListener("click", (event) => {
-  const chip = event.target.closest("[data-index]");
+  const chip = event.target.closest("[data-index], [data-add]");
   if (!chip) return;
-  if (chip.dataset.index === "add") {
-    addBandToTarget(1000, 0);
+  if (chip.dataset.add) {
+    addBandToLayer(chip.dataset.add, 1000, 0);
     return;
   }
   graphHooks.select(Number(chip.dataset.index));
@@ -750,8 +796,10 @@ byId("chips").addEventListener("click", (event) => {
 byId("chips").addEventListener("wheel", (event) => {
   const isUpDown = Math.abs(event.deltaY) > Math.abs(event.deltaX);
   if (!isUpDown) return;
+  const track = event.target.closest(".chip-track");
+  if (!track) return;
   event.preventDefault();
-  byId("chips").scrollLeft += event.deltaY;
+  track.scrollLeft += event.deltaY;
 }, { passive: false });
 
 byId("table").addEventListener("click", (event) => {
@@ -810,43 +858,36 @@ byId("bandDelete").addEventListener("click", () => {
   commitEdit(role);
 });
 
-byId("eqbyear").addEventListener("click", () => {
-  // The test measures what you hear, so the ear layer comes off first. AutoEQ stays on.
-  if (config.layers.ear) config.layers.ear.on = false;
-  commit();
-  chrome.tabs.create({ url: "https://eqbyear.com" });
-  byId("layerHint").textContent = "eqbyear is open in a new tab. Click the goui icon on that tab to capture it, run the test, then paste the result into My ear.";
-});
+for (const role of layerOrder) {
+  sectionOf(role).addEventListener("click", (event) => {
+    const button = event.target.closest("[data-action]");
+    if (button) libraryActions[button.dataset.action](role);
+  });
+  partOf(role, "save-name").addEventListener("input", () => renderSaveButton(role));
+  partOf(role, "save-name").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") libraryActions.confirmSave(role);
+  });
+  partOf(role, "import-file").addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    partOf(role, "text").value = await file.text();
+    event.target.value = "";
+    const dot = file.name.lastIndexOf(".");
+    applyText(role, dot > 0 ? file.name.slice(0, dot) : file.name, "From a file");
+  });
+}
 
 let searchTimer = 0;
-byId("librarySearch").addEventListener("input", () => {
+partOf("headphone", "search").addEventListener("input", () => {
   const typingPauseMs = 150;
   clearTimeout(searchTimer);
   searchTimer = setTimeout(searchLibrary, typingPauseMs);
 });
 
-byId("libraryActions").addEventListener("click", (event) => {
-  const button = event.target.closest("[data-action]");
-  if (!button) return;
-  if (button.dataset.action === "import") byId("importFile").click();
-  else openLibraryAction(button.dataset.action);
-});
-
-byId("saveButton").addEventListener("click", saveSound);
-byId("saveName").addEventListener("input", renderSaveButton);
-byId("applyText").addEventListener("click", () => applyText(`Pasted ${layerLabels[target]}`, "Pasted"));
-byId("exportAutoEq").addEventListener("click", exportAutoEq);
-byId("exportJson").addEventListener("click", () => {
-  byId("libraryText").value = JSON.stringify(config, null, 2);
-  byId("libraryHint").textContent = "The sound you hear, as JSON. Copy it out.";
-});
-
-byId("importFile").addEventListener("change", async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-  byId("libraryText").value = await file.text();
-  const dot = file.name.lastIndexOf(".");
-  applyText(dot > 0 ? file.name.slice(0, dot) : file.name, "From a file");
+byId("exportAll").addEventListener("click", () => {
+  const whole = byId("wholeText");
+  whole.hidden = false;
+  whole.value = toAutoEq({ preampDb: engineConfig(config).preampDb, bands: flatBands(config) });
 });
 
 chrome.runtime.onMessage.addListener((message) => {
@@ -855,21 +896,41 @@ chrome.runtime.onMessage.addListener((message) => {
   return false;
 });
 
+async function readPresets(stored) {
+  for (const role of layerOrder) {
+    const list = stored[`${role}Presets`] || {};
+    for (const [name, preset] of Object.entries(list)) presets[role][name] = { bands: cleanBands(preset && preset.bands) };
+  }
+  const olderSounds = stored.savedSounds || stored.presets;
+  if (!olderSounds) return;
+
+  // A sound saved before the two lists holds both layers. It becomes a headphone preset. When it
+  // has ear bands, it also becomes an ear preset under the same name. A preset of that name wins.
+  for (const [name, sound] of Object.entries(olderSounds)) {
+    const layers = sanitizeConfig(sound).layers;
+    presets.headphone[name] ??= { bands: layers.headphone.bands };
+    const hasEarBands = Boolean(layers.ear) && layers.ear.bands.length > 0;
+    if (hasEarBands) presets.ear[name] ??= { bands: layers.ear.bands };
+  }
+  // The old key goes only once the new lists are written, so a failed write loses nothing.
+  await chrome.storage.local.set({ headphonePresets: presets.headphone, earPresets: presets.ear });
+  await chrome.storage.local.remove(["savedSounds", "presets"]);
+}
+
 async function hydrate() {
   for (const type of bandTypes) byId("bandType").append(new Option(typeLabels[type], type));
 
-  const stored = await chrome.storage.local.get(["config", "savedSounds", "presets", "view", "tab"]);
+  const stored = await chrome.storage.local.get(["config", "headphonePresets", "earPresets", "savedSounds", "presets", "view", "tab"]);
   if (stored.config) config = sanitizeConfig(stored.config);
-  // Saved sounds stored before the rename are under presets.
-  savedSounds = stored.savedSounds || stored.presets || {};
+  await readPresets(stored);
   tuneGraph.setVertical(stored.view === "vertical");
   listenGraph.setVertical(tuneGraph.vertical);
   showTab(stored.tab || "listen");
   renderPills();
-  renderTarget();
   sendAudio();
   refresh();
   searchLibrary();
+  renderEarList();
 
   const session = await chrome.storage.session.get("capture");
   applyCaptureState(session.capture);

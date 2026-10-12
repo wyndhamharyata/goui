@@ -50,6 +50,13 @@ export default [
     },
   },
   {
+    // The journeys drive the panel in the browser, so they name chrome and window.
+    files: ["tests/**/*.js"],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser, ...globals.webextensions },
+    },
+  },
+  {
     files: ["src/**/*.js"],
     languageOptions: {
       sourceType: "module",
