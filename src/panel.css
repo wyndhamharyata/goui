@@ -427,7 +427,6 @@ textarea {
   border-radius: 999px;
 }
 
-/* The row scrolls sideways only. A vertical wheel turns into a sideways scroll in panel.js. */
 .chips {
   display: flex;
   flex-direction: column;
@@ -436,22 +435,16 @@ textarea {
 
 .chip-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
 }
 
+/* The chips wrap onto more lines instead of scrolling sideways, so every band stays in view. */
 .chip-track {
   display: flex;
   flex: 1;
+  flex-wrap: wrap;
   gap: 4px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-  touch-action: pan-x;
-}
-
-.chip-track::-webkit-scrollbar {
-  display: none;
 }
 
 .chip {

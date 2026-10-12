@@ -273,8 +273,6 @@ function renderSound() {
 // One row per layer, each with its own label, its own Add band chip and its own sideways scroll.
 function renderChips() {
   const host = byId("chips");
-  const scrollLeft = new Map();
-  for (const track of host.querySelectorAll(".chip-track")) scrollLeft.set(track.dataset.role, track.scrollLeft);
   host.replaceChildren();
   let index = 0;
   for (const role of layerOrder) {
@@ -311,7 +309,6 @@ function renderChips() {
     track.append(add);
     row.append(label, track);
     host.append(row);
-    track.scrollLeft = scrollLeft.get(role) || 0;
   }
 }
 
@@ -795,17 +792,10 @@ byId("chips").addEventListener("click", (event) => {
     addBandToLayer(chip.dataset.add, 1000, 0);
     return;
   }
-  graphHooks.select(Number(chip.dataset.index));
+  // A second press on the chip you already chose clears the choice.
+  const index = Number(chip.dataset.index);
+  graphHooks.select(index === selectedIndex ? -1 : index);
 });
-
-byId("chips").addEventListener("wheel", (event) => {
-  const isUpDown = Math.abs(event.deltaY) > Math.abs(event.deltaX);
-  if (!isUpDown) return;
-  const track = event.target.closest(".chip-track");
-  if (!track) return;
-  event.preventDefault();
-  track.scrollLeft += event.deltaY;
-}, { passive: false });
 
 byId("table").addEventListener("click", (event) => {
   const row = event.target.closest("[data-index]");

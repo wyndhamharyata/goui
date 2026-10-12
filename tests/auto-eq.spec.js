@@ -280,7 +280,7 @@ journey("given an edited headphone preset, Save changes writes over it and Save 
   await expect(headphone.locator(".action-hint")).toHaveText("Updated voice.");
 
   await panel.click("#tabs [data-tab=tune]");
-  await panel.click("#chips [data-index='0']");
+  // Band 1 stays chosen from the edit above, so a second press on its chip would clear the choice.
   await panel.fill("#gainInput", "6");
   await saveAs(panel, "headphone", "voice boosted");
 
@@ -564,4 +564,17 @@ journey("given goui has never heard a tab, the panel shows how to start, and the
   await panel.reload();
   await expect(panel.locator("#tabs")).toBeVisible();
   await expect(panel.locator("#start")).toBeHidden();
+});
+
+journey("given a chosen band chip, a second press clears the choice and the inspector empties", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  await panel.click("#autoPreamp");
+  await pasteInto(panel, "headphone", peakText);
+  await panel.click("#tabs [data-tab=tune]");
+  await panel.click("#chips [data-index='0']");
+  await expect(panel.locator("#bandTitle")).toContainText("Headphone · 1.");
+
+  await panel.click("#chips [data-index='0']");
+  await expect(panel.locator("#inspectorBody")).toBeHidden();
+  await expect(panel.locator("#inspectorEmpty")).toBeVisible();
 });

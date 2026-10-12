@@ -56,7 +56,9 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 - Double click empty space to make a new band. It joins the layer of the band you have selected, or the
   headphone layer when nothing is selected.
 - The chips come in two rows, one for the headphone and one for My ear. Each row has its own **Add band**
-  chip. Ear bands carry a gold ring, and each layer draws its own dashed curve under the solid total.
+  chip, and the chips wrap onto more lines as a layer gains bands. Ear bands carry a gold ring, and
+  each layer draws its own dashed curve under the solid total.
+- Press a chip to tune that band. Press it again to clear the choice.
 - All, Lows, Mids and Highs zoom the graph. **Tall** turns it, with low notes at the top.
 - The inspector under the chips edits one band with exact numbers. **Solo** plays that band alone.
 
