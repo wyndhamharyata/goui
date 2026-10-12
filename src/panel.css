@@ -14,6 +14,11 @@
   box-sizing: border-box;
 }
 
+/* A class that sets display would otherwise override the hidden attribute. */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   margin: 0;
