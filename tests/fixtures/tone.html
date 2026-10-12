@@ -13,10 +13,23 @@
         return source;
       }
 
+      // Pink noise, which stands in for music better than white noise. The low bins of white noise
+      // carry little energy, so its spectrum reads far lower than a song's.
       function noise(context) {
         const buffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
         const samples = buffer.getChannelData(0);
-        for (let index = 0; index < samples.length; index += 1) samples[index] = Math.random() * 2 - 1;
+        const rows = [0, 0, 0, 0, 0, 0, 0];
+        for (let index = 0; index < samples.length; index += 1) {
+          const white = (Math.random() * 2) - 1;
+          rows[0] = (0.99886 * rows[0]) + (white * 0.0555179);
+          rows[1] = (0.99332 * rows[1]) + (white * 0.0750759);
+          rows[2] = (0.969 * rows[2]) + (white * 0.153852);
+          rows[3] = (0.8665 * rows[3]) + (white * 0.3104856);
+          rows[4] = (0.55 * rows[4]) + (white * 0.5329522);
+          rows[5] = (-0.7616 * rows[5]) - (white * 0.016898);
+          samples[index] = (rows[0] + rows[1] + rows[2] + rows[3] + rows[4] + rows[5] + rows[6] + (white * 0.5362)) * 0.11;
+          rows[6] = white * 0.115926;
+        }
         const source = context.createBufferSource();
         source.buffer = buffer;
         source.loop = true;

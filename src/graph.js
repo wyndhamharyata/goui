@@ -161,23 +161,37 @@ export function makeGraph(host, options, hooks) {
     return parts.join("");
   }
 
-  // Music falls about 3 dB per octave. Adding that back stands the spectrum upright. The mirror
-  // around 0 dB keeps it even on both sides of the center line, so a normal song looks full.
   function drawSpectrum(size, frequencies) {
     const spectrumDb = hooks.spectrum();
     if (spectrumDb.length === 0) return "";
-    const rise = (graph.vertical ? size.plotWidth : size.plotHeight) * 0.45;
-    const above = [];
-    const below = [];
+    if (graph.vertical) return drawMirroredSpectrum(size, frequencies, spectrumDb);
+
+    // The fill starts at the floor and runs up. The floor is 100 dB below full scale, which puts a
+    // normal song around the middle with its peaks in the upper half.
+    const floorDb = -100;
+    // Array.from, not map. A Float32Array.map would turn each point string into a number.
+    const points = Array.from(frequencies, (frequencyHz, index) => {
+      const level = clamp((spectrumAt(spectrumDb, frequencyHz) - floorDb) / (0 - floorDb), 0, 1);
+      return `${size.left + ((index / 120) * size.plotWidth)},${size.top + (size.plotHeight * (1 - level))}`;
+    });
+    const floor = [`${size.left + size.plotWidth},${size.top + size.plotHeight}`, `${size.left},${size.top + size.plotHeight}`];
+    return `<polygon points="${[...points, ...floor].join(" ")}" fill="rgba(150,165,200,0.13)"/>`;
+  }
+
+  // The Tall view stays even on both sides of the center line, with the 3 dB per octave slope that
+  // stands the spectrum upright.
+  function drawMirroredSpectrum(size, frequencies, spectrumDb) {
+    const rise = size.plotWidth * 0.45;
+    const right = [];
+    const left = [];
     for (const frequencyHz of frequencies) {
       const levelDb = spectrumAt(spectrumDb, frequencyHz) + (3 * Math.log2(frequencyHz / 1000));
-      const half = clamp((levelDb + 100) / 90, 0, 1) * rise;
+      const halfWidth = clamp((levelDb + 100) / 90, 0, 1) * rise;
       const center = place(frequencyHz, 0, size);
-      const isTall = graph.vertical;
-      above.push(`${isTall ? center.x + half : center.x},${isTall ? center.y : center.y - half}`);
-      below.unshift(`${isTall ? center.x - half : center.x},${isTall ? center.y : center.y + half}`);
+      right.push(`${center.x + halfWidth},${center.y}`);
+      left.unshift(`${center.x - halfWidth},${center.y}`);
     }
-    return `<polygon points="${[...above, ...below].join(" ")}" fill="rgba(150,165,200,0.13)"/>`;
+    return `<polygon points="${[...right, ...left].join(" ")}" fill="rgba(150,165,200,0.13)"/>`;
   }
 
   function drawLoudness(size, frequencies, curveDb) {
