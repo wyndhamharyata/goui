@@ -72,7 +72,7 @@ test("given an AutoEQ file with a 1 kHz peak, a 1 kHz tone plays 6 dB louder", a
     await expect(panel.locator(".band").first()).toContainText("Peak");
 
     const withPeak = await steadyLevel(panel);
-    await panel.locator(".band .on").first().uncheck();
+    await panel.locator(".band input[type=number]").nth(1).fill("0");
     const withoutPeak = await steadyLevel(panel);
 
     expect(withPeak - withoutPeak).toBeGreaterThan(5.4);
@@ -80,7 +80,7 @@ test("given an AutoEQ file with a 1 kHz peak, a 1 kHz tone plays 6 dB louder", a
 
     // The same journey in the rotated view. The audio path must not change with the view.
     await panel.click("#viewToggle");
-    await panel.locator(".band .on").first().check();
+    await panel.locator(".band input[type=number]").nth(1).fill("6");
     const withPeakVertical = await steadyLevel(panel);
     await panel.locator(".band .on").first().uncheck();
     const withoutPeakVertical = await steadyLevel(panel);

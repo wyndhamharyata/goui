@@ -261,12 +261,11 @@ function sendConfig() {
   sendConfigValue(config);
 }
 
+// The sound follows every edit at once. Only the storage write waits for the edits to pause.
 function saveConfig() {
+  sendConfig();
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    chrome.storage.local.set({ config });
-    sendConfig();
-  }, 120);
+  saveTimer = setTimeout(() => chrome.storage.local.set({ config }), 120);
 }
 
 function updateRow(index, band) {
