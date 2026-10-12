@@ -40,6 +40,23 @@ header {
   letter-spacing: 0.02em;
 }
 
+.head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
 .switch {
   display: inline-flex;
   align-items: center;

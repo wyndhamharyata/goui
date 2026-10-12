@@ -29,6 +29,7 @@ const importPanel = document.getElementById("importPanel");
 const autoEqText = document.getElementById("autoEqText");
 const autoEqFile = document.getElementById("autoEqFile");
 const importHint = document.getElementById("importHint");
+const viewToggle = document.getElementById("viewToggle");
 
 const offlineContext = new OfflineAudioContext(1, 1, 48_000);
 
@@ -36,6 +37,7 @@ let config = defaultConfig();
 let spectrumDb = [];
 let levelDb = null;
 let capturing = false;
+let vertical = false;
 let dragIndex = -1;
 let curveDirty = true;
 let curveDb = [];
@@ -48,31 +50,66 @@ function layout() {
   return { width, height, padLeft: 26, padTop: 8, padRight: 8, padBottom: 14 };
 }
 
-function frequencyToX(frequencyHz, box) {
+function plotWidth(box) {
+  return box.width - box.padLeft - box.padRight;
+}
+
+function plotHeight(box) {
+  return box.height - box.padTop - box.padBottom;
+}
+
+function frequencyRatio(frequencyHz) {
   const span = Math.log10(highestHz) - Math.log10(lowestHz);
-  const at = (Math.log10(frequencyHz) - Math.log10(lowestHz)) / span;
-  return box.padLeft + at * (box.width - box.padLeft - box.padRight);
+  return (Math.log10(frequencyHz) - Math.log10(lowestHz)) / span;
 }
 
-function xToFrequency(x, box) {
+function ratioToFrequency(ratio) {
   const span = Math.log10(highestHz) - Math.log10(lowestHz);
-  const at = (x - box.padLeft) / (box.width - box.padLeft - box.padRight);
-  return clamp(lowestHz * 10 ** (at * span), lowestHz, highestHz);
+  return clamp(lowestHz * 10 ** (ratio * span), lowestHz, highestHz);
 }
 
-function dbToY(db, box) {
-  const at = (topDb - db) / (topDb - bottomDb);
-  return box.padTop + at * (box.height - box.padTop - box.padBottom);
+// A point maps one frequency and one gain to a canvas position. The vertical view turns the axes a
+// quarter turn, with the low frequencies at the top and the gain running left to right.
+function makeAxis(box) {
+  const width = plotWidth(box);
+  const height = plotHeight(box);
+  if (vertical) {
+    return {
+      point: (frequencyHz, gainDb) => ({
+        x: box.padLeft + ((gainDb - bottomDb) / (topDb - bottomDb)) * width,
+        y: box.padTop + frequencyRatio(frequencyHz) * height,
+      }),
+      place: (x, y) => ({
+        frequencyHz: ratioToFrequency((y - box.padTop) / height),
+        gainDb: clamp(bottomDb + ((x - box.padLeft) / width) * (topDb - bottomDb), bottomDb, topDb),
+      }),
+    };
+  }
+  return {
+    point: (frequencyHz, gainDb) => ({
+      x: box.padLeft + frequencyRatio(frequencyHz) * width,
+      y: box.padTop + ((topDb - gainDb) / (topDb - bottomDb)) * height,
+    }),
+    place: (x, y) => ({
+      frequencyHz: ratioToFrequency((x - box.padLeft) / width),
+      gainDb: clamp(topDb - ((y - box.padTop) / height) * (topDb - bottomDb), bottomDb, topDb),
+    }),
+  };
 }
 
-function yToDb(y, box) {
-  const at = (y - box.padTop) / (box.height - box.padTop - box.padBottom);
-  return clamp(topDb - at * (topDb - bottomDb), bottomDb, topDb);
+function levelToX(db, box) {
+  return box.padLeft + ((db - spectrumFloorDb) / (0 - spectrumFloorDb)) * plotWidth(box);
 }
 
 function spectrumToY(db, box) {
-  const at = (0 - db) / (0 - spectrumFloorDb);
-  return box.padTop + at * (box.height - box.padTop - box.padBottom);
+  return box.padTop + ((0 - db) / (0 - spectrumFloorDb)) * plotHeight(box);
+}
+
+function drawLine(x1, y1, x2, y2) {
+  context.beginPath();
+  context.moveTo(x1, y1);
+  context.lineTo(x2, y2);
+  context.stroke();
 }
 
 function curveFrequencies() {
@@ -109,62 +146,73 @@ function computeCurve() {
   curveDirty = false;
 }
 
-function drawGrid(box) {
+function drawGrid(box, axis) {
   context.strokeStyle = "rgba(255,255,255,0.06)";
   context.fillStyle = "rgba(255,255,255,0.32)";
   context.font = "9px -apple-system, sans-serif";
-  context.textAlign = "center";
+
   for (const frequencyHz of [100, 1000, 10_000]) {
-    const x = frequencyToX(frequencyHz, box);
-    context.beginPath();
-    context.moveTo(x, box.padTop);
-    context.lineTo(x, box.height - box.padBottom);
-    context.stroke();
-    context.fillText(frequencyHz >= 1000 ? `${frequencyHz / 1000}k` : `${frequencyHz}`, x, box.height - 4);
+    const label = frequencyHz >= 1000 ? `${frequencyHz / 1000}k` : `${frequencyHz}`;
+    const at = axis.point(frequencyHz, 0);
+    if (vertical) {
+      context.textAlign = "left";
+      drawLine(box.padLeft, at.y, box.width - box.padRight, at.y);
+      context.fillText(label, 4, at.y - 3);
+    } else {
+      context.textAlign = "center";
+      drawLine(at.x, box.padTop, at.x, box.height - box.padBottom);
+      context.fillText(label, at.x, box.height - 4);
+    }
   }
-  const zeroY = dbToY(0, box);
+
   context.strokeStyle = "rgba(255,255,255,0.16)";
-  context.beginPath();
-  context.moveTo(box.padLeft, zeroY);
-  context.lineTo(box.width - box.padRight, zeroY);
-  context.stroke();
+  const zero = axis.point(20, 0);
+  if (vertical) drawLine(zero.x, box.padTop, zero.x, box.height - box.padBottom);
+  else drawLine(box.padLeft, zero.y, box.width - box.padRight, zero.y);
 }
 
-function drawSpectrum(box) {
+function drawSpectrum(box, axis) {
   if (spectrumDb.length === 0) return;
+  const points = spectrumDb.map((db, index) => ({
+    frequencyHz: lowestHz * 1000 ** (index / (spectrumDb.length - 1)),
+    db,
+  }));
+
   context.beginPath();
-  context.moveTo(box.padLeft, box.height - box.padBottom);
-  for (let index = 0; index < spectrumDb.length; index += 1) {
-    const frequencyHz = lowestHz * 1000 ** (index / (spectrumDb.length - 1));
-    context.lineTo(frequencyToX(frequencyHz, box), spectrumToY(spectrumDb[index], box));
+  if (vertical) {
+    context.moveTo(box.padLeft, box.padTop);
+    for (const point of points) context.lineTo(levelToX(point.db, box), axis.point(point.frequencyHz, 0).y);
+    context.lineTo(box.padLeft, box.padTop + plotHeight(box));
+  } else {
+    context.moveTo(box.padLeft, box.height - box.padBottom);
+    for (const point of points) context.lineTo(axis.point(point.frequencyHz, 0).x, spectrumToY(point.db, box));
+    context.lineTo(box.width - box.padRight, box.height - box.padBottom);
   }
-  context.lineTo(box.width - box.padRight, box.height - box.padBottom);
   context.closePath();
   context.fillStyle = "rgba(91,140,255,0.14)";
   context.fill();
 }
 
-function drawCurveLine(box) {
+function drawCurveLine(box, axis) {
   context.beginPath();
   for (let index = 0; index < curveDb.length; index += 1) {
-    const point = [frequencyToX(frequencies[index], box), dbToY(curveDb[index], box)];
-    if (index === 0) context.moveTo(point[0], point[1]);
-    else context.lineTo(point[0], point[1]);
+    const point = axis.point(frequencies[index], curveDb[index]);
+    if (index === 0) context.moveTo(point.x, point.y);
+    else context.lineTo(point.x, point.y);
   }
   context.strokeStyle = "#5b8cff";
   context.lineWidth = 2;
   context.stroke();
 }
 
-function bandPoint(band, box) {
-  const gainDb = hasGain(band.type) ? band.gainDb : 0;
-  return { x: frequencyToX(band.frequencyHz, box), y: dbToY(gainDb, box) };
+function bandPoint(band, axis) {
+  return axis.point(band.frequencyHz, hasGain(band.type) ? band.gainDb : 0);
 }
 
-function drawPoints(box) {
+function drawPoints(axis) {
   context.fillStyle = "#b06bff";
   for (const band of config.bands) {
-    const point = bandPoint(band, box);
+    const point = bandPoint(band, axis);
     context.beginPath();
     context.arc(point.x, point.y, 4, 0, Math.PI * 2);
     context.fill();
@@ -182,10 +230,11 @@ function draw() {
   context.clearRect(0, 0, box.width, box.height);
 
   if (curveDirty) computeCurve();
-  drawGrid(box);
-  drawSpectrum(box);
-  drawCurveLine(box);
-  drawPoints(box);
+  const axis = makeAxis(box);
+  drawGrid(box, axis);
+  drawSpectrum(box, axis);
+  drawCurveLine(box, axis);
+  drawPoints(axis);
 }
 
 function frame() {
@@ -314,9 +363,9 @@ function renderBands() {
 }
 
 function hitBand(x, y) {
-  const box = layout();
+  const axis = makeAxis(layout());
   for (let index = 0; index < config.bands.length; index += 1) {
-    const point = bandPoint(config.bands[index], box);
+    const point = bandPoint(config.bands[index], axis);
     if (Math.hypot(point.x - x, point.y - y) <= hitRadiusPx) return index;
   }
   return -1;
@@ -328,10 +377,10 @@ function pointerPosition(event) {
 }
 
 function moveBand(index, x, y) {
-  const box = layout();
   const band = config.bands[index];
-  band.frequencyHz = Math.round(xToFrequency(x, box));
-  if (hasGain(band.type)) band.gainDb = Math.round(yToDb(y, box) * 10) / 10;
+  const placed = makeAxis(layout()).place(x, y);
+  band.frequencyHz = Math.round(placed.frequencyHz);
+  if (hasGain(band.type)) band.gainDb = Math.round(placed.gainDb * 10) / 10;
   updateRow(index, band);
   curveDirty = true;
   saveConfig();
@@ -372,7 +421,7 @@ curve.addEventListener("dblclick", (event) => {
   const position = pointerPosition(event);
   const index = hitBand(position.x, position.y);
   if (index >= 0) removeBand(config.bands[index]);
-  else addBand(Math.round(xToFrequency(position.x, layout())));
+  else addBand(Math.round(makeAxis(layout()).place(position.x, position.y).frequencyHz));
 });
 
 function setStatus(text) {
@@ -428,6 +477,12 @@ captureButton.addEventListener("click", () => {
 });
 
 document.getElementById("addBand").addEventListener("click", () => addBand(1000));
+document.getElementById("viewToggle").addEventListener("click", () => {
+  vertical = !vertical;
+  viewToggle.textContent = vertical ? "↕" : "↔";
+  dragIndex = -1;
+  chrome.storage.local.set({ view: vertical ? "vertical" : "horizontal" });
+});
 document.getElementById("importToggle").addEventListener("click", () => {
   importPanel.hidden = !importPanel.hidden;
 });
@@ -452,8 +507,10 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 async function hydrate() {
-  const stored = await chrome.storage.local.get("config");
+  const stored = await chrome.storage.local.get(["config", "view"]);
   if (stored.config) config = { ...defaultConfig(), ...stored.config };
+  vertical = stored.view === "vertical";
+  viewToggle.textContent = vertical ? "↕" : "↔";
   enabledBox.checked = config.enabled;
   preampRange.value = config.preampDb;
   preampValue.textContent = (config.preampDb || 0).toFixed(1);
