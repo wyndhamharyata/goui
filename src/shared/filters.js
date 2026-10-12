@@ -139,32 +139,31 @@ export function engineConfig(config, context) {
   return { enabled: config.enabled, preampDb, bands };
 }
 
-const autoEqLine =
-  /Filter\s+\d+\s*:\s*(ON|OFF)\s+([A-Za-z_]+)\s+Fc\s+([\d.]+)\s*Hz(?:\s+Gain\s+(-?[\d.]+)\s*dB)?(?:\s+Q\s+([\d.]+))?/i;
+const typeAliases = { PEAK: "PK", PEAKING: "PK", LOWPASS: "LP", HIGHPASS: "HP", NOTCH: "NO" };
 
-const typeFixes = { PEAK: "PK", PEAKING: "PK", LOWPASS: "LP", HIGHPASS: "HP", NOTCH: "NO" };
-
+// An AutoEQ line reads "Filter 1: ON PK Fc 105 Hz Gain -3.1 dB Q 0.70", with Gain and Q optional.
 export function parseAutoEq(text) {
   const config = defaultConfig();
-  for (const line of text.split(/\r?\n/)) {
-    const preamp = line.match(/Preamp\s*:\s*(-?[\d.]+)\s*dB/i);
-    if (preamp) {
-      config.preampDb = Number(preamp[1]);
+  for (const line of text.split("\n")) {
+    const words = line.trim().split(" ").filter((word) => word !== "");
+    const label = (words[0] || "").toLowerCase();
+    if (label === "preamp:") {
+      config.preampDb = Number(words[1]);
       continue;
     }
+    if (label !== "filter") continue;
 
-    const match = line.match(autoEqLine);
-    const type = match && typeFixes[match[2].toUpperCase()];
-    const plainType = match && bandTypes.includes(match[2].toUpperCase());
-    if (!match || (!type && !plainType)) continue;
+    const readAfter = (name) => {
+      const at = words.findIndex((word) => word.toLowerCase() === name);
+      return at < 0 ? undefined : Number(words[at + 1]);
+    };
+    const typeWord = (words[3] || "").toUpperCase();
+    const type = typeAliases[typeWord] || typeWord;
+    const frequencyHz = readAfter("fc");
+    const isBand = bandTypes.includes(type) && Number.isFinite(frequencyHz);
+    if (!isBand) continue;
 
-    config.bands.push({
-      on: match[1].toUpperCase() === "ON",
-      type: type || match[2].toUpperCase(),
-      frequencyHz: Number(match[3]),
-      gainDb: match[4] ? Number(match[4]) : 0,
-      q: match[5] ? Number(match[5]) : 0.71,
-    });
+    config.bands.push({ on: words[2].toUpperCase() === "ON", type, frequencyHz, gainDb: readAfter("gain") ?? 0, q: readAfter("q") ?? 0.71 });
   }
   return config;
 }

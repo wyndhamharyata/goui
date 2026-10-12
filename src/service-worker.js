@@ -7,7 +7,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() =>
 // The panel itself is never the target. In a test it is an extension page in a normal tab.
 async function readTargetTab() {
   const tabs = await chrome.tabs.query({ currentWindow: true });
-  const webPages = tabs.filter((tab) => tab.url && /^https?:/.test(tab.url));
+  const webPages = tabs.filter((tab) => tab.url && (tab.url.startsWith("http://") || tab.url.startsWith("https://")));
   const [newest] = webPages.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
   return newest;
 }
@@ -57,7 +57,9 @@ async function stopCapture() {
 chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
 
-  if (!tab.id || !/^https?:/.test(tab.url || "")) {
+  const url = tab.url || "";
+  const isWebPage = url.startsWith("http://") || url.startsWith("https://");
+  if (!tab.id || !isWebPage) {
     publishCapture({ isCapturing: false, error: "Open a web page with audio, then click the icon." });
     return;
   }

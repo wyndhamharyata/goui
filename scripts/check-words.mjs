@@ -56,7 +56,7 @@ function readScript(source) {
 function blankCode(markdown) {
   return markdown
     .split("`")
-    .map((part, index) => (index % 2 === 0 ? part : part.replaceAll(/[^\n]/g, "")))
+    .map((part, index) => (index % 2 === 0 ? part : "\n".repeat(part.split("\n").length - 1)))
     .join(" ");
 }
 

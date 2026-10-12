@@ -300,9 +300,12 @@ function saveSound() {
 function parseAutoEqIndex(text) {
   const items = [];
   for (const line of text.split("\n")) {
-    // The path can hold brackets of its own, such as "(ANC Off)", so it runs to the last ") by ".
-    const match = line.match(/^- \[(.+?)\]\(\.\/(.+)\) by /);
-    if (match) items.push({ name: match[1], path: match[2] });
+    // A line reads "- [Name](./path) by source". The path can hold brackets of its own, such as
+    // "(ANC Off)", so it runs to the last ") by ".
+    const nameEnd = line.indexOf("](./");
+    const pathEnd = line.lastIndexOf(") by ");
+    const isEntry = line.startsWith("- [") && nameEnd > 0 && pathEnd > nameEnd;
+    if (isEntry) items.push({ name: line.slice(3, nameEnd), path: line.slice(nameEnd + 4, pathEnd) });
   }
   return items;
 }
