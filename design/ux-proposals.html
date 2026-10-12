@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>goui UX proposals</title>
+    <link rel="stylesheet" href="ux-proposals.css" />
+  </head>
+  <body>
+    <main>
+      <header class="intro">
+        <h1>goui UX proposals</h1>
+        <p>
+          Four ways to make the panel easy for a newcomer and still complete for an expert. Every
+          mock is live. Drag the points, pull the side handles, hold A/B and search the library. The
+          spectrum is fake. The curve uses the real RBJ cookbook math.
+        </p>
+        <ul class="rules">
+          <li><b>Narrow first.</b> Each mock is 360 px wide, the width of your side panel.</li>
+          <li><b>Grows to full.</b> Each design says how it opens up on a wider panel.</li>
+          <li><b>One place per job.</b> AutoEQ, presets and JSON move into one Library.</li>
+          <li><b>Q from the graph.</b> A selected peak shows two side handles. Pull them apart for a wider band.</li>
+          <li><b>Help for a narrow graph.</b> Zoom to Lows, Mids or Highs. Hold Shift for fine moves. A point moves from where you grab it, so it never jumps under the pointer.</li>
+          <li><b>More legend.</b> Region names, dB and Hz labels, numbered points, a band width marker and a hover readout.</li>
+        </ul>
+      </header>
+
+      <section class="design">
+        <div class="design-head">
+          <span class="letter">A</span>
+          <div>
+            <h2>Simple first</h2>
+            <p class="pitch">Pick a sound, nudge three sliders, done. The graph stays small until you ask for it.</p>
+          </div>
+        </div>
+        <div class="design-body">
+          <div class="frame">
+            <div id="a-head"></div>
+            <div class="card">
+              <div id="a-profile"></div>
+              <div id="a-library" hidden></div>
+            </div>
+            <div class="card">
+              <div id="a-graph"></div>
+              <div class="legend-host" id="a-legend" hidden></div>
+            </div>
+            <div class="card" id="a-macros"></div>
+            <button class="wide-button" id="a-advanced-toggle">Fine tune every band</button>
+            <div id="a-advanced" hidden>
+              <div id="a-chips"></div>
+              <div class="card" id="a-inspector"></div>
+            </div>
+          </div>
+          <div class="notes">
+            <h3>How it works</h3>
+            <ul>
+              <li><b>For</b> someone who wants their headphone fix and a little more bass.</li>
+              <li><b>First screen.</b> The sound you use, a small curve, three sliders and nothing else.</li>
+              <li><b>Q on the graph.</b> Fine tune opens the same graph as design B, with side handles on the selected peak.</li>
+              <li><b>Narrow width.</b> The sliders need no exact dragging. The graph grows only when you open Fine tune.</li>
+              <li><b>One place.</b> The search box finds your saved sounds and the AutoEQ headphones in one list. Change opens it in place.</li>
+              <li><b>Grows to.</b> On a wide panel, Fine tune shows the graph and the inspector side by side.</li>
+              <li><b>Cost.</b> The three sliders are extra bands on top of the profile. An expert may want them as normal bands they can see.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="design">
+        <div class="design-head">
+          <span class="letter">B</span>
+          <div>
+            <h2>Graph and inspector</h2>
+            <p class="pitch">The graph stays in front. Tap a point and one inspector opens for that band only.</p>
+          </div>
+        </div>
+        <div class="design-body">
+          <div class="frame">
+            <div id="b-head"></div>
+            <div id="b-zoom"></div>
+            <div class="card">
+              <div id="b-graph"></div>
+              <div class="legend-host"></div>
+            </div>
+            <div id="b-chips"></div>
+            <div class="card" id="b-inspector"></div>
+            <div class="toolbar">
+              <div id="b-preamp"></div>
+              <button data-sheet="library">Library</button>
+              <button data-sheet="table">Table</button>
+            </div>
+            <div class="sheet" id="b-sheet" hidden>
+              <div class="sheet-head"><b class="sheet-title"></b><button data-close>Close</button></div>
+              <div class="sheet-library" id="b-library"></div>
+              <div class="sheet-table" id="b-table"></div>
+            </div>
+          </div>
+          <div class="notes">
+            <h3>How it works</h3>
+            <ul>
+              <li><b>For</b> someone who tunes by ear and wants the graph in front.</li>
+              <li><b>First screen.</b> The graph, the band chips and one inspector for the band you picked.</li>
+              <li><b>Q on the graph.</b> Pull the side handles, scroll on a point, or press the Q buttons in the inspector.</li>
+              <li><b>Narrow width.</b> The zoom pills stretch Lows, Mids or Highs to the full width. Tall turns the graph so frequency runs down the panel. Shift gives fine steps. The steppers move one semitone, 0.5 dB or about 12% of Q.</li>
+              <li><b>One place.</b> Library opens as a sheet with search, save, import, paste and export. The rows of five boxes become chips plus one inspector. The full table is one tap away.</li>
+              <li><b>Grows to.</b> The graph, the inspector and the table side by side.</li>
+              <li><b>Cost.</b> A newcomer still meets a graph first.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="design recommended">
+        <div class="design-head">
+          <span class="letter">C</span>
+          <div>
+            <h2>Three tabs <span class="badge">Recommended</span></h2>
+            <p class="pitch">Listen for everyday use, Tune for the graph, Library for everything you keep.</p>
+          </div>
+        </div>
+        <div class="design-body">
+          <div class="frame">
+            <div id="c-head"></div>
+            <div class="tabs" id="c-tabs">
+              <button data-tab="listen" class="on">Listen</button>
+              <button data-tab="tune">Tune</button>
+              <button data-tab="library">Library</button>
+            </div>
+            <div class="pane" data-pane="listen">
+              <div class="card" id="c-profile"></div>
+              <div class="card"><div id="c-listen-graph"></div></div>
+              <div class="card" id="c-macros"></div>
+            </div>
+            <div class="pane" data-pane="tune" hidden>
+              <div id="c-zoom"></div>
+              <div class="card">
+                <div id="c-graph"></div>
+                <div class="legend-host"></div>
+              </div>
+              <div id="c-chips"></div>
+              <div class="card" id="c-inspector"></div>
+              <details class="card">
+                <summary>Number table</summary>
+                <div id="c-table"></div>
+              </details>
+            </div>
+            <div class="pane" data-pane="library" hidden>
+              <div class="card" id="c-library"></div>
+            </div>
+          </div>
+          <div class="notes">
+            <h3>How it works</h3>
+            <ul>
+              <li><b>For</b> both. Listen is design A. Tune is design B. Library holds everything you keep.</li>
+              <li><b>First screen.</b> Listen, with the sound, a small curve and three sliders.</li>
+              <li><b>Q on the graph.</b> The same as design B, in the Tune tab.</li>
+              <li><b>Narrow width.</b> Each tab gets the full panel height. Tune has the zoom pills and the Tall option.</li>
+              <li><b>One place.</b> Library replaces the AutoEQ box, the Presets box and the JSON box. A/B and the EQ switch stay in the header on every tab.</li>
+              <li><b>Grows to.</b> The three tabs become three columns. See the wide preview below.</li>
+              <li><b>Cost.</b> One more tap to reach the graph. A tab hides what the other tabs hold.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="design">
+        <div class="design-head">
+          <span class="letter">D</span>
+          <div>
+            <h2>Tall graph</h2>
+            <p class="pitch">Use the long side of the panel for frequency. Low notes at the top, high notes at the bottom.</p>
+          </div>
+        </div>
+        <div class="design-body">
+          <div class="frame">
+            <div id="d-head"></div>
+            <div class="card">
+              <div id="d-graph"></div>
+              <div class="legend-host"></div>
+            </div>
+            <div class="card" id="d-inspector"></div>
+            <div class="toolbar">
+              <div id="d-preamp"></div>
+              <button data-sheet="library">Library</button>
+              <button data-sheet="table">Table</button>
+            </div>
+            <div class="sheet" id="d-sheet" hidden>
+              <div class="sheet-head"><b class="sheet-title"></b><button data-close>Close</button></div>
+              <div class="sheet-library" id="d-library"></div>
+              <div class="sheet-table" id="d-table"></div>
+            </div>
+          </div>
+          <div class="notes">
+            <h3>How it works</h3>
+            <ul>
+              <li><b>For</b> an experiment that gives frequency the tall side of the panel.</li>
+              <li><b>First screen.</b> A tall graph, from 20 Hz at the top to 20 kHz at the bottom, with gain left to right. This follows your rotated view.</li>
+              <li><b>Q on the graph.</b> The side handles run up and down.</li>
+              <li><b>Narrow width.</b> Frequency gets about 440 px instead of about 320 px. Gain needs less room and fits the width.</li>
+              <li><b>One place.</b> Library and Table open as sheets from the bottom bar.</li>
+              <li><b>Grows to.</b> On a wide panel it turns back to the usual left to right graph.</li>
+              <li><b>Cost.</b> Every other EQ tool draws frequency left to right. There is no simple mode.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="design">
+        <div class="design-head">
+          <span class="letter">C+</span>
+          <div>
+            <h2>Design C on a wide panel</h2>
+            <p class="pitch">The three tabs become three columns. Nothing moves to a new place. It only spreads out.</p>
+          </div>
+        </div>
+        <div class="wide-frame">
+          <div id="w-head"></div>
+          <div class="columns">
+            <div class="column">
+              <h4 class="column-title">Listen</h4>
+              <div class="card" id="w-profile"></div>
+              <div class="card" id="w-macros"></div>
+            </div>
+            <div class="column column-main">
+              <h4 class="column-title">Tune</h4>
+              <div id="w-zoom"></div>
+              <div class="card">
+                <div id="w-graph"></div>
+                <div class="legend-host"></div>
+              </div>
+              <div id="w-chips"></div>
+              <div class="card" id="w-table"></div>
+            </div>
+            <div class="column">
+              <h4 class="column-title">Band and Library</h4>
+              <div class="card" id="w-inspector"></div>
+              <div class="card" id="w-library"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="text-section">
+        <h2>What changes in every design</h2>
+        <table class="compare">
+          <thead><tr><th>Today</th><th>In the proposals</th></tr></thead>
+          <tbody>
+            <tr><td>AutoEQ box, Presets box and JSON box</td><td>One Library with search, save, import, paste and export</td></tr>
+            <tr><td>A row of five number boxes per band</td><td>Chips plus one inspector, with the table one tap away</td></tr>
+            <tr><td>Bypass button in the action row</td><td>A/B in the header, on every screen</td></tr>
+            <tr><td>Preamp slider set by hand</td><td>Auto preamp from the largest boost, with a clip light</td></tr>
+            <tr><td>Add band button</td><td>Add band chip, or double click the graph</td></tr>
+            <tr><td>Rotate button in the header</td><td>Tall pill next to the zoom pills</td></tr>
+            <tr><td>Three Hz labels on the graph</td><td>Hz and dB labels, region names, numbered points, a band width marker and a hover readout</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Side by side</h2>
+        <table class="compare">
+          <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr></thead>
+          <tbody>
+            <tr><td>First use</td><td>Easy</td><td>Medium</td><td>Easy</td><td>Hard</td></tr>
+            <tr><td>Expert precision</td><td>Medium</td><td>High</td><td>High</td><td>High</td></tr>
+            <tr><td>Use of the narrow width</td><td>Good</td><td>Good</td><td>Good</td><td>Best</td></tr>
+            <tr><td>Steps to apply an AutoEQ profile</td><td>Change, type, pick</td><td>Library, type, pick</td><td>Library, type, pick</td><td>Library, type, pick</td></tr>
+            <tr><td>Build size</td><td>Medium</td><td>Medium</td><td>Large</td><td>Medium</td></tr>
+          </tbody>
+        </table>
+
+        <h2>My recommendation</h2>
+        <p>
+          Build C. Put B's graph and inspector in the Tune tab. Offer D's tall graph as the Tall pill,
+          not as the default. A newcomer starts on Listen and never needs the graph. An expert opens
+          Tune and keeps it open. The panel remembers the last tab.
+        </p>
+
+        <h2>Questions for you</h2>
+        <ol>
+          <li>Is C the direction, or do you prefer another design?</li>
+          <li>Which three sliders go on Listen? Bass, Vocals and Treble, or something else?</li>
+          <li>Keep the number table, or drop it?</li>
+          <li>Should the graph turn Tall on its own when the panel is narrow?</li>
+          <li>Should the sliders be normal bands you can see in Tune, or stay a separate layer?</li>
+        </ol>
+      </section>
+    </main>
+    <script src="ux-proposals.js"></script>
+  </body>
+</html>
