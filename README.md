@@ -1,31 +1,75 @@
 # goui
 
 Browser level EQ to show how easy and significant it is to adjust EQ for your headphone against
-your own ear. It all comes down to a very simple mantra: different ear, different head, different
-sound.
+your own ear. It all comes down to a very simple mantra: **different ear, different head, different
+sound.**
+
+![The sound of a tab passes the headphone layer, then the ear layer, then your taste, then reaches you.](docs/images/how-it-works.png)
+
+## What it does
 
 This extension works on the notion of joining two incredibly important audio tools: AutoEQ and
 EQByEar. AutoEQ will give you a good neutral baseline against the headphone you personally use. Then
 use EQByEar to adjust the fine details that are specific to the interaction between your headphone /
 IEM and your hearing. Add flavour on top of that, based on your taste.
 
-## Load it
+goui runs the sound of one tab through a parametric EQ. It keeps the headphone profile and your ear
+profile apart, as two layers. The bands of both layers add up in dB, so the merge is exact. Bass,
+Vocals and Treble sit on top as your taste. The preamp follows the largest boost, so the sound never
+clips.
 
-1. Open `brave://extensions` or `chrome://extensions`.
-2. Turn on Developer mode.
-3. Choose Load unpacked and pick this folder.
-4. Pin goui. Click the Extensions icon in the toolbar. It looks like a puzzle piece. Press the pin
-   beside goui.
-5. Open a page that plays audio and click the goui icon on it. The side panel opens and goui starts
-   hearing that page.
+## Install
+
+Chrome loads an unpacked extension from a folder on your computer. The first job is to get the
+folder. Then you point Chrome at it.
+
+![Install goui in four steps: open Extensions, load the folder, pin goui, click the icon.](docs/images/install-flow.png)
+
+### 1. Get the folder
+
+Press **Code** on this page, then **Download ZIP**, and unzip the file. Or clone the repo if you
+have git:
+
+```bash
+git clone https://github.com/wyndhamharyata/goui.git
+```
+
+Keep the folder where it is after this step. Chrome reads it from there on every start.
+
+### 2. Load the folder
+
+![The extensions page with Developer mode on and its Load unpacked button.](docs/images/install-load-unpacked.png)
+
+Open `chrome://extensions` in Chrome, or `brave://extensions` in Brave. Turn on **Developer mode**
+at the top right. Press **Load unpacked**.
+
+![Pick the folder that holds manifest.json.](docs/images/install-pick-folder.png)
+
+Pick the goui folder itself, the one that holds `manifest.json`. A file inside it will not load.
+
+### 3. Pin goui
+
+![Press the pin beside goui in the extensions menu.](docs/images/install-pin.png)
+
+Click the puzzle piece in the toolbar. Press the pin beside goui. The goui icon then stays in the
+toolbar, one click away.
+
+### 4. Start listening
+
+![Click the goui icon on a page with sound. The panel opens and the icon shows a green ON.](docs/images/install-click-icon.png)
+
+Open a page that plays audio and click the goui icon on it. The side panel opens and goui starts
+hearing that page.
 
 A how-to guide opens in a tab once, on the first install. The **?** button in the panel opens it
 again. It shows how goui works as a picture, each step with a picture of what to press, and links to
 AutoEQ and eqbyear. Until goui hears its first tab, the panel itself shows the first three steps in
 place of the EQ.
 
-The icon is the on and off switch. Chrome only lets an extension take a tab's audio after you click
-its icon on that tab, so the panel has no Start button.
+### The icon is the switch
+
+Chrome only lets an extension take a tab's audio after you click its icon on that tab, so the panel
+has no Start button.
 
 - Click the icon on the tab goui hears to turn goui off.
 - Click the icon on another tab to move goui there.
@@ -95,13 +139,20 @@ wants, and goui keeps the two apart.
 3. Copy the result, return to goui, and **Paste** it into the My ear section.
 4. Press **Save** to keep it, then turn the ear layer on to hear the headphone plus your ear.
 
-## Commands
+## Develop
 
-| Command         | What it does                                                            |
-| --------------- | ----------------------------------------------------------------------- |
-| `npm run lint`  | ESLint, then the word check.                                            |
-| `npm test`      | The browser journeys. Run `npx playwright install chromium` once first. |
-| `npm run icons` | Rebuild the icon files.                                                 |
+| Command          | What it does                                                            |
+| ---------------- | ----------------------------------------------------------------------- |
+| `npm run lint`   | ESLint, then the word check.                                            |
+| `npm test`       | The browser journeys. Run `npx playwright install chromium` once first. |
+| `npm run icons`  | Rebuild the icon files.                                                 |
+| `npm run images` | Rebuild the pictures in `docs/images`.                                  |
+
+There is no build step. The extension is plain JavaScript, so a change to a file is live after you
+press the reload button on the extensions page.
+
+The pictures in `docs/images` are drawn by `scripts/make-readme-images.mjs`. Each one is written as an
+SVG and as a PNG. Edit the SVG by hand, or edit the script and run `npm run images`.
 
 ## Notes
 
@@ -111,3 +162,5 @@ wants, and goui keeps the two apart.
   worker, since Playwright cannot press the toolbar icon. A launch flag lets that click capture.
 - The extension can only change audio inside the browser. For system audio, use a tool such as
   SoundSource.
+- The AutoEQ search reads the public index on GitHub. The result is kept for a week, so a second
+  search is fast.
