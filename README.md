@@ -30,7 +30,7 @@ a zip, unzip it, then point Chrome at the folder.
 ![The Releases page, with the zip and a Download button.](docs/images/install-download.png)
 
 Open the [Releases page](https://github.com/wyndhamharyata/goui/releases/latest). Under the newest
-release, press the file named **goui-0.1.0.zip**. Unzip it after the download. Double clicking the
+release, press the file named **goui-0.1.1.zip**. Unzip it after the download. Double clicking the
 file is enough.
 
 Keep the unzipped folder where it is. Chrome reads it from there on every start, so a move or a
@@ -153,12 +153,18 @@ wants, and goui keeps the two apart.
 
 ## Credits
 
-goui stands on other people's work. `THIRD_PARTY_NOTICES.md` holds the full notices.
+goui stands on other people's work. `THIRD_PARTY_NOTICES.md` holds the full notices, and the guide
+inside the extension has the short version.
 
 - **AutoEQ** by Jaakko Pasanen. The headphone profiles and the search index come from AutoEQ. It is
   under the MIT licence.
 - **EQByEar** at [eqbyear.com](https://eqbyear.com). The ear test, which goui opens in a new tab.
+- **Google Material Icons**. The five icons in the panel and the guide. They are under the Apache 2.0
+  licence.
 - goui itself is under the MIT licence. See `LICENSE`.
+
+The tools that lint, test and build goui are npm packages, and none of them travel in the extension.
+`DEPENDENCIES.md` lists every one with its licence.
 
 ## Develop
 
@@ -174,20 +180,21 @@ npm install
 npx playwright install chromium
 ```
 
-| Command          | What it does                                              |
-| ---------------- | --------------------------------------------------------- |
-| `npm run lint`   | ESLint, then the word check.                              |
-| `npm test`       | The browser journeys.                                     |
-| `npm run icons`  | Rebuild the icon files.                                   |
-| `npm run images` | Rebuild the pictures in `docs/images`.                    |
-| `npm run zip`    | Build `dist/goui-<version>.zip`, the file a release uses. |
+| Command                | What it does                                              |
+| ---------------------- | --------------------------------------------------------- |
+| `npm run lint`         | ESLint, then the word check.                              |
+| `npm test`             | The browser journeys.                                     |
+| `npm run icons`        | Rebuild the icon files.                                   |
+| `npm run images`       | Rebuild the pictures in `docs/images`.                    |
+| `npm run dependencies` | Rebuild `DEPENDENCIES.md` from the installed packages.    |
+| `npm run zip`          | Build `dist/goui-<version>.zip`, the file a release uses. |
 
 The pictures in `docs/images` are drawn by `scripts/make-readme-images.mjs`. Each one is written as an
 SVG and as a PNG. Edit the SVG by hand, or edit the script and run `npm run images`.
 
 The release zip is built by `scripts/make-extension-zip.mjs`. It holds the `manifest.json`, the
-`src` folder and the `icons` folder, all inside one `goui` folder. A person who unzips it gets a
-folder to point Chrome at.
+`src` folder, the `icons` folder, the licence and the notices, all inside one `goui` folder. A person
+who unzips it gets a folder to point Chrome at.
 
 The tests open the panel as a normal tab. They fire the icon's own click event in the service
 worker, since Playwright cannot press the toolbar icon. A launch flag lets that click capture.

@@ -863,7 +863,7 @@ byId("tabs").addEventListener("click", (event) => {
   if (button) showTab(button.dataset.tab);
 });
 
-for (const id of ["help", "guide"]) {
+for (const id of ["help", "guide", "credits"]) {
   byId(id).addEventListener("click", () => chrome.tabs.create({ url: chrome.runtime.getURL("src/intro.html") }));
 }
 

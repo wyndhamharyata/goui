@@ -643,7 +643,7 @@ journey("given goui hears a 1 kHz tab, a click on the icon of a 5 kHz tab moves 
   await expect(panel.locator("#status")).toContainText("Click the goui icon");
 });
 
-journey("given the panel, the help button opens the how-to page with the pin step and the reading links", async (context, port) => {
+journey("given the panel, the help button opens the how-to page with the steps, the credits and the version", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
   const opened = context.waitForEvent("page");
   await panel.click("#help");
@@ -651,11 +651,29 @@ journey("given the panel, the help button opens the how-to page with the pin ste
   await intro.waitForLoadState();
   expect(intro.url()).toContain("src/intro.html");
   await expect(intro.locator("h1")).toHaveText("goui");
+  await expect(intro.locator("#version")).toHaveText(`v${manifest.version}`);
   await expect(intro.locator("body")).toContainText("Pin goui");
   await expect(intro.locator("body")).toContainText("Click the goui icon");
   await expect(intro.locator("body")).toContainText("Tune it to your ear");
+  await expect(intro.locator("h2", { hasText: "Credits" })).toBeVisible();
   await expect(intro.locator("a[href='https://github.com/jaakkopasanen/AutoEQ']")).toHaveCount(1);
   await expect(intro.locator("a[href='https://eqbyear.com']")).toHaveCount(1);
+  await expect(intro.locator("a[href='https://github.com/google/material-design-icons']")).toHaveCount(1);
+  await expect(intro.locator("a[href='https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md']")).toHaveCount(1);
+  await expect(intro.locator(".links")).toContainText("under the MIT licence");
+});
+
+journey("given the Library, the credits line names the three sources and its button opens the guide", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  await openTab(panel, "library");
+  const credits = panel.locator(".credits");
+  await expect(credits).toContainText("AutoEQ by Jaakko Pasanen");
+  await expect(credits).toContainText("EQByEar");
+  await expect(credits).toContainText("Google Material Icons");
+  await expect(credits).toContainText("MIT licence");
+  const opened = context.waitForEvent("page");
+  await panel.click("#credits");
+  expect((await opened).url()).toContain("src/intro.html");
 });
 
 journey("given goui has never heard a tab, the panel shows how to start, and the first tab goui hears ends it for good", async (context, port) => {

@@ -56,6 +56,15 @@ body {
   display: none;
 }
 
+.credits {
+  margin: 2px 0 0;
+  color: var(--muted);
+}
+
+.credits button {
+  vertical-align: baseline;
+}
+
 .caption {
   color: var(--muted);
 }

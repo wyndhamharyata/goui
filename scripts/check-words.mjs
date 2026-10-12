@@ -30,7 +30,12 @@ const bannedNames = new Set([
 
 const causalWords = new Set(["because", "hence", "therefore"]);
 const skippedFolders = new Set([".git", "node_modules", "playwright-report", "test-results"]);
-const skippedFiles = new Set(["package-lock.json", join("scripts", "check-words.mjs")]);
+// The generated files are machine output, so they stay out of the word check.
+const skippedFiles = new Set([
+  "DEPENDENCIES.md",
+  "package-lock.json",
+  join("scripts", "check-words.mjs"),
+]);
 
 /**
  * @param {string} source

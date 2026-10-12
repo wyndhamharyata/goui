@@ -49,6 +49,11 @@ h2 {
   color: #fff;
 }
 
+.version {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .flow {
   display: flex;
   align-items: center;
@@ -130,6 +135,16 @@ h2 {
 .links span {
   color: var(--muted);
   font-size: 12px;
+}
+
+.fine {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.fine a {
+  color: var(--accent);
 }
 
 .primary {
