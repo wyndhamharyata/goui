@@ -690,3 +690,28 @@ button:disabled {
   background: #ffd166;
   color: #0e1013;
 }
+
+/* Until goui first hears a tab, the panel shows how to start instead of the EQ. */
+.start {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.start h2 {
+  margin: 4px 0 0;
+  font-size: 15px;
+}
+
+.start .guide-text {
+  margin: 0;
+}
+
+.app[data-started="no"] .start {
+  display: flex;
+}
+
+.app[data-started="no"] .tabs,
+.app[data-started="no"] .panes {
+  display: none;
+}

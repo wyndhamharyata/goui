@@ -1,0 +1,257 @@
+.guide-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.guide-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: #161a20;
+  border: 1px solid #262d38;
+  border-radius: 10px;
+  counter-increment: step;
+}
+
+.guide-text {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.guide-text::before {
+  content: counter(step);
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #5b8cff;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.guide-text b {
+  display: block;
+  color: #fff;
+}
+
+.guide-text span {
+  color: #8993a2;
+}
+
+.guide-step.optional .guide-text::before {
+  background: #ffd166;
+  color: #0e1013;
+}
+
+/* The pictures below are drawn in HTML. They stand in for the browser's own toolbar and menus. */
+.shot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 74px;
+  padding: 10px;
+  background: #0b0d10;
+  border-radius: 7px;
+}
+
+.mock-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: #202124;
+  border-radius: 6px;
+}
+
+.mock-url {
+  flex: 1;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #303134;
+  color: #9aa0a6;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.mock-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: #c4c7c5;
+}
+
+.mock-avatar {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #5f6368;
+}
+
+.mock-goui {
+  position: relative;
+  display: grid;
+  flex: none;
+}
+
+.mock-goui img {
+  width: 18px;
+  height: 18px;
+}
+
+.mock-badge {
+  position: absolute;
+  right: -7px;
+  bottom: -5px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: #43d39e;
+  color: #0e1013;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 11px;
+}
+
+.mock-menu {
+  align-self: flex-end;
+  width: 150px;
+  padding: 6px 8px;
+  background: #292a2d;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.5);
+}
+
+.mock-menu small {
+  color: #9aa0a6;
+  font-size: 10px;
+}
+
+.mock-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: #e8eaed;
+  font-size: 12px;
+}
+
+.mock-menu-row img {
+  width: 14px;
+  height: 14px;
+}
+
+.mock-menu-row span {
+  flex: 1;
+}
+
+.mock-tabs {
+  display: flex;
+  gap: 3px;
+}
+
+.mock-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px 6px 0 0;
+  background: #1a1b1e;
+  color: #9aa0a6;
+  font-size: 11px;
+}
+
+.mock-tab.on {
+  background: #202124;
+  color: #e8eaed;
+}
+
+.mock-tab .mock-icon {
+  width: 13px;
+  height: 13px;
+  fill: #8ab4f8;
+}
+
+.mock-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mock-input,
+.mock-row,
+.mock-button {
+  padding: 4px 8px;
+  border: 1px solid #262d38;
+  border-radius: 6px;
+  background: #1c2129;
+  color: #e6e9ef;
+  font-size: 11px;
+}
+
+.mock-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.mock-row small {
+  color: #8993a2;
+}
+
+.mock-button {
+  align-self: flex-start;
+}
+
+.mock-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: auto 0;
+  color: #8993a2;
+}
+
+.mock-graph {
+  width: 100%;
+  height: 64px;
+}
+
+.mock-cursor {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  fill: #fff;
+  stroke: #0e1013;
+  stroke-width: 1.5;
+}
+
+/* The thing to press, ringed in the accent colour. */
+.focus {
+  outline: 2px solid #5b8cff;
+  outline-offset: 2px;
+  border-radius: 4px;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    outline-color: rgb(91 140 255 / 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus {
+    animation: none;
+  }
+}

@@ -683,6 +683,11 @@ const idleInstruction = "Click the goui icon in the toolbar while you are on the
 
 function applyCaptureState(state) {
   const isCapturing = Boolean(state.isCapturing);
+  // The first tab goui hears ends the guide for good.
+  if (isCapturing && byId("app").dataset.started === "no") {
+    byId("app").dataset.started = "yes";
+    chrome.storage.local.set({ hasCaptured: true });
+  }
   const status = byId("status");
   status.textContent = state.error || (isCapturing ? state.title : idleInstruction);
   status.classList.toggle("instruction", !isCapturing);
@@ -736,7 +741,9 @@ byId("tabs").addEventListener("click", (event) => {
   if (button) showTab(button.dataset.tab);
 });
 
-byId("help").addEventListener("click", () => chrome.tabs.create({ url: chrome.runtime.getURL("src/intro.html") }));
+for (const id of ["help", "guide"]) {
+  byId(id).addEventListener("click", () => chrome.tabs.create({ url: chrome.runtime.getURL("src/intro.html") }));
+}
 
 byId("compare").addEventListener("pointerdown", () => setBypass(true));
 byId("compare").addEventListener("pointerup", () => setBypass(false));
@@ -918,7 +925,8 @@ async function readPresets(stored) {
 async function hydrate() {
   for (const type of bandTypes) byId("bandType").append(new Option(typeLabels[type], type));
 
-  const stored = await chrome.storage.local.get(["config", "headphonePresets", "earPresets", "savedSounds", "presets", "view", "tab"]);
+  const stored = await chrome.storage.local.get(["config", "headphonePresets", "earPresets", "savedSounds", "presets", "view", "tab", "hasCaptured"]);
+  byId("app").dataset.started = stored.hasCaptured ? "yes" : "no";
   if (stored.config) config = sanitizeConfig(stored.config);
   await readPresets(stored);
   tuneGraph.setVertical(stored.view === "vertical");

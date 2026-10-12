@@ -15,8 +15,10 @@ every band on the graph.
 5. Open a page that plays audio and click the goui icon on it. The side panel opens and goui starts
    hearing that page.
 
-A how-to page opens once, on the first install. The **?** button in the panel opens it again. It
-covers what goui is for, the steps above, and links to AutoEQ and eqbyear.
+A how-to guide opens in a tab once, on the first install. The **?** button in the panel opens it
+again. It shows how goui works as a picture, each step with a picture of what to press, and links to
+AutoEQ and eqbyear. Until goui hears its first tab, the panel itself shows the first three steps in
+place of the EQ.
 
 The icon is the on and off switch. Chrome only lets an extension take a tab's audio after you click
 its icon on that tab, so the panel has no Start button.

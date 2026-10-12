@@ -536,7 +536,32 @@ journey("given the panel, the help button opens the how-to page with the pin ste
   expect(intro.url()).toContain("src/intro.html");
   await expect(intro.locator("h1")).toHaveText("goui");
   await expect(intro.locator("body")).toContainText("Pin goui");
-  await expect(intro.locator("body")).toContainText("Measure my ear with eqbyear");
+  await expect(intro.locator("body")).toContainText("Click the goui icon");
+  await expect(intro.locator("body")).toContainText("Add your ear");
   await expect(intro.locator("a[href='https://github.com/jaakkopasanen/AutoEQ']")).toHaveCount(1);
   await expect(intro.locator("a[href='https://eqbyear.com']")).toHaveCount(1);
+});
+
+journey("given goui has never heard a tab, the panel shows how to start, and the first tab goui hears ends it for good", async (context, port) => {
+  const tone = await openTone(context, port, 1000);
+  const panel = await context.newPage();
+  await panel.goto(`chrome-extension://${extensionId}/src/panel.html`);
+  await expect(panel.locator("#start")).toContainText("Pin goui");
+  await expect(panel.locator("#start")).toBeVisible();
+  await expect(panel.locator("#tabs")).toBeHidden();
+
+  const opened = context.waitForEvent("page");
+  await panel.click("#guide");
+  expect((await opened).url()).toContain("src/intro.html");
+
+  await pressIcon(context, tone);
+  await expect(panel.locator("#status")).toHaveText("playing running");
+  await expect(panel.locator("#start")).toBeHidden();
+  await expect(panel.locator("#tabs")).toBeVisible();
+
+  await pressIcon(context, tone);
+  await expect(panel.locator("#status")).toContainText("Click the goui icon");
+  await panel.reload();
+  await expect(panel.locator("#tabs")).toBeVisible();
+  await expect(panel.locator("#start")).toBeHidden();
 });

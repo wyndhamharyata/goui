@@ -16,11 +16,11 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .doc {
-  max-width: 640px;
+  max-width: 760px;
   margin: 0 auto;
   padding: 32px 24px 48px;
 }
@@ -28,12 +28,11 @@ body {
 .intro-head {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 8px;
+  gap: 14px;
 }
 
 .intro-head img {
-  border-radius: 14px;
+  border-radius: 13px;
 }
 
 h1 {
@@ -42,34 +41,109 @@ h1 {
 }
 
 h2 {
-  margin: 28px 0 8px;
-  font-size: 15px;
+  margin: 30px 0 10px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted);
 }
 
 .pitch {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   color: var(--muted);
 }
 
-ul,
-ol {
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.flow-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 96px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  text-align: center;
+}
+
+.flow-box small {
+  color: var(--muted);
+}
+
+.flow-box.headphone {
+  border-color: #a9b8ff;
+}
+
+.flow-box.ear {
+  border-color: #ffd166;
+}
+
+.flow-icon {
+  width: 20px;
+  height: 20px;
+  fill: var(--text);
+}
+
+.flow-arrow {
+  color: var(--muted);
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.facts li {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.guide-steps.grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.guide-text {
   margin: 0;
-  padding-left: 20px;
 }
 
-li {
-  margin-bottom: 8px;
+.links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
 }
 
-li b {
-  color: #fff;
+.links a {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  text-decoration: none;
 }
 
-a {
-  color: var(--accent);
+.links a:hover {
+  border-color: var(--accent);
+}
+
+.links span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .primary {
@@ -81,4 +155,16 @@ a {
   border: 0;
   border-radius: 8px;
   cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .flow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .flow-arrow {
+    align-self: center;
+    transform: rotate(90deg);
+  }
 }

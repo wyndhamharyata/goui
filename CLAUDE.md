@@ -124,6 +124,7 @@ If a line needs a comment to say what it does, rename it or split it.
 - A small copy is better than a shared helper with one or two users.
 - Each Chrome context gets its own file: the side panel, the offscreen document, the service worker
   and the how-to page (`src/intro.html`). Code that two contexts both need goes in one shared file.
+  `src/guide.css` draws the pictures of the browser toolbar for both the guide and the panel.
 
 ## 8. Tests are user journeys.
 
