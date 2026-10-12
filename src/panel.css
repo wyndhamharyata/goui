@@ -1,0 +1,299 @@
+:root {
+  --bg: #0e1013;
+  --panel: #161a20;
+  --panel-2: #1c2129;
+  --line: #262d38;
+  --text: #e6e9ef;
+  --muted: #8993a2;
+  --accent: #5b8cff;
+  --accent-2: #b06bff;
+  --danger: #ff6b6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch input {
+  display: none;
+}
+
+.switch .track {
+  width: 28px;
+  height: 15px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  position: relative;
+}
+
+.switch .track::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.switch input:checked + .track {
+  background: rgba(91, 140, 255, 0.25);
+  border-color: var(--accent);
+}
+
+.switch input:checked + .track::after {
+  transform: translateX(13px);
+  background: var(--accent);
+}
+
+.switch .label {
+  color: var(--muted);
+}
+
+.switch input:checked ~ .label {
+  color: var(--text);
+}
+
+.stage {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#curve {
+  display: block;
+  width: 100%;
+  height: 150px;
+  touch-action: none;
+}
+
+.readout {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px #000;
+}
+
+.readout #level {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.capture {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#status {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preamp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.caption {
+  color: var(--muted);
+}
+
+.preamp input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.preamp #preampValue {
+  font-variant-numeric: tabular-nums;
+  min-width: 34px;
+  text-align: right;
+}
+
+.unit {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.bands {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.band {
+  display: grid;
+  grid-template-columns: 18px 74px 1fr 1fr 1fr 20px;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.band.off {
+  opacity: 0.45;
+}
+
+.band .on {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+}
+
+select,
+input[type="text"],
+input[type="number"],
+input[type="file"],
+textarea {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font: inherit;
+  padding: 3px 5px;
+  outline: none;
+  min-width: 0;
+}
+
+select:focus,
+input:focus,
+textarea:focus {
+  border-color: var(--accent);
+}
+
+.band input[type="number"] {
+  width: 100%;
+  text-align: right;
+}
+
+.band .remove {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.band .remove:hover {
+  color: var(--danger);
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 500;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.08);
+}
+
+button.quiet {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.actions button {
+  flex: 1;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.panel textarea {
+  resize: vertical;
+  min-height: 90px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  white-space: pre;
+}
+
+.panel .row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel .row input[type="file"] {
+  flex: 1;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 10px;
+  min-height: 12px;
+}

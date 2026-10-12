@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "goui",
+  "version": "0.1.0",
+  "description": "A parametric EQ for the audio of a browser tab, with AutoEQ support.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8wKqXrrXVzWalItiCf7YUI60KI7y8YuJltC6MtwE9hOG4iDyCXc1sz0oA7bIJ1GocyDUMGVv88JP4FS/OhSndunfOXMtoYKr1wtOdwlIc0x7x1g5yKNk+YBxjhPbsWgdfy2yLMrvPojUEvlC7jHdRZ3YzPXPB3xekqe9EVFQeTsO0UDuSekAMtMhs3XWMmAS/rplspLQiwf8yBLjnnN6PC+YfhdIoxh1o/A25TDG1zz0rG4L0U5/B1pQeNbQe0MFauUEJ9iU8YaIBfhfxVc492ClQIWcDoWkAoq+8lFgdiB4gXQcWNJ0WcGrcLnClien0GJFU8kqrEmfzGgaxIbGhQIDAQAB",
+  "permissions": ["tabCapture", "offscreen", "storage", "tabs", "sidePanel"],
+  "background": { "service_worker": "src/service-worker.js", "type": "module" },
+  "side_panel": { "default_path": "src/panel.html" },
+  "action": {
+    "default_title": "goui",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "goui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint . && node scripts/check-words.mjs",
+    "test": "playwright test",
+    "icons": "node scripts/make-icons.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "@playwright/test": "^1.64.0",
+    "eslint": "^10.12.0",
+    "eslint-plugin-sonarjs": "^4.2.2",
+    "eslint-plugin-unicorn": "^77.0.0",
+    "espree": "^11.2.0",
+    "globals": "^17.13.0"
+  }
+}

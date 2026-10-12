@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>goui</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <span class="brand">goui</span>
+        <label class="switch">
+          <input type="checkbox" id="enabled" />
+          <span class="track"></span>
+          <span class="label">EQ</span>
+        </label>
+      </header>
+
+      <div class="stage">
+        <canvas id="curve"></canvas>
+        <div class="readout"><span id="level">--</span><span class="unit">dB</span></div>
+      </div>
+
+      <div class="capture">
+        <button id="capture">Start capture</button>
+        <span id="status">No audio</span>
+      </div>
+
+      <div class="preamp">
+        <span class="caption">Preamp</span>
+        <input type="range" id="preamp" min="-24" max="12" step="0.1" value="0" />
+        <span id="preampValue">0.0</span>
+        <span class="unit">dB</span>
+      </div>
+
+      <div class="bands" id="bands"></div>
+
+      <div class="actions">
+        <button id="addBand">Add band</button>
+        <button id="importToggle" class="quiet">AutoEQ</button>
+      </div>
+
+      <section class="panel" id="importPanel" hidden>
+        <textarea id="autoEqText" spellcheck="false" placeholder="Preamp: -6.2 dB&#10;Filter 1: ON PK Fc 105 Hz Gain -3.1 dB Q 0.70"></textarea>
+        <div class="row">
+          <input type="file" id="autoEqFile" accept=".txt,text/plain" />
+          <button id="applyAutoEq">Apply</button>
+        </div>
+        <div class="hint" id="importHint"></div>
+      </section>
+    </div>
+
+    <script type="module" src="panel.js"></script>
+  </body>
+</html>
