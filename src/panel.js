@@ -7,6 +7,7 @@ import {
   defaultConfig,
   newBand,
   parseAutoEq,
+  toAutoEq,
   sanitizeConfig,
 } from "./shared/filters.js";
 
@@ -37,6 +38,9 @@ const presetName = document.getElementById("presetName");
 const presetList = document.getElementById("presetList");
 const presetJson = document.getElementById("presetJson");
 const presetHint = document.getElementById("presetHint");
+const searchText = document.getElementById("searchText");
+const searchButton = document.getElementById("searchButton");
+const searchResults = document.getElementById("searchResults");
 
 const offlineContext = new OfflineAudioContext(1, 1, 48_000);
 
@@ -550,6 +554,71 @@ function importPreset() {
   }
 }
 
+const autoEqBase = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master/results/";
+const indexLifetimeMs = 7 * 24 * 60 * 60 * 1000;
+let autoEqItems = null;
+
+function parseAutoEqIndex(text) {
+  const items = [];
+  for (const line of text.split("\n")) {
+    const match = line.match(/^- \[(.+?)\]\(\.\/(.+?)\)/);
+    if (match) items.push({ name: match[1], path: match[2] });
+  }
+  return items;
+}
+
+async function loadAutoEqIndex() {
+  if (autoEqItems) return autoEqItems;
+  const cached = await chrome.storage.local.get(["autoEqIndex", "autoEqIndexAt"]);
+  const isFresh = cached.autoEqIndexAt && Date.now() - cached.autoEqIndexAt < indexLifetimeMs;
+  let text = isFresh ? cached.autoEqIndex : null;
+  if (!text) {
+    text = await (await fetch(`${autoEqBase}INDEX.md`)).text();
+    await chrome.storage.local.set({ autoEqIndex: text, autoEqIndexAt: Date.now() });
+  }
+  autoEqItems = parseAutoEqIndex(text);
+  return autoEqItems;
+}
+
+function renderSearchResults(items) {
+  searchResults.replaceChildren();
+  for (const item of items) {
+    const button = document.createElement("button");
+    button.className = "quiet";
+    button.textContent = item.name;
+    button.addEventListener("click", () => applySearchResult(item));
+    searchResults.append(button);
+  }
+}
+
+async function applySearchResult(item) {
+  importHint.textContent = `Loading ${item.name}...`;
+  const file = encodeURIComponent(`${item.name} ParametricEQ.txt`);
+  const response = await fetch(`${autoEqBase}${item.path}/${file}`);
+  if (!response.ok) {
+    importHint.textContent = "That profile did not load.";
+    return;
+  }
+  autoEqText.value = await response.text();
+  applyAutoEq();
+  importHint.textContent = `Loaded ${item.name}.`;
+}
+
+async function searchHeadphones() {
+  const query = searchText.value.trim().toLowerCase();
+  if (!query) return;
+  importHint.textContent = "Searching...";
+  const items = await loadAutoEqIndex();
+  const matches = items.filter((item) => item.name.toLowerCase().includes(query)).slice(0, 20);
+  renderSearchResults(matches);
+  importHint.textContent = matches.length ? `${matches.length} matches.` : "No match for that name.";
+}
+
+function exportAutoEq() {
+  autoEqText.value = toAutoEq(config);
+  importHint.textContent = "The current EQ is in the box. Copy it out.";
+}
+
 preampRange.addEventListener("input", () => {
   config.preampDb = Number(preampRange.value);
   preampValue.textContent = config.preampDb.toFixed(1);
@@ -578,6 +647,11 @@ document.getElementById("importToggle").addEventListener("click", () => {
   importPanel.hidden = !importPanel.hidden;
 });
 document.getElementById("applyAutoEq").addEventListener("click", applyAutoEq);
+document.getElementById("exportAutoEq").addEventListener("click", exportAutoEq);
+searchButton.addEventListener("click", searchHeadphones);
+searchText.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") searchHeadphones();
+});
 
 document.getElementById("presetToggle").addEventListener("click", () => {
   presetPanel.hidden = !presetPanel.hidden;

@@ -50,8 +50,14 @@
         <textarea id="autoEqText" spellcheck="false" placeholder="Preamp: -6.2 dB&#10;Filter 1: ON PK Fc 105 Hz Gain -3.1 dB Q 0.70"></textarea>
         <div class="row">
           <input type="file" id="autoEqFile" accept=".txt,text/plain" />
+          <button id="exportAutoEq" class="quiet">Export current</button>
           <button id="applyAutoEq">Apply</button>
         </div>
+        <div class="row">
+          <input type="text" id="searchText" placeholder="Search a headphone model" />
+          <button id="searchButton" class="quiet">Search</button>
+        </div>
+        <div class="preset-list" id="searchResults"></div>
         <div class="hint" id="importHint"></div>
       </section>
 

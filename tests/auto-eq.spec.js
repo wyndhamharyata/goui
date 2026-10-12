@@ -128,3 +128,45 @@ test("given a saved preset, loading it brings the boost back", async () => {
     server.close();
   }
 });
+
+test("given a headphone search, the chosen profile boosts the tone and exports as AutoEQ text", async () => {
+  test.setTimeout(60_000);
+  const { context, server, port } = await openBrowser();
+
+  try {
+    // Stand in for the AutoEQ repository.
+    await context.route("https://raw.githubusercontent.com/**", (route) => {
+      const isIndex = route.request().url().endsWith("INDEX.md");
+      const body = readFileSync(join(here, "fixtures", isIndex ? "autoeq-index.md" : "fixture-phone.txt"));
+      route.fulfill({ contentType: "text/plain", body });
+    });
+
+    const tone = await context.newPage();
+    await tone.goto(`http://localhost:${port}/`);
+    await tone.click("#play");
+
+    const panel = await context.newPage();
+    await panel.goto(`chrome-extension://${extensionId}/src/panel.html`);
+    await panel.click("#capture");
+    await expect(panel.locator("#status")).not.toHaveText("No audio");
+
+    const flat = await steadyLevel(panel);
+
+    await panel.click("#importToggle");
+    await panel.fill("#searchText", "fixture");
+    await panel.click("#searchButton");
+    await panel.locator("#searchResults button").first().click();
+    await expect(panel.locator(".band").first()).toContainText("Peak");
+
+    const peaked = await steadyLevel(panel);
+    expect(peaked - flat).toBeGreaterThan(5.4);
+    expect(peaked - flat).toBeLessThan(6.6);
+
+    await panel.click("#exportAutoEq");
+    await expect(panel.locator("#autoEqText")).toHaveValue(/Preamp: 0.0 dB/);
+    await expect(panel.locator("#autoEqText")).toHaveValue(/Filter 1: ON PK Fc 1000 Hz Gain 6.0 dB/);
+  } finally {
+    await context.close();
+    server.close();
+  }
+});

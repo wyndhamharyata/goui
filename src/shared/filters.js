@@ -95,3 +95,13 @@ export function parseAutoEq(text) {
   }
   return config;
 }
+
+export function toAutoEq(config) {
+  const lines = [`Preamp: ${config.preampDb.toFixed(1)} dB`];
+  config.bands.forEach((band, index) => {
+    const on = band.on ? "ON" : "OFF";
+    const gain = hasGain(band.type) ? ` Gain ${band.gainDb.toFixed(1)} dB` : "";
+    lines.push(`Filter ${index + 1}: ${on} ${band.type} Fc ${Math.round(band.frequencyHz)} Hz${gain} Q ${band.q.toFixed(2)}`);
+  });
+  return lines.join("\n");
+}
