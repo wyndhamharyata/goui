@@ -46,7 +46,6 @@ export function defaultConfig() {
     enabled: true,
     preampDb: 0,
     autoPreamp: true,
-    limiter: false,
     profileName: "Flat",
     profileKind: "Starter sound",
     isEdited: false,
@@ -78,7 +77,6 @@ export function sanitizeConfig(raw) {
     enabled: raw.enabled !== false,
     preampDb: clamp(Number(raw.preampDb) || 0, -24, 12),
     autoPreamp: raw.autoPreamp !== false,
-    limiter: !!raw.limiter,
     profileName: typeof raw.profileName === "string" ? raw.profileName : "Custom",
     profileKind: typeof raw.profileKind === "string" ? raw.profileKind : "Your sound",
     isEdited: raw.isEdited === true,
@@ -135,7 +133,7 @@ export function maxBoostDb(context, bands) {
 export function engineConfig(config, context) {
   const bands = [...config.bands, ...macroBands(config.macros)];
   const preampDb = config.autoPreamp ? 0 - maxBoostDb(context, bands) : config.preampDb;
-  return { enabled: config.enabled, limiter: config.limiter, preampDb, bands };
+  return { enabled: config.enabled, preampDb, bands };
 }
 
 const autoEqLine =

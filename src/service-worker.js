@@ -84,9 +84,5 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
     stopCapture().then(respond, (error) => respond({ capturing: false, error: error.message }));
     return true;
   }
-  if (message.type === "capture:status") {
-    chrome.storage.session.get("capture").then((stored) => respond(stored.capture || { capturing: false }));
-    return true;
-  }
   return false;
 });

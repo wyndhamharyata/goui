@@ -1,4 +1,4 @@
-import { bandTypes, biquadQ, engineConfig, hasGain, makeBiquad, sanitizeConfig } from "./shared/filters.js";
+import { biquadQ, engineConfig, hasGain, makeBiquad, sanitizeConfig } from "./shared/filters.js";
 
 let audioContext;
 let mediaStream;
@@ -8,7 +8,7 @@ let analyserNode;
 let preampNode;
 let filterNodes = [];
 let telemetryTimer;
-let config = { enabled: true, preampDb: 0, limiter: false, bands: [] };
+let config = { enabled: true, preampDb: 0, bands: [] };
 
 const spectrumPoints = 128;
 const offlineContext = new OfflineAudioContext(1, 1, 48_000);
@@ -18,7 +18,7 @@ function gainFromDb(gainDb) {
 }
 
 function activeBands() {
-  return config.bands.filter((band) => band.on && bandTypes.includes(band.type));
+  return config.bands.filter((band) => band.on);
 }
 
 function buildChain() {
@@ -51,15 +51,6 @@ function buildChain() {
     filterNodes.push(filter);
   }
 
-  if (config.limiter) {
-    const limiter = audioContext.createDynamicsCompressor();
-    limiter.threshold.value = -1;
-    limiter.knee.value = 0;
-    limiter.ratio.value = 20;
-    node.connect(limiter);
-    node = limiter;
-  }
-
   node.connect(analyserNode);
   analyserNode.connect(audioContext.destination);
   chainNodes = [preampNode, ...filterNodes, analyserNode];
@@ -68,7 +59,7 @@ function buildChain() {
 // Only a change here needs new nodes. A new frequency, gain or Q moves the nodes that exist.
 function chainLayout() {
   const parts = config.bands.map((band) => [band.type, band.on]);
-  return JSON.stringify([parts, config.limiter, config.enabled]);
+  return JSON.stringify([parts, config.enabled]);
 }
 
 function updateFilters() {
@@ -118,7 +109,7 @@ function sendTelemetry() {
   const levelDb = readLevelDb(new Float32Array(analyserNode.fftSize));
   const spectrumDb = readSpectrum(new Float32Array(analyserNode.frequencyBinCount));
   chrome.runtime
-    .sendMessage({ type: "audio:telemetry", levelDb: levelDb, spectrumDb: spectrumDb, sampleRateHz: audioContext.sampleRate })
+    .sendMessage({ type: "audio:telemetry", levelDb, spectrumDb })
     .catch(() => {});
 }
 
@@ -131,7 +122,7 @@ async function start(streamId) {
   sourceNode = audioContext.createMediaStreamSource(mediaStream);
   buildChain();
   telemetryTimer = setInterval(sendTelemetry, 50);
-  return { ok: true, sampleRateHz: audioContext.sampleRate };
+  return { ok: true };
 }
 
 async function stop() {
@@ -157,7 +148,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
   }
   if (message.type === "audio:config") {
     applyConfig(engineConfig(sanitizeConfig(message.config), offlineContext));
-    respond({ ok: true, bands: config.bands.length });
+    respond({ ok: true });
     return true;
   }
   return false;
