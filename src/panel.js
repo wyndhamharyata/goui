@@ -18,9 +18,7 @@ import {
 import { formatHz, makeGraph, qToOctaves, formatDb, typeColor } from "./graph.js";
 
 const byId = (id) => document.getElementById(id);
-const offlineContext = new OfflineAudioContext(1, 1, 48_000);
 const autoEqBase = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master/results/";
-const indexLifetimeMs = 7 * 24 * 60 * 60 * 1000;
 
 const starterSounds = [
   { name: "Flat", bands: [] },
@@ -52,8 +50,6 @@ let saveTimer = 0;
 let autoEqItems = null;
 let isMoreOpen = false;
 let openAction = "";
-
-const commonTypes = ["PK", "LSC", "HSC", "HP", "LP"];
 
 // What the panel draws is what the engine plays, with the A/B button and Solo applied.
 function listCurveBands() {
@@ -126,7 +122,7 @@ function setField(id, value) {
 }
 
 function renderSound() {
-  const engine = engineConfig(config, offlineContext);
+  const engine = engineConfig(config);
   byId("soundName").textContent = config.soundName;
   byId("soundKind").textContent = config.isEdited ? `${config.soundKind}, edited` : config.soundKind;
   byId("enabled").checked = config.enabled;
@@ -143,7 +139,7 @@ function renderSound() {
 
   // A rounding margin, so a boost that auto preamp offsets exactly never shows red.
   const clipMarginDb = 0.05;
-  const headroomDb = maxBoostDb(offlineContext, engine.bands) + engine.preampDb;
+  const headroomDb = maxBoostDb(engine.bands) + engine.preampDb;
   const isClipping = config.enabled && headroomDb > clipMarginDb;
   byId("clip").classList.toggle("red", isClipping);
   byId("meter").title = isClipping ? `The EQ can clip by ${headroomDb.toFixed(1)} dB. Turn the preamp down or press Auto.` : "Output level. No clipping.";
@@ -189,7 +185,7 @@ function renderInspector() {
   title.textContent = `${selectedIndex + 1}. ${typeLabels[band.type]}`;
   title.style.color = typeColor[band.type];
   setField("bandType", band.type);
-  const isCommon = commonTypes.includes(band.type);
+  const isCommon = ["PK", "LSC", "HSC", "HP", "LP"].includes(band.type);
   byId("bandType").hidden = isCommon && !isMoreOpen;
   byId("moreTypes").classList.toggle("on", !byId("bandType").hidden);
   for (const button of byId("bandSegments").querySelectorAll("[data-type]")) {
@@ -301,29 +297,26 @@ function saveSound() {
   byId("libraryHint").textContent = `${isUpdate ? "Updated" : "Saved"} ${name}.`;
 }
 
-function parseAutoEqIndex(text) {
-  const items = [];
-  for (const line of text.split("\n")) {
-    // A line reads "- [Name](./path) by source". The path can hold brackets of its own, such as
-    // "(ANC Off)", so it runs to the last ") by ".
-    const nameEnd = line.indexOf("](./");
-    const pathEnd = line.lastIndexOf(") by ");
-    const isEntry = line.startsWith("- [") && nameEnd > 0 && pathEnd > nameEnd;
-    if (isEntry) items.push({ name: line.slice(3, nameEnd), path: line.slice(nameEnd + 4, pathEnd) });
-  }
-  return items;
-}
-
 async function loadAutoEqIndex() {
   if (autoEqItems) return autoEqItems;
   const cached = await chrome.storage.local.get(["autoEqIndex", "autoEqIndexAt"]);
+  const indexLifetimeMs = 7 * 24 * 60 * 60 * 1000;
   const isFresh = cached.autoEqIndexAt && Date.now() - cached.autoEqIndexAt < indexLifetimeMs;
   let text = isFresh ? cached.autoEqIndex : null;
   if (!text) {
     text = await (await fetch(`${autoEqBase}INDEX.md`)).text();
     await chrome.storage.local.set({ autoEqIndex: text, autoEqIndexAt: Date.now() });
   }
-  autoEqItems = parseAutoEqIndex(text);
+
+  autoEqItems = [];
+  for (const line of text.split("\n")) {
+    // A line reads "- [Name](./path) by source". The path can hold brackets of its own, such as
+    // "(ANC Off)", so it runs to the last ") by ".
+    const nameEnd = line.indexOf("](./");
+    const pathEnd = line.lastIndexOf(") by ");
+    const isEntry = line.startsWith("- [") && nameEnd > 0 && pathEnd > nameEnd;
+    if (isEntry) autoEqItems.push({ name: line.slice(3, nameEnd), path: line.slice(nameEnd + 4, pathEnd) });
+  }
   return autoEqItems;
 }
 
@@ -445,7 +438,7 @@ function applyText(name, kind) {
 
 // Writes the sound you hear. A band at 0 dB changes nothing, so the unused sliders are left out.
 function exportAutoEq() {
-  const engine = engineConfig(config, offlineContext);
+  const engine = engineConfig(config);
   const bands = engine.bands.filter((band) => !hasGain(band.type) || band.gainDb !== 0);
   byId("libraryText").value = toAutoEq({ preampDb: engine.preampDb, bands });
   byId("libraryHint").textContent = "The sound you hear, as AutoEQ text. Copy it out.";
@@ -566,7 +559,7 @@ byId("sliders").addEventListener("input", (event) => {
 
 // Turning Auto off keeps the value Auto had, so the sound does not jump.
 byId("autoPreamp").addEventListener("click", () => {
-  if (config.autoPreamp) config.preampDb = engineConfig(config, offlineContext).preampDb;
+  if (config.autoPreamp) config.preampDb = engineConfig(config).preampDb;
   config.autoPreamp = !config.autoPreamp;
   commitEdit();
 });

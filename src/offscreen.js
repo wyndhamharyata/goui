@@ -11,11 +11,6 @@ let telemetryTimer;
 let config = { enabled: true, preampDb: 0, bands: [] };
 
 const spectrumPoints = 128;
-const offlineContext = new OfflineAudioContext(1, 1, 48_000);
-
-function gainFromDb(gainDb) {
-  return 10 ** (gainDb / 20);
-}
 
 function listActiveBands() {
   return config.bands.filter((band) => band.on);
@@ -40,7 +35,7 @@ function buildChain() {
 
   let node = sourceNode;
   preampNode = audioContext.createGain();
-  preampNode.gain.value = gainFromDb(config.preampDb);
+  preampNode.gain.value = 10 ** (config.preampDb / 20);
   node.connect(preampNode);
   node = preampNode;
 
@@ -65,7 +60,7 @@ function readChainLayout() {
 function updateBandNodes() {
   const now = audioContext.currentTime;
   const rampSeconds = 0.01;
-  preampNode.gain.setTargetAtTime(gainFromDb(config.preampDb), now, rampSeconds);
+  preampNode.gain.setTargetAtTime(10 ** (config.preampDb / 20), now, rampSeconds);
   listActiveBands().forEach((band, index) => {
     const bandNode = bandNodes[index];
     bandNode.frequency.setTargetAtTime(band.frequencyHz, now, rampSeconds);
@@ -148,7 +143,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
     return true;
   }
   if (message.type === "audio:config") {
-    applyConfig(engineConfig(sanitizeConfig(message.config), offlineContext));
+    applyConfig(engineConfig(sanitizeConfig(message.config)));
     respond({ ok: true });
     return true;
   }

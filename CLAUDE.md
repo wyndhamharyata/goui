@@ -157,5 +157,10 @@ Each one names the rule it breaks and the reason.
 
 - `qStepRatio` in `src/shared/filters.js` has two readers, against rule 7. The graph wheel and the
   inspector stepper both nudge Q, and two copies of the step would drift apart, as the Q limits did.
+- The render and event functions in `src/panel.js` and `src/graph.js` have one caller each,
+  against rule 7. Folded into their callers, those callers would pass the 15-branch limit. Their
+  names are also what a reader scans the file for.
+- `qToOctaves` in `src/graph.js` has two readers, against rule 7. It holds the RBJ bandwidth
+  formula, and two copies of a formula can disagree.
 - Each word list at the top of `scripts/check-words.mjs` has one reader, against rule 7.
   The lists are data. A person edits them there, next to each other, when rule 2 changes.

@@ -58,16 +58,6 @@ export function newBand(frequencyHz) {
   return { on: true, type: "PK", frequencyHz: frequencyHz || 1000, gainDb: 0, q: 1 };
 }
 
-function cleanBand(raw) {
-  return {
-    on: !raw || raw.on !== false,
-    type: raw && bandTypes.includes(raw.type) ? raw.type : "PK",
-    frequencyHz: clamp(Number(raw && raw.frequencyHz) || 1000, 20, 20_000),
-    gainDb: clamp(Number(raw && raw.gainDb) || 0, -20, 20),
-    q: clamp(Number(raw && raw.q) || 0.71, ...qRange),
-  };
-}
-
 // Used on a stored config and on an imported saved sound, so a bad file cannot reach the audio chain.
 export function sanitizeConfig(raw) {
   if (!raw || typeof raw !== "object") return defaultConfig();
@@ -84,7 +74,13 @@ export function sanitizeConfig(raw) {
     soundKind: typeof soundKind === "string" ? soundKind : "Your sound",
     isEdited: raw.isEdited === true,
     sliders: { bassDb: sliderDb(sliders.bassDb), vocalsDb: sliderDb(sliders.vocalsDb), trebleDb: sliderDb(sliders.trebleDb) },
-    bands: Array.isArray(raw.bands) ? raw.bands.map(cleanBand) : [],
+    bands: (Array.isArray(raw.bands) ? raw.bands : []).filter((band) => band && typeof band === "object").map((band) => ({
+      on: band.on !== false,
+      type: bandTypes.includes(band.type) ? band.type : "PK",
+      frequencyHz: clamp(Number(band.frequencyHz) || 1000, 20, 20_000),
+      gainDb: clamp(Number(band.gainDb) || 0, -20, 20),
+      q: clamp(Number(band.q) || 0.71, ...qRange),
+    })),
   };
 }
 
@@ -114,28 +110,29 @@ export function makeBiquad(context, band) {
 }
 
 // The panel draws with the same nodes the engine plays, so the curve matches the sound.
-export function responseDb(context, bands, frequencies) {
+const offlineContext = new OfflineAudioContext(1, 1, 48_000);
+
+export function responseDb(bands, frequencies) {
   const totals = new Float32Array(frequencies.length);
   const magnitudes = new Float32Array(frequencies.length);
   const phases = new Float32Array(frequencies.length);
   for (const band of bands) {
     if (!band.on) continue;
-    makeBiquad(context, band).getFrequencyResponse(frequencies, magnitudes, phases);
+    makeBiquad(offlineContext, band).getFrequencyResponse(frequencies, magnitudes, phases);
     for (let index = 0; index < totals.length; index += 1) totals[index] += 20 * Math.log10(magnitudes[index]);
   }
   return totals;
 }
 
-const sweepHz = Float32Array.from({ length: 121 }, (_, index) => 20 * 1000 ** (index / 120));
-
-export function maxBoostDb(context, bands) {
-  return Math.max(0, ...responseDb(context, bands, sweepHz));
+export function maxBoostDb(bands) {
+  const sweepHz = Float32Array.from({ length: 121 }, (_, index) => 20 * 1000 ** (index / 120));
+  return Math.max(0, ...responseDb(bands, sweepHz));
 }
 
 // What the audio chain plays: the sound's bands, the sliders on top, and the preamp the panel shows.
-export function engineConfig(config, context) {
+export function engineConfig(config) {
   const bands = [...config.bands, ...sliderBands(config.sliders)];
-  const preampDb = config.autoPreamp ? 0 - maxBoostDb(context, bands) : config.preampDb;
+  const preampDb = config.autoPreamp ? 0 - maxBoostDb(bands) : config.preampDb;
   return { enabled: config.enabled, preampDb, bands };
 }
 

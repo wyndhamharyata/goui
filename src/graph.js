@@ -4,7 +4,6 @@ const rangeDb = 15;
 const ticksHz = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10_000, 20_000];
 const majorTicksHz = [100, 1000, 10_000];
 const zooms = { all: [20, 20_000], lows: [20, 400], mids: [200, 5000], highs: [2000, 20_000] };
-const offlineContext = new OfflineAudioContext(1, 1, 48_000);
 
 const regions = [
   { lowHz: 20, highHz: 60, name: "Sub" },
@@ -39,12 +38,9 @@ export function formatDb(gainDb) {
   return `${gainDb > 0 ? "+" : ""}${gainDb.toFixed(1)}`;
 }
 
+// BW = (2 / ln2) * asinh(1 / (2Q)), RBJ Audio EQ Cookbook, with BW in octaves.
 export function qToOctaves(q) {
   return (2 / Math.LN2) * Math.asinh(1 / (2 * q));
-}
-
-function qFromOctaves(octaves) {
-  return 1 / (2 * Math.sinh((Math.LN2 / 2) * octaves));
 }
 
 // The engine sends 128 points from 20 Hz to 20 kHz on a log scale.
@@ -207,13 +203,13 @@ export function makeGraph(host, options, hooks) {
   function drawSelectedBand(size, band, frequencies) {
     const start = placePoint(frequencies[0], 0, size);
     const end = placePoint(frequencies.at(-1), 0, size);
-    const points = tracePoints(frequencies, responseDb(offlineContext, [{ ...band, on: true }], frequencies), size);
+    const points = tracePoints(frequencies, responseDb([{ ...band, on: true }], frequencies), size);
     const area = `<polygon points="${start.x},${start.y} ${points.join(" ")} ${end.x},${end.y}" fill="${typeColor[band.type]}" fill-opacity="0.18"/>`;
     if (band.type !== "PK") return area;
 
     const halfOctaves = qToOctaves(band.q) / 2;
     const sidesHz = Float32Array.from([-1, 1], (side) => band.frequencyHz * (2 ** (side * halfOctaves)));
-    const sidesDb = responseDb(offlineContext, [{ ...band, on: true }], sidesHz);
+    const sidesDb = responseDb([{ ...band, on: true }], sidesHz);
     const parts = [area];
     sidesHz.forEach((frequencyHz, index) => {
       const [low, high] = findGainAxisEnds(frequencyHz, size);
@@ -251,7 +247,7 @@ export function makeGraph(host, options, hooks) {
   function drawHover(size) {
     if (!graph.hover || graph.drag) return "";
     const reading = readPoint(graph.hover.x, graph.hover.y, size);
-    const [valueDb] = responseDb(offlineContext, hooks.listCurveBands(), Float32Array.of(reading.frequencyHz));
+    const [valueDb] = responseDb(hooks.listCurveBands(), Float32Array.of(reading.frequencyHz));
     const [low, high] = findGainAxisEnds(reading.frequencyHz, size);
     const dot = placePoint(reading.frequencyHz, valueDb, size);
     const content = `${formatHz(reading.frequencyHz)} Hz  ${formatDb(valueDb)} dB`;
@@ -269,7 +265,7 @@ export function makeGraph(host, options, hooks) {
     const size = measurePlot();
     if (size.width === 0) return;
     const frequencies = sweepFrequencies();
-    const curveDb = responseDb(offlineContext, hooks.listCurveBands(), frequencies);
+    const curveDb = responseDb(hooks.listCurveBands(), frequencies);
     const band = hooks.bands()[hooks.selectedIndex()];
     const showsPoints = options.interactive;
     graph.handles = [];
@@ -314,7 +310,8 @@ export function makeGraph(host, options, hooks) {
 
   function widenBand(band, point) {
     const octaves = 2 * Math.abs(Math.log2(readPoint(point.x, point.y, point.size).frequencyHz / band.frequencyHz));
-    band.q = clamp(qFromOctaves(Math.max(octaves, 0.05)), ...qRange);
+    // Q = 1 / (2 sinh(ln2 / 2 * BW)), RBJ Audio EQ Cookbook, with BW in octaves.
+    band.q = clamp(1 / (2 * Math.sinh((Math.LN2 / 2) * Math.max(octaves, 0.05))), ...qRange);
   }
 
   if (options.interactive) {

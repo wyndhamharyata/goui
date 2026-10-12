@@ -1,6 +1,3 @@
-const offscreenPath = "src/offscreen.html";
-const notInvokedHint = "Click the goui icon in the toolbar while you are on the page you want to EQ.";
-
 // Chrome keeps this setting from older builds. With it on, an icon click never reaches onClicked.
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => {});
 
@@ -15,7 +12,7 @@ async function readTargetTab() {
 async function openOffscreenDocument() {
   if (await chrome.offscreen.hasDocument()) return;
   await chrome.offscreen.createDocument({
-    url: offscreenPath,
+    url: "src/offscreen.html",
     reasons: ["USER_MEDIA"],
     justification: "The audio of the tab runs through the EQ in an offscreen document.",
   });
@@ -77,7 +74,8 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       })
       .then(respond, (error) => {
         const isNotInvoked = error.message.includes("has not been invoked");
-        const state = { isCapturing: false, error: isNotInvoked ? notInvokedHint : error.message };
+        const hint = "Click the goui icon in the toolbar while you are on the page you want to EQ.";
+        const state = { isCapturing: false, error: isNotInvoked ? hint : error.message };
         publishCapture(state);
         respond(state);
       });
