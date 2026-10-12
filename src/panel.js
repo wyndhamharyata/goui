@@ -436,7 +436,7 @@ function applyText(name, kind) {
   hint.textContent = `Applied ${parsed.bands.length} bands.`;
 }
 
-// Writes the sound you hear. A band at 0 dB changes nothing, so the unused sliders are left out.
+// A band at 0 dB changes nothing, so a slider left at 0 dB stays out of the exported text.
 function exportAutoEq() {
   const engine = engineConfig(config);
   const bands = engine.bands.filter((band) => !hasGain(band.type) || band.gainDb !== 0);

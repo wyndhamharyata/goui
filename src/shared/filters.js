@@ -84,8 +84,8 @@ export function sanitizeConfig(raw) {
   };
 }
 
-// The three Listen sliders, as bands on top of the sound's own bands. They stay in the chain at 0 dB, so a
-// slider move never rebuilds the audio nodes.
+// The three Listen sliders, as bands on top of the sound's own bands. They stay in the chain at
+// 0 dB, so a slider move never rebuilds the audio nodes.
 export function sliderBands(sliders) {
   return [
     { on: true, type: "LSC", frequencyHz: 105, gainDb: sliders.bassDb, q: 0.71 },

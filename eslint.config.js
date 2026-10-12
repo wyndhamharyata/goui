@@ -23,8 +23,8 @@ export default [
       "max-params": ["error", 4],
       "no-else-return": ["error", { allowElseIf: false }],
       "no-lonely-if": "error",
-      // Only the orders that are hard to read: bitwise, comparison and logic.
-      // Arithmetic in a formula stays free, per rule 5's revised wording.
+      // Rule 5 asks for brackets only where the order is not obvious. Arithmetic in a formula
+      // reads in the usual order, so only bitwise, comparison and logic mixes are flagged.
       "no-mixed-operators": [
         "error",
         {
