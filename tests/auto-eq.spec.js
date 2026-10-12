@@ -247,9 +247,20 @@ journey("given a press on a point that wobbles 3 px, the band stays put, and a 4
   await panel.click("#applyText");
   await panel.click("#tabs [data-tab=tune]");
 
-  const point = await panel.locator("#tuneGraph circle[r='7']").first().boundingBox();
-  const centerX = point.x + (point.width / 2);
-  const centerY = point.y + (point.height / 2);
+  // The graph draws a new SVG on each render, so the position is read in the same step that finds the
+  // point. It is read until it holds still, since the graph redraws once the page scrollbar appears.
+  const readPoint = () => panel.locator("#tuneGraph circle[r='7']").first().evaluate((circle) => {
+    const bounds = circle.getBoundingClientRect();
+    return { centerX: bounds.x + (bounds.width / 2), centerY: bounds.y + (bounds.height / 2) };
+  });
+  let position = await readPoint();
+  await expect.poll(async () => {
+    const next = await readPoint();
+    const isStill = next.centerX === position.centerX && next.centerY === position.centerY;
+    position = next;
+    return isStill;
+  }).toBe(true);
+  const { centerX, centerY } = position;
   await panel.mouse.move(centerX, centerY);
   await panel.mouse.down();
   await panel.mouse.move(centerX + 3, centerY, { steps: 3 });
