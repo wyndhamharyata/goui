@@ -92,3 +92,39 @@ test("given an AutoEQ file with a 1 kHz peak, a 1 kHz tone plays 6 dB louder", a
     server.close();
   }
 });
+
+test("given a saved preset, loading it brings the boost back", async () => {
+  test.setTimeout(60_000);
+  const { context, server, port } = await openBrowser();
+
+  try {
+    const tone = await context.newPage();
+    await tone.goto(`http://localhost:${port}/`);
+    await tone.click("#play");
+
+    const panel = await context.newPage();
+    await panel.goto(`chrome-extension://${extensionId}/src/panel.html`);
+    await panel.click("#capture");
+    await expect(panel.locator("#status")).not.toHaveText("No audio");
+
+    await panel.click("#importToggle");
+    await panel.fill("#autoEqText", "Filter 1: ON PK Fc 1000 Hz Gain 6.0 dB Q 1.0");
+    await panel.click("#applyAutoEq");
+
+    await panel.click("#presetToggle");
+    await panel.fill("#presetName", "voice");
+    await panel.click("#presetSave");
+
+    await panel.locator(".band .on").first().uncheck();
+    const flat = await steadyLevel(panel);
+
+    await panel.locator(".chip-item button", { hasText: "voice" }).click();
+    const peaked = await steadyLevel(panel);
+
+    expect(peaked - flat).toBeGreaterThan(5.4);
+    expect(peaked - flat).toBeLessThan(6.6);
+  } finally {
+    await context.close();
+    server.close();
+  }
+});

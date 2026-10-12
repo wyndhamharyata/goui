@@ -281,6 +281,51 @@ button.quiet {
   flex: 1;
 }
 
+.preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset-list .empty {
+  color: var(--muted);
+}
+
+.chip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 9px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.chip-item button {
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 0;
+  font: inherit;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.chip-item button.remove {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 0 3px;
+}
+
+.chip-item button.remove:hover {
+  color: var(--danger);
+}
+
+#bypass.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .panel {
   display: flex;
   flex-direction: column;

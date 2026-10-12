@@ -45,6 +45,27 @@ export function newBand(frequencyHz) {
   return { on: true, type: "PK", frequencyHz: frequencyHz || 1000, gainDb: 0, q: 1 };
 }
 
+function cleanBand(raw) {
+  return {
+    on: !raw || raw.on !== false,
+    type: raw && bandTypes.includes(raw.type) ? raw.type : "PK",
+    frequencyHz: clamp(Number(raw && raw.frequencyHz) || 1000, 20, 20_000),
+    gainDb: clamp(Number(raw && raw.gainDb) || 0, -20, 20),
+    q: clamp(Number(raw && raw.q) || 0.71, 0.1, 18),
+  };
+}
+
+// Used on a stored config and on an imported preset, so a bad file cannot reach the audio chain.
+export function sanitizeConfig(raw) {
+  if (!raw || typeof raw !== "object") return defaultConfig();
+  return {
+    enabled: raw.enabled !== false,
+    preampDb: clamp(Number(raw.preampDb) || 0, -24, 12),
+    limiter: !!raw.limiter,
+    bands: Array.isArray(raw.bands) ? raw.bands.map(cleanBand) : [],
+  };
+}
+
 const autoEqLine =
   /Filter\s+\d+\s*:\s*(ON|OFF)\s+([A-Za-z_]+)\s+Fc\s+([\d.]+)\s*Hz(?:\s+Gain\s+(-?[\d.]+)\s*dB)?(?:\s+Q\s+([\d.]+))?/i;
 

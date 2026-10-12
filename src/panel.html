@@ -41,7 +41,9 @@
 
       <div class="actions">
         <button id="addBand">Add band</button>
+        <button id="bypass" class="quiet" title="Hold to hear the audio without the EQ">Bypass</button>
         <button id="importToggle" class="quiet">AutoEQ</button>
+        <button id="presetToggle" class="quiet">Presets</button>
       </div>
 
       <section class="panel" id="importPanel" hidden>
@@ -51,6 +53,20 @@
           <button id="applyAutoEq">Apply</button>
         </div>
         <div class="hint" id="importHint"></div>
+      </section>
+
+      <section class="panel" id="presetPanel" hidden>
+        <div class="row">
+          <input type="text" id="presetName" placeholder="Preset name" />
+          <button id="presetSave">Save</button>
+        </div>
+        <div class="preset-list" id="presetList"></div>
+        <textarea id="presetJson" spellcheck="false" placeholder="Preset JSON"></textarea>
+        <div class="row">
+          <button id="presetExport" class="quiet">Current to JSON</button>
+          <button id="presetImport" class="quiet">JSON to current</button>
+        </div>
+        <div class="hint" id="presetHint"></div>
       </section>
     </div>
 

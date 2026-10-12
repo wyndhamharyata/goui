@@ -7,6 +7,7 @@ import {
   defaultConfig,
   newBand,
   parseAutoEq,
+  sanitizeConfig,
 } from "./shared/filters.js";
 
 const lowestHz = 20;
@@ -30,6 +31,12 @@ const autoEqText = document.getElementById("autoEqText");
 const autoEqFile = document.getElementById("autoEqFile");
 const importHint = document.getElementById("importHint");
 const viewToggle = document.getElementById("viewToggle");
+const bypassButton = document.getElementById("bypass");
+const presetPanel = document.getElementById("presetPanel");
+const presetName = document.getElementById("presetName");
+const presetList = document.getElementById("presetList");
+const presetJson = document.getElementById("presetJson");
+const presetHint = document.getElementById("presetHint");
 
 const offlineContext = new OfflineAudioContext(1, 1, 48_000);
 
@@ -242,8 +249,12 @@ function frame() {
   requestAnimationFrame(frame);
 }
 
+function sendConfigValue(value) {
+  chrome.runtime.sendMessage({ type: "audio:config", config: value }).catch(() => {});
+}
+
 function sendConfig() {
-  chrome.runtime.sendMessage({ type: "audio:config", config }).catch(() => {});
+  sendConfigValue(config);
 }
 
 function saveConfig() {
@@ -362,6 +373,14 @@ function renderBands() {
   config.bands.forEach((band, index) => bandsElement.append(makeBandRow(band, index)));
 }
 
+function applyConfigToUi() {
+  enabledBox.checked = config.enabled;
+  preampRange.value = config.preampDb;
+  preampValue.textContent = (config.preampDb || 0).toFixed(1);
+  renderBands();
+  curveDirty = true;
+}
+
 function hitBand(x, y) {
   const axis = makeAxis(layout());
   for (let index = 0; index < config.bands.length; index += 1) {
@@ -451,12 +470,84 @@ function applyAutoEq() {
   }
   parsed.enabled = config.enabled;
   config = parsed;
-  preampRange.value = config.preampDb;
-  preampValue.textContent = config.preampDb.toFixed(1);
-  renderBands();
-  curveDirty = true;
+  applyConfigToUi();
   saveConfig();
   importHint.textContent = `Imported ${parsed.bands.length} bands.`;
+}
+
+let presets = {};
+
+function persistPresets() {
+  chrome.storage.local.set({ presets });
+}
+
+function renderPresets() {
+  presetList.replaceChildren();
+  const names = Object.keys(presets);
+  if (names.length === 0) {
+    const empty = document.createElement("span");
+    empty.className = "empty";
+    empty.textContent = "No presets yet.";
+    presetList.append(empty);
+    return;
+  }
+  for (const name of names) {
+    const item = document.createElement("span");
+    item.className = "chip-item";
+
+    const load = document.createElement("button");
+    load.textContent = name;
+    load.addEventListener("click", () => loadPreset(name));
+
+    const remove = document.createElement("button");
+    remove.className = "remove";
+    remove.textContent = "×";
+    remove.addEventListener("click", () => deletePreset(name));
+
+    item.append(load, remove);
+    presetList.append(item);
+  }
+}
+
+function savePreset() {
+  const name = presetName.value.trim();
+  if (!name) {
+    presetHint.textContent = "Give the preset a name.";
+    return;
+  }
+  presets[name] = structuredClone(config);
+  persistPresets();
+  renderPresets();
+  presetHint.textContent = `Saved ${name}.`;
+}
+
+function loadPreset(name) {
+  config = sanitizeConfig(presets[name]);
+  applyConfigToUi();
+  saveConfig();
+  presetHint.textContent = `Loaded ${name}.`;
+}
+
+function deletePreset(name) {
+  delete presets[name];
+  persistPresets();
+  renderPresets();
+}
+
+function exportPreset() {
+  presetJson.value = JSON.stringify(config, null, 2);
+  presetHint.textContent = "The current EQ is in the box.";
+}
+
+function importPreset() {
+  try {
+    config = sanitizeConfig(JSON.parse(presetJson.value));
+    applyConfigToUi();
+    saveConfig();
+    presetHint.textContent = "Applied the JSON.";
+  } catch {
+    presetHint.textContent = "That text is not valid JSON.";
+  }
 }
 
 preampRange.addEventListener("input", () => {
@@ -488,6 +579,25 @@ document.getElementById("importToggle").addEventListener("click", () => {
 });
 document.getElementById("applyAutoEq").addEventListener("click", applyAutoEq);
 
+document.getElementById("presetToggle").addEventListener("click", () => {
+  presetPanel.hidden = !presetPanel.hidden;
+});
+document.getElementById("presetSave").addEventListener("click", savePreset);
+document.getElementById("presetExport").addEventListener("click", exportPreset);
+document.getElementById("presetImport").addEventListener("click", importPreset);
+
+function endBypass() {
+  bypassButton.classList.remove("on");
+  sendConfig();
+}
+
+bypassButton.addEventListener("pointerdown", () => {
+  bypassButton.classList.add("on");
+  sendConfigValue({ ...config, enabled: false });
+});
+bypassButton.addEventListener("pointerup", endBypass);
+bypassButton.addEventListener("pointerleave", endBypass);
+
 autoEqFile.addEventListener("change", async () => {
   const file = autoEqFile.files[0];
   if (file) autoEqText.value = await file.text();
@@ -507,15 +617,13 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 async function hydrate() {
-  const stored = await chrome.storage.local.get(["config", "view"]);
-  if (stored.config) config = { ...defaultConfig(), ...stored.config };
+  const stored = await chrome.storage.local.get(["config", "view", "presets"]);
+  if (stored.config) config = sanitizeConfig(stored.config);
+  presets = stored.presets || {};
   vertical = stored.view === "vertical";
   viewToggle.textContent = vertical ? "↕" : "↔";
-  enabledBox.checked = config.enabled;
-  preampRange.value = config.preampDb;
-  preampValue.textContent = (config.preampDb || 0).toFixed(1);
-  renderBands();
-  curveDirty = true;
+  applyConfigToUi();
+  renderPresets();
   sendConfig();
 
   const session = await chrome.storage.session.get("capture");
