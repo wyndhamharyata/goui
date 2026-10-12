@@ -568,3 +568,73 @@ textarea {
 .band-table tr.on td {
   background: rgba(91, 140, 255, 0.15);
 }
+
+/* Layers */
+.layer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.layer + .layer {
+  border-top: 1px solid var(--line);
+}
+
+.layer .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.layer b {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layer.off b,
+.layer.off .caption {
+  color: var(--muted);
+}
+
+.layer-mark {
+  display: inline-block;
+  width: 10px;
+  height: 0;
+  margin-right: 5px;
+  border-top: 2px dashed;
+  vertical-align: middle;
+}
+
+#layers > button {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.chip-label {
+  flex: none;
+  align-self: center;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 2px 0 6px;
+}
+
+.wide {
+  width: 100%;
+}
+
+.target {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.target > span {
+  color: var(--muted);
+}
+
+.target button {
+  flex: 1;
+}

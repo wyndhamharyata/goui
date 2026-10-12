@@ -41,16 +41,20 @@ export function clamp(value, low, high) {
   return Math.min(Math.max(value, low), high);
 }
 
+export const layerOrder = ["headphone", "ear"];
+export const layerLabels = { headphone: "Headphone", ear: "My ear" };
+
+function emptyLayer(name, source) {
+  return { on: true, source, name, isEdited: false, bands: [] };
+}
+
 export function defaultConfig() {
   return {
     enabled: true,
     preampDb: 0,
     autoPreamp: true,
-    soundName: "Flat",
-    soundKind: "Starter sound",
-    isEdited: false,
     sliders: { bassDb: 0, vocalsDb: 0, trebleDb: 0 },
-    bands: [],
+    layers: { headphone: emptyLayer("Flat", "Starter sound") },
   };
 }
 
@@ -58,30 +62,64 @@ export function newBand(frequencyHz) {
   return { on: true, type: "PK", frequencyHz: frequencyHz || 1000, gainDb: 0, q: 1 };
 }
 
+// A layer's bands, cleaned one by one, so a bad file cannot reach the audio chain.
+function cleanBands(raw) {
+  const bands = Array.isArray(raw) ? raw : [];
+  return bands.filter((band) => band && typeof band === "object").map((band) => ({
+    on: band.on !== false,
+    type: bandTypes.includes(band.type) ? band.type : "PK",
+    frequencyHz: clamp(Number(band.frequencyHz) || 1000, 20, 20_000),
+    gainDb: clamp(Number(band.gainDb) || 0, -20, 20),
+    q: clamp(Number(band.q) || 0.71, ...qRange),
+  }));
+}
+
+function cleanLayer(raw, fallbackName) {
+  return {
+    on: !raw || raw.on !== false,
+    source: raw && typeof raw.source === "string" ? raw.source : "Sound",
+    name: raw && typeof raw.name === "string" ? raw.name : fallbackName,
+    isEdited: Boolean(raw && raw.isEdited),
+    bands: cleanBands(raw && raw.bands),
+  };
+}
+
 // Used on a stored config and on an imported saved sound, so a bad file cannot reach the audio chain.
 export function sanitizeConfig(raw) {
   if (!raw || typeof raw !== "object") return defaultConfig();
-  // A config stored before the rename uses macros, profileName and profileKind.
   const sliders = raw.sliders || raw.macros || {};
-  const soundName = raw.soundName ?? raw.profileName;
-  const soundKind = raw.soundKind ?? raw.profileKind;
   const sliderDb = (value) => clamp(Number(value) || 0, -6, 6);
+
+  // A config stored before the layers holds one flat list. That list becomes the headphone layer.
+  // A config stored before the rename uses profileName and profileKind.
+  const older = {
+    headphone: {
+      on: true,
+      source: raw.soundKind ?? raw.profileKind,
+      name: raw.soundName ?? raw.profileName,
+      isEdited: raw.isEdited,
+      bands: raw.bands,
+    },
+  };
+  const source = raw.layers || older;
+  const layers = { headphone: cleanLayer(source.headphone, "Flat") };
+  if (source.ear) layers.ear = cleanLayer(source.ear, "Ear tuning");
+
   return {
     enabled: raw.enabled !== false,
     preampDb: clamp(Number(raw.preampDb) || 0, -24, 12),
     autoPreamp: raw.autoPreamp !== false,
-    soundName: typeof soundName === "string" ? soundName : "Custom",
-    soundKind: typeof soundKind === "string" ? soundKind : "Your sound",
-    isEdited: raw.isEdited === true,
     sliders: { bassDb: sliderDb(sliders.bassDb), vocalsDb: sliderDb(sliders.vocalsDb), trebleDb: sliderDb(sliders.trebleDb) },
-    bands: (Array.isArray(raw.bands) ? raw.bands : []).filter((band) => band && typeof band === "object").map((band) => ({
-      on: band.on !== false,
-      type: bandTypes.includes(band.type) ? band.type : "PK",
-      frequencyHz: clamp(Number(band.frequencyHz) || 1000, 20, 20_000),
-      gainDb: clamp(Number(band.gainDb) || 0, -20, 20),
-      q: clamp(Number(band.q) || 0.71, ...qRange),
-    })),
+    layers,
   };
+}
+
+// Every layer that is on, in a fixed order. The engine plays these, and the panel draws them.
+export function layerBands(config) {
+  return layerOrder.flatMap((role) => {
+    const layer = config.layers[role];
+    return layer && layer.on ? layer.bands : [];
+  });
 }
 
 // The three Listen sliders, as bands on top of the sound's own bands. They stay in the chain at
@@ -129,23 +167,29 @@ export function maxBoostDb(bands) {
   return Math.max(0, ...responseDb(bands, sweepHz));
 }
 
-// What the audio chain plays: the sound's bands, the sliders on top, and the preamp the panel shows.
+// What the audio chain plays: every layer that is on, the sliders on top, and the preamp.
 export function engineConfig(config) {
-  const bands = [...config.bands, ...sliderBands(config.sliders)];
+  const bands = [...layerBands(config), ...sliderBands(config.sliders)];
   const preampDb = config.autoPreamp ? 0 - maxBoostDb(bands) : config.preampDb;
   return { enabled: config.enabled, preampDb, bands };
+}
+
+// Export writes one flat file, so another app can read the merged sound.
+export function flatBands(config) {
+  return [...layerBands(config), ...sliderBands(config.sliders)].filter((band) => !hasGain(band.type) || band.gainDb !== 0);
 }
 
 const typeAliases = { PEAK: "PK", PEAKING: "PK", LOWPASS: "LP", HIGHPASS: "HP", NOTCH: "NO" };
 
 // An AutoEQ line reads "Filter 1: ON PK Fc 105 Hz Gain -3.1 dB Q 0.70", with Gain and Q optional.
 export function parseAutoEq(text) {
-  const config = defaultConfig();
+  const bands = [];
+  let preampDb = 0;
   for (const line of text.split("\n")) {
     const words = line.trim().split(" ").filter((word) => word !== "");
     const label = (words[0] || "").toLowerCase();
     if (label === "preamp:") {
-      config.preampDb = Number(words[1]);
+      preampDb = Number(words[1]);
       continue;
     }
     if (label !== "filter") continue;
@@ -160,9 +204,9 @@ export function parseAutoEq(text) {
     const isBand = bandTypes.includes(type) && Number.isFinite(frequencyHz);
     if (!isBand) continue;
 
-    config.bands.push({ on: words[2].toUpperCase() === "ON", type, frequencyHz, gainDb: readAfter("gain") ?? 0, q: readAfter("q") ?? 0.71 });
+    bands.push({ on: words[2].toUpperCase() === "ON", type, frequencyHz, gainDb: readAfter("gain") ?? 0, q: readAfter("q") ?? 0.71 });
   }
-  return config;
+  return { bands, preampDb };
 }
 
 export function toAutoEq(config) {

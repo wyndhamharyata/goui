@@ -29,6 +29,8 @@ export const typeColor = {
   AP: passColor,
 };
 
+export const layerColor = { headphone: "#a9b8ff", ear: "#ffd166" };
+
 export function formatHz(frequencyHz) {
   if (frequencyHz >= 1000) return `${Math.round(frequencyHz / 100) / 10}k`;
   return `${Math.round(frequencyHz)}`;
@@ -222,12 +224,14 @@ export function makeGraph(host, options, hooks) {
   }
 
   function drawNodes(size) {
-    return hooks.bands().map((band, index) => {
+    return hooks.bands().map((entry, index) => {
+      const band = entry.band;
       const point = placePoint(band.frequencyHz, hasGain(band.type) ? band.gainDb : 0, size);
       graph.nodes.push({ index, x: point.x, y: point.y });
       const fill = band.on ? typeColor[band.type] : "#0e1013";
       const ring = index === hooks.selectedIndex() ? `<circle cx="${point.x}" cy="${point.y}" r="11" fill="none" stroke="#fff" stroke-opacity="0.7"/>` : "";
-      return `${ring}<circle cx="${point.x}" cy="${point.y}" r="7" fill="${fill}" stroke="${typeColor[band.type]}" stroke-width="1.5"/>`
+      const earRing = entry.role === "ear" ? `<circle cx="${point.x}" cy="${point.y}" r="9.5" fill="none" stroke="${layerColor.ear}" stroke-width="1.5"/>` : "";
+      return `${earRing}${ring}<circle cx="${point.x}" cy="${point.y}" r="7" fill="${fill}" stroke="${typeColor[band.type]}" stroke-width="1.5"/>`
         + `<text x="${point.x}" y="${point.y + 3}" text-anchor="middle" font-size="9" font-weight="700" fill="#0e1013">${index + 1}</text>`;
     }).join("");
   }
@@ -261,12 +265,38 @@ export function makeGraph(host, options, hooks) {
       + `<text x="${x + 5}" y="${y + 11}" font-size="9.5" fill="#e6e9ef">${content}</text>`;
   }
 
+  // Each layer's own curve, dashed, under the solid total.
+  function drawLayerCurves(size, frequencies) {
+    if (!options.layerCurves || !hooks.curveLayers) return "";
+    return hooks.curveLayers().map((layer) => {
+      const curve = tracePoints(frequencies, responseDb(layer.bands, frequencies), size);
+      return `<polyline points="${curve.join(" ")}" fill="none" stroke="${layerColor[layer.role]}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    }).join("");
+  }
+
+  // A spectrum frame redraws the live layer alone. Replacing the whole SVG would remove the element
+  // under the pointer, and the browser then reads a press as cancelled and sends no click.
+  function renderSpectrum() {
+    const group = host.querySelector("[data-spectrum]");
+    if (!group) return render();
+    group.innerHTML = drawSpectrum(measurePlot(), sweepFrequencies());
+  }
+
+  // The hover reading is the same idea. It changes on every move, and a full redraw there would also
+  // drop the point a press starts on.
+  function renderHover() {
+    const group = host.querySelector("[data-hover]");
+    if (!group) return render();
+    group.innerHTML = drawHover(measurePlot());
+  }
+
   function render() {
     const size = measurePlot();
     if (size.width === 0) return;
     const frequencies = sweepFrequencies();
     const curveDb = responseDb(hooks.listCurveBands(), frequencies);
-    const band = hooks.bands()[hooks.selectedIndex()];
+    const entry = hooks.bands()[hooks.selectedIndex()];
+    const band = entry && entry.band;
     const showsPoints = options.interactive;
     graph.handles = [];
     graph.nodes = [];
@@ -279,8 +309,8 @@ export function makeGraph(host, options, hooks) {
     host.innerHTML = `<svg viewBox="0 0 ${size.width} ${size.height}" height="${size.height}">
       <defs><clipPath id="${clipId}"><rect x="${size.left}" y="${size.top}" width="${size.plotWidth}" height="${size.plotHeight}"/></clipPath></defs>
       ${options.regions === false ? "" : drawRegions(size)}${drawFrequencyGrid(size)}${drawGainGrid(size)}
-      <g clip-path="url(#${clipId})">${drawSpectrum(size, frequencies)}${drawLoudness(size, frequencies, curveDb)}${selectedArea}${curve}</g>
-      ${nodes}${pill}${drawHover(size)}
+      <g clip-path="url(#${clipId})"><g data-spectrum>${drawSpectrum(size, frequencies)}</g>${drawLoudness(size, frequencies, curveDb)}${selectedArea}${drawLayerCurves(size, frequencies)}${curve}</g>
+      ${nodes}${pill}<g data-hover>${drawHover(size)}</g>
     </svg>`;
   }
 
@@ -319,7 +349,7 @@ export function makeGraph(host, options, hooks) {
       const point = readPointer(event);
       const target = findTarget(point);
       if (!target) return;
-      const band = hooks.bands()[target.index];
+      const band = hooks.bands()[target.index].band;
       graph.drag = { ...target, startX: point.x, startY: point.y, startHz: band.frequencyHz, startDb: hasGain(band.type) ? band.gainDb : 0 };
       host.setPointerCapture(event.pointerId);
       hooks.select(target.index);
@@ -329,10 +359,10 @@ export function makeGraph(host, options, hooks) {
       const point = readPointer(event);
       graph.hover = point;
       if (!graph.drag) {
-        render();
+        renderHover();
         return;
       }
-      const band = hooks.bands()[graph.drag.index];
+      const band = hooks.bands()[graph.drag.index].band;
       // A press only selects. The point moves once the pointer has gone 5 px, counted from there.
       if (!graph.drag.isMoving) {
         const deadZonePx = 5;
@@ -347,13 +377,16 @@ export function makeGraph(host, options, hooks) {
     });
 
     host.addEventListener("pointerup", () => {
+      const wasDragging = Boolean(graph.drag);
       graph.drag = null;
-      render();
+      // A full redraw here would remove the point the press started on, and the browser would then
+      // send no click. Only the hover reading changes when a drag ends.
+      if (wasDragging) renderHover();
     });
 
     host.addEventListener("pointerleave", () => {
       graph.hover = null;
-      if (!graph.drag) render();
+      if (!graph.drag) renderHover();
     });
 
     host.addEventListener("dblclick", (event) => {
@@ -367,7 +400,7 @@ export function makeGraph(host, options, hooks) {
       const target = findTarget(readPointer(event));
       if (!target) return;
       event.preventDefault();
-      const band = hooks.bands()[target.index];
+      const band = hooks.bands()[target.index].band;
       band.q = clamp(band.q * (event.deltaY < 0 ? qStepRatio : 1 / qStepRatio), ...qRange);
       hooks.select(target.index);
       hooks.changed();
@@ -378,6 +411,8 @@ export function makeGraph(host, options, hooks) {
 
   return {
     render,
+    renderSpectrum,
+    renderHover,
     get zoom() {
       return graph.zoom;
     },

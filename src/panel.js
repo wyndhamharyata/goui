@@ -4,18 +4,22 @@ import {
   clamp,
   defaultConfig,
   engineConfig,
+  flatBands,
   hasGain,
-  sliderBands,
+  layerBands,
+  layerLabels,
+  layerOrder,
   maxBoostDb,
   newBand,
   parseAutoEq,
   qRange,
   qStepRatio,
   sanitizeConfig,
+  sliderBands,
   toAutoEq,
   typeLabels,
 } from "./shared/filters.js";
-import { formatHz, makeGraph, qToOctaves, formatDb, typeColor } from "./graph.js";
+import { formatDb, formatHz, layerColor, makeGraph, qToOctaves, typeColor } from "./graph.js";
 
 const byId = (id) => document.getElementById(id);
 const autoEqBase = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master/results/";
@@ -50,17 +54,61 @@ let saveTimer = 0;
 let autoEqItems = null;
 let isMoreOpen = false;
 let openAction = "";
+// Where a pick from the Library goes. Paste, Import, an AutoEQ headphone and a starter sound all
+// join this layer. A saved sound brings back the whole stack.
+let target = "headphone";
+
+// Every band in the panel, in layer order, with the layer it belongs to. A layer that is off keeps
+// its bands, so they can still be edited while it is silent.
+function listBandEntries() {
+  return layerOrder.flatMap((role) => {
+    const layer = config.layers[role];
+    return layer ? layer.bands.map((band) => ({ role, band })) : [];
+  });
+}
+
+function bandAt(index) {
+  const entry = listBandEntries()[index];
+  return entry && entry.band;
+}
+
+function roleAt(index) {
+  const entry = listBandEntries()[index];
+  return entry && entry.role;
+}
 
 // What the panel draws is what the engine plays, with the A/B button and Solo applied.
 function listCurveBands() {
   if (isBypassed || !config.enabled) return [];
-  if (config.bands[soloIndex]) return [{ ...config.bands[soloIndex], on: true }];
-  return [...config.bands, ...sliderBands(config.sliders)];
+  const soloed = bandAt(soloIndex);
+  if (soloed) return [{ ...soloed, on: true }];
+  return [...layerBands(config), ...sliderBands(config.sliders)];
+}
+
+// Each layer's own curve, for the dashed lines under the total.
+function listCurveLayers() {
+  if (isBypassed || !config.enabled || soloIndex >= 0) return [];
+  return layerOrder
+    .filter((role) => config.layers[role] && config.layers[role].on)
+    .map((role) => ({ role, bands: config.layers[role].bands }));
+}
+
+function addBandToTarget(frequencyHz, gainDb) {
+  const role = roleAt(selectedIndex) || target;
+  if (!config.layers[role]) {
+    config.layers[role] = { on: true, source: "Your band", name: layerLabels[role], isEdited: false, bands: [] };
+  }
+  const layer = config.layers[role];
+  const band = { ...newBand(frequencyHz), gainDb };
+  layer.bands.push(band);
+  selectedIndex = listBandEntries().findIndex((entry) => entry.band === band);
+  commitEdit(role);
 }
 
 const graphHooks = {
-  bands: () => config.bands,
+  bands: listBandEntries,
   listCurveBands,
+  curveLayers: listCurveLayers,
   spectrum: () => spectrumDb,
   selectedIndex: () => selectedIndex,
   isBypassed: () => isBypassed || !config.enabled,
@@ -69,24 +117,25 @@ const graphHooks = {
     refresh();
   },
   changed: () => commitEdit(),
-  addBand: (frequencyHz, gainDb) => {
-    config.bands.push({ ...newBand(frequencyHz), gainDb });
-    selectedIndex = config.bands.length - 1;
-    commitEdit();
-  },
+  addBand: addBandToTarget,
 };
 
 // The Listen graph is a preview. It matches the Tune graph in size and follows its zoom and turn.
-const listenGraph = makeGraph(byId("listenGraph"), { height: 210, tallHeight: 440, interactive: false, regions: true }, graphHooks);
-const tuneGraph = makeGraph(byId("tuneGraph"), { height: 210, tallHeight: 440, interactive: true }, graphHooks);
+const listenGraph = makeGraph(byId("listenGraph"), { height: 210, tallHeight: 440, interactive: false, regions: true, layerCurves: true }, graphHooks);
+const tuneGraph = makeGraph(byId("tuneGraph"), { height: 210, tallHeight: 440, interactive: true, layerCurves: true }, graphHooks);
 
 function sendAudio() {
   let value = config;
-  const isSoloing = !isBypassed && Boolean(config.bands[soloIndex]);
+  const soloed = bandAt(soloIndex);
+  const isSoloing = !isBypassed && Boolean(soloed);
   if (isBypassed) value = { ...config, enabled: false };
   if (isSoloing) {
-    const bands = config.bands.map((band, index) => ({ ...band, on: index === soloIndex }));
-    value = { ...config, bands, sliders: { bassDb: 0, vocalsDb: 0, trebleDb: 0 } };
+    const layers = {};
+    for (const role of layerOrder) {
+      const layer = config.layers[role];
+      if (layer) layers[role] = { ...layer, on: true, bands: layer.bands.map((band) => ({ ...band, on: band === soloed })) };
+    }
+    value = { ...config, layers, sliders: { bassDb: 0, vocalsDb: 0, trebleDb: 0 } };
   }
   chrome.runtime.sendMessage({ type: "audio:config", config: value }).catch(() => {});
 }
@@ -100,15 +149,18 @@ function commit() {
   refresh();
 }
 
-// A change to the sound itself. The card then says the sound differs from the one you picked.
-function commitEdit() {
-  config.isEdited = true;
+// A change to a layer's bands. Its row then says the sound differs from the one you picked. Pass
+// null for a change that belongs to the sliders or the preamp, which no layer owns.
+function commitEdit(role) {
+  const markedRole = role === null ? null : role || roleAt(selectedIndex);
+  if (markedRole && config.layers[markedRole]) config.layers[markedRole].isEdited = true;
   commit();
 }
 
 function refresh() {
   listenGraph.render();
   tuneGraph.render();
+  renderLayers();
   renderSound();
   renderChips();
   renderInspector();
@@ -121,10 +173,91 @@ function setField(id, value) {
   if (field !== document.activeElement) field.value = value;
 }
 
+// The stack on Listen. One row per layer, each with its own switch, its source and its name.
+function renderLayers() {
+  const host = byId("layers");
+  host.replaceChildren();
+  for (const role of layerOrder) {
+    const layer = config.layers[role];
+    if (!layer) continue;
+    const row = document.createElement("div");
+    row.className = layer.on ? "layer" : "layer off";
+
+    const toggle = document.createElement("label");
+    toggle.className = "switch";
+    toggle.title = `Turn the ${layerLabels[role]} layer on or off`;
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = layer.on;
+    box.addEventListener("change", () => {
+      layer.on = box.checked;
+      commit();
+    });
+    const track = document.createElement("span");
+    track.className = "track";
+    toggle.append(box, track);
+
+    const text = document.createElement("div");
+    text.className = "grow";
+    const caption = document.createElement("small");
+    caption.className = "caption";
+    const mark = document.createElement("i");
+    mark.className = "layer-mark";
+    mark.style.borderColor = layerColor[role];
+    caption.append(mark, `${layerLabels[role]} · ${layer.source}`);
+    const name = document.createElement("b");
+    name.textContent = layer.isEdited ? `${layer.name}, edited` : layer.name;
+    text.append(caption, name);
+
+    const change = document.createElement("button");
+    change.dataset.role = role;
+    change.textContent = "Change";
+    change.addEventListener("click", () => {
+      target = role;
+      renderTarget();
+      showTab("library");
+      byId("librarySearch").focus();
+    });
+
+    row.append(toggle, text, change);
+    if (role === "ear") {
+      const remove = document.createElement("button");
+      remove.title = "Take the ear layer off";
+      remove.textContent = "×";
+      remove.addEventListener("click", () => {
+        delete config.layers.ear;
+        selectedIndex = -1;
+        soloIndex = -1;
+        commit();
+      });
+      row.append(remove);
+    }
+    host.append(row);
+  }
+
+  if (!config.layers.ear) {
+    const add = document.createElement("button");
+    add.id = "addEar";
+    add.title = "Paste or import an eqbyear result into a new My ear layer";
+    add.textContent = "Add your ear tuning on top";
+    add.addEventListener("click", () => {
+      target = "ear";
+      renderTarget();
+      showTab("library");
+      openLibraryAction("paste");
+    });
+    host.append(add);
+  }
+}
+
+function renderTarget() {
+  for (const button of byId("target").querySelectorAll("[data-target]")) {
+    button.classList.toggle("on", button.dataset.target === target);
+  }
+}
+
 function renderSound() {
   const engine = engineConfig(config);
-  byId("soundName").textContent = config.soundName;
-  byId("soundKind").textContent = config.isEdited ? `${config.soundKind}, edited` : config.soundKind;
   byId("enabled").checked = config.enabled;
 
   for (const name of ["bass", "vocals", "treble"]) {
@@ -149,16 +282,24 @@ function renderChips() {
   const chips = byId("chips");
   const scrollLeft = chips.scrollLeft;
   chips.replaceChildren();
-  config.bands.forEach((band, index) => {
+  listBandEntries().forEach((entry, index) => {
+    const previous = listBandEntries()[index - 1];
+    if (entry.role !== (previous && previous.role)) {
+      const label = document.createElement("span");
+      label.className = "chip-label";
+      label.style.color = layerColor[entry.role];
+      label.textContent = layerLabels[entry.role];
+      chips.append(label);
+    }
     const chip = document.createElement("button");
     chip.className = "chip";
     chip.classList.toggle("on", index === selectedIndex);
-    chip.classList.toggle("muted", !band.on);
+    chip.classList.toggle("muted", !entry.band.on);
     chip.dataset.index = index;
     const number = document.createElement("i");
-    number.style.background = typeColor[band.type];
+    number.style.background = typeColor[entry.band.type];
     number.textContent = index + 1;
-    chip.append(number, formatHz(band.frequencyHz));
+    chip.append(number, formatHz(entry.band.frequencyHz));
     chips.append(chip);
   });
   const add = document.createElement("button");
@@ -176,13 +317,13 @@ function describeQ(band) {
 }
 
 function renderInspector() {
-  const band = config.bands[selectedIndex];
+  const band = bandAt(selectedIndex);
   byId("inspectorEmpty").hidden = Boolean(band);
   byId("inspectorBody").hidden = !band;
   if (!band) return;
 
   const title = byId("bandTitle");
-  title.textContent = `${selectedIndex + 1}. ${typeLabels[band.type]}`;
+  title.textContent = `${layerLabels[roleAt(selectedIndex)]} · ${selectedIndex + 1}. ${typeLabels[band.type]}`;
   title.style.color = typeColor[band.type];
   setField("bandType", band.type);
   const isCommon = ["PK", "LSC", "HSC", "HP", "LP"].includes(band.type);
@@ -210,7 +351,8 @@ function renderTable() {
     cell.textContent = label;
     head.append(cell);
   }
-  const rows = config.bands.map((band, index) => {
+  const rows = listBandEntries().map((entry, index) => {
+    const band = entry.band;
     const row = document.createElement("tr");
     row.dataset.index = index;
     row.classList.toggle("on", index === selectedIndex);
@@ -247,26 +389,32 @@ function renderPills() {
 }
 
 function markCurrent() {
+  const currentName = config.layers[target] && config.layers[target].name;
   for (const item of document.querySelectorAll(".results .item")) {
-    item.classList.toggle("on", item.firstChild.textContent === config.soundName);
+    item.classList.toggle("on", item.firstChild.textContent === currentName);
   }
 }
 
-function applySound(name, kind, bands, preampDb) {
-  config.soundName = name;
-  config.soundKind = kind;
-  config.isEdited = false;
-  config.bands = sanitizeConfig({ bands }).bands;
-  if (preampDb !== undefined) config.preampDb = preampDb;
+// A pick joins the layer the Library shows. A headphone file's own preamp is kept only when it
+// joins the headphone layer, where a lone file needs it. Auto preamp overrides it either way.
+function placeBands(sound, role) {
+  config.layers[role] = {
+    on: true,
+    source: sound.source,
+    name: sound.name,
+    isEdited: false,
+    bands: sanitizeConfig({ bands: sound.bands }).layers.headphone.bands,
+  };
+  if (role === "headphone" && sound.preampDb !== undefined) config.preampDb = sound.preampDb;
   selectedIndex = -1;
   soloIndex = -1;
   commit();
   markCurrent();
 }
 
-// A saved sound keeps everything, the sliders and the preamp too. Only the EQ switch stays as it is.
+// A saved sound keeps everything: both layers, the sliders and the preamp. Only the EQ switch stays.
 function loadSavedSound(name) {
-  config = { ...sanitizeConfig(savedSounds[name]), enabled: config.enabled, soundName: name, soundKind: "Saved", isEdited: false };
+  config = { ...sanitizeConfig(savedSounds[name]), enabled: config.enabled };
   selectedIndex = -1;
   soloIndex = -1;
   commit();
@@ -286,9 +434,9 @@ function saveSound() {
     return;
   }
   const isUpdate = Boolean(savedSounds[name]);
-  config.soundName = name;
-  config.soundKind = "Saved";
-  config.isEdited = false;
+  config.layers.headphone.name = name;
+  config.layers.headphone.source = "Saved";
+  for (const role of layerOrder) if (config.layers[role]) config.layers[role].isEdited = false;
   savedSounds[name] = structuredClone(config);
   chrome.storage.local.set({ savedSounds });
   commit();
@@ -329,7 +477,7 @@ async function loadHeadphone(item, hint) {
     return false;
   }
   const parsed = parseAutoEq(await response.text());
-  applySound(item.name, "AutoEQ headphones", parsed.bands, parsed.preampDb);
+  placeBands({ name: item.name, source: "AutoEQ headphones", bands: parsed.bands, preampDb: parsed.preampDb }, target);
   hint.textContent = "";
   return true;
 }
@@ -350,10 +498,16 @@ function countBands(bands) {
   return bands.length === 1 ? "1 band" : `${bands.length} bands`;
 }
 
+// A saved sound holds both layers, so its count is every band in every layer.
+function countSavedBands(sound) {
+  const bands = layerOrder.flatMap((role) => (sound.layers[role] ? sound.layers[role].bands : []));
+  return countBands(bands);
+}
+
 function makeResultItem(label, detail, onPick, onRemove) {
   const button = document.createElement("button");
   button.className = "item";
-  button.classList.toggle("on", label === config.soundName);
+  button.classList.toggle("on", Boolean(config.layers[target]) && label === config.layers[target].name);
   const name = document.createElement("span");
   name.textContent = label;
   const small = document.createElement("small");
@@ -399,11 +553,11 @@ async function searchLibrary() {
 
   const matches = (name) => name.toLowerCase().includes(text);
   const saved = Object.keys(savedSounds).filter(matches).map((name) =>
-    makeResultItem(name, countBands(savedSounds[name].bands), () => pickFromSearch(() => loadSavedSound(name)), () => deleteSavedSound(name)));
+    makeResultItem(name, countSavedBands(savedSounds[name]), () => pickFromSearch(() => loadSavedSound(name)), () => deleteSavedSound(name)));
   const headphoneItems = headphones.map((item) =>
     makeResultItem(item.name, "AutoEQ", () => pickFromSearch(() => loadHeadphone(item, hint))));
   const starterItems = starterSounds.filter((sound) => matches(sound.name)).map((sound) =>
-    makeResultItem(sound.name, countBands(sound.bands), () => pickFromSearch(() => applySound(sound.name, "Starter sound", sound.bands))));
+    makeResultItem(sound.name, countBands(sound.bands), () => pickFromSearch(() => placeBands({ name: sound.name, source: "Starter sound", bands: sound.bands }, target))));
 
   list.replaceChildren();
   appendSection(list, "Saved", saved);
@@ -424,7 +578,7 @@ function applyText(name, kind) {
     }
     commit();
     markCurrent();
-    hint.textContent = `Applied ${config.soundName}.`;
+    hint.textContent = "Applied the JSON.";
     return;
   }
   const parsed = parseAutoEq(text);
@@ -432,16 +586,15 @@ function applyText(name, kind) {
     hint.textContent = "No AutoEQ filters found in that text.";
     return;
   }
-  applySound(name, kind, parsed.bands, parsed.preampDb);
-  hint.textContent = `Applied ${parsed.bands.length} bands.`;
+  placeBands({ name, source: kind, bands: parsed.bands, preampDb: parsed.preampDb }, target);
+  hint.textContent = `Applied ${parsed.bands.length} bands to ${layerLabels[target]}.`;
 }
 
-// A band at 0 dB changes nothing, so a slider left at 0 dB stays out of the exported text.
+// Export always writes one flat file, both layers merged, so another app can read the sound.
 function exportAutoEq() {
   const engine = engineConfig(config);
-  const bands = engine.bands.filter((band) => !hasGain(band.type) || band.gainDb !== 0);
-  byId("libraryText").value = toAutoEq({ preampDb: engine.preampDb, bands });
-  byId("libraryHint").textContent = "The sound you hear, as AutoEQ text. Copy it out.";
+  byId("libraryText").value = toAutoEq({ preampDb: engine.preampDb, bands: flatBands(config) });
+  byId("libraryHint").textContent = "Both layers as one AutoEQ file. Copy it out.";
 }
 
 // The name of a saved sound is filled in, so Save writes the edit back to it.
@@ -461,7 +614,7 @@ function openLibraryAction(action) {
   byId("libraryHint").textContent = "";
 
   if (openAction === "save") {
-    byId("saveName").value = config.soundName;
+    byId("saveName").value = config.layers.headphone.name;
     renderSaveButton();
     byId("saveName").focus();
   }
@@ -487,8 +640,8 @@ function showTelemetry(message) {
   const newShare = 0.3;
   const previous = spectrumDb;
   spectrumDb = message.spectrumDb.map((db, index) => (previous.length ? ((1 - newShare) * previous[index]) + (newShare * db) : db));
-  listenGraph.render();
-  tuneGraph.render();
+  listenGraph.renderSpectrum();
+  tuneGraph.renderSpectrum();
 }
 
 function setBypass(isOn) {
@@ -523,9 +676,13 @@ const fieldEdits = {
   },
 };
 
-byId("soundCard").addEventListener("click", () => {
-  showTab("library");
-  byId("librarySearch").focus();
+byId("target").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-target]");
+  if (!button) return;
+  target = button.dataset.target;
+  renderTarget();
+  markCurrent();
+  searchLibrary();
 });
 
 byId("tabs").addEventListener("click", (event) => {
@@ -554,14 +711,14 @@ byId("sliders").addEventListener("input", (event) => {
   } else {
     config.sliders[`${event.target.id}Db`] = value;
   }
-  commitEdit();
+  commitEdit(null);
 });
 
 // Turning Auto off keeps the value Auto had, so the sound does not jump.
 byId("autoPreamp").addEventListener("click", () => {
   if (config.autoPreamp) config.preampDb = engineConfig(config).preampDb;
   config.autoPreamp = !config.autoPreamp;
-  commitEdit();
+  commitEdit(null);
 });
 
 byId("zoom").addEventListener("click", (event) => {
@@ -584,9 +741,7 @@ byId("chips").addEventListener("click", (event) => {
   const chip = event.target.closest("[data-index]");
   if (!chip) return;
   if (chip.dataset.index === "add") {
-    config.bands.push(newBand(1000));
-    selectedIndex = config.bands.length - 1;
-    commitEdit();
+    addBandToTarget(1000, 0);
     return;
   }
   graphHooks.select(Number(chip.dataset.index));
@@ -607,14 +762,14 @@ byId("table").addEventListener("click", (event) => {
 byId("inspector").addEventListener("click", (event) => {
   const button = event.target.closest("[data-step]");
   if (!button) return;
-  steps[button.dataset.step](config.bands[selectedIndex], Number(button.dataset.direction));
+  steps[button.dataset.step](bandAt(selectedIndex), Number(button.dataset.direction));
   commitEdit();
 });
 
 byId("inspector").addEventListener("input", (event) => {
   const edit = fieldEdits[event.target.id];
   if (!edit) return;
-  edit(config.bands[selectedIndex], Number(event.target.value.replace(",", ".")));
+  edit(bandAt(selectedIndex), Number(event.target.value.replace(",", ".")));
   commitEdit();
 });
 
@@ -626,17 +781,18 @@ byId("bandSegments").addEventListener("click", (event) => {
     renderInspector();
     return;
   }
-  config.bands[selectedIndex].type = button.dataset.type;
+  bandAt(selectedIndex).type = button.dataset.type;
   commitEdit();
 });
 
 byId("bandType").addEventListener("change", (event) => {
-  config.bands[selectedIndex].type = event.target.value;
+  bandAt(selectedIndex).type = event.target.value;
   commitEdit();
 });
 
 byId("bandOn").addEventListener("click", () => {
-  config.bands[selectedIndex].on = !config.bands[selectedIndex].on;
+  const band = bandAt(selectedIndex);
+  band.on = !band.on;
   commitEdit();
 });
 
@@ -646,10 +802,20 @@ byId("bandSolo").addEventListener("click", () => {
 });
 
 byId("bandDelete").addEventListener("click", () => {
-  config.bands.splice(selectedIndex, 1);
+  const role = roleAt(selectedIndex);
+  const layer = config.layers[role];
+  layer.bands.splice(layer.bands.indexOf(bandAt(selectedIndex)), 1);
   selectedIndex = -1;
   soloIndex = -1;
-  commitEdit();
+  commitEdit(role);
+});
+
+byId("eqbyear").addEventListener("click", () => {
+  // The test measures what you hear, so the ear layer comes off first. AutoEQ stays on.
+  if (config.layers.ear) config.layers.ear.on = false;
+  commit();
+  chrome.tabs.create({ url: "https://eqbyear.com" });
+  byId("layerHint").textContent = "eqbyear is open in a new tab. Click the goui icon on that tab to capture it, run the test, then paste the result into My ear.";
 });
 
 let searchTimer = 0;
@@ -668,7 +834,7 @@ byId("libraryActions").addEventListener("click", (event) => {
 
 byId("saveButton").addEventListener("click", saveSound);
 byId("saveName").addEventListener("input", renderSaveButton);
-byId("applyText").addEventListener("click", () => applyText("Pasted AutoEQ", "Pasted"));
+byId("applyText").addEventListener("click", () => applyText(`Pasted ${layerLabels[target]}`, "Pasted"));
 byId("exportAutoEq").addEventListener("click", exportAutoEq);
 byId("exportJson").addEventListener("click", () => {
   byId("libraryText").value = JSON.stringify(config, null, 2);
@@ -700,6 +866,7 @@ async function hydrate() {
   listenGraph.setVertical(tuneGraph.vertical);
   showTab(stored.tab || "listen");
   renderPills();
+  renderTarget();
   sendAudio();
   refresh();
   searchLibrary();

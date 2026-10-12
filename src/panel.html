@@ -33,13 +33,9 @@
       <div class="panes">
         <section class="pane" data-pane="listen">
           <h4 class="column-title">Listen</h4>
-          <button class="card sound" id="soundCard" title="Open the Library to pick another sound">
-            <span class="grow">
-              <small class="caption" id="soundKind">Starter sound</small>
-              <b id="soundName" class="sound-name">Flat</b>
-            </span>
-            <span class="change">Change</span>
-          </button>
+          <div class="card" id="layers"></div>
+          <p class="hint" id="layerHint"></p>
+          <button id="eqbyear" class="wide" title="Open eqbyear.com in a new tab, with the ear layer off, to measure your ear">Measure my ear with eqbyear</button>
           <div class="card"><div class="graph" id="listenGraph"></div></div>
           <div class="card" id="sliders">
             <label class="slider">
@@ -137,6 +133,11 @@
             <input type="search" id="librarySearch" placeholder="Search your headphones, for example HD 600" />
             <div class="results" id="libraryResults"></div>
             <p class="hint" id="librarySearchHint"></p>
+            <div class="target" id="target">
+              <span>Put into</span>
+              <button data-target="headphone">Headphone</button>
+              <button data-target="ear">My ear</button>
+            </div>
             <div class="library-actions" id="libraryActions">
               <button data-action="save" title="Keep the sound you hear under a name">Save</button>
               <button data-action="import" title="Load a ParametricEQ.txt or a JSON file">Import</button>

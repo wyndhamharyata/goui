@@ -1,8 +1,9 @@
 # goui
 
 A Brave and Chromium extension that runs the audio of a browser tab through a parametric EQ. Search
-your headphones and the AutoEQ profile for them applies at once. You can then tune by ear with three
-sliders, or edit every band on the graph.
+your headphones and the AutoEQ profile for them applies at once. That is the neutral baseline. On top
+of it you can add your own ear tuning from an eqbyear test, or tune by ear with three sliders, or edit
+every band on the graph.
 
 ## Load it
 
@@ -22,8 +23,13 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 
 **Listen**
 
-- The card at the top shows the sound you use. Press it to open the Library and pick another.
-- Bass, Vocals and Treble nudge the sound. They stay when you pick another sound.
+- The stack at the top holds a **Headphone** layer and a **My ear** layer. Each row has its own switch,
+  so AutoEQ alone compares against AutoEQ plus your ear with one press. **Change** opens the Library for
+  that layer, and the ear row has an **×** to take it off.
+- **Measure my ear with eqbyear** turns the ear layer off, opens eqbyear.com in a new tab and tells you
+  the next step.
+- Bass, Vocals and Treble nudge the sound. They sit on top of both layers and stay when you pick another
+  sound.
 - The preamp follows the largest boost, so the sound never clips. Move the slider to set it by hand.
   Press **Auto** to give it back.
 
@@ -32,23 +38,40 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 - Drag a point to change that band's frequency and gain. A press alone only selects it. The point
   moves once you drag it 5 px. Hold Shift for fine steps.
 - On a selected peak, pull the square side handles apart for a wider band, or scroll on the point.
-- Double click empty space to make a new band.
+- Double click empty space to make a new band. It joins the layer you last worked in.
+- Ear bands carry a gold ring, and the chip row marks them with a **My ear** label. Each layer draws
+  its own dashed curve under the solid total.
 - All, Lows, Mids and Highs zoom the graph. **Tall** turns it, with low notes at the top.
 - The inspector under the chips edits one band with exact numbers. **Solo** plays that band alone.
 
 **Library**
 
+- **Put into Headphone | My ear** decides the layer for a Paste, an Import, an AutoEQ headphone or a
+  starter sound.
 - Type your headphone model to search the AutoEQ headphones. A pick clears the search and takes you
   back to Listen.
 - With the box empty, the list shows your saved sounds and a few starter sounds.
-- Every edit is kept as the sound you use, and the card on Listen then says "edited". A saved
-  sound only changes when you save it again.
-- **Save** keeps the sound you hear under a name, sliders and preamp included. The name of the
-  current sound is filled in. When that name exists, the button reads **Update** and writes over it.
-- **Import** loads a `ParametricEQ.txt` or JSON file. **Paste** takes the same text.
-- **Export** writes the sound you hear as AutoEQ text or JSON, for use in other apps.
+- A layer row says "edited" once you change one of its bands. A saved sound only changes when you save
+  it again.
+- **Save** keeps both layers under a name, sliders and preamp included. The name of the headphone layer
+  is filled in. When that name exists, the button reads **Update** and writes over it. Picking a saved
+  sound brings both layers back.
+- **Import** loads a `ParametricEQ.txt` or JSON file. **Paste** takes the same text. The text joins the
+  layer chosen above.
+- **Export** writes both layers as one flat AutoEQ file, or as JSON, for use in other apps.
 
 On a panel 900 px or wider, the three tabs show side by side.
+
+## Measure your ear
+
+An AutoEQ profile corrects the headphone, not your ear. An eqbyear test measures what your ear still
+wants, and goui keeps the two apart.
+
+1. On Listen, press **Measure my ear with eqbyear**. The ear layer turns off, so the test hears AutoEQ
+   alone.
+2. eqbyear opens in a new tab. Click the goui icon on that tab to capture it, then run the test.
+3. Copy the result, return to goui, choose **My ear** under Put into, and paste it.
+4. Turn the ear layer on to hear AutoEQ plus your ear.
 
 ## Commands
 

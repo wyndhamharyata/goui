@@ -13,8 +13,10 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
   columns. `design/ux-proposals.html` holds the mock the panel follows.
 - `src/graph.js` draws the curve as SVG. It uses the same Web Audio filters the engine plays, so
   the picture matches the sound.
-- `engineConfig` in `src/shared/filters.js` turns a stored config into what the engine plays: the
-  sound's bands, the three Listen sliders as fixed bands, and the auto preamp.
+- `engineConfig` in `src/shared/filters.js` turns a stored config into what the engine plays: the bands
+  of every layer that is on, the three Listen sliders as fixed bands, and the auto preamp. A config
+  holds a `headphone` layer and an optional `ear` layer, each with its own switch and bands. Bands add
+  in dB, so the two layers merge exactly. `flatBands` is the same list for Export.
 - Playwright runs the tests at side panel width. ESLint and `scripts/check-words.mjs` run the lint.
 
 ## Commands
