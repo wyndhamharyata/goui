@@ -1,9 +1,13 @@
 # goui
 
-A Brave and Chromium extension that runs the audio of a browser tab through a parametric EQ. Search
-your headphones and the AutoEQ profile for them applies at once. That is the neutral baseline. On top
-of it you can add your own ear tuning from an eqbyear test, or tune by ear with three sliders, or edit
-every band on the graph.
+Browser level EQ to show how easy and significant it is to adjust EQ for your headphone against
+your own ear. It all comes down to a very simple mantra: different ear, different head, different
+sound.
+
+This extension works on the notion of joining two incredibly important audio tools: AutoEQ and
+EQByEar. AutoEQ will give you a good neutral baseline against the headphone you personally use. Then
+use EQByEar to adjust the fine details that are specific to the interaction between your headphone /
+IEM and your hearing. Add flavour on top of that, based on your taste.
 
 ## Load it
 

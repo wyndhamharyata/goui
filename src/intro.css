@@ -49,8 +49,13 @@ h2 {
 }
 
 .pitch {
+  max-width: 600px;
   margin: 2px 0 0;
   color: var(--muted);
+}
+
+.pitch b {
+  color: #fff;
 }
 
 .flow {
@@ -95,22 +100,11 @@ h2 {
   color: var(--muted);
 }
 
-.facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
+.lead {
+  max-width: 620px;
+  margin: 14px 0 0;
 }
 
-.facts li {
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 12px;
-}
 
 .guide-steps.grid {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

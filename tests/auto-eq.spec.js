@@ -537,7 +537,7 @@ journey("given the panel, the help button opens the how-to page with the pin ste
   await expect(intro.locator("h1")).toHaveText("goui");
   await expect(intro.locator("body")).toContainText("Pin goui");
   await expect(intro.locator("body")).toContainText("Click the goui icon");
-  await expect(intro.locator("body")).toContainText("Add your ear");
+  await expect(intro.locator("body")).toContainText("Tune it to your ear");
   await expect(intro.locator("a[href='https://github.com/jaakkopasanen/AutoEQ']")).toHaveCount(1);
   await expect(intro.locator("a[href='https://eqbyear.com']")).toHaveCount(1);
 });

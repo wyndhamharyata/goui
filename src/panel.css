@@ -703,6 +703,12 @@ button:disabled {
   font-size: 15px;
 }
 
+.start .mantra {
+  margin: 0;
+  color: var(--text);
+  font-weight: 600;
+}
+
 .start .guide-text {
   margin: 0;
 }

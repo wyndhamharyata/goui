@@ -22,7 +22,11 @@
         <img src="../icons/icon128.png" alt="" width="56" height="56" />
         <div>
           <h1>goui</h1>
-          <p class="pitch">An EQ for one browser tab. Your headphone first, then your ear.</p>
+          <p class="pitch">
+            Browser level EQ to show how easy and significant it is to adjust EQ for your headphone
+            against your own ear, because of a very simple mantra:
+            <b>different ear, different head, different sound.</b>
+          </p>
         </div>
       </header>
 
@@ -33,17 +37,18 @@
           <span class="flow-arrow">→</span>
           <span class="flow-box headphone"><b>Headphone</b><small>AutoEQ</small></span>
           <span class="flow-arrow">→</span>
-          <span class="flow-box ear"><b>My ear</b><small>eqbyear</small></span>
+          <span class="flow-box ear"><b>My ear</b><small>EQByEar</small></span>
           <span class="flow-arrow">→</span>
-          <span class="flow-box"><b>Sliders</b><small>Bass, Vocals, Treble</small></span>
+          <span class="flow-box"><b>Your taste</b><small>Bass, Vocals, Treble</small></span>
           <span class="flow-arrow">→</span>
           <span class="flow-box"><svg class="flow-icon"><use href="#headphones" /></svg>You</span>
         </div>
-        <ul class="facts">
-          <li>Each layer has its own switch.</li>
-          <li>Browser tabs only.</li>
-          <li>Presets stay on this computer.</li>
-        </ul>
+        <p class="lead">
+          This extension works on the notion of joining two incredibly important audio tools: AutoEQ
+          and EQByEar. AutoEQ will give you a good neutral baseline against the headphone you personally
+          use. Then use EQByEar to adjust the fine details that are specific to the interaction between
+          your headphone / IEM and your hearing. Add flavour on top of that, based on your taste.
+        </p>
       </section>
 
       <section>
@@ -64,7 +69,7 @@
                 </div>
               </div>
             </div>
-            <p class="guide-text"><span><b>Pin goui</b>Open the puzzle menu. Press the pin.</span></p>
+            <p class="guide-text"><span><b>Pin goui</b>Click the puzzle piece in your toolbar, then pin goui so it's always one click away.</span></p>
           </li>
           <li class="guide-step">
             <div class="shot">
@@ -74,7 +79,7 @@
               </div>
               <div class="mock-toolbar"><span class="mock-url">radio.example.com</span></div>
             </div>
-            <p class="guide-text"><span><b>Play audio in a tab</b>Music, a video, a stream.</span></p>
+            <p class="guide-text"><span><b>Play something</b>Any tab with sound works. Music, a video, a radio stream.</span></p>
           </li>
           <li class="guide-step">
             <div class="shot">
@@ -85,13 +90,13 @@
               </div>
               <svg class="mock-cursor" style="right: 50px; top: 30px"><use href="#cursor" /></svg>
             </div>
-            <p class="guide-text"><span><b>Click the goui icon</b>The badge says ON. goui hears this tab.</span></p>
+            <p class="guide-text"><span><b>Click the goui icon</b>goui starts listening to that tab, and the icon shows a green ON.</span></p>
           </li>
         </ol>
       </section>
 
       <section>
-        <h2>Tune it</h2>
+        <h2>Make it yours</h2>
         <ol class="guide-steps grid" start="4" style="counter-reset: step 3">
           <li class="guide-step">
             <div class="shot">
@@ -101,7 +106,7 @@
                 <span class="mock-button focus">Save</span>
               </div>
             </div>
-            <p class="guide-text"><span><b>Pick your headphone</b>Library, Headphone. Search, pick, Save.</span></p>
+            <p class="guide-text"><span><b>Find your headphone</b>Search your model in the Library and hit Save. That's your neutral baseline.</span></p>
           </li>
           <li class="guide-step optional">
             <div class="shot">
@@ -109,7 +114,7 @@
                 <span class="mock-button">Measure my ear</span>→<span class="mock-button">Paste</span>→<span class="mock-button focus">Save</span>
               </div>
             </div>
-            <p class="guide-text"><span><b>Add your ear</b>Optional. Run the eqbyear test, paste the result, Save.</span></p>
+            <p class="guide-text"><span><b>Tune it to your ear</b>Take the EQByEar test, paste the result into My ear, and save it. Optional, but this is where it gets personal.</span></p>
           </li>
           <li class="guide-step">
             <div class="shot">
@@ -120,7 +125,7 @@
                 <path d="M172 12h22m-5-4l5 4-5 4M148 12h-22m5-4l-5 4 5 4" stroke="#8993a2" stroke-width="1.5" fill="none" />
               </svg>
             </div>
-            <p class="guide-text"><span><b>Fine-tune</b>Drag a point in Tune. Or move the sliders in Listen.</span></p>
+            <p class="guide-text"><span><b>Add your flavour</b>Drag the points in Tune, or nudge Bass, Vocals and Treble in Listen. Go with what sounds good to you.</span></p>
           </li>
           <li class="guide-step">
             <div class="shot">
@@ -131,7 +136,7 @@
               </div>
               <svg class="mock-cursor" style="right: 50px; top: 30px"><use href="#cursor" /></svg>
             </div>
-            <p class="guide-text"><span><b>Turn it off</b>Click the icon again. Closing the tab works too.</span></p>
+            <p class="guide-text"><span><b>Turn it off</b>Click the icon again. Closing the tab does it too.</span></p>
           </li>
         </ol>
       </section>
@@ -139,9 +144,9 @@
       <section>
         <h2>Read more</h2>
         <div class="links">
-          <a href="https://github.com/jaakkopasanen/AutoEQ" target="_blank" rel="noreferrer"><b>AutoEQ</b><span>Where the headphone profiles come from</span></a>
-          <a href="https://eqbyear.com" target="_blank" rel="noreferrer"><b>eqbyear</b><span>The hearing test for My ear</span></a>
-          <a href="https://en.wikipedia.org/wiki/Equalization_(audio)" target="_blank" rel="noreferrer"><b>Equalization</b><span>What each band on the graph does</span></a>
+          <a href="https://github.com/jaakkopasanen/AutoEQ" target="_blank" rel="noreferrer"><b>AutoEQ</b><span>Headphone profiles measured and shared by the community</span></a>
+          <a href="https://eqbyear.com" target="_blank" rel="noreferrer"><b>EQByEar</b><span>The hearing test behind your My ear layer</span></a>
+          <a href="https://en.wikipedia.org/wiki/Equalization_(audio)" target="_blank" rel="noreferrer"><b>Equalization</b><span>A primer on what each band actually does</span></a>
         </div>
       </section>
 
