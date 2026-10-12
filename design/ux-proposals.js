@@ -15,6 +15,8 @@ const regions = [
 const typeColor = { PK: "#b06bff", LSC: "#2ec4b6", HSC: "#2ec4b6", HP: "#ff9f43", LP: "#ff9f43" };
 const typeName = { PK: "Peak", LSC: "Low shelf", HSC: "High shelf", HP: "Low cut", LP: "High cut" };
 const zooms = { all: [20, 20_000], lows: [20, 400], mids: [200, 5000], highs: [2000, 20_000] };
+const layerColor = { headphone: "#a9b8ff", ear: "#ffd166" };
+const earText = "Preamp: 0.0 dB\nFilter 1: ON PK Fc 94 Hz Gain -5.0 dB Q 1.60\nFilter 2: ON PK Fc 7732 Hz Gain -3.0 dB Q 2.85";
 
 const headphoneBands = [
   { on: true, type: "LSC", frequencyHz: 105, gainDb: -2.6, q: 0.7 },
@@ -109,6 +111,18 @@ function spectrumDb(frequencyHz) {
   return Math.max(tilt + kick + voice + rolloff + wobble, -90);
 }
 
+// Reads "Filter 1: ON PK Fc 94 Hz Gain -5.0 dB Q 1.60" lines, as the extension does.
+function parseAutoEqText(text, layer) {
+  const bands = [];
+  for (const line of text.split("\n")) {
+    const words = line.trim().split(" ").filter((word) => word !== "");
+    if ((words[0] || "").toLowerCase() !== "filter") continue;
+    const readAfter = (name) => Number(words[words.findIndex((word) => word.toLowerCase() === name) + 1]);
+    bands.push({ on: words[2] === "ON", type: words[3], frequencyHz: readAfter("fc"), gainDb: readAfter("gain") || 0, q: readAfter("q") || 0.71, layer });
+  }
+  return bands;
+}
+
 function makeModel(bands, profile) {
   const model = {
     bands: bands.map((band) => ({ ...band })),
@@ -127,7 +141,8 @@ function makeModel(bands, profile) {
 function curveBands(model) {
   if (model.bypass || !model.enabled) return [];
   if (model.solo >= 0 && model.bands[model.solo]) return [model.bands[model.solo]];
-  const list = model.bands.filter((band) => band.on);
+  const isLayerOn = (band) => !band.layer || Boolean(model.layers && model.layers[band.layer] && model.layers[band.layer].on);
+  const list = model.bands.filter((band) => band.on && isLayerOn(band));
   const { bass, vocals, treble } = model.macros;
   if (bass) list.push({ type: "LSC", frequencyHz: 105, gainDb: bass, q: 0.7 });
   if (vocals) list.push({ type: "PK", frequencyHz: 2500, gainDb: vocals, q: 0.9 });
@@ -319,7 +334,8 @@ function makeGraph(host, model, options) {
       const isSelected = index === model.selected;
       const fill = band.on ? typeColor[band.type] : "#0e1013";
       const ring = isSelected ? `<circle cx="${point.x}" cy="${point.y}" r="11" fill="none" stroke="#fff" stroke-opacity="0.7"/>` : "";
-      return `${ring}<circle cx="${point.x}" cy="${point.y}" r="7" fill="${fill}" stroke="${typeColor[band.type]}" stroke-width="1.5"/>`
+      const earRing = band.layer === "ear" ? `<circle cx="${point.x}" cy="${point.y}" r="9" fill="none" stroke="${layerColor.ear}" stroke-width="1.5"/>` : "";
+      return `${earRing}${ring}<circle cx="${point.x}" cy="${point.y}" r="7" fill="${fill}" stroke="${typeColor[band.type]}" stroke-width="1.5"/>`
         + `<text x="${point.x}" y="${point.y + 3}" text-anchor="middle" font-size="9" font-weight="700" fill="#0e1013">${index + 1}</text>`;
     }).join("");
   }
@@ -351,6 +367,16 @@ function makeGraph(host, model, options) {
       + `<text x="${x + 5}" y="${size.top + (graph.vertical ? 13 : 27)}" font-size="9.5" fill="#e6e9ef">${content}</text>`;
   }
 
+  // Each layer's own curve, dashed, under the solid total.
+  function drawLayerCurves(size) {
+    if (!options.layerCurves || !model.layers || model.bypass || !model.enabled) return "";
+    return Object.entries(model.layers).filter(([, layer]) => layer.on).map(([key]) => {
+      const bands = model.bands.filter((band) => band.on && band.layer === key);
+      const points = trace((frequencyHz) => bands.reduce((total, band) => total + bandDb(band, frequencyHz), 0), size);
+      return `<polyline points="${points.join(" ")}" fill="none" stroke="${layerColor[key]}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    }).join("");
+  }
+
   function render() {
     const size = box();
     const band = model.bands[model.selected];
@@ -361,7 +387,7 @@ function makeGraph(host, model, options) {
     host.innerHTML = `<svg viewBox="0 0 ${size.width} ${size.height}" height="${size.height}">
       <defs><clipPath id="${clipId}"><rect x="${size.left}" y="${size.top}" width="${size.plotWidth}" height="${size.plotHeight}"/></clipPath></defs>
       ${drawRegions(size)}${drawGrid(size)}
-      <g clip-path="url(#${clipId})">${drawSpectrum(size)}${drawLoudness(size)}${selected}${curve}</g>
+      <g clip-path="url(#${clipId})">${drawSpectrum(size)}${drawLoudness(size)}${selected}${drawLayerCurves(size)}${curve}</g>
       ${drawNodes(size)}${drawPill(size)}${drawHover(size)}
     </svg>`;
   }
@@ -551,7 +577,21 @@ function mountMacros(host, model, showSafety) {
       <output>0 dB</output>
     </label>`);
   const safety = `<div class="safety"><span>Stop clipping on its own</span><button class="switch" title="Auto preamp"></button></div>`;
-  host.innerHTML = sliders.join("") + (showSafety ? safety : "");
+  host.innerHTML = sliders.join("") + (showSafety === "preamp" ? `<div class="preamp-host"></div>` : "") + (showSafety === true ? safety : "");
+  if (showSafety === "preamp") {
+    const preampHost = host.querySelector(".preamp-host");
+    const draw = () => {
+      const preampDb = 0 - maxBoostDb(model);
+      preampHost.innerHTML = `<div class="preamp-row">
+          <span>Preamp<small>Auto</small></span>
+          <input type="range" min="-24" max="12" step="0.1" value="${preampDb}" />
+          <output>${signedDb(preampDb)} dB</output>
+          <button class="on" title="Set the preamp from the largest boost of the total curve">Auto</button>
+        </div>`;
+    };
+    model.listeners.push(draw);
+    draw();
+  }
   host.addEventListener("input", (event) => {
     const key = event.target.dataset.key;
     if (!key) return;
@@ -565,7 +605,9 @@ function mountChips(host, model) {
   const draw = () => {
     const chips = model.bands.map((band, index) => {
       const state = `${index === model.selected ? "on" : ""} ${band.on ? "" : "muted"}`;
-      return `<button class="chip ${state}" data-act="select" data-value="${index}"><i style="background:${typeColor[band.type]}">${index + 1}</i>${hzLabel(band.frequencyHz)}</button>`;
+      const startsLayer = band.layer && model.layers && model.layers[band.layer] && (index === 0 || model.bands[index - 1].layer !== band.layer);
+      const label = startsLayer ? `<span class="chip-label" style="color:${layerColor[band.layer]}">${model.layers[band.layer].label}</span>` : "";
+      return `${label}<button class="chip ${state}" data-act="select" data-value="${index}"><i style="background:${typeColor[band.type]}">${index + 1}</i>${hzLabel(band.frequencyHz)}</button>`;
     });
     return `<div class="chips">${chips.join("")}<button class="chip add" data-act="add">Add band</button></div>`;
   };
@@ -602,7 +644,7 @@ function mountInspector(host, model, isCompact) {
     const segments = types.map(([type, label]) => `<button class="${band.type === type ? "on" : ""}" data-act="type" data-value="${type}">${label}</button>`);
     const gain = hasGain(band.type) ? stepperHtml("gain", "gain", `${signedDb(band.gainDb)} dB`) : stepperHtml("gain", "gain", "none");
     return `<div class="inspector-top">
-        <b style="color:${typeColor[band.type]}">${model.selected + 1}. ${typeName[band.type]}</b>
+        <b style="color:${typeColor[band.type]}">${band.layer && model.layers && model.layers[band.layer] ? `${model.layers[band.layer].label} · ` : ""}${model.selected + 1}. ${typeName[band.type]}</b>
         <button class="${band.on ? "on" : ""}" data-act="power">${band.on ? "On" : "Off"}</button>
         <button class="${model.solo === model.selected ? "on" : ""}" data-act="solo" title="Hear only this band">Solo</button>
         <button data-act="remove" title="Delete this band">Delete</button>
@@ -686,7 +728,7 @@ function mountSheet(frame, model) {
   };
 }
 
-function legendHtml() {
+function legendHtml(hasLayers) {
   const swatch = (style) => `<i class="swatch" style="${style}"></i>`;
   const dot = (color) => `<i class="swatch" style="width:8px;border-radius:50%;background:${color}"></i>`;
   return `<div class="legend">
@@ -699,12 +741,13 @@ function legendHtml() {
       <span>${dot(typeColor.PK)}Peak</span>
       <span>${dot(typeColor.LSC)}Shelf</span>
       <span>${dot(typeColor.HP)}Cut</span>
+      ${hasLayers ? `<span>${swatch(`height:0;border-top:2px dashed ${layerColor.headphone}`)}Headphone layer</span><span>${swatch(`height:0;border-top:2px dashed ${layerColor.ear}`)}My ear layer</span>` : ""}
     </div>`;
 }
 
 const byId = (id) => document.getElementById(id);
 
-for (const host of document.querySelectorAll(".legend-host")) host.innerHTML = legendHtml();
+for (const host of document.querySelectorAll(".legend-host")) host.innerHTML = legendHtml("layers" in host.dataset);
 
 {
   const model = makeModel(headphoneBands, "AKG N700NC M2");
@@ -754,8 +797,8 @@ for (const host of document.querySelectorAll(".legend-host")) host.innerHTML = l
   });
   mountHeader(byId("c-head"), model);
   mountProfile(byId("c-profile"), model, () => showTab("library"));
-  makeGraph(byId("c-listen-graph"), model, { height: 110, showNodes: false, regions: false, interactive: false });
-  mountMacros(byId("c-macros"), model, true);
+  makeGraph(byId("c-listen-graph"), model, { height: 210, tallHeight: 420, showNodes: false, regions: true, interactive: false });
+  mountMacros(byId("c-macros"), model, "preamp");
   const graph = makeGraph(byId("c-graph"), model, { height: 210, tallHeight: 420, showNodes: true, regions: true, interactive: true });
   mountZoom(byId("c-zoom"), graph, model, true);
   mountChips(byId("c-chips"), model);
@@ -788,6 +831,108 @@ for (const host of document.querySelectorAll(".legend-host")) host.innerHTML = l
   mountTable(byId("w-table"), model);
   mountInspector(byId("w-inspector"), model, false);
   mountLibrary(byId("w-library"), model, null);
+}
+
+function mountTabs(tabsId, model) {
+  const tabs = byId(tabsId);
+  const frame = tabs.parentElement;
+  const showTab = (name) => {
+    for (const button of tabs.children) button.classList.toggle("on", button.dataset.tab === name);
+    for (const pane of frame.querySelectorAll("[data-pane]")) pane.hidden = pane.dataset.pane !== name;
+    model.changed();
+  };
+  tabs.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-tab]");
+    if (button) showTab(button.dataset.tab);
+  });
+  return showTab;
+}
+
+function mountLayers(host, model, onChange) {
+  const draw = () => {
+    const rows = Object.entries(model.layers).map(([key, layer]) => `<div class="layer-row ${layer.on ? "" : "off"}">
+        <button class="switch ${layer.on ? "" : "off"}" data-act="toggle" data-value="${key}" title="Turn this layer on or off"></button>
+        <div class="grow"><small><i class="layer-mark" style="border-color:${layerColor[key]}"></i>${layer.label} · ${layer.source}</small><b>${layer.name}</b></div>
+        <button data-act="change" data-value="${key}">Change</button>
+        ${key === "ear" ? `<button data-act="remove" title="Take the ear layer off">×</button>` : ""}
+      </div>`);
+    const add = model.layers.ear ? "" : `<button class="wide-button" data-act="addEar">Add your ear tuning on top</button>`;
+    return rows.join("") + add;
+  };
+  mount(host, model, draw, {
+    toggle: (key) => { model.layers[key].on = !model.layers[key].on; },
+    change: (key) => onChange(key),
+    addEar: () => onChange("ear"),
+    remove: () => {
+      delete model.layers.ear;
+      model.bands = model.bands.filter((band) => band.layer !== "ear");
+      model.selected = -1;
+    },
+  });
+}
+
+{
+  const model = makeModel(headphoneBands, "AKG N700NC M2");
+  const showTab = mountTabs("e-tabs", model);
+  mountHeader(byId("e-head"), model);
+  mountProfile(byId("e-sound"), model, () => {});
+  byId("e-text").value = earText;
+  makeGraph(byId("e-graph"), model, { height: 210, tallHeight: 420, showNodes: true, regions: true, interactive: true });
+  mountChips(byId("e-chips"), model);
+  mountInspector(byId("e-inspector"), model, false);
+  const merge = (isAdding) => {
+    const bands = parseAutoEqText(byId("e-text").value);
+    model.bands = isAdding ? [...model.bands, ...bands] : bands;
+    model.profile = isAdding ? "AKG N700NC M2 + Ear test" : "Ear test";
+    model.selected = -1;
+    showTab("tune");
+  };
+  byId("e-add").addEventListener("click", () => merge(true));
+  byId("e-replace").addEventListener("click", () => merge(false));
+}
+
+{
+  const model = makeModel(headphoneBands.map((band) => ({ ...band, layer: "headphone" })), "AKG N700NC M2");
+  model.bands.push(...parseAutoEqText(earText, "ear"));
+  model.layers = {
+    headphone: { label: "Headphone", source: "AutoEQ", name: "AKG N700NC M2", on: true },
+    ear: { label: "My ear", source: "eqbyear", name: "Ear test, 12 Oct", on: true },
+  };
+  let target = "ear";
+  const showTab = mountTabs("f-tabs", model);
+  const drawTarget = () => {
+    const choices = [["headphone", "Headphone"], ["ear", "My ear"]].map(([key, label]) => `<button class="${key === target ? "on" : ""}" data-target="${key}">${label}</button>`);
+    byId("f-target").innerHTML = `<span>Put into</span>${choices.join("")}`;
+  };
+  byId("f-target").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-target]");
+    if (!button) return;
+    target = button.dataset.target;
+    drawTarget();
+  });
+  mountHeader(byId("f-head"), model);
+  mountLayers(byId("f-layers"), model, (key) => {
+    target = key;
+    drawTarget();
+    showTab("library");
+  });
+  makeGraph(byId("f-listen-graph"), model, { height: 210, tallHeight: 420, showNodes: false, regions: true, interactive: false, layerCurves: true });
+  mountMacros(byId("f-macros"), model, "preamp");
+  const graph = makeGraph(byId("f-graph"), model, { height: 210, tallHeight: 420, showNodes: true, regions: true, interactive: true, layerCurves: true });
+  mountZoom(byId("f-zoom"), graph, model, true);
+  mountChips(byId("f-chips"), model);
+  mountInspector(byId("f-inspector"), model, false);
+  byId("f-text").value = earText;
+  drawTarget();
+  byId("f-apply").addEventListener("click", () => {
+    const bands = parseAutoEqText(byId("f-text").value, target);
+    const order = { headphone: 0, ear: 1 };
+    model.bands = [...model.bands.filter((band) => band.layer !== target), ...bands].sort((first, second) => order[first.layer] - order[second.layer]);
+    const name = target === "ear" ? "Pasted ear tuning" : "Pasted headphone";
+    model.layers[target] = { label: target === "ear" ? "My ear" : "Headphone", source: "Pasted", name, on: true };
+    model.selected = -1;
+    showTab("listen");
+  });
 }
 
 setInterval(() => {

@@ -3,28 +3,250 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>goui UX proposals</title>
+    <title>goui design</title>
     <link rel="stylesheet" href="ux-proposals.css" />
   </head>
   <body>
     <main>
       <header class="intro">
-        <h1>goui UX proposals</h1>
+        <h1>goui design</h1>
         <p>
-          Four ways to make the panel easy for a newcomer and still complete for an expert. Every
-          mock is live. Drag the points, pull the side handles, hold A/B and search the library. The
-          spectrum is fake. The curve uses the real RBJ cookbook math.
+          Design C is built. The first section shows it as it ships, with the changes made after the
+          proposal. The second section proposes Combine, the next feature. The first four proposals
+          stay at the bottom as a record. Every mock is live. The spectrum is fake. The curve uses the
+          real RBJ cookbook math.
         </p>
-        <ul class="rules">
-          <li><b>Narrow first.</b> Each mock is 360 px wide, the width of your side panel.</li>
-          <li><b>Grows to full.</b> Each design says how it opens up on a wider panel.</li>
-          <li><b>One place per job.</b> AutoEQ, presets and JSON move into one Library.</li>
-          <li><b>Q from the graph.</b> A selected peak shows two side handles. Pull them apart for a wider band.</li>
-          <li><b>Help for a narrow graph.</b> Zoom to Lows, Mids or Highs. Hold Shift for fine moves. A point moves from where you grab it, so it never jumps under the pointer.</li>
-          <li><b>More legend.</b> Region names, dB and Hz labels, numbered points, a band width marker and a hover readout.</li>
-        </ul>
       </header>
 
+      <section class="design recommended">
+        <div class="design-head">
+          <span class="letter">C</span>
+          <div>
+            <h2>Three tabs <span class="badge">Built</span></h2>
+            <p class="pitch">Listen for everyday use, Tune for the graph, Library for everything you keep. This is the panel as it ships today.</p>
+          </div>
+        </div>
+        <div class="design-body">
+          <div class="frame">
+            <div id="c-head"></div>
+            <div class="tabs" id="c-tabs">
+              <button data-tab="listen" class="on">Listen</button>
+              <button data-tab="tune">Tune</button>
+              <button data-tab="library">Library</button>
+            </div>
+            <div class="pane" data-pane="listen">
+              <div class="card" id="c-profile"></div>
+              <div class="card"><div id="c-listen-graph"></div></div>
+              <div class="card" id="c-macros"></div>
+            </div>
+            <div class="pane" data-pane="tune" hidden>
+              <div id="c-zoom"></div>
+              <div class="card">
+                <div id="c-graph"></div>
+                <div class="legend-host"></div>
+              </div>
+              <div id="c-chips"></div>
+              <div class="card" id="c-inspector"></div>
+              <details class="card">
+                <summary>Number table</summary>
+                <div id="c-table"></div>
+              </details>
+            </div>
+            <div class="pane" data-pane="library" hidden>
+              <div class="card" id="c-library"></div>
+            </div>
+          </div>
+          <div class="notes">
+            <h3>Changed after the proposal</h3>
+            <ul>
+              <li><b>Sound card.</b> The whole card opens the Library. It shows the kind of sound above the name, and says "edited" once you change anything.</li>
+              <li><b>Search.</b> The search box lives in the Library only. A pick from a typed search empties the box and returns to Listen.</li>
+              <li><b>Listen graph.</b> Same size as the Tune graph, with the region names and no points. It follows the Tune zoom and Tall.</li>
+              <li><b>Preamp.</b> Auto follows the largest boost, so the sound never clips. Moving the slider sets it by hand. The light by the level turns red when the EQ can clip.</li>
+              <li><b>Save.</b> The name of the current sound is filled in. When that name exists, the button reads Update and writes over it.</li>
+              <li><b>Library actions.</b> Save, Import, Paste and Export each open their own row under the list.</li>
+              <li><b>Inspector.</b> Five type buttons, with the rare types behind More. Each stepper shows its value with a label under it.</li>
+              <li><b>Graph points.</b> A press only selects a point. It moves once you drag it 5 px. Q has one range, 0.1 to 18, on the graph and in the inspector.</li>
+              <li><b>Spectrum.</b> The horizontal view fills up from a floor 100 dB below full scale. Tall mirrors it around 0 dB, with the 3 dB per octave slope.</li>
+              <li><b>Header.</b> Start and Stop for the capture, the tab title, and the level with the clip light.</li>
+              <li><b>Number table.</b> Each band number is in its type color. The chip row scrolls sideways with no scrollbar.</li>
+            </ul>
+          </div></div>
+        </div>
+      </section>
+
+      <section class="text-section combine-intro">
+        <h2>Combine: AutoEQ for neutral, eqbyear for your ear</h2>
+        <p>
+          The goal is two steps. AutoEQ gives a neutral baseline for your headphones. An eqbyear test
+          then tunes that baseline to your own hearing. Combine puts both into the sound you hear.
+        </p>
+        <h3>The math is exact</h3>
+        <ul>
+          <li>Bands in a chain multiply. In dB they add. Putting the eqbyear bands after the AutoEQ bands gives exactly AutoEQ plus eqbyear. Nothing is fitted or rounded.</li>
+          <li>The order in the chain does not change the sound. It only changes the band numbers.</li>
+          <li>Your sample, a -5 dB peak at 94 Hz and a -3 dB peak at 7,732 Hz, becomes bands 7 and 8 after the six AKG bands.</li>
+          <li>The band count is no concern. Web Audio runs dozens of bands with no trouble.</li>
+        </ul>
+        <h3>The preamp is the one number that does not add</h3>
+        <ul>
+          <li>Each file's preamp only covers its own boosts. Two cuts need no preamp at all. Two boosts at one frequency need more than both preamps together.</li>
+          <li>With Auto on, goui sets the preamp from the combined curve and ignores the preamp line of each file.</li>
+          <li>With Auto off, the preamp starts at the headphone file's value, and the clip light warns you.</li>
+          <li>Export writes one flat AutoEQ file: the headphone bands, then the ear bands, then one preamp for the total.</li>
+        </ul>
+        <h3>Run the eqbyear test with AutoEQ on</h3>
+        <p>
+          The eqbyear result is a correction to whatever you heard during the test. Run the test in a tab
+          that goui captures, with the AutoEQ baseline on. The result is then a correction on top of
+          AutoEQ. A test run with no EQ also measures the headphone's own color. AutoEQ fixes that color
+          too, so combining the two would fix it twice.
+        </p>
+      </section>
+
+      <section class="design">
+        <div class="design-head">
+          <span class="letter">E</span>
+          <div>
+            <h2>Add on top</h2>
+            <p class="pitch">Paste or import a file, then pick Add on top. Its bands join the end of the list you have.</p>
+          </div>
+        </div>
+        <div class="design-body">
+          <div class="frame">
+            <div id="e-head"></div>
+            <div class="tabs" id="e-tabs">
+              <button data-tab="library" class="on">Library</button>
+              <button data-tab="tune">Tune</button>
+            </div>
+            <div class="pane" data-pane="library">
+              <div class="card" id="e-sound"></div>
+              <div class="card">
+                <div class="library-actions">
+                  <button>Save</button><button>Import</button><button class="on">Paste</button><button>Export</button>
+                </div>
+                <textarea id="e-text" spellcheck="false"></textarea>
+                <div class="button-row">
+                  <button id="e-replace">Replace</button>
+                  <button id="e-add" class="primary">Add on top</button>
+                </div>
+                <p class="hint" id="e-hint">Press Add on top. The mock then opens Tune.</p>
+              </div>
+            </div>
+            <div class="pane" data-pane="tune" hidden>
+              <div class="card">
+                <div id="e-graph"></div>
+                <div class="legend-host"></div>
+              </div>
+              <div id="e-chips"></div>
+              <div class="card" id="e-inspector"></div>
+            </div>
+          </div>
+          <div class="notes">
+            <h3>How it works</h3>
+            <ul>
+              <li><b>For</b> one quick merge, with nothing new to learn.</li>
+              <li><b>Paste and Import</b> show two buttons: Replace, as today, and Add on top.</li>
+              <li><b>Library picks</b> get a small + next to each result, for the same Add on top.</li>
+              <li><b>After the merge</b> the sound is one list of bands. The card reads "AKG N700NC M2 + Ear test, edited".</li>
+              <li><b>Save</b> keeps the merged list as one saved sound.</li>
+              <li><b>Cost.</b> The ear part has no switch of its own, so you cannot hear AutoEQ alone for a compare. A new headphone replaces both parts. To get your ear tuning back, you add the file again.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="design recommended">
+        <div class="design-head">
+          <span class="letter">F</span>
+          <div>
+            <h2>Layers <span class="badge">Chosen</span></h2>
+            <p class="pitch">The sound is a headphone layer and an ear layer, each with its own switch. The sliders apply on top of both. This is the design we build next.</p>
+          </div>
+        </div>
+        <div class="design-body">
+          <div class="frame">
+            <div id="f-head"></div>
+            <div class="tabs" id="f-tabs">
+              <button data-tab="listen" class="on">Listen</button>
+              <button data-tab="tune">Tune</button>
+              <button data-tab="library">Library</button>
+            </div>
+            <div class="pane" data-pane="listen">
+              <div class="card" id="f-layers"></div>
+              <div class="card">
+                <div id="f-listen-graph"></div>
+                <div class="legend-host" data-layers></div>
+              </div>
+              <div class="card" id="f-macros"></div>
+            </div>
+            <div class="pane" data-pane="tune" hidden>
+              <div id="f-zoom"></div>
+              <div class="card">
+                <div id="f-graph"></div>
+                <div class="legend-host" data-layers></div>
+              </div>
+              <div id="f-chips"></div>
+              <div class="card" id="f-inspector"></div>
+            </div>
+            <div class="pane" data-pane="library" hidden>
+              <div class="card">
+                <div class="library-actions">
+                  <button>Save</button><button>Import</button><button class="on">Paste</button><button>Export</button>
+                </div>
+                <div class="target" id="f-target"></div>
+                <textarea id="f-text" spellcheck="false"></textarea>
+                <div class="button-row"><button id="f-apply" class="primary">Apply</button></div>
+                <p class="hint">A pick from the search goes into the layer chosen above. A headphone pick goes into the headphone layer unless you choose My ear.</p>
+              </div>
+            </div>
+          </div>
+          <div class="notes">
+            <h3>How it works</h3>
+            <ul>
+              <li><b>For</b> your workflow: AutoEQ for a neutral base, eqbyear for your ear on top.</li>
+              <li><b>Listen</b> shows one row per layer. Each row has a switch, the source and the name, and Change. Turn My ear off to hear the AutoEQ baseline alone.</li>
+              <li><b>No ear layer yet?</b> The card shows "Add your ear tuning on top". It opens the Library with My ear chosen.</li>
+              <li><b>A new headphone</b> changes the headphone layer only. Your ear layer stays.</li>
+              <li><b>Tune</b> shows every band. Ear bands have a gold ring and come after a "My ear" label in the chip row. The graph draws each layer's own curve dashed, and the total solid.</li>
+              <li><b>Library.</b> Paste and Import ask which layer the file is for.</li>
+              <li><b>Save</b> keeps both layers. <b>Export</b> writes one flat AutoEQ file for other apps.</li>
+              <li><b>Cost.</b> One new idea to learn, the layer. The stored config gets a layer per band, so older configs need a read path.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="text-section">
+        <h2>Combine side by side</h2>
+        <table class="compare">
+          <thead><tr><th></th><th>E. Add on top</th><th>F. Layers</th></tr></thead>
+          <tbody>
+            <tr><td>Steps to combine</td><td>Paste, Add on top</td><td>Add your ear tuning, paste, Apply</td></tr>
+            <tr><td>Hear AutoEQ alone</td><td>No</td><td>Switch the ear layer off</td></tr>
+            <tr><td>New headphone keeps your ear</td><td>No</td><td>Yes</td></tr>
+            <tr><td>Edit an ear band</td><td>Yes, as a normal band</td><td>Yes, marked with its layer</td></tr>
+            <tr><td>Export for other apps</td><td>One flat file</td><td>One flat file</td></tr>
+            <tr><td>Build size</td><td>Small</td><td>Medium</td></tr>
+          </tbody>
+        </table>
+        <h2>Decision</h2>
+        <p>
+          F. Your goal is two separate steps, and F keeps them separate. AutoEQ alone compares against
+          AutoEQ plus your ear with one switch, and another headphone keeps your ear tuning.
+        </p>
+        <h2>Questions for you</h2>
+        <ol>
+          <li>E or F?</li>
+          <li>On a new headphone, should the ear layer stay, or clear? An eqbyear result is partly tied to the headphone you tested with.</li>
+          <li>Should ear bands be editable in Tune, or locked as the file says?</li>
+          <li>Only two layers, headphone and ear, plus the sliders? Or any number of layers?</li>
+          <li>Should goui help start the eqbyear test, for example a button that opens eqbyear in a tab with the ear layer off?</li>
+        </ol>
+      </section>
+
+      <details class="earlier">
+        <summary>Earlier proposals, not built</summary>
       <section class="design">
         <div class="design-head">
           <span class="letter">A</span>
@@ -105,59 +327,6 @@
               <li><b>One place.</b> Library opens as a sheet with search, save, import, paste and export. The rows of five boxes become chips plus one inspector. The full table is one tap away.</li>
               <li><b>Grows to.</b> The graph, the inspector and the table side by side.</li>
               <li><b>Cost.</b> A newcomer still meets a graph first.</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section class="design recommended">
-        <div class="design-head">
-          <span class="letter">C</span>
-          <div>
-            <h2>Three tabs <span class="badge">Recommended</span></h2>
-            <p class="pitch">Listen for everyday use, Tune for the graph, Library for everything you keep.</p>
-          </div>
-        </div>
-        <div class="design-body">
-          <div class="frame">
-            <div id="c-head"></div>
-            <div class="tabs" id="c-tabs">
-              <button data-tab="listen" class="on">Listen</button>
-              <button data-tab="tune">Tune</button>
-              <button data-tab="library">Library</button>
-            </div>
-            <div class="pane" data-pane="listen">
-              <div class="card" id="c-profile"></div>
-              <div class="card"><div id="c-listen-graph"></div></div>
-              <div class="card" id="c-macros"></div>
-            </div>
-            <div class="pane" data-pane="tune" hidden>
-              <div id="c-zoom"></div>
-              <div class="card">
-                <div id="c-graph"></div>
-                <div class="legend-host"></div>
-              </div>
-              <div id="c-chips"></div>
-              <div class="card" id="c-inspector"></div>
-              <details class="card">
-                <summary>Number table</summary>
-                <div id="c-table"></div>
-              </details>
-            </div>
-            <div class="pane" data-pane="library" hidden>
-              <div class="card" id="c-library"></div>
-            </div>
-          </div>
-          <div class="notes">
-            <h3>How it works</h3>
-            <ul>
-              <li><b>For</b> both. Listen is design A. Tune is design B. Library holds everything you keep.</li>
-              <li><b>First screen.</b> Listen, with the sound, a small curve and three sliders.</li>
-              <li><b>Q on the graph.</b> The same as design B, in the Tune tab.</li>
-              <li><b>Narrow width.</b> Each tab gets the full panel height. Tune has the zoom pills and the Tall option.</li>
-              <li><b>One place.</b> Library replaces the AutoEQ box, the Presets box and the JSON box. A/B and the EQ switch stay in the header on every tab.</li>
-              <li><b>Grows to.</b> The three tabs become three columns. See the wide preview below.</li>
-              <li><b>Cost.</b> One more tap to reach the graph. A tab hides what the other tabs hold.</li>
             </ul>
           </div>
         </div>
@@ -283,6 +452,8 @@
           <li>Should the sliders be normal bands you can see in Tune, or stay a separate layer?</li>
         </ol>
       </section>
+
+      </details>
     </main>
     <script src="ux-proposals.js"></script>
   </body>
