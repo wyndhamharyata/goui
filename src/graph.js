@@ -326,6 +326,14 @@ export function makeGraph(host, options, hooks) {
         return;
       }
       const band = hooks.bands()[graph.drag.index];
+      // A press only selects. The point moves once the pointer has gone 5 px, counted from there.
+      if (!graph.drag.isMoving) {
+        const deadZonePx = 5;
+        if (Math.hypot(point.x - graph.drag.startX, point.y - graph.drag.startY) < deadZonePx) return;
+        graph.drag.isMoving = true;
+        graph.drag.startX = point.x;
+        graph.drag.startY = point.y;
+      }
       if (graph.drag.kind === "move") moveBand(band, point, event.shiftKey);
       else widenBand(band, point);
       hooks.changed();

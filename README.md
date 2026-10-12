@@ -29,7 +29,8 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 
 **Tune**
 
-- Drag a point to change that band's frequency and gain. Hold Shift for fine steps.
+- Drag a point to change that band's frequency and gain. A press alone only selects it. The point
+  moves once you drag it 5 px. Hold Shift for fine steps.
 - On a selected peak, pull the square side handles apart for a wider band, or scroll on the point.
 - Double click empty space to make a new band.
 - All, Lows, Mids and Highs zoom the graph. **Tall** turns it, with low notes at the top.
@@ -40,7 +41,10 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 - Type your headphone model to search the AutoEQ headphones. A pick clears the search and takes you
   back to Listen.
 - With the box empty, the list shows your saved sounds and a few starter sounds.
-- **Save** keeps the sound you hear under a name, sliders and preamp included.
+- Every edit is kept as the sound you use, and the card on Listen then says "edited". A saved
+  sound only changes when you save it again.
+- **Save** keeps the sound you hear under a name, sliders and preamp included. The name of the
+  current sound is filled in. When that name exists, the button reads **Update** and writes over it.
 - **Import** loads a `ParametricEQ.txt` or JSON file. **Paste** takes the same text.
 - **Export** writes the sound you hear as AutoEQ text or JSON, for use in other apps.
 

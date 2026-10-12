@@ -45,6 +45,7 @@ export function defaultConfig() {
     limiter: false,
     profileName: "Flat",
     profileKind: "Starter sound",
+    isEdited: false,
     macros: { bassDb: 0, vocalsDb: 0, trebleDb: 0 },
     bands: [],
   };
@@ -76,6 +77,7 @@ export function sanitizeConfig(raw) {
     limiter: !!raw.limiter,
     profileName: typeof raw.profileName === "string" ? raw.profileName : "Custom",
     profileKind: typeof raw.profileKind === "string" ? raw.profileKind : "Your sound",
+    isEdited: raw.isEdited === true,
     macros: { bassDb: macroDb(macros.bassDb), vocalsDb: macroDb(macros.vocalsDb), trebleDb: macroDb(macros.trebleDb) },
     bands: Array.isArray(raw.bands) ? raw.bands.map(cleanBand) : [],
   };

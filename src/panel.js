@@ -70,11 +70,11 @@ const graphHooks = {
     selected = index;
     refresh();
   },
-  changed: () => commit(),
+  changed: () => commitEdit(),
   addBand: (frequencyHz, gainDb) => {
     config.bands.push({ ...newBand(frequencyHz), gainDb });
     selected = config.bands.length - 1;
-    commit();
+    commitEdit();
   },
 };
 
@@ -99,6 +99,12 @@ function commit() {
   refresh();
 }
 
+// A change to the sound itself. The card then says the sound differs from the one you picked.
+function commitEdit() {
+  config.isEdited = true;
+  commit();
+}
+
 function refresh() {
   listenGraph.render();
   tuneGraph.render();
@@ -117,7 +123,7 @@ function setField(id, value) {
 function renderSound() {
   const engine = engineConfig(config, offlineContext);
   byId("profileName").textContent = config.profileName;
-  byId("profileKind").textContent = config.profileKind;
+  byId("profileKind").textContent = config.isEdited ? `${config.profileKind}, edited` : config.profileKind;
   byId("enabled").checked = config.enabled;
 
   for (const name of ["bass", "vocals", "treble"]) {
@@ -205,8 +211,16 @@ function renderTable() {
     const row = document.createElement("tr");
     row.dataset.index = index;
     row.classList.toggle("on", index === selected);
+    const number = document.createElement("span");
+    number.className = "number";
+    number.style.color = typeColor[band.type];
+    number.textContent = index + 1;
+    const name = document.createElement("td");
+    name.append(number, typeLabels[band.type]);
+    row.append(name);
+
     const gain = hasGain(band.type) ? signedDb(band.gainDb) : "";
-    for (const value of [`${index + 1}. ${typeLabels[band.type]}`, Math.round(band.frequencyHz), gain, band.q.toFixed(2)]) {
+    for (const value of [Math.round(band.frequencyHz), gain, band.q.toFixed(2)]) {
       const cell = document.createElement("td");
       cell.textContent = value;
       row.append(cell);
@@ -238,6 +252,7 @@ function markCurrent() {
 function applyProfile(name, kind, bands, preampDb) {
   config.profileName = name;
   config.profileKind = kind;
+  config.isEdited = false;
   config.bands = sanitizeConfig({ bands }).bands;
   if (preampDb !== undefined) config.preampDb = preampDb;
   selected = -1;
@@ -248,7 +263,7 @@ function applyProfile(name, kind, bands, preampDb) {
 
 // A saved sound keeps everything, the sliders and the preamp too. Only the EQ switch stays as it is.
 function loadPreset(name) {
-  config = { ...sanitizeConfig(presets[name]), enabled: config.enabled, profileName: name, profileKind: "Saved" };
+  config = { ...sanitizeConfig(presets[name]), enabled: config.enabled, profileName: name, profileKind: "Saved", isEdited: false };
   selected = -1;
   solo = -1;
   commit();
@@ -267,15 +282,16 @@ function savePreset() {
     byId("libraryHint").textContent = "Give the sound a name first.";
     return;
   }
+  const isUpdate = Boolean(presets[name]);
   config.profileName = name;
   config.profileKind = "Saved";
+  config.isEdited = false;
   presets[name] = structuredClone(config);
   chrome.storage.local.set({ presets });
   commit();
   searchLibrary();
   openLibraryAction("");
-  byId("saveName").value = "";
-  byId("libraryHint").textContent = `Saved ${name}.`;
+  byId("libraryHint").textContent = `${isUpdate ? "Updated" : "Saved"} ${name}.`;
 }
 
 function parseAutoEqIndex(text) {
@@ -423,6 +439,12 @@ function exportAutoEq() {
   byId("libraryHint").textContent = "The sound you hear, as AutoEQ text. Copy it out.";
 }
 
+// The name of a saved sound is filled in, so Save writes the edit back to it.
+function renderSaveButton() {
+  const name = byId("saveName").value.trim();
+  byId("saveButton").textContent = presets[name] ? "Update" : "Save";
+}
+
 // Each Library button opens its own row under the list. A second press closes it.
 function openLibraryAction(action) {
   openAction = openAction === action ? "" : action;
@@ -433,7 +455,11 @@ function openLibraryAction(action) {
   for (const button of byId("libraryActions").children) button.classList.toggle("on", button.dataset.action === openAction);
   byId("libraryHint").textContent = "";
 
-  if (openAction === "save") byId("saveName").focus();
+  if (openAction === "save") {
+    byId("saveName").value = config.profileName;
+    renderSaveButton();
+    byId("saveName").focus();
+  }
   if (openAction === "export") exportAutoEq();
   if (openAction === "paste") {
     byId("libraryText").value = "";
@@ -522,14 +548,14 @@ byId("macros").addEventListener("input", (event) => {
   } else {
     config.macros[`${event.target.id}Db`] = value;
   }
-  commit();
+  commitEdit();
 });
 
 // Turning Auto off keeps the value Auto had, so the sound does not jump.
 byId("autoPreamp").addEventListener("click", () => {
   if (config.autoPreamp) config.preampDb = engineConfig(config, offlineContext).preampDb;
   config.autoPreamp = !config.autoPreamp;
-  commit();
+  commitEdit();
 });
 
 byId("zoom").addEventListener("click", (event) => {
@@ -550,11 +576,18 @@ byId("chips").addEventListener("click", (event) => {
   if (chip.dataset.index === "add") {
     config.bands.push(newBand(1000));
     selected = config.bands.length - 1;
-    commit();
+    commitEdit();
     return;
   }
   graphHooks.select(Number(chip.dataset.index));
 });
+
+byId("chips").addEventListener("wheel", (event) => {
+  const isUpDown = Math.abs(event.deltaY) > Math.abs(event.deltaX);
+  if (!isUpDown) return;
+  event.preventDefault();
+  byId("chips").scrollLeft += event.deltaY;
+}, { passive: false });
 
 byId("table").addEventListener("click", (event) => {
   const row = event.target.closest("[data-index]");
@@ -565,14 +598,14 @@ byId("inspector").addEventListener("click", (event) => {
   const button = event.target.closest("[data-step]");
   if (!button) return;
   steps[button.dataset.step](config.bands[selected], Number(button.dataset.direction));
-  commit();
+  commitEdit();
 });
 
 byId("inspector").addEventListener("input", (event) => {
   const edit = fieldEdits[event.target.id];
   if (!edit) return;
   edit(config.bands[selected], Number(event.target.value.replace(",", ".")));
-  commit();
+  commitEdit();
 });
 
 byId("bandSegments").addEventListener("click", (event) => {
@@ -584,17 +617,17 @@ byId("bandSegments").addEventListener("click", (event) => {
     return;
   }
   config.bands[selected].type = button.dataset.type;
-  commit();
+  commitEdit();
 });
 
 byId("bandType").addEventListener("change", (event) => {
   config.bands[selected].type = event.target.value;
-  commit();
+  commitEdit();
 });
 
 byId("bandOn").addEventListener("click", () => {
   config.bands[selected].on = !config.bands[selected].on;
-  commit();
+  commitEdit();
 });
 
 byId("bandSolo").addEventListener("click", () => {
@@ -606,7 +639,7 @@ byId("bandDelete").addEventListener("click", () => {
   config.bands.splice(selected, 1);
   selected = -1;
   solo = -1;
-  commit();
+  commitEdit();
 });
 
 let searchTimer = 0;
@@ -623,6 +656,7 @@ byId("libraryActions").addEventListener("click", (event) => {
 });
 
 byId("saveButton").addEventListener("click", savePreset);
+byId("saveName").addEventListener("input", renderSaveButton);
 byId("applyText").addEventListener("click", () => applyText("Pasted AutoEQ", "Pasted"));
 byId("exportAutoEq").addEventListener("click", exportAutoEq);
 byId("exportJson").addEventListener("click", () => {

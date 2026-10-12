@@ -206,3 +206,60 @@ journey("given Vocals at +6 dB, a 2.5 kHz tone plays 6 dB louder and stays so on
   expect(afterSwitch - flat).toBeGreaterThan(5.4);
   expect(afterSwitch - flat).toBeLessThan(6.6);
 });
+
+journey("given a saved sound you then edit, the card says edited and Update keeps the edit", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  await panel.click("#autoPreamp");
+  const flat = await steadyLevel(panel);
+
+  await panel.click("#tabs [data-tab=library]");
+  await panel.click("#libraryActions [data-action=paste]");
+  await panel.fill("#libraryText", peakText);
+  await panel.click("#applyText");
+  await panel.click("#libraryActions [data-action=save]");
+  await panel.fill("#saveName", "voice");
+  await panel.click("#saveButton");
+
+  await panel.click("#tabs [data-tab=tune]");
+  await panel.click("#chips [data-index='0']");
+  await panel.fill("#gainInput", "0");
+  await expect(panel.locator("#profileKind")).toHaveText("Saved, edited");
+
+  await panel.click("#tabs [data-tab=library]");
+  await panel.click("#libraryActions [data-action=save]");
+  await expect(panel.locator("#saveName")).toHaveValue("voice");
+  await expect(panel.locator("#saveButton")).toHaveText("Update");
+  await panel.click("#saveButton");
+  await expect(panel.locator("#profileKind")).toHaveText("Saved");
+
+  await panel.locator("#libraryResults .item", { hasText: "Clear vocals" }).click();
+  await panel.locator("#libraryResults .item", { hasText: "voice" }).click();
+  const reloaded = await steadyLevel(panel);
+  expect(Math.abs(reloaded - flat)).toBeLessThan(0.6);
+});
+
+journey("given a press on a point that wobbles 3 px, the band stays put, and a 40 px drag moves it", async (context) => {
+  const panel = await context.newPage();
+  await panel.goto(`chrome-extension://${extensionId}/src/panel.html`);
+  await panel.click("#tabs [data-tab=library]");
+  await panel.click("#libraryActions [data-action=paste]");
+  await panel.fill("#libraryText", peakText);
+  await panel.click("#applyText");
+  await panel.click("#tabs [data-tab=tune]");
+
+  const point = await panel.locator("#tuneGraph circle[r='7']").first().boundingBox();
+  const centerX = point.x + (point.width / 2);
+  const centerY = point.y + (point.height / 2);
+  await panel.mouse.move(centerX, centerY);
+  await panel.mouse.down();
+  await panel.mouse.move(centerX + 3, centerY, { steps: 3 });
+  await panel.mouse.up();
+  await expect(panel.locator("#frequencyInput")).toHaveValue("1000");
+  await expect(panel.locator("#gainInput")).toHaveValue("+6.0");
+
+  await panel.mouse.move(centerX, centerY);
+  await panel.mouse.down();
+  await panel.mouse.move(centerX + 40, centerY, { steps: 8 });
+  await panel.mouse.up();
+  await expect(panel.locator("#frequencyInput")).not.toHaveValue("1000");
+});
