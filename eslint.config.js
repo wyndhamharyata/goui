@@ -101,6 +101,14 @@ export default [
     },
   },
   {
+    // The store script drives the extension in a browser, so its evaluate callbacks name chrome
+    // and document.
+    files: ["scripts/make-store-images.mjs"],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser, ...globals.webextensions },
+    },
+  },
+  {
     files: ["src/**/*.js"],
     languageOptions: {
       sourceType: "module",
