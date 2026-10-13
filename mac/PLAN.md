@@ -1,7 +1,8 @@
 # goui for macOS, plan
 
 An experiment. goui EQs one browser tab. The Mac app would EQ every sound the Mac plays, with the
-same bands, the same AutoEQ search and the same targets. One JavaScript core serves both.
+same bands, the same AutoEQ search and the same targets. The extension and the app share the EQ
+code and the panel itself.
 
 Only the newest macOS is in scope. Spatial Audio, head tracking and other features of Apple
 headphones are out of scope.
@@ -10,102 +11,104 @@ headphones are out of scope.
 
 | App | How it takes the sound | Install |
 | --- | --- | --- |
-| eqMac | Its own virtual output device, a HAL plug-in based on Apple's Null Audio Server sample. The app reads that device and plays the result to the real one. | Admin password, coreaudiod restart |
+| eqMac | Its own virtual output device, a HAL plug-in based on Apple's Null Audio Server sample. The app reads that device and plays the result to the real one. Its UI is a web page. | Admin password, coreaudiod restart |
 | Background Music | The same idea, open source. Its playthrough code is the best reference for clock drift. | Admin password |
 | SoundSource | Rogue Amoeba's ARK plugin since September 2024. Their notes say it sets up in seconds with no restart. They do not say what it runs on. | Seconds |
 | Core Audio taps | Apple's own API since macOS 14.2. A tap takes the output of some or all processes and can mute the original. | A permission prompt |
 
-goui uses Core Audio taps. No driver, no restart, no admin password. When the app quits or crashes,
-its tap goes away and the Mac plays sound the normal way again. A virtual device would leave the
-Mac silent instead.
+goui uses Core Audio taps. `engine/` proves the path works. Its README lists what was checked.
 
-## The audio path
+## The app
 
-1. Create a tap of every process except the app itself, with `muteBehavior` set to mute the
-   original. The app taps itself out, or it would hear its own output.
-2. Create a private aggregate device that holds the tap as input and the real output device.
-   Turn on drift correction for the tap.
-3. An IOProc on the aggregate device reads the tap, runs the preamp and the biquads, and writes to
-   the output.
-4. When the default output or its sample rate changes, build the aggregate device again and fade
-   in.
+One Swift app with no Dock icon. It has three parts.
 
-The prompt is "System Audio Recording Only". It needs `NSAudioCaptureUsageDescription` in the
-Info.plist. macOS gives the permission to the app bundle. A bare binary run from a terminal asks
-for the terminal instead.
-
-## What runs where
-
-JavaScript never runs on the audio thread. A garbage collection pause there is a click.
-
-| Part | Language | Job |
+| Part | Built with | Job |
 | --- | --- | --- |
-| Core | JavaScript, in `src/shared/` | Config, AutoEQ files, targets, the fit, the auto preamp, biquad coefficients |
-| Engine | Native, a C interface | Tap, aggregate device, IOProc, the biquad loop, device changes |
-| App | Bun and gpuix | The window, storage, the AutoEQ search, the bridge to the engine |
+| Menu bar icon and panel | AppKit | An icon at the top of the screen. A click drops a floating panel under it. |
+| The panel | The extension's own `src/panel.html` in a `WKWebView` | Everything you see and edit, the same files as the extension |
+| Engine | Swift with a C callback, from `engine/` | Tap, aggregate device, biquads, device and rate changes |
 
-The core hands the engine finished numbers: the preamp and one `b0 b1 b2 a1 a2` row per band, for
-the sample rate the engine reports. The formulas live in one place. The engine only multiplies.
-The engine swaps to a new chain without a lock and crossfades for about 20 ms, so a change does
-not click.
+The audio does not depend on the panel. The engine keeps playing with the panel closed, and the web
+view can be thrown away to save memory.
 
-The extension keeps loading `src/` with no build step. The app imports the same files from
-`../src/shared/`. Nothing under `mac/` goes into the extension zip.
+### The floating panel
+
+An `NSStatusItem` holds the icon. A click opens an `NSPanel` right under it, about 400 px wide,
+the size of the extension's popup layout. A click anywhere else closes it. A pin keeps it open and
+floating above other windows while you play music in another app.
+
+Things to get right:
+
+- The panel must take key presses without taking focus from the app you were in. That needs a
+  non-activating panel that can still become the key window, or the AutoEQ search field ignores
+  typing.
+- It opens on the screen that holds the menu bar you clicked, and over full screen apps.
+- The app runs as an accessory, with `LSUIElement` set, so it has no Dock icon and no app menu.
+
+### The panel as a web page
+
+The extension loads `src/` with no build step. The app serves the same folder to the web view
+under a custom scheme such as `goui://app/src/panel.html`. A `file://` page cannot load ES
+modules, so the custom scheme is needed. In development it serves the repo's `src/`, so a change
+shows in both at once.
+
+WebKit has Web Audio. `responseDb` and the graph work as they are, with the same
+`OfflineAudioContext`. The earlier step that rewrote the core without Web Audio is no longer
+needed.
+
+The panel calls six Chrome APIs in 18 places. The app gives the page a small `chrome` object at
+load, before the panel's own code runs.
+
+| Chrome API | In the app |
+| --- | --- |
+| `chrome.storage.local` and `session` | A JSON file in Application Support, through a message to Swift |
+| `chrome.runtime.sendMessage` | A message to Swift. The engine takes the bands and the preamp. |
+| `chrome.runtime.onMessage` | Swift calls into the page, for the capture state and the level |
+| `chrome.runtime.getURL` | A `goui://` address |
+| `chrome.tabs.create` | Opens the link in the default browser |
+
+The panel needs a Mac mode for its words and a few controls. Tab words such as "the tab goui
+hears" become "your Mac". The power pill from the popup turns the engine on and off. The intro
+about the toolbar icon does not apply.
+
+### Bands to sound
+
+The page sends the bands and the preamp, as it sends them to the offscreen document today. Web
+Audio does not give out its filter numbers, so the engine works them out in C from the formulas
+in the Web Audio spec. Its shelves take no Q, and its LP and HP read Q in dB. A check in the app
+can compare the C response with WebKit's `getFrequencyResponse` for the same bands. The engine
+swaps to the new numbers without a lock and fades across about 20 ms.
+
+## Options set aside
+
+| Option | Why not |
+| --- | --- |
+| gpuix | It draws natively with no web view, so the panel would be written twice. |
+| Electron | It bundles Chromium, about 150 MB, for a menu bar app. The engine would need a Node addon. |
+| Tauri | It uses the same `WKWebView` on the Mac, with Rust in between. The engine is Swift already. |
+| SwiftUI `MenuBarExtra` | A native menu bar window, but the panel would be written twice. |
 
 ## Steps
 
 Each step ends with a commit.
 
-### 1. Engine trial, no UI
-
-A command line tool in `mac/engine/` that plays the Mac through a fixed list of biquad rows read
-from a JSON file. It answers these questions before anything else is built:
-
-- Does the mute stop the original sound in Safari, Chrome and Music? Chrome plays from helper
-  processes.
-- Does an hour of music play with no click, with drift correction on and with it off?
-- What happens when AirPods connect, when an HDMI screen unplugs, and when a call opens the
-  microphone and the headphone drops to 16 or 24 kHz?
-- How much later does the sound arrive than with goui off? Is a video still in sync?
-- Do the volume keys still change the real device?
-- Does the permission prompt work from a signed `.app`?
-
-### 2. A core with no Web Audio
-
-`responseDb` asks an `OfflineAudioContext` for its curve. Bun has none. The Web Audio spec gives
-the exact biquad formulas, including the shelves that take no Q and the LP and HP that read Q in
-dB. Write them in `src/shared/filters.js` as plain math and draw the curve from them. The current
-journeys then check that the curve still matches what Chrome plays. The fit and the auto preamp
-come along unchanged.
-
-### 3. Bridge
-
-Bun loads the engine and plays an AutoEQ file from the command line:
-`bun mac/app/play.js "Sennheiser HD 600 ParametricEQ.txt"`. The core turns the file into rows and
-the engine plays them.
-
-### 4. Window with gpuix
-
-The Listen and Library views first. The graph comes later. The window must not need the audio
-running. The audio must not need the window open.
-
-### 5. Package
-
-An `.app` bundle with the Info.plist key, a Developer ID signature, notarization and launch at
-login. Direct download first. The Mac App Store can come later.
+1. **Menu bar app.** An icon, the floating panel with its pin, and the extension's panel in the web
+   view with the `chrome` object for storage only. The engine runs at a fixed gain.
+2. **Bands to the engine.** The C biquads for every band type, the swap without a click, and the
+   check against WebKit's response. Moving a point in the panel changes the sound of the Mac.
+3. **Mac mode.** The words, the power pill, the capture state and the level meter.
+4. **Package.** An `.app` bundle with `src/` inside, a Developer ID signature, notarization and
+   launch at login.
 
 ## Risks
 
-- gpuix and GPUI are young and change fast. The core and the engine do not import gpuix, so the
-  window can move to another toolkit.
-- The tap API is documented mostly in header comments. Few examples exist beyond Apple's sample
-  and insidegui/AudioCap.
-- The engine language is open. Rust matches GPUI and has CoreAudio bindings through objc2. Whether
-  those cover `CATapDescription` needs a check in step 1. Swift with a C interface works either way.
-- A biquad below 50 Hz loses accuracy in 32-bit floats. The engine keeps its filter state in
-  64-bit floats.
-- The repo rules ask for journeys that end in the sound that comes out. Recording the Mac's output
-  needs a loopback device. How the Mac journeys get one is open.
+- Journeys today start in Chrome with the extension loaded. A Mac journey needs the app, a tone
+  and a way to record what the engine plays. The engine could write what it plays to a file for
+  that, as a real feature for checking a sound. How the Mac journeys run is still open.
+- A `WKWebView` takes about 50 to 80 MB while the panel is open. The app can drop it when the
+  panel closes.
+- A non-activating panel and a web view can disagree about keyboard focus and mouse moves. Step 1
+  checks typing in the search field and hover on the graph.
 
 ## Troubleshooting text for the README
 
@@ -121,5 +124,4 @@ login. Direct download first. The Mac App Store can come later.
 - eqMac README, github.com/bitgapp/eqMac
 - SoundSource release notes, rogueamoeba.com/soundsource/releasenotes.php
 - ARK-SDK, rogueamoeba.com/licensing
-- gpuix, github.com/remorses/gpuix
 - AudioCap, github.com/insidegui/AudioCap
