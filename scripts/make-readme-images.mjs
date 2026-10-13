@@ -50,18 +50,21 @@ function arrow(fromX, toX, y, color = palette.muted) {
     + `<path d="M${toX} ${y} l-6 -3.5 v7 z" fill="${color}"/>`;
 }
 
-// The goui icon, the same tile and bars as scripts/make-icons.mjs draws.
+// The goui icon, the same tile and bars as scripts/make-icons.mjs draws. The artwork is inset by the
+// same amount, so the pictures show the padding the store asks for.
 function icon(x, y, size) {
   const bars = [0.4, 0.62, 0.48, 0.7];
-  const barWidth = size * 0.13;
-  const barGap = size * 0.075;
+  const padding = size * (16 / 128);
+  const artwork = size - (2 * padding);
+  const barWidth = artwork * 0.13;
+  const barGap = artwork * 0.075;
   const totalWidth = (bars.length * barWidth) + ((bars.length - 1) * barGap);
-  const firstBarX = x + ((size - totalWidth) / 2);
-  const baseY = y + (size * 0.76);
-  const tile = rect({ x, y, width: size, height: size, radius: size * 0.22, fill: "url(#tile)" });
+  const firstBarX = x + padding + ((artwork - totalWidth) / 2);
+  const baseY = y + padding + (artwork * 0.76);
+  const tile = rect({ x: x + padding, y: y + padding, width: artwork, height: artwork, radius: artwork * 0.22, fill: "url(#tile)" });
   const drawn = bars.map((height, index) => {
     const left = firstBarX + (index * (barWidth + barGap));
-    const top = baseY - (height * size);
+    const top = baseY - (height * artwork);
     return rect({ x: left, y: top, width: barWidth, height: baseY - top, radius: barWidth / 2, fill: "#ffffff" });
   });
   return tile + drawn.join("");

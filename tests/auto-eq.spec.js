@@ -105,18 +105,20 @@ function findTone(context, toneHz) {
   return context.pages().find((page) => page.url().includes(`?hz=${toneHz}`));
 }
 
-// Playwright cannot press the toolbar icon. The journey fires the icon's own click event with the
-// tab instead, so the same code runs as for a real click.
+// Playwright cannot press the toolbar icon. The journey brings the page to the front and fires the
+// icon's own click event with that tab, so the same code runs as for a real click.
 /**
  * @param {BrowserContext} context
  * @param {Page} page
  */
 async function pressIcon(context, page) {
   const worker = await findWorker(context);
-  await worker.evaluate(async (url) => {
-    const tabs = await chrome.tabs.query({});
-    chrome.action.onClicked.dispatch(tabs.find((tab) => tab.url === url));
-  }, page.url());
+  await page.bringToFront();
+  const details = { url: page.url(), title: await page.title() };
+  await worker.evaluate(async (tabDetails) => {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    chrome.action.onClicked.dispatch({ ...tab, ...tabDetails });
+  }, details);
 }
 
 /**
@@ -126,10 +128,11 @@ async function pressIcon(context, page) {
  */
 async function readBadge(context, page) {
   const worker = await findWorker(context);
-  return worker.evaluate(async (url) => {
-    const tabs = await chrome.tabs.query({});
-    return chrome.action.getBadgeText({ tabId: tabs.find((tab) => tab.url === url).id });
-  }, page.url());
+  await page.bringToFront();
+  return worker.evaluate(async () => {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    return chrome.action.getBadgeText({ tabId: tab.id });
+  });
 }
 
 /**

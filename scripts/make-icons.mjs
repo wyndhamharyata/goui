@@ -69,22 +69,33 @@ function isInsideRoundedRect(x, y, rect) {
 
 const bars = [0.4, 0.62, 0.48, 0.7];
 
+// The store asks for 96 px of artwork inside a 128 px icon, so 16 px stays clear on every side.
+const paddingRatio = 16 / 128;
+
 // The tile carries its own colour and the bars are white, so the icon reads on a light toolbar and
 // on a dark one. A dark tile would disappear on a dark toolbar.
 function sampleColor(x, y, size) {
-  const tile = { left: 0, top: 0, right: size, bottom: size, radius: size * 0.22 };
+  const padding = size * paddingRatio;
+  const artwork = size - (2 * padding);
+  const tile = {
+    left: padding,
+    top: padding,
+    right: size - padding,
+    bottom: size - padding,
+    radius: artwork * 0.22,
+  };
   if (!isInsideRoundedRect(x, y, tile)) return [0, 0, 0, 0];
 
-  const tileColor = mixColor([74, 122, 224], [143, 82, 216], y / size);
-  const barWidth = size * 0.13;
-  const barGap = size * 0.075;
+  const tileColor = mixColor([74, 122, 224], [143, 82, 216], (y - padding) / artwork);
+  const barWidth = artwork * 0.13;
+  const barGap = artwork * 0.075;
   const totalWidth = (bars.length * barWidth) + ((bars.length - 1) * barGap);
-  const firstBarX = (size - totalWidth) / 2;
-  const baseY = size * 0.76;
+  const firstBarX = padding + ((artwork - totalWidth) / 2);
+  const baseY = padding + (artwork * 0.76);
 
   for (let index = 0; index < bars.length; index += 1) {
     const left = firstBarX + (index * (barWidth + barGap));
-    const top = baseY - (bars[index] * size);
+    const top = baseY - (bars[index] * artwork);
     const bar = { left, top, right: left + barWidth, bottom: baseY, radius: barWidth / 2 };
     if (isInsideRoundedRect(x, y, bar)) return [255, 255, 255, 255];
   }
