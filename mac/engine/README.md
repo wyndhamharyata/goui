@@ -34,6 +34,8 @@ On a MacBook Pro with macOS 27.0.1, through its speakers at 48 kHz:
 - Stopped in the middle of playback, the music came straight back at its normal level.
 - Killed with `kill -9` in the middle of playback, the music came back on its own. macOS removes
   the muted tap when the process dies.
+- A Bluetooth headphone connected while it ran took over the sound, still quieter. Turned off, the
+  sound went back to the speakers, still quieter. After a kill, it came back at full level each time.
 
 ## Checks by ear
 
