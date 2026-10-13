@@ -25,12 +25,14 @@ clips.
 goui is in the Chrome Web Store. [Install goui](https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap)
 in one click, and Chrome keeps it up to date.
 
-You can also add it by hand one time, in about two minutes. You download a zip, unzip it, then point
-Chrome at the folder.
+### Add it by hand
+
+To run the files yourself instead, add it by hand one time, in about two minutes. You download a
+zip, unzip it, then point Chrome at the folder.
 
 ![Install goui in four steps: download the zip, load the folder, pin goui, click the icon.](docs/images/install-flow.png)
 
-### 1. Download the zip
+#### 1. Download the zip
 
 ![The Releases page, with the zip and a Download button.](docs/images/install-download.png)
 
@@ -41,7 +43,7 @@ Unzip it after the download. Double clicking the file is enough.
 Keep the unzipped folder where it is. Chrome reads it from there on every start, so a move or a
 delete turns goui off.
 
-### 2. Load the folder in Chrome
+#### 2. Load the folder in Chrome
 
 ![The extensions page with Developer mode on and its Load unpacked button.](docs/images/install-load-unpacked.png)
 
@@ -53,14 +55,14 @@ at the top right. Press **Load unpacked**.
 The button asks for a folder. Pick the goui folder, the one that holds `manifest.json`. A file
 inside it will not load.
 
-### 3. Pin goui
+#### 3. Pin goui
 
 ![Press the pin beside goui in the extensions menu.](docs/images/install-pin.png)
 
 Click the puzzle piece in the toolbar. Press the pin beside goui. The goui icon then stays in the
 toolbar, one click away.
 
-### 4. Start listening
+#### 4. Start listening
 
 ![Click the goui icon on a page with sound. The panel opens and the icon shows a green ON.](docs/images/install-click-icon.png)
 

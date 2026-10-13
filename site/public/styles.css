@@ -209,6 +209,15 @@ a.name {
   color: var(--muted);
 }
 
+.block h3 {
+  margin: 34px 0 0;
+  font-size: 17px;
+}
+
+.block h3 + .lead {
+  margin-top: 4px;
+}
+
 .two-col {
   display: flex;
   flex-wrap: wrap;
