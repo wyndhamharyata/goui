@@ -102,6 +102,9 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
   preset.
 - The preamp follows the largest boost, so the sound never clips. Move the slider to set it by hand.
   Press **Auto** to give it back.
+- **Level match** keeps the preamp while you hold A/B. The EQ usually plays quieter than the raw
+  sound, and people tend to prefer the louder side. With both sides at the same preamp, the
+  comparison is about the curve, not the volume.
 
 **Tune**
 

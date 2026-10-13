@@ -557,6 +557,27 @@ journey("given a 6 dB peak, holding A/B or turning the EQ off plays the 1 kHz to
   expectFlat(await readSteadyLevel(panel), flat);
 });
 
+journey("given a 1 kHz peak under auto preamp, A/B plays a 5 kHz tone 6 dB louder, and Level match holds it at the EQ level", async (context, port) => {
+  const panel = await openPanel(context, port, 5000);
+  await pasteInto(panel, "headphone", peakText);
+  const withEq = await readSteadyLevel(panel);
+  await holdCompare(panel);
+  expectAbout6Db(await readSteadyLevel(panel) - withEq);
+  await panel.mouse.up();
+
+  await openTab(panel, "listen");
+  await panel.getByText("Level match").click();
+  await holdCompare(panel);
+  expect(Math.abs(await readSteadyLevel(panel) - withEq)).toBeLessThan(0.6);
+  await panel.mouse.up();
+
+  const reopened = await context.newPage();
+  await reopened.goto(panelUrl);
+  await expect(reopened.locator("#keepPreamp")).toBeChecked();
+  await holdCompare(reopened);
+  expect(Math.abs(await readSteadyLevel(reopened) - withEq)).toBeLessThan(0.6);
+});
+
 journey("given Vocals at +6 dB, a 2.5 kHz tone plays 6 dB louder and stays so on a new headphone", async (context, port) => {
   const panel = await openPanel(context, port, 2500);
   await panel.click("#autoPreamp");

@@ -361,6 +361,10 @@ textarea {
   padding-top: 6px;
 }
 
+.slider.level-match {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .slider small {
   display: block;
   color: var(--muted);

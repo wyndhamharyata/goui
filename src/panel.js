@@ -123,6 +123,7 @@ let spectrumDb = [];
 let selectedIndex = -1;
 let soloIndex = -1;
 let isBypassed = false;
+let keepsPreampInCompare = false;
 let autoEqItems = null;
 let isMoreOpen = false;
 const openActions = { headphone: "", ear: "" };
@@ -224,11 +225,19 @@ const listenGraph = makeGraph(byId("listenGraph"), { height: 210, tallHeight: 44
 const tuneGraph = makeGraph(byId("tuneGraph"), { height: 210, tallHeight: 440, interactive: true, layerCurves: true }, graphHooks);
 const graphs = [listenGraph, tuneGraph];
 
+// Level match plays the preamp the EQ uses with every band off. Auto would set 0 dB for no bands.
+/** @returns {import("./shared/filters.js").Config} */
+function makePreampOnlyConfig() {
+  const layers = {};
+  for (const role of layerOrder) if (config.layers[role]) layers[role] = { ...config.layers[role], on: false };
+  return { ...config, layers, sliders: flatSliders, autoPreamp: false, preampDb: engineConfig(config).preampDb };
+}
+
 function sendAudio() {
   let value = config;
   const soloed = bandAt(soloIndex);
   const isSoloing = !isBypassed && Boolean(soloed);
-  if (isBypassed) value = { ...config, enabled: false };
+  if (isBypassed) value = keepsPreampInCompare ? makePreampOnlyConfig() : { ...config, enabled: false };
   if (isSoloing) {
     const layers = {};
     for (const role of layerOrder) {
@@ -884,6 +893,7 @@ byId("enabled").addEventListener("change", (event) => {
 });
 
 byId("sliders").addEventListener("input", (event) => {
+  if (event.target.type !== "range") return;
   const value = Number(event.target.value);
   if (event.target.id === "preamp") {
     config.autoPreamp = false;
@@ -892,6 +902,11 @@ byId("sliders").addEventListener("input", (event) => {
     config.sliders[`${event.target.id}Db`] = value;
   }
   commitEdit(null);
+});
+
+byId("keepPreamp").addEventListener("change", (event) => {
+  keepsPreampInCompare = event.target.checked;
+  chrome.storage.local.set({ keepsPreampInCompare });
 });
 
 // Turning Auto off keeps the value Auto had, so the sound does not jump.
@@ -1039,8 +1054,10 @@ async function readPresets(stored) {
 async function hydrate() {
   for (const type of bandTypes) byId("bandType").append(new Option(typeLabels[type], type));
 
-  const stored = await chrome.storage.local.get(["config", "headphonePresets", "earPresets", "savedSounds", "presets", "view", "tab", "hasCaptured"]);
+  const stored = await chrome.storage.local.get(["config", "headphonePresets", "earPresets", "savedSounds", "presets", "view", "tab", "hasCaptured", "keepsPreampInCompare"]);
   byId("app").dataset.started = stored.hasCaptured ? "yes" : "no";
+  keepsPreampInCompare = stored.keepsPreampInCompare === true;
+  byId("keepPreamp").checked = keepsPreampInCompare;
   if (stored.config) config = sanitizeConfig(stored.config);
   await readPresets(stored);
   for (const graph of graphs) graph.setVertical(stored.view === "vertical");
