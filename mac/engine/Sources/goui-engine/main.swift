@@ -171,6 +171,8 @@ final class Session {
   }
 }
 
+// A pipe holds printed lines until it fills, and kill -9 loses them. Each line goes out at once.
+setvbuf(stdout, nil, _IOLBF, 0)
 let options = Options.read(CommandLine.arguments)
 let meterEverySeconds = 2.0
 var session: Session?
