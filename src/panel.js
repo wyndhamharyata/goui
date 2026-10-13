@@ -39,7 +39,11 @@ import { formatDb, formatHz, layerColor, makeGraph, qToOctaves, typeColor } from
 
 /** @typedef {import("./graph.js").BandEntry} BandEntry */
 
-/** @typedef {{ name: string, path: string, source: string }} AutoEqItem */
+/** @typedef {{ name: string, path: string, source: string, form: string, rig: string, isPick: boolean }} AutoEqItem */
+
+/** @typedef {{ labels: string[], measurements: { source: string, form: string, rig?: string }[] }} RigFamily */
+
+/** @typedef {{ label: string, bassDb: number, db: number[] }} TargetCurve */
 
 /**
  * @param {string} id
@@ -125,6 +129,8 @@ let soloIndex = -1;
 let isBypassed = false;
 let keepsPreampInCompare = false;
 let autoEqItems = null;
+/** @type {Promise<{ families: RigFamily[], targets: TargetCurve[] }> | null} */
+let targetData = null;
 let isMoreOpen = false;
 const openActions = { headphone: "", ear: "" };
 
@@ -554,6 +560,57 @@ function deletePreset(role, name) {
   storePresets(role);
 }
 
+const forms = ["over-ear", "in-ear", "earbud"];
+const formLabels = { "over-ear": "Over-ear", "in-ear": "In-ear", earbud: "Earbud" };
+
+// A path reads "source/folder/name". The folder holds the form, after the rig when the source names
+// one, as in "GRAS 43AG-7 over-ear".
+/**
+ * @param {string} path
+ * @returns {{ source: string, form: string, rig: string }}
+ */
+function readMeasurement(path) {
+  const [source = "", folder = ""] = decodeURIComponent(path).split("/");
+  const form = forms.find((each) => folder.endsWith(each)) || "";
+  return { source, form, rig: folder.slice(0, folder.length - form.length).trim() };
+}
+
+/** @returns {Promise<{ families: RigFamily[], targets: TargetCurve[] }>} */
+function loadTargets() {
+  targetData ??= fetch(chrome.runtime.getURL("src/targets.json")).then((response) => response.json());
+  return targetData;
+}
+
+// A target only suits the rig it was made for. AutoEQ names the measurements each family suits.
+/**
+ * @param {RigFamily[]} families
+ * @param {AutoEqItem} item
+ * @returns {RigFamily | undefined}
+ */
+function findFamily(families, item) {
+  /**
+   * @param {{ source: string, form: string, rig?: string }} each
+   * @returns {boolean}
+   */
+  const suits = (each) => each.source === item.source && each.form === item.form && (!each.rig || each.rig === item.rig);
+  return families.find((family) => family.measurements.some(suits));
+}
+
+// Eight measurements of one headphone read the same by name. The source, form, rig and target tell
+// them apart.
+/**
+ * @param {AutoEqItem} item
+ * @param {RigFamily | undefined} family
+ * @returns {string}
+ */
+function describeMeasurement(item, family) {
+  const parts = [item.source];
+  if (item.form) parts.push(formLabels[item.form]);
+  if (item.rig) parts.push(item.rig.replace("Bruel & Kjaer", "B&K"));
+  if (family) parts.push(family.labels[0]);
+  return parts.join(" · ");
+}
+
 /** @returns {Promise<AutoEqItem[]>} */
 async function loadAutoEqIndex() {
   if (autoEqItems) return autoEqItems;
@@ -567,14 +624,20 @@ async function loadAutoEqIndex() {
   }
 
   autoEqItems = [];
+  const seenNames = new Set();
   for (const line of text.split("\n")) {
     // A line reads "- [Name](./path) by source". The path can hold brackets of its own, such as
     // "(ANC Off)", so it runs to the last ") by ".
     const nameEnd = line.indexOf("](./");
     const pathEnd = line.lastIndexOf(") by ");
     const isEntry = line.startsWith("- [") && nameEnd > 0 && pathEnd > nameEnd;
-    // One headphone can have several measurements, one per source, so the source tells them apart.
-    if (isEntry) autoEqItems.push({ name: line.slice(3, nameEnd), path: line.slice(nameEnd + 4, pathEnd), source: line.slice(pathEnd + 5).trim() });
+    if (!isEntry) continue;
+    // The index lists the measurements of one headphone in AutoEQ's order. The first one is the one
+    // AutoEQ recommends.
+    const name = line.slice(3, nameEnd);
+    const path = line.slice(nameEnd + 4, pathEnd);
+    autoEqItems.push({ name, path, ...readMeasurement(path), isPick: !seenNames.has(name) });
+    seenNames.add(name);
   }
   return autoEqItems;
 }
@@ -708,8 +771,14 @@ async function searchLibrary() {
   if (text.length < 2) return;
 
   const headphones = await findHeadphones(text, hint);
+  const { families } = await loadTargets();
   if (list.dataset.query !== text) return;
-  show(headphones.map((item) => makeResultItem(item.name, `AutoEQ, ${item.source}`, () => pickFromSearch(() => loadHeadphone(item, hint)))));
+  show(headphones.map((item) => {
+    const row = makeResultItem(item.name, describeMeasurement(item, findFamily(families, item)), () => pickFromSearch(() => loadHeadphone(item, hint)));
+    row.classList.add("measurement");
+    if (item.isPick) row.firstChild.append(makeElement("em", { className: "pick", text: "AutoEQ's pick", title: "AutoEQ recommends this measurement of the headphone" }));
+    return row;
+  }));
   if (list.children.length === 0) hint.textContent = "No sound by that name.";
 }
 

@@ -313,7 +313,7 @@ function expectFlat(levelDb, flatDb) {
 
 // Stand in for the AutoEQ repository. Other Phone has no profile, as a broken download.
 async function routeAutoEq(context) {
-  const profilePath = "/fake/rig/Fixture%20Phone%20(ANC%20On)/Fixture%20Phone%20(ANC%20On)%20ParametricEQ.txt";
+  const profilePath = "/Filk/over-ear/Fixture%20Phone%20(ANC%20On)/Fixture%20Phone%20(ANC%20On)%20ParametricEQ.txt";
   await context.route("https://raw.githubusercontent.com/**", (route) => {
     const url = route.request().url();
     if (url.endsWith("INDEX.md")) {
@@ -381,6 +381,23 @@ journey("given a headphone boost and an ear cut at 1 kHz, the layers cancel and 
   expectFlat(await readSteadyLevel(panel), flat);
 });
 
+journey("given eight HD 600 measurements, each result names its source, form, rig and target, and AutoEQ's pick comes first", async (context, port) => {
+  await routeAutoEq(context);
+  const panel = await openPanel(context, port, 1000);
+  await openTab(panel, "library");
+  const headphone = sectionOf(panel, "headphone");
+  await headphone.locator(".search").fill("HD 600");
+
+  const results = headphone.locator(".item[data-name='Sennheiser HD 600']");
+  await expect(results).toHaveCount(8);
+  await expect(results.nth(0)).toContainText("oratory1990 · Over-ear · Harman over-ear 2018");
+  await expect(results.nth(0)).toContainText("AutoEQ's pick");
+  await expect(results.nth(1)).toContainText("crinacle · Over-ear · GRAS 43AG-7 · Harman over-ear 2018");
+  await expect(results.nth(1)).not.toContainText("AutoEQ's pick");
+  await expect(results.nth(5)).toContainText("Rtings · Over-ear · B&K 5128 · HMS II.3 Harman over-ear 2018");
+  await expect(results.nth(6)).toContainText("Innerfidelity · Over-ear · HMS II.3 Harman over-ear 2018");
+});
+
 journey("given an AutoEQ pick, Save keeps it under its headphone name, and picking it from your presets plays it again", async (context, port) => {
   await routeAutoEq(context);
   const panel = await openPanel(context, port, 1000);
@@ -390,7 +407,7 @@ journey("given an AutoEQ pick, Save keeps it under its headphone name, and picki
   await openTab(panel, "library");
   const headphone = sectionOf(panel, "headphone");
   await headphone.locator(".search").fill("phone");
-  await expect(headphone.locator(".item[data-name='Fixture Phone (ANC On)']")).toContainText("AutoEQ, someone on a rig");
+  await expect(headphone.locator(".item[data-name='Fixture Phone (ANC On)']")).toContainText("Filk · Over-ear · Harman over-ear 2018");
   await headphone.locator(".item[data-name='Other Phone']").click();
   await expect(headphone.locator(".search-hint")).toHaveText("Other Phone did not load. Check the network and try again.");
 

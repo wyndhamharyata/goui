@@ -13,6 +13,10 @@ come from elsewhere.
 The headphone profiles and the search index come from AutoEQ, by Jaakko Pasanen. goui reads the
 published files over the network. It does not copy AutoEQ code.
 
+The target curves in `src/targets.json` are copied from AutoEQ. `npm run targets` builds the file
+from the AutoEQ web app's target list and the AutoEQ targets folder. It keeps each curve at 121
+points from 20 Hz to 20 kHz.
+
 - Project: https://github.com/jaakkopasanen/AutoEQ
 - Licence: MIT
 

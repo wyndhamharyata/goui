@@ -357,6 +357,22 @@ textarea {
   color: var(--muted);
 }
 
+.item.measurement {
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pick {
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--good);
+  border-radius: 999px;
+  color: var(--good);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+}
+
 .item.on {
   background: rgba(91, 140, 255, 0.18);
   color: var(--text);

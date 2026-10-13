@@ -9,7 +9,8 @@
     "images": "node scripts/make-readme-images.mjs",
     "dependencies": "node scripts/make-dependencies.mjs",
     "zip": "node scripts/make-extension-zip.mjs",
-    "store": "node scripts/make-store-images.mjs"
+    "store": "node scripts/make-store-images.mjs",
+    "targets": "node scripts/make-targets.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
