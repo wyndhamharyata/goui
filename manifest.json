@@ -4,7 +4,7 @@
   "version": "0.1.3",
   "description": "Browser level EQ joining AutoEQ and EQByEar. Different ear, different head, different sound.",
   "homepage_url": "https://goui.mwyndham.dev",
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8wKqXrrXVzWalItiCf7YUI60KI7y8YuJltC6MtwE9hOG4iDyCXc1sz0oA7bIJ1GocyDUMGVv88JP4FS/OhSndunfOXMtoYKr1wtOdwlIc0x7x1g5yKNk+YBxjhPbsWgdfy2yLMrvPojUEvlC7jHdRZ3YzPXPB3xekqe9EVFQeTsO0UDuSekAMtMhs3XWMmAS/rplspLQiwf8yBLjnnN6PC+YfhdIoxh1o/A25TDG1zz0rG4L0U5/B1pQeNbQe0MFauUEJ9iU8YaIBfhfxVc492ClQIWcDoWkAoq+8lFgdiB4gXQcWNJ0WcGrcLnClien0GJFU8kqrEmfzGgaxIbGhQIDAQAB",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4kSQjeEVP6CGDnI2Eft1Ae3jBxb9PbVHrqAefb0Fg6RH0Yeo8vDHhDgNtL+mdyhNi/ipANZySWF30hrptnl1UmoRhG7Xxu/iH2YONaQsTxpnKajmHcdw/Cn662GsnGjtsl+ZOTYQcwTZBS1hyI4UMDEJwslfy0kV1vOwTgKGj10b35VR5PmpCtbzeFwt1orcW/IDYPZNsq+S7cvKLzYyW8PMYMwC/GPls3dvW7w6Hi/IKyafU2uWZVSOO9WD1y3BrLDW1Uv1J2C5U9rIo8FY4H2SwHMa6or9UGqoTyY1T4u+Cwkf0Mmibdr5nxZTvWKQV6SCzeoeyw3Od9jyINmH4QIDAQAB",
   "permissions": ["tabCapture", "offscreen", "storage", "activeTab", "sidePanel"],
   "host_permissions": ["https://raw.githubusercontent.com/jaakkopasanen/AutoEq/*"],
   "background": { "service_worker": "src/service-worker.js", "type": "module" },
