@@ -363,7 +363,9 @@ textarea {
 }
 
 .pick {
+  display: inline-block;
   margin-left: 6px;
+  white-space: nowrap;
   padding: 0 6px;
   border: 1px solid var(--good);
   border-radius: 999px;

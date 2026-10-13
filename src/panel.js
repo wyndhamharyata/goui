@@ -652,7 +652,7 @@ async function loadAutoEqIndex() {
   }
 
   autoEqItems = [];
-  const seenNames = new Set();
+  const countByName = new Map();
   for (const line of text.split("\n")) {
     // A line reads "- [Name](./path) by source". The path can hold brackets of its own, such as
     // "(ANC Off)", so it runs to the last ") by ".
@@ -660,13 +660,14 @@ async function loadAutoEqIndex() {
     const pathEnd = line.lastIndexOf(") by ");
     const isEntry = line.startsWith("- [") && nameEnd > 0 && pathEnd > nameEnd;
     if (!isEntry) continue;
-    // The index lists the measurements of one headphone in AutoEQ's order. The first one is the one
-    // AutoEQ recommends.
     const name = line.slice(3, nameEnd);
     const path = line.slice(nameEnd + 4, pathEnd);
-    autoEqItems.push({ name, path, ...readMeasurement(path), isPick: !seenNames.has(name) });
-    seenNames.add(name);
+    autoEqItems.push({ name, path, ...readMeasurement(path), isPick: !countByName.has(name) });
+    countByName.set(name, (countByName.get(name) || 0) + 1);
   }
+  // The index lists the measurements of one headphone in AutoEQ's order. The first one is the one
+  // AutoEQ recommends. A name with one measurement has nothing to choose between.
+  for (const item of autoEqItems) item.isPick &&= countByName.get(item.name) > 1;
   return autoEqItems;
 }
 

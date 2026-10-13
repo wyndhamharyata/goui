@@ -444,6 +444,7 @@ journey("given an AutoEQ pick, Save keeps it under its headphone name, and picki
   const headphone = sectionOf(panel, "headphone");
   await headphone.locator(".search").fill("phone");
   await expect(headphone.locator(".item[data-name='Fixture Phone (ANC On)']")).toContainText("Filk · Over-ear · Harman over-ear 2018");
+  await expect(headphone.locator(".item[data-name='Fixture Phone (ANC On)']")).not.toContainText("AutoEQ's pick");
   await headphone.locator(".item[data-name='Other Phone']").click();
   await expect(headphone.locator(".search-hint")).toHaveText("Other Phone did not load. Check the network and try again.");
 
