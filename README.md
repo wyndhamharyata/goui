@@ -167,7 +167,7 @@ wants, and goui keeps the two apart.
 - The AutoEQ search reads the public index on GitHub. The result is kept for a week, so a second
   search is fast.
 - The targets come from AutoEQ itself. AutoEQ's file tunes a headphone to the first target of its
-  rig. Another target adds a few bands that move the sound from that target to the one you pick, up
+  rig. Another target puts in a few bands that move the sound from that target to the one you pick, up
   to 12 kHz.
 - The extension can only change audio inside the browser. For system audio, use a tool such as
   SoundSource.

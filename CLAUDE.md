@@ -26,8 +26,9 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
   only. The sliders and the preamp stay as they are when you pick one. A sound saved before the two
   lists splits into a headphone preset and, when it holds ear bands, an ear preset under that name.
 - `src/targets.json` holds AutoEQ's target curves in rig families, built by `npm run targets`. A
-  headphone from AutoEQ plays AutoEQ's file, tuned to the first target of its family. Another target
-  adds the bands `fitTargetChange` in `src/fit.js` fits to the gap between the two targets.
+  headphone from AutoEQ plays AutoEQ's file, tuned to the first target of its family. With another
+  target, goui also plays the bands `fitTargetChange` in `src/fit.js` fits to the difference between
+  the two targets.
 - Playwright runs the tests at side panel width. ESLint and `scripts/check-words.mjs` run the lint.
 
 ## Commands

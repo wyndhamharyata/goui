@@ -671,8 +671,8 @@ async function loadAutoEqIndex() {
   return autoEqItems;
 }
 
-// AutoEQ's file tunes the headphone to the first target of its family. Another target adds the
-// bands that move the sound from that one to it.
+// AutoEQ's file tunes the headphone to the first target of its family. Another target also plays
+// the bands that move the sound from that one to it.
 /**
  * @param {AutoEqItem} item
  * @param {HTMLElement} hint

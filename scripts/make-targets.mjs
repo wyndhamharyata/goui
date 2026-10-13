@@ -1,5 +1,5 @@
 // Builds src/targets.json from AutoEQ. The AutoEQ web app lists its targets, the measurements each
-// one suits and the bass boost it adds. A rig family then gains the other curves from the AutoEQ
+// one suits and the bass boost it puts on top. A rig family then gains the other curves from the AutoEQ
 // targets folder that were made for the same rig. Those files hold their own bass.
 import { writeFileSync } from "node:fs";
 

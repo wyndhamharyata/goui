@@ -29,7 +29,7 @@ const bannedNames = new Set([
 ]);
 
 const causalWords = new Set(["because", "hence", "therefore"]);
-const skippedFolders = new Set([".git", ".sst", ".wrangler", "node_modules", "playwright-report", "test-results"]);
+const skippedFolders = new Set([".build", ".git", ".sst", ".wrangler", "dist", "node_modules", "playwright-report", "test-results"]);
 // The generated files are machine output, so they stay out of the word check.
 const skippedFiles = new Set([
   "DEPENDENCIES.md",

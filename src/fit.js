@@ -1,4 +1,4 @@
-// Fits a few bands to the gap between two target curves. AutoEQ's own file already tunes the
+// Fits a few bands to the difference between two target curves. AutoEQ's own file already tunes the
 // headphone to its default target, so these bands only move that sound to the target you pick.
 import { clamp, logSweepHz, responseDb, roundGainDb } from "./shared/filters.js";
 
@@ -10,7 +10,7 @@ import { clamp, logSweepHz, responseDb, roundGainDb } from "./shared/filters.js"
 
 const sweepHz = logSweepHz(121);
 const anchorIndex = sweepHz.findIndex((frequencyHz) => frequencyHz >= 1000);
-// Above 12 kHz the targets fall away steeply and differ by rig and by person, so the fit leaves them.
+// Above 12 kHz the targets fall away steeply and differ by rig and by person, so the fit skips them.
 const fitTopHz = 12_000;
 const fittedPoints = sweepHz.filter((frequencyHz) => frequencyHz <= fitTopHz).length;
 // AutoEQ lets its own file boost by 6 dB at most. The change of target keeps to the same limit.
@@ -19,7 +19,7 @@ const maxPeakCount = 4;
 const closeEnoughDb = 0.5;
 const smallestGainDb = 0.2;
 
-// AutoEQ adds the bass of a target as a 105 Hz shelf, apart from the curve.
+// AutoEQ puts the bass of a target in a 105 Hz shelf, apart from the curve.
 /**
  * @param {TargetCurve} target
  * @returns {number[]}
