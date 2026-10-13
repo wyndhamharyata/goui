@@ -79,8 +79,11 @@ place of the EQ.
 Chrome only lets an extension take a tab's audio after you click its icon on that tab, so the panel
 has no Start button.
 
-- Click the icon on the tab goui hears to turn goui off.
+- With the panel open, click the icon on the tab goui hears to turn goui off. With the panel
+  closed, the same click only opens the panel again.
 - Click the icon on another tab to move goui there.
+- An installed app, such as YT Music, has no side panel. There the icon opens goui as a popup, with
+  its own Turn off button.
 - The icon shows a green ON badge on the tab goui hears.
 - Closing that tab turns goui off.
 

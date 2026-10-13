@@ -9,7 +9,11 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 - Manifest V3, plain JavaScript, no build step. Load the folder with "Load unpacked".
 - `chrome.tabCapture` takes the tab's audio. An offscreen document runs the Web Audio chain and
   plays the result. Chrome allows the capture only after a click on the toolbar icon, so the icon is
-  the on and off switch and the panel has no Start button.
+  the on and off switch and the panel has no Start button. With the panel closed, a click on the
+  tab goui hears only opens the panel.
+- `sidePanel.open` on a window with no side panel, such as an installed app, crashes Brave. A tab
+  in such a window gets `src/panel.html?tab=<id>` as the popup of the icon. That popup starts goui
+  on its tab when it opens and has a Turn on and Turn off button.
 - The side panel has three tabs: Listen, Tune and Library. From 900 px wide they show as three
   columns. `design/ux-proposals.html` holds the mock the panel follows.
 - `src/graph.js` draws the curve as SVG. It uses the same Web Audio filters the engine plays, so

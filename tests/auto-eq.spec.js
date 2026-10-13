@@ -654,6 +654,22 @@ journey("given goui hears a tab, a click on its icon turns goui off, and a secon
   expectAbout6Db(await readSteadyLevel(panel) - flat);
 });
 
+journey("given goui hears a tab and the panel is closed, a click on its icon brings the panel back with the 6 dB peak still on", async (context, port) => {
+  const panel = await openPanel(context, port, 1000);
+  const tone = findTone(context, 1000);
+  await panel.click("#autoPreamp");
+  await pasteInto(panel, "headphone", peakText);
+  const withPeak = await readSteadyLevel(panel);
+  await panel.close();
+
+  await pressIcon(context, tone);
+  const reopened = await context.newPage();
+  await reopened.goto(panelUrl);
+  await expect(reopened.locator("#status")).toHaveText("playing running");
+  expect(Math.abs(await readSteadyLevel(reopened) - withPeak)).toBeLessThan(0.6);
+  expect(await readBadge(context, tone)).toBe("ON");
+});
+
 journey("given goui hears a 1 kHz tab, a click on the icon of a 5 kHz tab moves goui there, and closing it turns goui off", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
   const low = findTone(context, 1000);

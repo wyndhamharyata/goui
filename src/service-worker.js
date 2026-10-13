@@ -108,13 +108,17 @@ chrome.tabs.onAttached.addListener(async (tabId, attach) => {
 
 // The click is what invokes the extension for the tab, which grants the right to take its audio.
 // Open the panel first, while the gesture is fresh. A click on the tab goui hears turns it off. A
-// click on any other tab moves goui there.
+// click on any other tab moves goui there. With the panel closed, a click on the tab goui hears only
+// brings the panel back. Chrome answers in the order it is asked, so the question asked before the
+// panel opens sees the panel as it was before the click.
 chrome.action.onClicked.addListener(async (tab) => {
+  const openPanels = chrome.runtime.getContexts({ documentUrls: [chrome.runtime.getURL("src/panel.html")] });
   if (popupWindowIds.has(tab.windowId)) usePopupOn(tab.id);
   else chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
 
   if (await isHeardTab(tab.id)) {
-    stopCapture();
+    const wasPanelOpen = (await openPanels).length > 0;
+    if (wasPanelOpen) stopCapture();
     return;
   }
 
