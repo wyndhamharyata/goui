@@ -5,7 +5,8 @@ same bands, the same AutoEQ search and the same targets. The extension and the a
 code and the panel itself.
 
 Only the newest macOS is in scope. Spatial Audio, head tracking and other features of Apple
-headphones are out of scope.
+headphones are out of scope. Branding comes later. The first goal is a Mac app that works with the
+panel the extension already has.
 
 ## How other apps do it
 
@@ -18,97 +19,141 @@ headphones are out of scope.
 
 goui uses Core Audio taps. `engine/` proves the path works. Its README lists what was checked.
 
-## The app
+## Rules for this app
 
-One Swift app with no Dock icon. It has three parts.
+- As much as possible runs in JavaScript. Swift is for what only native code can do: the tap, the
+  devices, the socket, the menu bar icon, the panel window and launchd.
+- The extension's panel runs as it is. A Mac feature goes in a page around the panel or in the
+  `chrome` stand-in, never in `src/`.
 
-| Part | Built with | Job |
+## Two processes
+
+| | Server, `goui-engine` | Tray, `goui.app` |
 | --- | --- | --- |
-| Menu bar icon and panel | AppKit | An icon at the top of the screen. A click drops a floating panel under it. |
-| The panel | The extension's own `src/panel.html` in a `WKWebView` | Everything you see and edit, the same files as the extension |
-| Engine | Swift with a C callback, from `engine/` | Tap, aggregate device, biquads, device and rate changes |
+| Runs | All the time, from login, as a LaunchAgent | When you want the panel, also from login |
+| Owns | The tap, the output device, the biquads, the saved config | The menu bar icon, the floating panel, the web view |
+| Swift | The engine from `engine/`, a socket server, the config file | `NSStatusItem`, `NSPanel`, `WKWebView`, a right-click menu |
+| JavaScript | None | The panel, the `chrome` stand-in, the page around the panel |
 
-The audio does not depend on the panel. The engine keeps playing with the panel closed, and the web
-view can be thrown away to save memory.
+The server plays with the tray closed or crashed. At login it reads the last config and plays it
+before any window opens.
 
-### The floating panel
+### A stuck server
 
-An `NSStatusItem` holds the icon. A click opens an `NSPanel` right under it, about 400 px wide,
-the size of the extension's popup layout. A click anywhere else closes it. A pin keeps it open and
-floating above other windows while you play music in another app.
+A killed server is always safe. macOS removes its muted tap and the Mac plays the normal way again.
+So every way back is a hard kill and a fresh start.
 
-Things to get right:
+1. A crash. launchd starts it again, with `KeepAlive` in its plist.
+2. A hang or silence. The server watches its own callback count. When the callbacks stop while
+   audio should play, it builds its session again.
+3. By hand from the tray. The right-click menu has **Restart engine**, which runs
+   `launchctl kickstart -k`. It works even when the web view is broken. The page around the panel
+   also shows a status dot and a restart button when the server stops answering.
+4. By hand from a terminal. `goui restart` does the same.
 
-- The panel must take key presses without taking focus from the app you were in. That needs a
-  non-activating panel that can still become the key window, or the AutoEQ search field ignores
-  typing.
-- It opens on the screen that holds the menu bar you clicked, and over full screen apps.
-- The app runs as an accessory, with `LSUIElement` set, so it has no Dock icon and no app menu.
+### Between the page and the server
 
-### The panel as a web page
+The web view talks to the server itself, so the tray needs very little Swift.
 
-The extension loads `src/` with no build step. The app serves the same folder to the web view
-under a custom scheme such as `goui://app/src/panel.html`. A `file://` page cannot load ES
-modules, so the custom scheme is needed. In development it serves the repo's `src/`, so a change
-shows in both at once.
-
-WebKit has Web Audio. `responseDb` and the graph work as they are, with the same
-`OfflineAudioContext`. The earlier step that rewrote the core without Web Audio is no longer
-needed.
-
-The panel calls six Chrome APIs in 18 places. The app gives the page a small `chrome` object at
-load, before the panel's own code runs.
+- The server listens with a WebSocket on `127.0.0.1`. It takes a connection only from the
+  `goui://app` origin with a random token. The tray hands the token to the page. A website cannot
+  read the token.
+- `mac/web/chrome.js` stands in for the Chrome APIs the panel calls.
 
 | Chrome API | In the app |
 | --- | --- |
-| `chrome.storage.local` and `session` | A JSON file in Application Support, through a message to Swift |
-| `chrome.runtime.sendMessage` | A message to Swift. The engine takes the bands and the preamp. |
-| `chrome.runtime.onMessage` | Swift calls into the page, for the capture state and the level |
-| `chrome.runtime.getURL` | A `goui://` address |
-| `chrome.tabs.create` | Opens the link in the default browser |
+| `chrome.storage.local` and `session` | Messages to the server, which keeps a JSON file |
+| `chrome.runtime.sendMessage` | Messages to the server |
+| `chrome.runtime.onMessage` | Events from the server, passed to the panel's listeners |
+| `chrome.runtime.getURL` | A `goui://app` address |
+| `chrome.tabs.create` | A message to the tray, which opens the link in the default browser |
 
-The panel needs a Mac mode for its words and a few controls. Tab words such as "the tab goui
-hears" become "your Mac". The power pill from the popup turns the engine on and off. The intro
-about the toolbar icon does not apply.
+- Before a config goes to the server, `chrome.js` runs `engineConfig` from `src/shared/filters.js`.
+  The server only ever takes `{ preampDb, bands }` and keeps the last one for the next login.
 
 ### Bands to sound
 
-The page sends the bands and the preamp, as it sends them to the offscreen document today. Web
-Audio does not give out its filter numbers, so the engine works them out in C from the formulas
-in the Web Audio spec. Its shelves take no Q, and its LP and HP read Q in dB. A check in the app
-can compare the C response with WebKit's `getFrequencyResponse` for the same bands. The engine
-swaps to the new numbers without a lock and fades across about 20 ms.
+The biquad formulas are the one piece of math outside JavaScript. When the sample rate changes with
+the panel closed, as it does when a call starts on a Bluetooth headphone, the server must work out
+the filters again on its own. The formulas come from the Web Audio spec, so the shelves take no Q
+and LP and HP read Q in dB. They live in C next to the render code, about 60 lines. A check in the
+page compares the C response with WebKit's `getFrequencyResponse` for the same bands. The server
+swaps to new filters without a lock and fades across about 20 ms, so a change does not click.
+
+### The existing panel in the tray
+
+- The web view loads `src/panel.html` as it is, served under `goui://app` from the extension's own
+  files. The tray puts `chrome.js` in the page before the panel's code runs.
+- The panel opens in its popup mode. Its power button already sends `capture:start` and
+  `capture:stop`. `chrome.js` turns those into engine on and off.
+- `mac/web/shell.html` holds the panel in an iframe, with the Mac controls above it: the server
+  status and its restart button now, the output device later.
+- Words about the tab read oddly on a Mac for now. They wait for the branding pass, with the level
+  and spectrum meters.
+
+## Install
+
+A curl line installs goui. npm, a DMG and a PKG come later.
+
+- `install.sh` downloads one tarball from GitHub Releases and unpacks it to
+  `~/Applications/goui.app`. No admin password.
+- The tarball holds the tray, the server inside its `Contents/`, the files of `src/` and `mac/web/`,
+  and the `goui` command.
+- The script writes two plists to `~/Library/LaunchAgents`, one for the server and one for the
+  tray, and starts them with `launchctl bootstrap`. Running the curl line again updates goui.
+- `curl` sets no quarantine flag, so Gatekeeper does not stop the binaries.
+- npm can come later as a thin wrapper, `npx goui install`, around the same tarball. Many setups
+  block `postinstall`, so the install runs only when you ask for it.
+
+The `goui` command is a shell script.
+
+| Command | What it does |
+| --- | --- |
+| `goui restart` | `launchctl kickstart -k` on the server |
+| `goui stop`, `goui start` | Stops or starts the server |
+| `goui logs` | Shows the server log |
+| `goui uninstall` | Removes both agents and the app |
+
+### Signing
+
+The binaries are signed ad hoc for now. macOS remembers the System Audio Recording permission by
+the code signature, and an ad hoc signature changes with every build. So each update asks for the
+permission again. A Developer ID signature stays the same across updates. It costs $99 a year and
+waits until goui has users.
+
+## Steps
+
+Each step starts only when it is asked for, and ends with a commit.
+
+1. Server. The WebSocket with its origin and token checks, the config file, and commands for
+   bands, on and off, and status.
+2. Biquads in C for every band type, the swap without a click, and the check against WebKit.
+3. Tray. The icon, the floating panel, the web view, and the right-click menu with
+   **Restart engine** and **Quit**.
+4. `chrome.js` and `shell.html`, so the existing panel drives the server.
+5. Install. A script that builds the tarball, `install.sh` with the two plists, and the `goui`
+   command.
+
+## Open questions
+
+- Which process macOS asks about for System Audio Recording when the server is a LaunchAgent inside
+  the app, and whether a LaunchAgent with no window can show the prompt at all. If it cannot, the
+  tray starts the first capture. A short check settles it before step 1.
+- How the Mac journeys run. Playwright cannot drive a `WKWebView`. One way is the panel in Chromium
+  against the real server, with the server writing what it plays to a file the journey reads.
+- How the floating panel and the web view handle keyboard focus. Typing in the AutoEQ search must
+  work while music plays in another app.
 
 ## Options set aside
 
 | Option | Why not |
 | --- | --- |
 | gpuix | It draws natively with no web view, so the panel would be written twice. |
-| Electron | It bundles Chromium, about 150 MB, for a menu bar app. The engine would need a Node addon. |
-| Tauri | It uses the same `WKWebView` on the Mac, with Rust in between. The engine is Swift already. |
-| SwiftUI `MenuBarExtra` | A native menu bar window, but the panel would be written twice. |
-
-## Steps
-
-Each step ends with a commit.
-
-1. **Menu bar app.** An icon, the floating panel with its pin, and the extension's panel in the web
-   view with the `chrome` object for storage only. The engine runs at a fixed gain.
-2. **Bands to the engine.** The C biquads for every band type, the swap without a click, and the
-   check against WebKit's response. Moving a point in the panel changes the sound of the Mac.
-3. **Mac mode.** The words, the power pill, the capture state and the level meter.
-4. **Package.** An `.app` bundle with `src/` inside, a Developer ID signature, notarization and
-   launch at login.
-
-## Risks
-
-- Journeys today start in Chrome with the extension loaded. A Mac journey needs the app, a tone
-  and a way to record what the engine plays. The engine could write what it plays to a file for
-  that, as a real feature for checking a sound. How the Mac journeys run is still open.
-- A `WKWebView` takes about 50 to 80 MB while the panel is open. The app can drop it when the
-  panel closes.
-- A non-activating panel and a web view can disagree about keyboard focus and mouse moves. Step 1
-  checks typing in the search field and hover on the graph.
+| Electron | It bundles Chromium, about 150 MB, for a menu bar app. |
+| Tauri | It uses the same `WKWebView` on the Mac, with Rust in between. |
+| Wails v3 | Go is pleasant, but v3 is still beta. It saves about 215 lines of Swift and costs about 350 lines of Go. The panel focus and position code would live in Wails, out of reach. |
+| Electrobun | Bun in the main process, but beta, and the panel position is left to the app. |
+| SMAppService | It suits an app in `/Applications`. A curl install writes its own LaunchAgent plists. |
 
 ## Troubleshooting text for the README
 
@@ -125,3 +170,4 @@ Each step ends with a commit.
 - SoundSource release notes, rogueamoeba.com/soundsource/releasenotes.php
 - ARK-SDK, rogueamoeba.com/licensing
 - AudioCap, github.com/insidegui/AudioCap
+- Wails v3 source, github.com/wailsapp/wails
