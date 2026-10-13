@@ -720,7 +720,7 @@ journey("given a tab in a window with no side panel, its icon opens goui as a po
   await expect.poll(() => readPopup(context, tabId)).toContain("/src/panel.html?tab=");
   const panel = await context.newPage();
   await panel.goto(await readPopup(context, tabId));
-  await expect(panel.locator("#power")).toHaveText("Turn off");
+  await expect(panel.locator("#power")).toHaveText("ON");
 
   await panel.click("#autoPreamp");
   const flat = await readSteadyLevel(panel);
@@ -728,9 +728,9 @@ journey("given a tab in a window with no side panel, its icon opens goui as a po
   expectAbout6Db(await readSteadyLevel(panel) - flat);
 
   await panel.click("#power");
-  await expect(panel.locator("#status")).toHaveText("goui is off on this tab. Press Turn on to EQ it.");
+  await expect(panel.locator("#status")).toHaveText("goui is off on this tab. Press the power button to EQ it.");
   await panel.click("#power");
-  await expect(panel.locator("#power")).toHaveText("Turn off");
+  await expect(panel.locator("#power")).toHaveText("ON");
   expectAbout6Db(await readSteadyLevel(panel) - flat);
 
   // Chrome forgets the popup of a tab when the tab loads a page.

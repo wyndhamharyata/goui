@@ -191,6 +191,30 @@ textarea {
   border-color: var(--hold);
 }
 
+.power {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.power svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+}
+
+.power[aria-pressed="true"] {
+  border-color: var(--good);
+  background: rgba(67, 211, 158, 0.14);
+  color: var(--good);
+}
+
 .source {
   flex: 1;
   color: var(--muted);

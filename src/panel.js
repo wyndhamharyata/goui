@@ -813,7 +813,7 @@ const libraryActions = {
 const popupTabId = Number(new URLSearchParams(location.search).get("tab"));
 const isPopup = Number.isInteger(popupTabId) && popupTabId > 0;
 let isPopupTabHeard = false;
-const idleInstruction = isPopup ? "goui is off on this tab. Press Turn on to EQ it." : "Click the goui icon in the toolbar while you are on the tab you want to EQ.";
+const idleInstruction = isPopup ? "goui is off on this tab. Press the power button to EQ it." : "Click the goui icon in the toolbar while you are on the tab you want to EQ.";
 
 /** @param {import("./shared/messages.js").CaptureState} state */
 function applyCaptureState(state) {
@@ -829,7 +829,9 @@ function applyCaptureState(state) {
   status.title = isCapturing && !isPopup ? "Click the goui icon on this tab to turn goui off, or on another tab to move it there." : "";
 
   isPopupTabHeard = isCapturing && state.tabId === popupTabId;
-  byId("power").textContent = isPopupTabHeard ? "Turn off" : "Turn on";
+  byId("powerText").textContent = isPopupTabHeard ? "ON" : "OFF";
+  byId("power").setAttribute("aria-pressed", String(isPopupTabHeard));
+  byId("power").title = isPopupTabHeard ? "Turn goui off on this tab" : "Turn goui on for this tab";
 }
 
 function showTelemetry(message) {

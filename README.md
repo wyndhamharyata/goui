@@ -83,7 +83,7 @@ has no Start button.
   closed, the same click only opens the panel again.
 - Click the icon on another tab to move goui there.
 - An installed app, such as YT Music, has no side panel. There the icon opens goui as a popup, with
-  its own Turn off button.
+  its own power button.
 - The icon shows a green ON badge on the tab goui hears.
 - Closing that tab turns goui off.
 

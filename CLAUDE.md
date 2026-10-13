@@ -13,7 +13,7 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
   tab goui hears only opens the panel.
 - `sidePanel.open` on a window with no side panel, such as an installed app, crashes Brave. A tab
   in such a window gets `src/panel.html?tab=<id>` as the popup of the icon. That popup starts goui
-  on its tab when it opens and has a Turn on and Turn off button.
+  on its tab when it opens and has a power button that turns goui on and off.
 - The side panel has three tabs: Listen, Tune and Library. From 900 px wide they show as three
   columns. `design/ux-proposals.html` holds the mock the panel follows.
 - `src/graph.js` draws the curve as SVG. It uses the same Web Audio filters the engine plays, so
