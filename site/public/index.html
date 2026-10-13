@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#08090b" />
+    <meta
+      name="description"
+      content="Browser level EQ joining AutoEQ and EQByEar. Different ear, different head, different sound."
+    />
+    <link rel="icon" href="/icons/icon48.png" />
+    <link rel="stylesheet" href="/panel.css" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>goui</title>
+  </head>
+  <body>
+    <main>
+      <header class="site-head">
+        <img src="/icons/icon128.png" alt="" width="32" height="32" />
+        <span class="name">goui</span>
+        <nav>
+          <a href="#try">Try it</a>
+          <a href="#install">Install</a>
+          <a href="#credits">Credits</a>
+          <a href="https://github.com/wyndhamharyata/goui">GitHub</a>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <div class="hero-text">
+          <p class="eyebrow">Chrome and Brave extension</p>
+          <h1>goui</h1>
+          <p class="mantra">Different ear, different head, different sound.</p>
+          <p class="pitch">
+            goui runs the sound of one browser tab through a parametric EQ. AutoEQ gives a neutral
+            baseline for your headphone. An eqbyear test tunes that baseline to your own hearing.
+            The two stay apart as two layers, and Bass, Vocals and Treble go on top.
+          </p>
+          <div class="buttons">
+            <a class="button primary" href="https://github.com/wyndhamharyata/goui/releases/latest"
+              >Get goui</a
+            >
+            <a class="button" href="https://github.com/wyndhamharyata/goui">View on GitHub</a>
+          </div>
+          <p class="fine">
+            Free and open source, under the MIT licence. goui is not in the Chrome Web Store, so you
+            add it by hand one time. It takes about two minutes.
+          </p>
+        </div>
+
+        <div class="demo" id="try">
+          <div class="frame">
+            <div id="f-head"></div>
+            <div class="tabs" id="f-tabs">
+              <button data-tab="listen" class="on">Listen</button>
+              <button data-tab="tune">Tune</button>
+              <button data-tab="library">Library</button>
+            </div>
+            <div class="pane" data-pane="listen">
+              <div class="card" id="f-layers"></div>
+              <div class="card">
+                <div id="f-listen-graph"></div>
+                <div class="legend-host" data-layers></div>
+              </div>
+              <div class="card" id="f-macros"></div>
+            </div>
+            <div class="pane" data-pane="tune" hidden>
+              <div id="f-zoom"></div>
+              <div class="card">
+                <div id="f-graph"></div>
+                <div class="legend-host" data-layers></div>
+              </div>
+              <div id="f-chips"></div>
+              <div class="card" id="f-inspector"></div>
+            </div>
+            <div class="pane" data-pane="library" hidden>
+              <div class="card">
+                <div class="library-actions">
+                  <button>Save</button><button>Import</button><button class="on">Paste</button
+                  ><button>Export</button>
+                </div>
+                <div class="target" id="f-target"></div>
+                <textarea id="f-text" spellcheck="false"></textarea>
+                <div class="button-row"><button id="f-apply" class="primary">Apply</button></div>
+                <p class="hint">
+                  A pick from the search goes into the layer chosen above. A headphone pick goes into
+                  the headphone layer unless you choose My ear.
+                </p>
+              </div>
+            </div>
+          </div>
+          <p class="demo-caption">
+            The panel, live. Press Listen, Tune and Library, drag a point, or hold A/B. The curve
+            uses the real filter math. The spectrum is a stand-in.
+          </p>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>How it works</h2>
+        <p class="lead">
+          Two corrections, kept apart. One for the headphone, one for your ear.
+        </p>
+        <div class="two-col">
+          <img src="/images/how-it-works.png" alt="The sound of a tab passes the headphone layer, then the ear layer, then your taste, then reaches you." />
+          <div>
+            <p>
+              A headphone has its own colour. AutoEQ measures it and writes a profile that cancels
+              it, so the headphone sounds neutral. That is the headphone layer.
+            </p>
+            <p>
+              Your hearing is your own too, and no profile can know it. An eqbyear test
+              measures what your ear still wants on top of the neutral sound. That is the ear layer.
+            </p>
+            <p>
+              The two layers add up in dB, so the merge is exact. Bass, Vocals and Treble go on top
+              as your taste. The preamp follows the largest boost, so the sound never clips. Each
+              layer has its own switch, so you can hear AutoEQ alone in one press.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" id="install">
+        <h2>Install</h2>
+        <p class="lead">Four steps, one time. No build, no account.</p>
+        <div class="two-col">
+          <ol class="steps">
+            <li><b>Download the zip.</b> Open the Releases page and press the newest zip. Unzip it.</li>
+            <li>
+              <b>Load the folder.</b> Open <code>chrome://extensions</code>, or
+              <code>brave://extensions</code>, turn on Developer mode, then press Load unpacked and
+              pick the goui folder.
+            </li>
+            <li><b>Pin goui.</b> Click the puzzle piece in the toolbar and pin goui.</li>
+            <li><b>Click the icon.</b> Open a page with sound and click the goui icon on it.</li>
+          </ol>
+          <img src="/images/install-flow.png" alt="Install goui in four steps: download the zip, load the folder, pin goui, click the icon." />
+        </div>
+        <p class="fine">
+          The <a href="https://github.com/wyndhamharyata/goui#install">README</a> has a picture for
+          each step, and a note about the Chrome warning on developer mode extensions.
+        </p>
+      </section>
+
+      <section class="block" id="credits">
+        <h2>Credits</h2>
+        <p class="lead">goui stands on other people's work.</p>
+        <div class="credits">
+          <a class="credit" href="https://github.com/jaakkopasanen/AutoEQ">
+            <b>AutoEQ</b>
+            <span>Headphone profiles by Jaakko Pasanen, under the MIT licence.</span>
+          </a>
+          <a class="credit" href="https://eqbyear.com">
+            <b>EQByEar</b>
+            <span>The hearing test behind the My ear layer.</span>
+          </a>
+          <a class="credit" href="https://github.com/google/material-design-icons">
+            <b>Material Icons</b>
+            <span>Icon art by Google, under the Apache 2.0 licence.</span>
+          </a>
+        </div>
+        <p class="fine">
+          goui itself is under the MIT licence. The
+          <a href="https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md"
+            >full notices</a
+          >
+          name every part, and say which of them travel in the extension.
+        </p>
+      </section>
+
+      <footer>
+        <span>goui, by M Wyndham Haryata Permana.</span>
+        <a href="https://github.com/wyndhamharyata/goui">Source</a>
+        <a href="https://github.com/wyndhamharyata/goui/blob/main/LICENSE">MIT licence</a>
+        <a href="https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md">Notices</a>
+      </footer>
+    </main>
+
+    <script src="/panel.js"></script>
+  </body>
+</html>

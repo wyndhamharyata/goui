@@ -5,8 +5,21 @@ import sonarjs from "eslint-plugin-sonarjs";
 import unicorn from "eslint-plugin-unicorn";
 
 export default [
-  // design/ holds throwaway HTML mocks, and dist/ holds the built release zip.
-  { ignores: ["design/**", "dist/**", "node_modules/**", "playwright-report/**", "test-results/**"] },
+  // design/ holds throwaway HTML mocks, and dist/ holds the built release zip. The site folder has
+  // its own packages and SST output, and its public/ holds copies made by npm run assets.
+  {
+    ignores: [
+      "design/**",
+      "dist/**",
+      "node_modules/**",
+      "playwright-report/**",
+      "test-results/**",
+      "site/node_modules/**",
+      "site/public/**",
+      "site/.sst/**",
+      "site/.wrangler/**",
+    ],
+  },
   {
     files: ["**/*.{js,mjs}"],
     plugins: { jsdoc, sonarjs, unicorn },

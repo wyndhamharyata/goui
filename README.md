@@ -200,5 +200,8 @@ To cut a release, raise `version` in `manifest.json`, then run `npm run images` 
 Commit and push, then attach `dist/goui-<version>.zip` to a new release named after the version.
 Past releases stay as they are, and GitHub marks the newest one as Latest.
 
+The homepage at [goui.mwyndham.dev](https://goui.mwyndham.dev) lives in `site/`, with its own
+packages. `site/README.md` covers how to run and deploy it.
+
 The tests open the panel as a normal tab. They fire the icon's own click event in the service
 worker, since Playwright cannot press the toolbar icon. A launch flag lets that click capture.

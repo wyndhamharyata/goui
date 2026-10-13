@@ -1,0 +1,239 @@
+/* The homepage. panel.css holds the styles for the mock panel, and the palette both files share. */
+
+body {
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel-2);
+  font-size: 13px;
+}
+
+.site-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.site-head img {
+  border-radius: 8px;
+}
+
+.site-head .name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.site-head nav {
+  display: flex;
+  gap: 18px;
+  margin-left: auto;
+  font-size: 14px;
+}
+
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 48px;
+  margin-top: 48px;
+}
+
+.hero-text {
+  flex: 1;
+  min-width: 320px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hero h1 {
+  margin: 8px 0 0;
+  font-size: 60px;
+  line-height: 1;
+}
+
+.mantra {
+  margin: 10px 0 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.pitch {
+  max-width: 560px;
+  margin: 18px 0 0;
+  color: var(--muted);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.button {
+  display: inline-block;
+  padding: 10px 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.button:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.button.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.fine {
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.demo-caption {
+  max-width: 360px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.block {
+  margin-top: 72px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+
+.block h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.block .lead {
+  max-width: 720px;
+  margin: 6px 0 22px;
+  color: var(--muted);
+}
+
+.two-col {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 36px;
+}
+
+.two-col > * {
+  flex: 1;
+  min-width: 300px;
+}
+
+.two-col img {
+  width: 100%;
+  max-width: 560px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.two-col p {
+  margin-top: 0;
+  color: var(--muted);
+}
+
+.steps {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.steps li {
+  margin-bottom: 12px;
+}
+
+.steps b {
+  color: var(--text);
+}
+
+.credits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.credit {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+}
+
+.credit:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.credit b {
+  display: block;
+  color: #fff;
+}
+
+.credit span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 72px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .hero h1 {
+    font-size: 44px;
+  }
+
+  .hero {
+    gap: 28px;
+  }
+}

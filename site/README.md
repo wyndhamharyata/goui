@@ -1,0 +1,42 @@
+# goui homepage
+
+The homepage at [goui.mwyndham.dev](https://goui.mwyndham.dev). A static site on Cloudflare Workers,
+deployed with SST. It has its own `package.json`, so its tools stay apart from the extension's.
+
+## Shared files
+
+The site shows the icons, two README pictures and the live panel mock from `design/`. `npm run
+assets` copies them into `public/`, and every dev and deploy command runs it first. The copies stay
+out of git, so the site always matches the repo.
+
+The panel mock is `design/ux-proposals.js` with one change. Each design block runs only when its own
+markup is on the page, so the homepage shows design F alone.
+
+## Develop
+
+```bash
+cd site
+npm install
+npm run dev
+```
+
+`npm run dev` serves `public/` through `wrangler dev` on http://localhost:8787.
+
+## Deploy
+
+SST deploys to the Cloudflare account that owns the mwyndham.dev zone. Copy `.env.example` to `.env`
+and fill in `CLOUDFLARE_DEFAULT_ACCOUNT_ID`, then:
+
+```bash
+npm run deploy:dev     # goui-dev.mwyndham.dev
+npm run deploy:prod    # goui.mwyndham.dev
+```
+
+The production stage is kept. Every other stage is removed on `sst remove`.
+
+## Files
+
+- `public/index.html`, `public/404.html` and `public/styles.css` are the pages.
+- `scripts/copy-assets.mjs` copies the shared files.
+- `src/worker/index.ts` is the worker: a health check and the asset fallback.
+- `sst.config.ts` names the worker, the domain and the local dev command.

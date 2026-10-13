@@ -1,0 +1,13 @@
+node_modules/
+.sst/
+.wrangler/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+
+# Copied from the rest of the repo by npm run assets.
+public/icons/
+public/images/
+public/panel.css
+public/panel.js
