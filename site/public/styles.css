@@ -37,6 +37,11 @@ code {
   font-weight: 700;
 }
 
+/* On the privacy page the name is a link home, in the text colour like on the homepage. */
+a.name {
+  color: var(--text);
+}
+
 .site-head nav {
   display: flex;
   gap: 18px;
@@ -215,6 +220,28 @@ code {
 .credit span {
   color: var(--muted);
   font-size: 13px;
+}
+
+/* The privacy page: one column of text at a readable width. */
+.policy {
+  max-width: 720px;
+  margin-top: 48px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.policy h1 {
+  margin: 0;
+  font-size: 36px;
+}
+
+.policy h2 {
+  margin-top: 32px;
+  font-size: 20px;
+}
+
+.policy li {
+  margin-bottom: 8px;
 }
 
 footer {
