@@ -79,15 +79,18 @@ func toDbfs(_ linear: Float) -> String {
 @MainActor
 final class Session {
   let outputName: String
+  let outputID: AudioObjectID
   let tapID: AudioObjectID
   let aggregateID: AudioObjectID
   let ioProcID: AudioDeviceIOProcID
   let render: OpaquePointer
   var overloadCount = 0
   private var overloadListener: AudioObjectPropertyListenerBlock?
+  private var sampleRateListener: AudioObjectPropertyListenerBlock?
 
-  init(options: Options) throws {
+  init(options: Options, onSampleRateChange: @escaping @MainActor () -> Void) throws {
     let outputID: AudioObjectID = try readValue(AudioObjectID(kAudioObjectSystemObject), kAudioHardwarePropertyDefaultOutputDevice, initial: 0)
+    self.outputID = outputID
     let outputUID = try readString(outputID, kAudioDevicePropertyDeviceUID)
     outputName = try readString(outputID, kAudioObjectPropertyName)
 
@@ -126,6 +129,7 @@ final class Session {
     try check(AudioDeviceStart(aggregateID, ioProcID), "Starting the aggregate device")
 
     listenForOverloads()
+    listenForSampleRate(onSampleRateChange)
     try printSummary(sampleRateHz: sampleRateHz, tapFormat: tapFormat, ownProcess: ownProcess)
   }
 
@@ -138,8 +142,18 @@ final class Session {
     overloadListener = listener
   }
 
-  // The delay from the tap to the speaker, as the aggregate device reports it. A player that asks
-  // the default device for its latency does not see this.
+  // The same device can change its rate, as a Bluetooth headphone does when a call opens its
+  // microphone. The bands were worked out for the old rate.
+  private func listenForSampleRate(_ onSampleRateChange: @escaping @MainActor () -> Void) {
+    var where_ = address(kAudioDevicePropertyNominalSampleRate)
+    let listener: AudioObjectPropertyListenerBlock = { _, _ in
+      MainActor.assumeIsolated { onSampleRateChange() }
+    }
+    AudioObjectAddPropertyListenerBlock(outputID, &where_, DispatchQueue.main, listener)
+    sampleRateListener = listener
+  }
+
+  // The device latency is there with or without goui. The engine's own share is its buffer.
   private func printSummary(sampleRateHz: Float64, tapFormat: AudioStreamBasicDescription, ownProcess: AudioObjectID) throws {
     let output = kAudioObjectPropertyScopeOutput
     let latencyFrames: UInt32 = try readValue(aggregateID, kAudioDevicePropertyLatency, output, initial: 0)
@@ -148,8 +162,8 @@ final class Session {
     let totalFrames = Double(latencyFrames + safetyFrames + bufferFrames)
     print("Output       \(outputName) at \(Int(sampleRateHz)) Hz")
     print("Tap          \(tapFormat.mChannelsPerFrame) channels at \(Int(tapFormat.mSampleRate)) Hz, this process is object \(ownProcess)")
-    print("Buffer       \(bufferFrames) frames, latency \(latencyFrames), safety \(safetyFrames)")
-    print(String(format: "Added delay  about %.1f ms on the output side", totalFrames / sampleRateHz * 1000))
+    print(String(format: "Delay        %.1f ms from the tap to the ear, of which the engine's buffer is %.1f ms",
+                 totalFrames / sampleRateHz * 1000, Double(bufferFrames) / sampleRateHz * 1000))
   }
 
   func printMeters(everySeconds: Double, previousCallbackCount: inout UInt64) {
@@ -163,6 +177,10 @@ final class Session {
   }
 
   func stop() {
+    var where_ = address(kAudioDevicePropertyNominalSampleRate)
+    if let sampleRateListener {
+      AudioObjectRemovePropertyListenerBlock(outputID, &where_, DispatchQueue.main, sampleRateListener)
+    }
     AudioDeviceStop(aggregateID, ioProcID)
     AudioDeviceDestroyIOProcID(aggregateID, ioProcID)
     AudioHardwareDestroyAggregateDevice(aggregateID)
@@ -182,7 +200,7 @@ var restartCount = 0
 @MainActor
 func startSession() {
   do {
-    session = try Session(options: options)
+    session = try Session(options: options) { restartSoon("The sample rate of the output changed.") }
     previousCallbackCount = 0
   } catch {
     print("goui engine could not start. \(error)")
@@ -201,22 +219,25 @@ print("goui engine. Gain \(options.gainDb) dB, bass \(options.bassDb) dB at 105 
 print("If the Mac goes quiet, allow the terminal under System Settings, Privacy & Security, Screen & System Audio Recording.")
 startSession()
 
-// A new default output, such as headphones plugged in, needs a new aggregate device. Several
-// changes can arrive at once, so the restart waits for them to settle.
-var outputChangeAddress = address(kAudioHardwarePropertyDefaultOutputDevice)
-AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &outputChangeAddress, DispatchQueue.main) { _, _ in
-  MainActor.assumeIsolated {
-    restartCount += 1
-    let restart = restartCount
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-      MainActor.assumeIsolated {
-        guard restart == restartCount else { return }
-        session?.stop()
-        print("The default output changed. Starting again.")
-        startSession()
-      }
+// Several changes can arrive at once, such as a new device and then its new rate, so the restart
+// waits for them to settle.
+@MainActor
+func restartSoon(_ reason: String) {
+  restartCount += 1
+  let restart = restartCount
+  DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+    MainActor.assumeIsolated {
+      guard restart == restartCount else { return }
+      session?.stop()
+      print("\(reason) Starting again.")
+      startSession()
     }
   }
+}
+
+var outputChangeAddress = address(kAudioHardwarePropertyDefaultOutputDevice)
+AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &outputChangeAddress, DispatchQueue.main) { _, _ in
+  MainActor.assumeIsolated { restartSoon("The default output changed.") }
 }
 
 let meterTimer = DispatchSource.makeTimerSource(queue: .main)
