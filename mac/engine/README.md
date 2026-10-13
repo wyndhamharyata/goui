@@ -28,6 +28,7 @@ On a MacBook Pro with macOS 27.0.1, through its speakers at 48 kHz:
 - A 440 Hz tone at -40.2 dBFS came out at -40.2 dBFS. With `--gain-db -6` it came out at -46.2.
 - The output side added about 13 ms.
 - On exit the tap and the aggregate device went away, and sound played the normal way again.
+- By ear, music with `--gain-db -12 --bass-db 6` played quieter with no double. The mute works.
 
 ## Checks by ear
 
