@@ -800,7 +800,11 @@ const libraryActions = {
   },
 };
 
-const idleInstruction = "Click the goui icon in the toolbar while you are on the tab you want to EQ.";
+// A window with no side panel, such as an installed app, opens this page as the popup of one tab.
+const popupTabId = Number(new URLSearchParams(location.search).get("tab"));
+const isPopup = Number.isInteger(popupTabId) && popupTabId > 0;
+let isPopupTabHeard = false;
+const idleInstruction = isPopup ? "goui is off on this tab. Press Turn on to EQ it." : "Click the goui icon in the toolbar while you are on the tab you want to EQ.";
 
 /** @param {import("./shared/messages.js").CaptureState} state */
 function applyCaptureState(state) {
@@ -813,7 +817,10 @@ function applyCaptureState(state) {
   const status = byId("status");
   status.textContent = state.error || (isCapturing ? state.title : idleInstruction);
   status.classList.toggle("instruction", !isCapturing);
-  status.title = isCapturing ? "Click the goui icon on this tab to turn goui off, or on another tab to move it there." : "";
+  status.title = isCapturing && !isPopup ? "Click the goui icon on this tab to turn goui off, or on another tab to move it there." : "";
+
+  isPopupTabHeard = isCapturing && state.tabId === popupTabId;
+  byId("power").textContent = isPopupTabHeard ? "Turn off" : "Turn on";
 }
 
 function showTelemetry(message) {
@@ -1046,6 +1053,14 @@ async function hydrate() {
 
   const session = await chrome.storage.session.get("capture");
   applyCaptureState(session.capture || { isCapturing: false });
+
+  // Opening the popup counts as the click on the icon, so goui starts on its tab right away.
+  if (!isPopup) return;
+  document.documentElement.classList.add("popup");
+  byId("power").hidden = false;
+  const start = { type: messageTypes.captureStart, tabId: popupTabId };
+  byId("power").addEventListener("click", () => trySendMessage(isPopupTabHeard ? { type: messageTypes.captureStop } : start));
+  trySendMessage(start);
 }
 
 hydrate();

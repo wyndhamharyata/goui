@@ -7,7 +7,9 @@
  *   | { type: "audio:stop" }
  *   | { type: "audio:config", config: import("./filters.js").Config }
  *   | { type: "audio:telemetry", levelDb: number, spectrumDb: number[] }
- *   | { type: "capture:state", state: CaptureState }} Message
+ *   | { type: "capture:state", state: CaptureState }
+ *   | { type: "capture:start", tabId: number }
+ *   | { type: "capture:stop" }} Message
  */
 
 export const messageTypes = {
@@ -16,6 +18,8 @@ export const messageTypes = {
   audioConfig: "audio:config",
   audioTelemetry: "audio:telemetry",
   captureState: "capture:state",
+  captureStart: "capture:start",
+  captureStop: "capture:stop",
 };
 
 // A message rejects when no other context is open to read it. The panel is often closed, so that

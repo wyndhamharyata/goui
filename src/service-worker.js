@@ -74,11 +74,44 @@ async function stopCapture() {
   return state;
 }
 
+// Brave crashes the whole browser when sidePanel.open names a window with no side panel, such as an
+// installed app. A tab in such a window opens goui as a popup instead, so its click never comes here.
+const everyWindowType = ["normal", "popup", "panel", "app", "devtools"];
+const popupWindowIds = new Set();
+
+/** @param {number} tabId */
+function usePopupOn(tabId) {
+  chrome.action.setPopup({ tabId, popup: `src/panel.html?tab=${tabId}` }).catch(() => {});
+}
+
+/** @param {chrome.windows.Window} window */
+function rememberWindow(window) {
+  if (window.type === "normal") return;
+  popupWindowIds.add(window.id);
+  for (const tab of window.tabs || []) usePopupOn(tab.id);
+}
+
+chrome.windows.getAll({ populate: true, windowTypes: everyWindowType }).then((windows) => windows.forEach(rememberWindow));
+
+// Chrome forgets the popup of a tab on each page load, so each load sets it again.
+chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
+  if (change.status !== "loading") return;
+  chrome.windows.get(tab.windowId, { populate: true, windowTypes: everyWindowType }).then(rememberWindow, () => {});
+});
+
+// "Open in Brave" moves the tab of an app into a normal window, where the side panel works again.
+chrome.tabs.onAttached.addListener(async (tabId, attach) => {
+  const window = await chrome.windows.get(attach.newWindowId, { populate: true, windowTypes: everyWindowType });
+  if (window.type === "normal") chrome.action.setPopup({ tabId, popup: "" }).catch(() => {});
+  rememberWindow(window);
+});
+
 // The click is what invokes the extension for the tab, which grants the right to take its audio.
 // Open the panel first, while the gesture is fresh. A click on the tab goui hears turns it off. A
 // click on any other tab moves goui there.
 chrome.action.onClicked.addListener(async (tab) => {
-  chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
+  if (popupWindowIds.has(tab.windowId)) usePopupOn(tab.id);
+  else chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
 
   if (await isHeardTab(tab.id)) {
     stopCapture();
@@ -92,6 +125,22 @@ chrome.action.onClicked.addListener(async (tab) => {
     return;
   }
   startCaptureForTab(tab).catch((error) => publishCapture({ isCapturing: false, error: error.message }));
+});
+
+/** @param {number} tabId */
+async function startCaptureFromPopup(tabId) {
+  if (await isHeardTab(tabId)) return;
+  const tab = await chrome.tabs.get(tabId);
+  await startCaptureForTab(tab);
+}
+
+// The popup has no click to answer, so it asks for its own tab when it opens and from its button.
+// Only a tab in an app window has the popup, and an app is always a web page.
+chrome.runtime.onMessage.addListener((message) => {
+  const isStart = message && message.type === messageTypes.captureStart && Number.isInteger(message.tabId);
+  if (isStart) startCaptureFromPopup(message.tabId).catch((error) => publishCapture({ isCapturing: false, error: error.message }));
+  if (message && message.type === messageTypes.captureStop) stopCapture();
+  return false;
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {

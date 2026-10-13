@@ -121,6 +121,38 @@ async function pressIcon(context, page) {
   }, details);
 }
 
+// An installed app has no side panel, and Playwright cannot install one. A popup window has no side
+// panel either, so it stands in for the app.
+/**
+ * @param {BrowserContext} context
+ * @param {number} port
+ * @param {number} toneHz
+ * @returns {Promise<{ tone: Page, tabId: number }>}
+ */
+async function openToneInApp(context, port, toneHz) {
+  const worker = await findWorker(context);
+  const url = `http://localhost:${port}/?hz=${toneHz}`;
+  const tabId = await worker.evaluate(async (toneUrl) => (await chrome.windows.create({ type: "popup", url: toneUrl })).tabs[0].id, url);
+  await expect.poll(() => findTone(context, toneHz)).toBeTruthy();
+  const tone = findTone(context, toneHz);
+  await tone.waitForLoadState();
+  await tone.click("#play");
+  expect(await tone.title()).toBe("playing running");
+  return { tone, tabId };
+}
+
+// Playwright cannot press the icon in a window with no toolbar. The journey opens the page the icon
+// would show as its popup instead.
+/**
+ * @param {BrowserContext} context
+ * @param {number} tabId
+ * @returns {Promise<string>}
+ */
+async function readPopup(context, tabId) {
+  const worker = await findWorker(context);
+  return worker.evaluate((id) => chrome.action.getPopup({ tabId: id }), tabId);
+}
+
 /**
  * @param {BrowserContext} context
  * @param {Page} page
@@ -644,6 +676,37 @@ journey("given goui hears a 1 kHz tab, a click on the icon of a 5 kHz tab moves 
 
   await high.close();
   await expect(panel.locator("#status")).toContainText("Click the goui icon");
+});
+
+journey("given a tab in a window with no side panel, its icon opens goui as a popup that plays the 6 dB peak and turns it off", async (context, port) => {
+  const { tone, tabId } = await openToneInApp(context, port, 1000);
+  await expect.poll(() => readPopup(context, tabId)).toContain("/src/panel.html?tab=");
+  const panel = await context.newPage();
+  await panel.goto(await readPopup(context, tabId));
+  await expect(panel.locator("#power")).toHaveText("Turn off");
+
+  await panel.click("#autoPreamp");
+  const flat = await readSteadyLevel(panel);
+  await pasteInto(panel, "headphone", peakText);
+  expectAbout6Db(await readSteadyLevel(panel) - flat);
+
+  await panel.click("#power");
+  await expect(panel.locator("#status")).toHaveText("goui is off on this tab. Press Turn on to EQ it.");
+  await panel.click("#power");
+  await expect(panel.locator("#power")).toHaveText("Turn off");
+  expectAbout6Db(await readSteadyLevel(panel) - flat);
+
+  // Chrome forgets the popup of a tab when the tab loads a page.
+  await tone.reload();
+  await expect.poll(() => readPopup(context, tabId)).toContain("/src/panel.html?tab=");
+
+  // "Open in Brave" moves the tab of an app into a normal window, where the icon opens the side panel.
+  const worker = await findWorker(context);
+  await worker.evaluate(async (id) => {
+    const [normal] = await chrome.windows.getAll({ windowTypes: ["normal"] });
+    await chrome.tabs.move(id, { windowId: normal.id, index: -1 });
+  }, tabId);
+  await expect.poll(() => readPopup(context, tabId)).toBe("");
 });
 
 journey("given the panel, the help button opens the how-to page with the steps, the credits, the version and the store link", async (context, port) => {

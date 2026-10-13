@@ -15,6 +15,11 @@ body {
   line-height: 1.4;
 }
 
+/* A popup takes the width of its page, up to 800 px. This is the side panel width the tests use. */
+.popup body {
+  width: 400px;
+}
+
 .app {
   display: flex;
   flex-direction: column;
