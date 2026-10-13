@@ -32,6 +32,8 @@ On a MacBook Pro with macOS 27.0.1, through its speakers at 48 kHz:
   The mute works. The tap also catches audio from the browser's helper process.
 - The volume keys still change the volume of the real device.
 - Stopped in the middle of playback, the music came straight back at its normal level.
+- Killed with `kill -9` in the middle of playback, the music came back on its own. macOS removes
+  the muted tap when the process dies.
 
 ## Checks by ear
 
