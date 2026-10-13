@@ -646,7 +646,7 @@ journey("given goui hears a 1 kHz tab, a click on the icon of a 5 kHz tab moves 
   await expect(panel.locator("#status")).toContainText("Click the goui icon");
 });
 
-journey("given the panel, the help button opens the how-to page with the steps, the credits and the version", async (context, port) => {
+journey("given the panel, the help button opens the how-to page with the steps, the credits, the version and the store link", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
   const opened = context.waitForEvent("page");
   await panel.click("#help");
@@ -662,6 +662,11 @@ journey("given the panel, the help button opens the how-to page with the steps, 
   await expect(intro.locator("a[href='https://github.com/jaakkopasanen/AutoEQ']")).toHaveCount(1);
   await expect(intro.locator("a[href='https://eqbyear.com']")).toHaveCount(1);
   await expect(intro.locator("a[href='https://github.com/google/material-design-icons']")).toHaveCount(1);
+  const store = intro.locator("a[href='https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap']");
+  await expect(store).toHaveCount(1);
+  const badge = store.locator("img[alt='Available in the Chrome Web Store']");
+  await expect(badge).toBeVisible();
+  expect(await badge.evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
   await expect(intro.locator("a[href='https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md']")).toHaveCount(1);
   await expect(intro.locator(".links")).toContainText("under the MIT licence");
 });

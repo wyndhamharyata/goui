@@ -4,6 +4,8 @@ Browser level EQ to show how easy and significant it is to adjust EQ for your he
 your own ear. It all comes down to a very simple mantra: **different ear, different head, different
 sound.**
 
+<a href="https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap"><img src="docs/images/chrome-web-store.png" alt="Available in the Chrome Web Store" height="58"></a>
+
 ![The sound of a tab passes the headphone layer, then the ear layer, then your taste, then reaches you.](docs/images/how-it-works.png)
 
 ## What it does
@@ -20,8 +22,11 @@ clips.
 
 ## Install
 
-goui is not in the Chrome Web Store. You add it by hand one time, in about two minutes. You download
-a zip, unzip it, then point Chrome at the folder.
+goui is in the Chrome Web Store. [Install goui](https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap)
+in one click, and Chrome keeps it up to date.
+
+You can also add it by hand one time, in about two minutes. You download a zip, unzip it, then point
+Chrome at the folder.
 
 ![Install goui in four steps: download the zip, load the folder, pin goui, click the icon.](docs/images/install-flow.png)
 

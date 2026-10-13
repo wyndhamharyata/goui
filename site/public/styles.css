@@ -91,9 +91,63 @@ a.name {
 
 .buttons {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 24px;
+}
+
+/* Google allows a resize of the store badge and nothing else, so the glow and the lift go on the link. */
+@property --spin {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.store-badge {
+  position: relative;
+  isolation: isolate;
+  display: inline-block;
+  margin-right: 8px;
+  border-radius: 6px;
+  line-height: 0;
+  box-shadow: 0 10px 30px -8px rgba(91, 140, 255, 0.6);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.store-badge::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  border-radius: 9px;
+  background: conic-gradient(from var(--spin), var(--accent), var(--peak), var(--shelf), var(--accent));
+  filter: blur(8px);
+  opacity: 0.6;
+  animation: spin 6s linear infinite;
+}
+
+.store-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px -8px rgba(91, 140, 255, 0.8);
+}
+
+.store-badge:hover::before {
+  opacity: 0.9;
+}
+
+@keyframes spin {
+  to {
+    --spin: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-badge,
+  .store-badge::before {
+    transition: none;
+    animation: none;
+  }
 }
 
 .button {

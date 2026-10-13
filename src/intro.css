@@ -137,6 +137,33 @@ h2 {
   font-size: 12px;
 }
 
+.links a.store {
+  flex-direction: row;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 16px;
+  border-color: rgba(91, 140, 255, 0.45);
+  background: linear-gradient(120deg, rgba(91, 140, 255, 0.16), rgba(176, 107, 255, 0.12) 60%, var(--panel));
+  box-shadow: 0 10px 28px -14px rgba(91, 140, 255, 0.7);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.links a.store:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -14px rgba(91, 140, 255, 0.9);
+}
+
+.links a.store span {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.links a.store b {
+  color: var(--text);
+  font-size: 14px;
+}
+
 .fine {
   margin: 14px 0 0;
   color: var(--muted);
