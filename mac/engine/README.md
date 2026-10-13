@@ -30,6 +30,8 @@ On a MacBook Pro with macOS 27.0.1, through its speakers at 48 kHz:
 - On exit the tap and the aggregate device went away, and sound played the normal way again.
 - By ear, YouTube in a browser tab with `--gain-db -12 --bass-db 6` played quieter with no double.
   The mute works. The tap also catches audio from the browser's helper process.
+- The volume keys still change the volume of the real device.
+- Stopped in the middle of playback, the music came straight back at its normal level.
 
 ## Checks by ear
 
