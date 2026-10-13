@@ -4,3 +4,4 @@ test-results/
 dist/
 shots/
 .DS_Store
+mac/engine/.build/
