@@ -314,6 +314,7 @@ function expectFlat(levelDb, flatDb) {
 // Stand in for the AutoEQ repository. Other Phone has no profile, as a broken download.
 async function routeAutoEq(context) {
   const profilePath = "/Filk/over-ear/Fixture%20Phone%20(ANC%20On)/Fixture%20Phone%20(ANC%20On)%20ParametricEQ.txt";
+  const hd600Path = "/oratory1990/over-ear/Sennheiser%20HD%20600/Sennheiser%20HD%20600%20ParametricEQ.txt";
   await context.route("https://raw.githubusercontent.com/**", (route) => {
     const url = route.request().url();
     if (url.endsWith("INDEX.md")) {
@@ -322,6 +323,10 @@ async function routeAutoEq(context) {
     }
     if (url.endsWith(profilePath)) {
       route.fulfill({ contentType: "text/plain", body: readFixture("fixture-phone.txt") });
+      return;
+    }
+    if (url.endsWith(hd600Path)) {
+      route.fulfill({ contentType: "text/plain", body: readFixture("Sennheiser HD 600 ParametricEQ.txt") });
       return;
     }
     route.fulfill({ status: 404, body: "404: Not Found" });
@@ -396,6 +401,37 @@ journey("given eight HD 600 measurements, each result names its source, form, ri
   await expect(results.nth(1)).not.toContainText("AutoEQ's pick");
   await expect(results.nth(5)).toContainText("Rtings · Over-ear · B&K 5128 · HMS II.3 Harman over-ear 2018");
   await expect(results.nth(6)).toContainText("Innerfidelity · Over-ear · HMS II.3 Harman over-ear 2018");
+});
+
+// AutoEQ's target files put Harman over-ear 2018 at +3.3 dB at 50 Hz and oratory1990's optimum hifi
+// curve at -1.6 dB. Both sit at 0 dB at 1 kHz.
+journey("given the HD 600 by oratory1990, the optimum hifi target plays a 50 Hz tone 4.9 dB quieter than Harman 2018 and keeps 1 kHz", async (context, port) => {
+  await routeAutoEq(context);
+  const panel = await openPanel(context, port, 50);
+  await panel.click("#autoPreamp");
+  await openTab(panel, "library");
+  const headphone = sectionOf(panel, "headphone");
+  await headphone.locator(".search").fill("HD 600");
+  await headphone.locator(".item[data-name='Sennheiser HD 600']").first().click();
+
+  const target = layerRow(panel, "Headphone").locator(".target select");
+  await expect(target).toHaveValue("Harman over-ear 2018");
+  const lowWithHarman = await readSteadyLevel(panel);
+  await target.selectOption("oratory1990 optimum hifi over-ear");
+  await expect(target).toHaveValue("oratory1990 optimum hifi over-ear");
+  expect(Math.abs(await readSteadyLevel(panel) - lowWithHarman + 4.9)).toBeLessThan(0.6);
+  const reopened = await context.newPage();
+  await reopened.goto(panelUrl);
+  await expect(layerRow(reopened, "Headphone").locator(".target select")).toHaveValue("oratory1990 optimum hifi over-ear");
+  await reopened.close();
+
+  const mid = await openTone(context, port, 1000);
+  await pressIcon(context, mid);
+  await expect(panel.locator("#status")).toHaveText("playing running");
+  const midWithOratory = await readSteadyLevel(panel);
+  await target.selectOption("Harman over-ear 2018");
+  await expect(target).toHaveValue("Harman over-ear 2018");
+  expect(Math.abs(await readSteadyLevel(panel) - midWithOratory)).toBeLessThan(0.6);
 });
 
 journey("given an AutoEQ pick, Save keeps it under its headphone name, and picking it from your presets plays it again", async (context, port) => {

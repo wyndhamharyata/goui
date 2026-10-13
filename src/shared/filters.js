@@ -18,7 +18,10 @@
  * @property {string} name
  * @property {boolean} isEdited
  * @property {Band[]} bands
+ * @property {AutoEqSource} [autoEq]
  */
+
+/** @typedef {{ name: string, path: string, target: string }} AutoEqSource */
 
 /** @typedef {{ bassDb: number, vocalsDb: number, trebleDb: number }} Sliders */
 
@@ -157,13 +160,17 @@ export function cleanBands(raw) {
  * @returns {Layer}
  */
 function cleanLayer(raw, fallbackName) {
-  return {
+  const layer = {
     on: !raw || raw.on !== false,
     source: raw && typeof raw.source === "string" ? raw.source : "Sound",
     name: raw && typeof raw.name === "string" ? raw.name : fallbackName,
     isEdited: Boolean(raw && raw.isEdited),
     bands: cleanBands(raw && raw.bands),
   };
+  const autoEq = raw && raw.autoEq;
+  const isAutoEq = Boolean(autoEq) && ["name", "path", "target"].every((key) => typeof autoEq[key] === "string");
+  if (isAutoEq) layer.autoEq = { name: autoEq.name, path: autoEq.path, target: autoEq.target };
+  return layer;
 }
 
 // Used on a stored config and on an imported saved sound, so a bad file cannot reach the audio chain.

@@ -98,6 +98,9 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 - The stack at the top holds a **Headphone** layer and a **My ear** layer. Each row has its own switch,
   so AutoEQ alone compares against AutoEQ plus your ear with one press. **Change** opens that layer in
   the Library, and the ear row has an **×** to take it off.
+- A headphone from AutoEQ shows its **Target**, the sound AutoEQ tunes it toward. Pick another one to
+  hear the headphone tuned to it. The list holds only the targets made for the rig that measured your
+  headphone. A change of target loads the headphone again, so edits to its bands are lost.
 - Bass, Vocals and Treble nudge the sound. They sit on top of both layers and stay when you pick another
   preset.
 - The preamp follows the largest boost, so the sound never clips. Move the slider to set it by hand.
@@ -132,7 +135,9 @@ own Save, Import, Paste and Export.
 - The list shows the presets you saved, and the one that plays now is marked. A pick from the list plays
   it again. The **×** on a row deletes it.
 - In the headphone section, type a model to search the AutoEQ headphones. A pick clears the search and
-  takes you back to Listen. The source under each name tells apart the measurements of one headphone.
+  takes you back to Listen. One headphone often has several measurements. The line under each name
+  gives the source, the form, the rig and the target AutoEQ tuned it to. **AutoEQ's pick** marks the
+  one AutoEQ recommends.
 - **Import** loads a `ParametricEQ.txt` file into that layer. **Paste** takes the same text. **Export**
   writes that one layer as AutoEQ text.
 - **Measure my ear with eqbyear** is in the ear section. It turns My ear off, so the test hears the
@@ -161,6 +166,9 @@ wants, and goui keeps the two apart.
   drops its Q. The inspector says so on a shelf.
 - The AutoEQ search reads the public index on GitHub. The result is kept for a week, so a second
   search is fast.
+- The targets come from AutoEQ itself. AutoEQ's file tunes a headphone to the first target of its
+  rig. Another target adds a few bands that move the sound from that target to the one you pick, up
+  to 12 kHz.
 - The extension can only change audio inside the browser. For system audio, use a tool such as
   SoundSource.
 
@@ -169,8 +177,8 @@ wants, and goui keeps the two apart.
 goui stands on other people's work. `THIRD_PARTY_NOTICES.md` holds the full notices, and the guide
 inside the extension has the short version.
 
-- **AutoEQ** by Jaakko Pasanen. The headphone profiles and the search index come from AutoEQ. It is
-  under the MIT licence.
+- **AutoEQ** by Jaakko Pasanen. The headphone profiles, the search index and the target curves come
+  from AutoEQ. It is under the MIT licence.
 - **EQByEar** at [eqbyear.com](https://eqbyear.com). The ear test, which goui opens in a new tab.
 - **Google Material Icons**. The five icons in the panel and the guide. They are under the Apache 2.0
   licence.

@@ -27,6 +27,7 @@ import {
   typeLabels,
 } from "./shared/filters.js";
 import { messageTypes, trySendMessage } from "./shared/messages.js";
+import { fitTargetChange } from "./fit.js";
 import { formatDb, formatHz, layerColor, makeGraph, qToOctaves, typeColor } from "./graph.js";
 
 /** @typedef {import("./shared/filters.js").Band} Band */
@@ -43,7 +44,9 @@ import { formatDb, formatHz, layerColor, makeGraph, qToOctaves, typeColor } from
 
 /** @typedef {{ labels: string[], measurements: { source: string, form: string, rig?: string }[] }} RigFamily */
 
-/** @typedef {{ label: string, bassDb: number, db: number[] }} TargetCurve */
+/** @typedef {import("./fit.js").TargetCurve} TargetCurve */
+
+/** @typedef {{ families: RigFamily[], targets: TargetCurve[] }} TargetData */
 
 /**
  * @param {string} id
@@ -129,8 +132,11 @@ let soloIndex = -1;
 let isBypassed = false;
 let keepsPreampInCompare = false;
 let autoEqItems = null;
-/** @type {Promise<{ families: RigFamily[], targets: TargetCurve[] }> | null} */
+/** @type {Promise<TargetData> | null} */
 let targetData = null;
+// The same data once it has loaded, for the Listen row, which draws at once.
+/** @type {TargetData | null} */
+let loadedTargets = null;
 let isMoreOpen = false;
 const openActions = { headphone: "", ear: "" };
 
@@ -308,6 +314,26 @@ function openLibrarySection(role) {
   sectionOf(role).scrollIntoView({ block: "start" });
 }
 
+// The targets a headphone from AutoEQ can take. A family with one target shows its name only.
+/**
+ * @param {import("./shared/filters.js").AutoEqSource} autoEq
+ * @returns {HTMLElement}
+ */
+function makeTargetChoice(autoEq) {
+  const family = loadedTargets && findFamily(loadedTargets.families, { ...readMeasurement(autoEq.path), name: autoEq.name, path: autoEq.path, isPick: false });
+  const choice = makeElement("label", { className: "target", text: "Target", title: "The sound AutoEQ tunes your headphone toward" });
+  if (!family || family.labels.length < 2) {
+    choice.append(makeElement("span", { text: autoEq.target }));
+    return choice;
+  }
+  const select = makeElement("select");
+  for (const label of family.labels) select.append(new Option(label, label));
+  select.value = autoEq.target;
+  select.addEventListener("change", () => changeTarget(select.value));
+  choice.append(select);
+  return choice;
+}
+
 // The stack on Listen. One row per layer, each with its own switch, its source and its name.
 function renderLayers() {
   const host = byId("layers");
@@ -333,6 +359,7 @@ function renderLayers() {
     caption.append(mark, `${layerLabels[role]} · ${layer.source}`);
     const text = makeElement("div", { className: "grow" });
     text.append(caption, makeElement("b", { text: describeLayerName(layer) }));
+    if (layer.autoEq) text.append(makeTargetChoice(layer.autoEq));
 
     const change = makeElement("button", { text: "Change" });
     change.dataset.role = role;
@@ -518,11 +545,12 @@ function renderPresetCards() {
 // A headphone file's own preamp is kept, since a lone headphone file needs it. Auto preamp
 // overrides it either way.
 /**
- * @param {{ name: string, source: string, bands: Band[], preampDb?: number }} sound
+ * @param {{ name: string, source: string, bands: Band[], preampDb?: number, autoEq?: import("./shared/filters.js").AutoEqSource }} sound
  * @param {LayerRole} role
  */
 function placeBands(sound, role) {
   config.layers[role] = makeLayer(sound.name, sound.source, cleanBands(sound.bands));
+  if (sound.autoEq) config.layers[role].autoEq = sound.autoEq;
   if (role === "headphone" && sound.preampDb !== undefined) config.preampDb = sound.preampDb;
   unselectBand();
   commit();
@@ -575,7 +603,7 @@ function readMeasurement(path) {
   return { source, form, rig: folder.slice(0, folder.length - form.length).trim() };
 }
 
-/** @returns {Promise<{ families: RigFamily[], targets: TargetCurve[] }>} */
+/** @returns {Promise<TargetData>} */
 function loadTargets() {
   targetData ??= fetch(chrome.runtime.getURL("src/targets.json")).then((response) => response.json());
   return targetData;
@@ -642,12 +670,15 @@ async function loadAutoEqIndex() {
   return autoEqItems;
 }
 
+// AutoEQ's file tunes the headphone to the first target of its family. Another target adds the
+// bands that move the sound from that one to it.
 /**
  * @param {AutoEqItem} item
  * @param {HTMLElement} hint
+ * @param {string} [target]
  * @returns {Promise<boolean>}
  */
-async function loadHeadphone(item, hint) {
+async function loadHeadphone(item, hint, target) {
   hint.textContent = `Loading ${item.name}...`;
   const file = encodeURIComponent(`${item.name} ParametricEQ.txt`);
   const response = await fetch(`${autoEqBase}${item.path}/${file}`).catch(() => null);
@@ -656,9 +687,24 @@ async function loadHeadphone(item, hint) {
     return false;
   }
   const parsed = parseAutoEq(await response.text());
-  placeBands({ name: item.name, source: "AutoEQ", bands: parsed.bands, preampDb: parsed.preampDb }, "headphone");
+  const { families, targets } = await loadTargets();
+  const family = findFamily(families, item);
+  const autoEqTarget = family ? family.labels[0] : "";
+  const chosen = family && family.labels.includes(target) ? target : autoEqTarget;
+  const curveOf = (label) => targets.find((curve) => curve.label === label);
+  const moveBands = chosen === autoEqTarget ? [] : fitTargetChange(curveOf(autoEqTarget), curveOf(chosen));
+
+  const autoEq = family ? { name: item.name, path: item.path, target: chosen } : undefined;
+  placeBands({ name: item.name, source: "AutoEQ", bands: [...parsed.bands, ...moveBands], preampDb: parsed.preampDb, autoEq }, "headphone");
   hint.textContent = "";
   return true;
+}
+
+// A change of target loads the headphone again with the new target. Edits to its bands are lost.
+/** @param {string} target */
+function changeTarget(target) {
+  const { name, path } = config.layers.headphone.autoEq;
+  loadHeadphone({ name, path, ...readMeasurement(path), isPick: false }, partOf("headphone", "search-hint"), target);
 }
 
 // A pick from a typed search is the end of that search. The box empties and Listen shows the sound.
@@ -1125,6 +1171,7 @@ async function readPresets(stored) {
 async function hydrate() {
   for (const type of bandTypes) byId("bandType").append(new Option(typeLabels[type], type));
 
+  loadedTargets = await loadTargets();
   const stored = await chrome.storage.local.get(["config", "headphonePresets", "earPresets", "savedSounds", "presets", "view", "tab", "hasCaptured", "keepsPreampInCompare"]);
   byId("app").dataset.started = stored.hasCaptured ? "yes" : "no";
   keepsPreampInCompare = stored.keepsPreampInCompare === true;

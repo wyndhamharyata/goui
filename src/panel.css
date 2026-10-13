@@ -647,6 +647,26 @@ textarea {
   white-space: nowrap;
 }
 
+.layer .target {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.layer .target select {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 4px;
+  font-size: 11px;
+}
+
+.layer .target span {
+  color: var(--text);
+}
+
 .layer.off b,
 .layer.off .caption {
   color: var(--muted);
