@@ -12,6 +12,7 @@ let package = Package(
     .target(name: "Render"),
     .target(name: "GouiEngine", dependencies: ["Render"]),
     .executableTarget(name: "goui", dependencies: ["GouiEngine"]),
+    .executableTarget(name: "goui-render-check", dependencies: ["Render"]),
     .executableTarget(
       name: "goui-engine",
       dependencies: ["GouiEngine"],

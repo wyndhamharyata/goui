@@ -1,20 +1,15 @@
 import Foundation
+import GouiEngine
 
-public struct Options {
+struct Options {
   static let maxLevelDb = 24.0
   static let usage = "Usage: goui-engine [--gain-db -24...24] [--bass-db -24...24] [--seconds N]"
 
-  public var gainDb: Double
-  public var bassDb: Double
-  public var seconds: Double?
+  var gainDb = 0.0
+  var bassDb = 0.0
+  var seconds: Double?
 
-  public init(gainDb: Double = 0, bassDb: Double = 0, seconds: Double? = nil) {
-    self.gainDb = gainDb
-    self.bassDb = bassDb
-    self.seconds = seconds
-  }
-
-  public static func parse(_ arguments: [String]) -> Options {
+  static func parse(_ arguments: [String]) -> Options {
     var options = Options()
     var remaining = arguments.dropFirst()
     while let flag = remaining.popFirst() {
@@ -28,6 +23,12 @@ public struct Options {
       }
     }
     return options
+  }
+
+  // The bass is a low shelf at 105 Hz, the corner AutoEQ and the Bass slider use.
+  var sound: Sound {
+    let bass = Band(type: "LSC", frequencyHz: 105, gainDb: bassDb, q: 0.71)
+    return Sound(preampDb: gainDb, bands: bassDb == 0 ? [] : [bass])
   }
 
   private static func exitWithUsage() -> Never {

@@ -134,7 +134,7 @@ Each step starts only when it is asked for, and ends with a commit.
 
 1. Permission check. Done, see Settled.
 2. App. Done, see Settled. The callback watch from A stuck engine is still to come.
-3. Biquads in C for every band type, the swap without a click, and the check against WebKit.
+3. Biquads in C. Done, see Settled.
 4. `chrome.js` and `shell.html`, so the existing panel drives the engine through the bridge.
 5. Install. A script that builds the tarball, `install.sh` with the plist, and the `goui`
    command.
@@ -161,6 +161,13 @@ Each step starts only when it is asked for, and ends with a commit.
   Power off and on sent a status event each time. An unknown message and a sound with no data were
   refused with the reason. After `kill -9`, the app came back at the -6 dB that `config.json` kept.
 - A new build asks for the permission again, as the ad hoc signature changes.
+- The C filters match WebKit's `getFrequencyResponse` to 0.0001 dB, for 300 bands of every type at
+  16, 44.1 and 48 kHz, built by the extension's own `createBiquad`. That covers bands above the
+  Nyquist frequency at 16 kHz, and the low and high pass that read Q in dB.
+- A change of sound fades over 20 ms between two filter chains, and the new chain takes the old
+  one's filter memory. `goui-render-check` changes the sound at a peak of a tone, and the largest
+  step between two samples stays within the tone's own. With no fade, the steps reached 1.8 to 100
+  times that. A change during a fade waits, and only the newest sound goes in.
 - **Restart engine** takes the tap down and builds it again, so the sound plays as it is for a
   moment, louder, then drops back. A new output device or rate does the same. Building the new tap
   before taking the old one down would play both at once. **Quit goui** brings the sound back at

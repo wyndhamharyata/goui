@@ -11,6 +11,9 @@ private struct Request: Decodable {
   let isOn: Bool?
   let sound: PlayedSound?
   let text: String?
+  let band: Band?
+  let sampleRateHz: Double?
+  let frequenciesHz: [Double]?
 }
 
 // Answers the page's messages and sends it events. Only pages served by goui reach it.
@@ -18,6 +21,7 @@ private struct Request: Decodable {
 final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
   static let name = "goui"
   static let maxPreampDb = 24.0
+  static let maxFrequencyCount = 1000
 
   weak var webView: WKWebView?
   private let engine: Engine
@@ -55,10 +59,12 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
     case "sound":
       guard let sound = request.sound, sound.preampDb.isFinite else { throw BridgeError(description: "A sound message needs a sound with a finite preampDb") }
 
-      config.sound = sound
-      config.sound.preampDb = min(max(sound.preampDb, -Self.maxPreampDb), Self.maxPreampDb)
+      var newConfig = config
+      newConfig.sound = sound
+      newConfig.sound.preampDb = min(max(sound.preampDb, -Self.maxPreampDb), Self.maxPreampDb)
+      try engine.setSound(newConfig.playedSound)
+      config = newConfig
       config.write()
-      engine.setGainDb(config.playedGainDb)
       return nil
     case "power":
       guard let isOn = request.isOn else { throw BridgeError(description: "A power message needs isOn") }
@@ -67,6 +73,12 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
       config.write()
       if isOn { engine.start() } else { engine.stop() }
       return nil
+    case "response":
+      guard let band = request.band, let sampleRateHz = request.sampleRateHz, let frequenciesHz = request.frequenciesHz, frequenciesHz.count <= Self.maxFrequencyCount else {
+        throw BridgeError(description: "A response message needs a band, a sampleRateHz and up to \(Self.maxFrequencyCount) frequenciesHz")
+      }
+
+      return try bandResponse(band, sampleRateHz: sampleRateHz, frequenciesHz: frequenciesHz)
     case "restart":
       engine.restart(reason: "The page asked for a restart.")
       return nil

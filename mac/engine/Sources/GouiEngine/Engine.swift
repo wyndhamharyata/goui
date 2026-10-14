@@ -11,10 +11,12 @@ public final class Engine {
   }
 
   private static let retryDelaysSeconds = [0.3, 1, 3]
+  // A change that arrives during a fade waits this long, then the newest sound goes in.
+  private static let fadeWaitSeconds = 0.005
   // A new device and then its new rate can arrive together, so a restart waits for them to settle.
   private static let restartSettleSeconds = 0.3
 
-  private var options: Options
+  private var sound = RenderSound(preampDb: 0, bands: [])
   public var onStatusChange: ((Status) -> Void)?
   public private(set) var status = Status.stopped {
     didSet { if status != oldValue { onStatusChange?(status) } }
@@ -23,9 +25,9 @@ public final class Engine {
   private var defaultOutputListener: PropertyListener?
   private var pendingStart: DispatchWorkItem?
   private var failedStartCount = 0
+  private var pendingSound: DispatchWorkItem?
 
-  public init(options: Options) throws {
-    self.options = options
+  public init() throws {
     defaultOutputListener = try PropertyListener(object: AudioObjectID(kAudioObjectSystemObject), selector: kAudioHardwarePropertyDefaultOutputDevice) { [weak self] in
       self?.restart(reason: "The default output changed.")
     }
@@ -35,7 +37,7 @@ public final class Engine {
     cancelPendingStart()
     guard path == nil else { return }
     do {
-      let path = try AudioPath(options: options) { [weak self] in
+      let path = try AudioPath(sound: sound) { [weak self] in
         self?.restart(reason: "The sample rate of the output changed.")
       }
       self.path = path
@@ -66,13 +68,24 @@ public final class Engine {
     }
   }
 
-  public func setGainDb(_ gainDb: Double) {
-    options.gainDb = gainDb
-    path?.setGainDb(gainDb)
+  // Throws when the sound cannot play, and keeps the one before.
+  public func setSound(_ sound: Sound) throws {
+    self.sound = try sound.toRenderSound()
+    sendSoundToPath()
   }
 
   public func readMeters() -> MeterReading? {
     path?.readMeters()
+  }
+
+  private func sendSoundToPath() {
+    pendingSound?.cancel()
+    pendingSound = nil
+    guard let path, !path.trySetSound(sound) else { return }
+
+    let workItem = DispatchWorkItem { [weak self] in MainActor.assumeIsolated { self?.sendSoundToPath() } }
+    pendingSound = workItem
+    DispatchQueue.main.asyncAfter(deadline: .now() + Self.fadeWaitSeconds, execute: workItem)
   }
 
   private func stopPath() {

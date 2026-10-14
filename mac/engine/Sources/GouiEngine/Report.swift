@@ -1,10 +1,5 @@
 import Foundation
 
-public func printIntroduction(_ options: Options) {
-  print("goui engine. Gain \(options.gainDb) dB, bass \(options.bassDb) dB at 105 Hz. Press Control-C to stop.")
-  print("If the Mac goes quiet, allow the terminal under System Settings, Privacy & Security, Screen & System Audio Recording.")
-}
-
 func printSummary(_ summary: AudioPathSummary) {
   print("Output       \(summary.outputName) at \(Int(summary.sampleRateHz)) Hz")
   print("Tap          \(summary.tapChannelCount) channels")

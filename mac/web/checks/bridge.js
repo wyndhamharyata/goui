@@ -66,5 +66,7 @@ await wait(settleMs);
 await report("status", { type: "status" });
 await report("an unknown message", { type: "nothing" });
 await report("a sound with no sound", { type: "sound" });
+await report("an unknown band type", { type: "sound", sound: { enabled: true, preampDb: 0, bands: [{ on: true, type: "XX", frequencyHz: 1000, gainDb: 6, q: 1 }] } });
+await reportLevels("a peak at 1 kHz, +6 dB", { type: "sound", sound: { enabled: true, preampDb: -6, bands: [{ on: true, type: "PK", frequencyHz: 1000, gainDb: 6, q: 1 }] } });
 await reportLevels("preamp -6 to keep", playSound(-6));
 await print("Check done.");

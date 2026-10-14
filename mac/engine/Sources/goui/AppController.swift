@@ -26,17 +26,23 @@ final class AppController: NSObject, WKNavigationDelegate {
     let config = SavedConfig.read()
     let engine: Engine
     do {
-      engine = try Engine(options: Options(gainDb: config.playedGainDb))
+      engine = try Engine()
     } catch {
       print("goui engine could not start. \(error)")
       exit(1)
+    }
+
+    do {
+      try engine.setSound(config.playedSound)
+    } catch {
+      print("The saved sound cannot play, so goui plays the sound as it is. \(error)")
     }
 
     let bridge = Bridge(engine: engine, config: config)
     engine.onStatusChange = { _ in bridge.sendStatus() }
     self.engine = engine
     self.bridge = bridge
-    print("goui. \(config.isOn ? "On" : "Off"), preamp \(config.playedGainDb) dB.")
+    print("goui. \(config.isOn ? "On" : "Off"), preamp \(config.playedSound.preampDb) dB, \(config.playedSound.bands.count) bands.")
     if config.isOn { engine.start() }
 
     buildMenu()

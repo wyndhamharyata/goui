@@ -51,7 +51,7 @@ final class AudioPath {
   private var lastCallbackCount: UInt64 = 0
   private var lastMeterNanoseconds: UInt64
 
-  init(options: Options, onSampleRateChange: @escaping @MainActor () -> Void) throws {
+  init(sound: RenderSound, onSampleRateChange: @escaping @MainActor () -> Void) throws {
     var teardown = Teardown()
     let outputID: AudioObjectID
     let aggregateID: AudioObjectID
@@ -71,7 +71,10 @@ final class AudioPath {
       guard sampleRateHz > 0 else { throw AudioError("The output reports a sample rate of \(sampleRateHz) Hz") }
       let tapBufferIndex = try findTapBufferIndex(outputID: outputID, aggregateID: aggregateID, tapChannelCount: tapChannelCount)
 
-      guard let render = renderStateCreate(options.gainDb, options.bassDb, sampleRateHz, tapChannelCount, tapBufferIndex) else {
+      let createdRender = sound.bands.withUnsafeBufferPointer { bands in
+        renderStateCreate(sound.preampDb, bands.baseAddress, UInt32(bands.count), sampleRateHz, tapChannelCount, tapBufferIndex)
+      }
+      guard let render = createdRender else {
         throw AudioError("Creating the render state failed. Memory ran out or atomic float is not lock-free here")
       }
       teardown.add("Freeing the render state") { renderStateDestroy(render); return noErr }
@@ -96,7 +99,7 @@ final class AudioPath {
       overloadListener = try PropertyListener(object: aggregateID, selector: kAudioDeviceProcessorOverload) { [weak self] in
         self?.overloadCount += 1
       }
-      // A call on a Bluetooth headphone changes its rate, and the bass shelf was worked out for the old one.
+      // A call on a Bluetooth headphone changes its rate, and the filters were worked out for the old one.
       sampleRateListener = try PropertyListener(object: outputID, selector: kAudioDevicePropertyNominalSampleRate, handler: onSampleRateChange)
     } catch {
       stop()
@@ -111,9 +114,13 @@ final class AudioPath {
     render = nil
   }
 
-  func setGainDb(_ gainDb: Double) {
-    guard let render else { return }
-    renderSetGain(render, gainDb)
+  // False while the last change still fades. A stopped path takes nothing and returns true.
+  func trySetSound(_ sound: RenderSound) -> Bool {
+    guard let render else { return true }
+
+    return sound.bands.withUnsafeBufferPointer { bands in
+      renderTrySetSound(render, sound.preampDb, bands.baseAddress, UInt32(bands.count))
+    }
   }
 
   // Returns nil once the path has stopped.

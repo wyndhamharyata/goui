@@ -6,30 +6,39 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "Biquad.h"
+
 // An output with more buffers than this plays silence on the rest.
 enum { maxOutputBufferCount = 16 };
 
 _Static_assert(ATOMIC_LLONG_LOCK_FREE == 2, "the audio thread needs lock-free 64-bit counters");
 _Static_assert(ATOMIC_INT_LOCK_FREE == 2, "the audio thread needs lock-free 32-bit counters");
 
-static const double bassFrequencyHz = 105;
+// Long enough that a change of sound does not click, short enough to feel instant.
+static const double fadeSeconds = 0.02;
 
+// One sound: the preamp and the bands, with each band's filter memory for each channel.
 typedef struct {
-  double b0, b1, b2, a1, a2;
-} BiquadRow;
-
-// 64-bit state, so a shelf near 100 Hz keeps its accuracy.
-typedef struct {
-  double z1, z2;
-} BiquadState;
+  double preampLinear;
+  UInt32 bandCount;
+  BiquadRow rows[maxBandCount];
+  BiquadState states[maxBandCount][maxTapChannelCount];
+} Chain;
 
 struct RenderState {
-  _Atomic float gainLinear;
-  bool hasBass;
-  BiquadRow bass;
-  BiquadState bassStates[maxTapChannelCount];
+  // The main thread writes the chain the audio thread does not play, then publishes its number.
+  Chain chains[2];
+  _Atomic int publishedChain;
+  // The audio thread stores the chain it plays alone once a fade ends. Until then the other is in use.
+  _Atomic int settledChain;
+  double sampleRateHz;
+  UInt32 fadeFrameCount;
   UInt32 tapChannelCount;
   UInt32 tapBufferIndex;
+  // Only the audio thread reads and writes these three. fadingFromChain is -1 outside a fade.
+  int playingChain;
+  int fadingFromChain;
+  UInt32 fadeFrame;
   _Atomic unsigned long long callbackCount;
   _Atomic unsigned long long clippedSampleCount;
   _Atomic unsigned int inputBufferCount;
@@ -44,37 +53,18 @@ typedef struct {
   UInt32 firstChannel;
 } OutputBuffer;
 
-// A = 10^(dBgain/40), w0 = 2*pi*f0/Fs, alpha = sin(w0)/2 * sqrt((A + 1/A)*(1/S - 1) + 2), RBJ Audio EQ Cookbook
-static BiquadRow makeLowShelf(double frequencyHz, double gainDb, double sampleRateHz) {
-  // S = 1, as the Web Audio spec plays a low shelf.
-  double shelfSlope = 1;
-  double amplitude = pow(10, gainDb / 40);
-  double omegaRad = 2 * M_PI * frequencyHz / sampleRateHz;
-  double cosine = cos(omegaRad);
-  double alpha = (sin(omegaRad) / 2) * sqrt(((amplitude + (1 / amplitude)) * ((1 / shelfSlope) - 1)) + 2);
-  double twoSqrtAmplitudeAlpha = 2 * sqrt(amplitude) * alpha;
-  double a0 = (amplitude + 1) + ((amplitude - 1) * cosine) + twoSqrtAmplitudeAlpha;
-  return (BiquadRow){
-      .b0 = amplitude * ((amplitude + 1) - ((amplitude - 1) * cosine) + twoSqrtAmplitudeAlpha) / a0,
-      .b1 = 2 * amplitude * ((amplitude - 1) - ((amplitude + 1) * cosine)) / a0,
-      .b2 = amplitude * ((amplitude + 1) - ((amplitude - 1) * cosine) - twoSqrtAmplitudeAlpha) / a0,
-      .a1 = -2 * ((amplitude - 1) + ((amplitude + 1) * cosine)) / a0,
-      .a2 = ((amplitude + 1) + ((amplitude - 1) * cosine) - twoSqrtAmplitudeAlpha) / a0,
-  };
+static void writeChain(Chain *chain, double preampDb, const RenderBand *bands, UInt32 bandCount, double sampleRateHz) {
+  chain->preampLinear = pow(10, preampDb / 20);
+  chain->bandCount = bandCount;
+  for (UInt32 index = 0; index < bandCount; index += 1) chain->rows[index] = makeBiquadRow(bands[index], sampleRateHz);
+  memset(chain->states, 0, sizeof(chain->states));
 }
 
-// Transposed direct form II.
-static inline double runBiquad(const BiquadRow *row, BiquadState *state, double sample) {
-  double result = (row->b0 * sample) + state->z1;
-  state->z1 = (row->b1 * sample) - (row->a1 * result) + state->z2;
-  state->z2 = (row->b2 * sample) - (row->a2 * result);
-  return result;
-}
-
-RenderState *renderStateCreate(double gainDb, double bassDb, double sampleRateHz, unsigned int tapChannelCount,
-                               unsigned int tapBufferIndex) {
+RenderState *renderStateCreate(double preampDb, const RenderBand *bands, unsigned int bandCount, double sampleRateHz,
+                               unsigned int tapChannelCount, unsigned int tapBufferIndex) {
   bool isChannelCountSupported = tapChannelCount >= 1 && tapChannelCount <= maxTapChannelCount;
-  if (!isChannelCountSupported) return NULL;
+  bool isBandCountSupported = bandCount <= maxBandCount && (bandCount == 0 || bands);
+  if (!isChannelCountSupported || !isBandCountSupported) return NULL;
 
   RenderState *state = calloc(1, sizeof(RenderState));
   if (!state) return NULL;
@@ -83,18 +73,29 @@ RenderState *renderStateCreate(double gainDb, double bassDb, double sampleRateHz
     return NULL;
   }
 
-  atomic_init(&state->gainLinear, (float)pow(10, gainDb / 20));
-  state->hasBass = bassDb != 0;
-  state->bass = makeLowShelf(bassFrequencyHz, bassDb, sampleRateHz);
+  writeChain(&state->chains[0], preampDb, bands, bandCount, sampleRateHz);
+  state->sampleRateHz = sampleRateHz;
+  state->fadeFrameCount = (UInt32)fmax(1, round(fadeSeconds * sampleRateHz));
   state->tapChannelCount = tapChannelCount;
   state->tapBufferIndex = tapBufferIndex;
+  state->fadingFromChain = -1;
   return state;
 }
 
 void renderStateDestroy(RenderState *state) { free(state); }
 
-void renderSetGain(RenderState *state, double gainDb) {
-  atomic_store_explicit(&state->gainLinear, (float)pow(10, gainDb / 20), memory_order_relaxed);
+bool renderTrySetSound(RenderState *state, double preampDb, const RenderBand *bands, unsigned int bandCount) {
+  bool isBandCountSupported = bandCount <= maxBandCount && (bandCount == 0 || bands);
+  if (!isBandCountSupported) return false;
+
+  int published = atomic_load_explicit(&state->publishedChain, memory_order_acquire);
+  int settled = atomic_load_explicit(&state->settledChain, memory_order_acquire);
+  if (settled != published) return false;
+
+  int next = 1 - published;
+  writeChain(&state->chains[next], preampDb, bands, bandCount, state->sampleRateHz);
+  atomic_store_explicit(&state->publishedChain, next, memory_order_release);
+  return true;
 }
 
 void renderReadMeters(RenderState *state, RenderMeters *meters) {
@@ -151,6 +152,40 @@ static void writeFrame(const OutputBuffer *buffers, UInt32 bufferCount, UInt32 f
   }
 }
 
+// The new chain takes the old one's filter memory, so a small change carries straight on.
+static void startFadeIfPublished(RenderState *state) {
+  if (state->fadingFromChain >= 0) return;
+
+  int published = atomic_load_explicit(&state->publishedChain, memory_order_acquire);
+  if (published == state->playingChain) return;
+
+  Chain *from = &state->chains[state->playingChain];
+  Chain *to = &state->chains[published];
+  UInt32 sharedBandCount = from->bandCount < to->bandCount ? from->bandCount : to->bandCount;
+  memcpy(to->states, from->states, sharedBandCount * sizeof(from->states[0]));
+  state->fadingFromChain = state->playingChain;
+  state->playingChain = published;
+  state->fadeFrame = 0;
+}
+
+static inline double runChain(Chain *chain, UInt32 channel, double sample) {
+  double result = sample * chain->preampLinear;
+  for (UInt32 band = 0; band < chain->bandCount; band += 1) {
+    result = runBiquad(&chain->rows[band], &chain->states[band][channel], result);
+  }
+  return result;
+}
+
+static void advanceFade(RenderState *state) {
+  if (state->fadingFromChain < 0) return;
+
+  state->fadeFrame += 1;
+  if (state->fadeFrame < state->fadeFrameCount) return;
+
+  state->fadingFromChain = -1;
+  atomic_store_explicit(&state->settledChain, state->playingChain, memory_order_release);
+}
+
 // Runs on the audio thread. No allocation, no lock, no call that can wait.
 OSStatus renderAudio(AudioObjectID device, const AudioTimeStamp *now, const AudioBufferList *input,
                      const AudioTimeStamp *inputTime, AudioBufferList *output,
@@ -171,21 +206,26 @@ OSStatus renderAudio(AudioObjectID device, const AudioTimeStamp *now, const Audi
   atomic_store_explicit(&state->tapChannelCountSeen, tapChannelCount, memory_order_relaxed);
   if (!tap->mData || tapChannelCount == 0) return noErr;
 
+  startFadeIfPublished(state);
   OutputBuffer outputBuffers[maxOutputBufferCount];
   UInt32 frameCount = tap->mDataByteSize / (tapChannelCount * sizeof(float));
   UInt32 outputBufferCount = describeOutput(output, outputBuffers, &frameCount);
   UInt32 channelCount = tapChannelCount < state->tapChannelCount ? tapChannelCount : state->tapChannelCount;
   const float *samples = tap->mData;
-  float gainLinear = atomic_load_explicit(&state->gainLinear, memory_order_relaxed);
   float inputPeakLinear = 0;
   float outputPeakLinear = 0;
   unsigned long long clippedSampleCount = 0;
   for (UInt32 frame = 0; frame < frameCount; frame += 1) {
     float processed[maxTapChannelCount];
+    bool isFading = state->fadingFromChain >= 0;
+    double fadeShare = (double)(state->fadeFrame + 1) / state->fadeFrameCount;
     for (UInt32 channel = 0; channel < channelCount; channel += 1) {
       float sample = samples[(frame * tapChannelCount) + channel];
-      double result = sample * gainLinear;
-      if (state->hasBass) result = runBiquad(&state->bass, &state->bassStates[channel], result);
+      double result = runChain(&state->chains[state->playingChain], channel, sample);
+      if (isFading) {
+        double fadingResult = runChain(&state->chains[state->fadingFromChain], channel, sample);
+        result = fadingResult + ((result - fadingResult) * fadeShare);
+      }
       processed[channel] = (float)result;
       float outputLevel = fabsf(processed[channel]);
       clippedSampleCount += outputLevel > 1.0f;
@@ -193,6 +233,7 @@ OSStatus renderAudio(AudioObjectID device, const AudioTimeStamp *now, const Audi
       outputPeakLinear = fmaxf(outputPeakLinear, outputLevel);
     }
     writeFrame(outputBuffers, outputBufferCount, frame, processed, channelCount);
+    advanceFade(state);
   }
   raisePeak(&state->inputPeakLinear, inputPeakLinear);
   raisePeak(&state->outputPeakLinear, outputPeakLinear);

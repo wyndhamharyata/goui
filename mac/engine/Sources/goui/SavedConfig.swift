@@ -1,12 +1,5 @@
 import Foundation
-
-struct Band: Codable {
-  var on: Bool
-  var type: String
-  var frequencyHz: Double
-  var gainDb: Double
-  var q: Double
-}
+import GouiEngine
 
 // What toPlayedSound in src/shared/config.js gives: the EQ switch, the preamp and every band that plays.
 struct PlayedSound: Codable {
@@ -22,9 +15,9 @@ struct SavedConfig: Codable {
   var isOn = true
   var sound = PlayedSound(enabled: true, preampDb: 0, bands: [])
 
-  // Only the preamp plays until the biquads come in. With the EQ switch off, the sound plays as it is.
-  var playedGainDb: Double {
-    sound.enabled ? sound.preampDb : 0
+  // With the EQ switch off, the sound plays as it is.
+  var playedSound: Sound {
+    sound.enabled ? Sound(preampDb: sound.preampDb, bands: sound.bands) : .flat
   }
 
   static func read() -> SavedConfig {

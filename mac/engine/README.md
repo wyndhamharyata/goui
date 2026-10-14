@@ -1,13 +1,18 @@
 # goui engine
 
-A command line trial of the audio path in `../PLAN.md`. It plays every sound on the Mac through a
-gain and a 105 Hz bass shelf. There is no UI and no AutoEQ yet.
+The audio path in `../PLAN.md`. It plays every sound on the Mac through a preamp and up to 32
+bands, with the same filters as the extension.
 
 `goui-engine` is the command line tool. `goui` is the same engine in a menu bar app, run by launchd.
+`goui-render-check` checks the render code with no audio device.
 
-Swift sets up the tap, the aggregate device and the listeners. The audio callback is C, in
-`Sources/Render/`. Swift can allocate or retain without a sign in the code, and the audio thread
-must never wait.
+Swift sets up the tap, the aggregate device and the listeners. The audio callback and the filters
+are C, in `Sources/Render/`. Swift can allocate or retain without a sign in the code, and the audio
+thread must never wait.
+
+A new sound goes into the one of two filter chains that is not playing. The audio thread fades
+from the old chain to the new one over 20 ms, so a change does not click. A change that comes
+during a fade waits for it to end, and then only the newest sound goes in.
 
 | File | What it does |
 | --- | --- |
@@ -16,13 +21,17 @@ must never wait.
 | `goui/AppController.swift` | Owns the engine, the menu bar item with its right-click menu, and the panel |
 | `goui/FloatingPanel.swift` | The panel under the menu bar item, which hides on a click elsewhere |
 | `goui/WebFileServer.swift` | Serves `goui://app/` from the web files inside the app |
-| `goui/Bridge.swift` | Answers the page's messages: status, meters, sound, power, restart, print |
+| `goui/Bridge.swift` | Answers the page's messages: status, meters, sound, power, response, restart, print |
 | `goui/SavedConfig.swift` | The power switch and the last sound, in `~/Library/Application Support/goui/config.json` |
+| `Render/Biquad.c` | The Web Audio spec's formulas for the eight filters, and each band's response |
+| `Render/Render.c` | The audio callback: the two chains, the fade and the meters |
+| `GouiEngine/Sound.swift` | The preamp and bands, as `toPlayedSound` makes them, checked and turned into C bands |
+| `goui-render-check/main.swift` | Plays test tones through the render code and checks each gain and each fade |
 | `GouiEngine/Engine.swift` | Keeps one audio path playing. It builds the path again when the output changes and tries again after a failed start. |
 | `GouiEngine/AudioPath.swift` | Builds the tap, the aggregate device and the callback, and takes them down in reverse |
 | `GouiEngine/PropertyListener.swift` | Listens to one Core Audio property on the main queue |
 | `GouiEngine/CoreAudioProperty.swift` | Reads Core Audio properties and names their errors |
-| `GouiEngine/Options.swift` | Parses the flags |
+| `goui-engine/Options.swift` | Parses the flags |
 | `GouiEngine/Report.swift` | Prints the summary and the meters |
 
 ## Run
@@ -49,7 +58,17 @@ App/agent.sh start
 `make-app.sh` builds `.build/goui.app` with `src/` and `mac/web/` inside it, and signs it ad hoc.
 `agent.sh start` writes `~/Library/LaunchAgents/com.goui.app.plist` and starts it.
 `agent.sh start --page mac/web/checks/bridge.html` runs the bridge check, which prints each reply to
-the log. The prompt names goui. launchd starts
+the log. `--page mac/web/checks/biquads.html` compares the C filters with WebKit's.
+
+### The render check
+
+```sh
+swift run -c release goui-render-check
+```
+
+It plays a tone through each kind of band and compares the gain with the band's response. Then it
+changes the sound at a peak of a tone and checks that no step between two samples is larger than
+the tone's own. With the fade cut to one sample, all four of those checks fail. The prompt names goui. launchd starts
 the app again after a crash, and after **Quit goui** it stays quit. The meters go to
 `~/Library/Logs/goui.log`. `agent.sh stop` stops the app and removes the agent.
 

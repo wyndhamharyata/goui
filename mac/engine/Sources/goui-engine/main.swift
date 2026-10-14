@@ -6,10 +6,12 @@ setvbuf(stdout, nil, _IOLBF, 0)
 let options = Options.parse(CommandLine.arguments)
 let meterEverySeconds = 2.0
 
-printIntroduction(options)
+print("goui engine. Gain \(options.gainDb) dB, bass \(options.bassDb) dB at 105 Hz. Press Control-C to stop.")
+print("If the Mac goes quiet, allow the terminal under System Settings, Privacy & Security, Screen & System Audio Recording.")
 let engine: Engine
 do {
-  engine = try Engine(options: options)
+  engine = try Engine()
+  try engine.setSound(options.sound)
 } catch {
   print("goui engine could not start. \(error)")
   exit(1)
