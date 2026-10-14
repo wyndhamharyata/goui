@@ -1,10 +1,23 @@
-import { clamp, frequencyRangeHz, hasGain, octavesToQ, qStepRatio, qToOctaves, responseDb, roundGainDb, setBandFrequency, setBandGain, setBandQ, sweepPointCount } from "./shared/filters.js";
+import {
+  clamp,
+  frequencyRangeHz,
+  hasGain,
+  octavesToQ,
+  qStepRatio,
+  qToOctaves,
+  responseDb,
+  roundGainDb,
+  setBandFrequency,
+  setBandGain,
+  setBandQ,
+  sweepPointCount,
+} from "./shared/bands.js";
 
-/** @typedef {import("./shared/filters.js").Band} Band */
+/** @typedef {import("./shared/bands.js").Band} Band */
 
-/** @typedef {import("./shared/filters.js").LayerBands} LayerBands */
+/** @typedef {import("./shared/config.js").LayerBands} LayerBands */
 
-/** @typedef {{ role: import("./shared/filters.js").LayerRole, band: Band }} BandEntry */
+/** @typedef {{ role: import("./shared/config.js").LayerRole, band: Band }} BandEntry */
 
 /** @typedef {{ x: number, y: number }} Point */
 

@@ -5,7 +5,7 @@
 /**
  * @typedef {{ type: "audio:start", streamId: string }
  *   | { type: "audio:stop" }
- *   | { type: "audio:config", config: import("./filters.js").Config }
+ *   | { type: "audio:config", config: import("./config.js").Config }
  *   | { type: "audio:telemetry", levelDb: number, spectrumDb: number[] }
  *   | { type: "capture:state", state: CaptureState }
  *   | { type: "capture:start", tabId: number }

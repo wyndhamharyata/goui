@@ -153,11 +153,13 @@ If a line needs a comment to say what it does, rename it or split it.
 - Write a named constant or a shared object type when two or more places use it.
 - Before you write a new file or helper, ask one question. If you deleted it and put its code back
   where it is used, would the code be harder to follow? If not, do not write it.
-- Each Chrome context gets its own file: the side panel, the offscreen document, the service worker
-  and the how-to page (`src/intro.html`). Code that two contexts both need goes in one shared file.
-  `src/shared/messages.js` names the messages between contexts. `src/base.css` holds the palette of
-  both pages. `src/guide.css` draws the pictures of the browser toolbar for both the guide and the
-  panel.
+- Each Chrome context has its own entry file: `src/panel.js`, `src/offscreen.js`,
+  `src/service-worker.js` and the how-to page (`src/intro.html`). A context can split its code into
+  more files by concern, as the panel does with `src/graph.js`, `src/fit.js` and `src/autoeq.js`.
+- Code that two contexts both need goes in `src/shared/`. `bands.js` holds one band and its Web
+  Audio response. `config.js` holds the layers, the stored config and the played sound.
+  `messages.js` names the messages between contexts. `src/base.css` holds the palette of both
+  pages. `src/guide.css` draws the pictures of the browser toolbar for both the guide and the panel.
 
 ## 8. Tests are user journeys.
 
@@ -195,8 +197,8 @@ If a line needs a comment to say what it does, rename it or split it.
 - No prose in the block. No description after a name. The reason for the code stays in a `//`
   comment above the block (rule 3).
 - A type that two or more places use is a `@typedef` in the file that owns it.
-  `src/shared/filters.js` owns the band, layer and config types. Another file names them as
-  `import("./shared/filters.js").Band`.
+  `src/shared/bands.js` owns the band types, and `src/shared/config.js` owns the layer and config
+  types. Another file names them as `import("./shared/bands.js").Band`.
 - `npm run lint` checks that every export has a block, that each type parses and is known, and that
   no block holds prose. A person checks the functions with two callers.
 

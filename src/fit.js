@@ -1,8 +1,16 @@
 // Fits a few bands to the difference between two target curves. AutoEQ's own file already tunes the
 // headphone to its default target, so these bands only move that sound to the target you pick.
-import { autoEqBassShelfHz, butterworthQ, clamp, logSweepHz, responseDb, roundGainDb, sweepPointCount } from "./shared/filters.js";
+import {
+  autoEqBassShelfHz,
+  butterworthQ,
+  clamp,
+  logSweepHz,
+  responseDb,
+  roundGainDb,
+  sweepPointCount,
+} from "./shared/bands.js";
 
-/** @typedef {import("./shared/filters.js").Band} Band */
+/** @typedef {import("./shared/bands.js").Band} Band */
 
 /** @typedef {{ label: string, bassDb: number, curveDb: number[] }} TargetCurve */
 

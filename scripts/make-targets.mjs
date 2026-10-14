@@ -2,9 +2,9 @@
 // one suits and the bass boost it puts on top. A rig family then gains the other curves from the AutoEQ
 // targets folder that were made for the same rig. Those files hold their own bass.
 import { writeFileSync } from "node:fs";
+import { clamp, logSweepHz, sweepPointCount } from "../src/shared/bands.js";
 
 const repo = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master";
-const pointCount = 121;
 
 // The first label is the target AutoEQ used for the measurements in the family.
 const families = [
@@ -24,13 +24,14 @@ const families = [
  */
 function resample(frequenciesHz, levelsDb) {
   const curve = [];
-  for (let index = 0; index < pointCount; index += 1) {
-    const frequencyHz = 20 * 1000 ** (index / (pointCount - 1));
+  for (const frequencyHz of logSweepHz(sweepPointCount)) {
     let upper = frequenciesHz.findIndex((each) => each >= frequencyHz);
-    if (upper <= 0) upper = upper === 0 ? 1 : frequenciesHz.length - 1;
+    // A point below the first one takes the first two. A point past the last one takes the last two.
+    if (upper === 0) upper = 1;
+    if (upper < 0) upper = frequenciesHz.length - 1;
     const lower = upper - 1;
     const share = Math.log(frequencyHz / frequenciesHz[lower]) / Math.log(frequenciesHz[upper] / frequenciesHz[lower]);
-    const levelDb = levelsDb[lower] + (Math.min(Math.max(share, 0), 1) * (levelsDb[upper] - levelsDb[lower]));
+    const levelDb = levelsDb[lower] + (clamp(share, 0, 1) * (levelsDb[upper] - levelsDb[lower]));
     curve.push(Math.round(levelDb * 100) / 100);
   }
   return curve;
@@ -65,6 +66,6 @@ const rigFamilies = families.map((family) => {
   return { labels: family, measurements };
 });
 
-const data = { source: `${repo}/targets`, pointCount, families: rigFamilies, targets };
+const data = { source: `${repo}/targets`, pointCount: sweepPointCount, families: rigFamilies, targets };
 writeFileSync("src/targets.json", `${JSON.stringify(data)}\n`);
 console.log(`src/targets.json holds ${targets.length} targets in ${rigFamilies.length} families`);

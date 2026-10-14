@@ -1,4 +1,5 @@
-import { biquadQ, makePlayedSound, hasGain, logSweepHz, makeBiquad, sanitizeConfig } from "./shared/filters.js";
+import { biquadQ, hasGain, logSweepHz, makeBiquad } from "./shared/bands.js";
+import { makePlayedSound, sanitizeConfig } from "./shared/config.js";
 import { messageTypes, silenceDb, spectrumPointCount, trySendMessage } from "./shared/messages.js";
 
 /** @typedef {import("./shared/messages.js").AudioReply} AudioReply */
@@ -11,13 +12,13 @@ let analyserNode;
 let preampNode;
 let bandNodes = [];
 let telemetryTimer;
-/** @type {import("./shared/filters.js").PlayedSound} */
+/** @type {import("./shared/config.js").PlayedSound} */
 let playedSound = { enabled: true, preampDb: 0, bands: [] };
 
 // The panel reads these points back on the same log scale.
 const spectrumHz = logSweepHz(spectrumPointCount);
 
-/** @returns {import("./shared/filters.js").Band[]} */
+/** @returns {import("./shared/bands.js").Band[]} */
 function listActiveBands() {
   return playedSound.bands.filter((band) => band.on);
 }

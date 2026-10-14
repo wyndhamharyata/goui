@@ -4,9 +4,19 @@ import {
   bandTypes,
   butterworthQ,
   cleanBands,
+  hasGain,
+  maxBoostDb,
+  newBand,
+  qStepRatio,
+  qToOctaves,
+  setBandFrequency,
+  setBandGain,
+  setBandQ,
+  typeLabels,
+} from "./shared/bands.js";
+import {
   defaultConfig,
   flatSliders,
-  hasGain,
   layerLabels,
   layerOrder,
   listExportBands,
@@ -14,31 +24,22 @@ import {
   listPlayedBands,
   makeLayer,
   makePlayedSound,
-  maxBoostDb,
-  newBand,
-  parseAutoEq,
   preampRangeDb,
-  qStepRatio,
-  qToOctaves,
   sanitizeConfig,
-  setBandFrequency,
-  setBandGain,
-  setBandQ,
   sliderRangeDb,
-  toAutoEq,
-  typeLabels,
-} from "./shared/filters.js";
+} from "./shared/config.js";
+import { parseAutoEq, toAutoEq } from "./autoeq.js";
 import { messageTypes, silenceDb, trySendMessage } from "./shared/messages.js";
 import { fitTargetChange } from "./fit.js";
 import { formatDb, formatHz, layerColor, makeGraph, typeColor } from "./graph.js";
 
-/** @typedef {import("./shared/filters.js").Band} Band */
+/** @typedef {import("./shared/bands.js").Band} Band */
 
-/** @typedef {import("./shared/filters.js").Layer} Layer */
+/** @typedef {import("./shared/config.js").Layer} Layer */
 
-/** @typedef {import("./shared/filters.js").LayerRole} LayerRole */
+/** @typedef {import("./shared/config.js").LayerRole} LayerRole */
 
-/** @typedef {import("./shared/filters.js").LayerBands} LayerBands */
+/** @typedef {import("./shared/config.js").LayerBands} LayerBands */
 
 /** @typedef {import("./graph.js").BandEntry} BandEntry */
 
@@ -187,7 +188,7 @@ function mapLayers(change) {
 }
 
 // Level match plays the preamp the EQ uses with every band off. Auto would set 0 dB for no bands.
-/** @returns {import("./shared/filters.js").Config} */
+/** @returns {import("./shared/config.js").Config} */
 function makePreampOnlyConfig() {
   const layers = mapLayers((layer) => ({ ...layer, on: false }));
   return { ...config, layers, sliders: flatSliders, autoPreamp: false, preampDb: makePlayedSound(config).preampDb };
@@ -195,7 +196,7 @@ function makePreampOnlyConfig() {
 
 /**
  * @param {Band} soloed
- * @returns {import("./shared/filters.js").Config}
+ * @returns {import("./shared/config.js").Config}
  */
 function makeSoloConfig(soloed) {
   const layers = mapLayers((layer) => ({ ...layer, on: true, bands: layer.bands.map((band) => ({ ...band, on: band === soloed })) }));
@@ -203,7 +204,7 @@ function makeSoloConfig(soloed) {
 }
 
 // The config the engine plays and the graph draws, with A/B and Solo applied. A/B wins over Solo.
-/** @returns {import("./shared/filters.js").Config} */
+/** @returns {import("./shared/config.js").Config} */
 function makeHeardConfig() {
   if (isComparing) return isLevelMatched ? makePreampOnlyConfig() : { ...config, enabled: false };
   const soloed = bandAt(soloIndex);
@@ -330,7 +331,7 @@ function openLibrarySection(role) {
 
 // The targets a headphone from AutoEQ can take. A family with one target shows its name only.
 /**
- * @param {import("./shared/filters.js").AutoEqOrigin} autoEq
+ * @param {import("./shared/config.js").AutoEqOrigin} autoEq
  * @returns {HTMLElement}
  */
 function makeTargetChoice(autoEq) {
@@ -560,7 +561,7 @@ function renderPresetCards() {
 // A headphone file's own preamp is kept, since a lone headphone file needs it. Auto preamp
 // overrides it either way.
 /**
- * @param {{ name: string, source: string, bands: Band[], preampDb?: number, autoEq?: import("./shared/filters.js").AutoEqOrigin }} sound
+ * @param {{ name: string, source: string, bands: Band[], preampDb?: number, autoEq?: import("./shared/config.js").AutoEqOrigin }} sound
  * @param {LayerRole} role
  */
 function replaceLayer(sound, role) {
