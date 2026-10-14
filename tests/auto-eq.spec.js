@@ -868,7 +868,7 @@ journey("given goui has never heard a tab, the panel shows how to start, and the
   await expect(panel.locator("#start")).toBeHidden();
 });
 
-journey("given a chosen band chip, a second press clears the choice and the inspector empties", async (context, port) => {
+journey("given a chosen band chip, a second press unselects it and the inspector empties", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
   await pasteInto(panel, "headphone", peakText);

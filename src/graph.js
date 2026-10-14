@@ -30,8 +30,6 @@ import {
  * @property {number} height
  * @property {number} tallHeight
  * @property {boolean} interactive
- * @property {boolean} [regions]
- * @property {boolean} [layerCurves]
  */
 
 /**
@@ -51,7 +49,6 @@ import {
  * @typedef {object} Graph
  * @property {() => void} render
  * @property {() => void} renderSpectrum
- * @property {() => void} renderHover
  * @property {string} zoom
  * @property {boolean} isTall
  * @property {(zoom: string) => void} setZoom
@@ -439,7 +436,6 @@ export function makeGraph(host, options, hooks) {
 
   // Each layer's own curve, dashed, under the solid total.
   function drawLayerCurves(size, frequencies) {
-    if (!options.layerCurves || !hooks.listCurveLayers) return "";
     return hooks.listCurveLayers().map((layer) => {
       const stroke = `stroke="${layerColor[layer.role]}" stroke-width="1.5" stroke-dasharray="4 3"`;
       return drawCurve(size, frequencies, responseDb(layer.bands, frequencies), stroke);
@@ -484,7 +480,7 @@ export function makeGraph(host, options, hooks) {
     const pill = showsPoints && band ? drawPill(size, band) : "";
     host.innerHTML = `<svg viewBox="0 0 ${size.width} ${size.height}" height="${size.height}">
       <defs><clipPath id="${clipId}"><rect x="${size.left}" y="${size.top}" width="${size.plotWidth}" height="${size.plotHeight}"/></clipPath></defs>
-      ${options.regions === false ? "" : drawRegions(size)}${drawFrequencyGrid(size)}${drawGainGrid(size)}
+      ${drawRegions(size)}${drawFrequencyGrid(size)}${drawGainGrid(size)}
       <g clip-path="url(#${clipId})"><g data-spectrum>${drawSpectrum(size, frequencies)}</g>${drawLoudness(size, frequencies, curveDb)}${selectedArea}${drawLayerCurves(size, frequencies)}${curve}</g>
       ${nodes}${pill}<g data-hover>${drawHover(size)}</g>
     </svg>`;
@@ -601,7 +597,6 @@ export function makeGraph(host, options, hooks) {
   return {
     render,
     renderSpectrum,
-    renderHover,
     get zoom() {
       return graph.zoom;
     },
