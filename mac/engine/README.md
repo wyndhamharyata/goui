@@ -61,6 +61,19 @@ App/agent.sh start
 `agent.sh start --page mac/web/checks/bridge.html` runs the bridge check, which prints each reply to
 the log. `--page mac/web/checks/biquads.html` compares the C filters with WebKit's.
 
+### The release tarball
+
+```sh
+App/make-tarball.sh
+GOUI_TARBALL=.build/goui-mac.tar.gz sh ../install.sh
+```
+
+`make-tarball.sh` builds the app and packs `.build/goui-mac.tar.gz`, the file a release carries.
+`install.sh` installs it as a person would, to `~/Applications/goui.app`, with the `goui` command
+in `~/.local/bin`. With no `GOUI_TARBALL` it downloads the latest release. It asks before it
+installs, and `GOUI_YES=1` answers yes for a run with no terminal. The installed app and
+`agent.sh` use the same agent label, so whichever ran last is the one that starts at login.
+
 ### The render check
 
 ```sh

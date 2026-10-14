@@ -79,6 +79,8 @@ final class FloatingPanel: NSPanel, NSWindowDelegate {
     let x = min(max(buttonFrame.midX - (frame.width / 2), leftmostX), rightmostX)
 
     setFrameOrigin(NSPoint(x: x, y: buttonFrame.minY - frame.height - Self.gapPx))
+    // Until goui is the active app, macOS can hand the focus back to the app in front, which hides the panel.
+    NSApp.activate()
     makeKeyAndOrderFront(nil)
   }
 }

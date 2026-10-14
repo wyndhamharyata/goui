@@ -32,6 +32,28 @@
         </p>
         <p class="fine">The Mac app is not released yet. The install line comes with the first release.</p>
 
+        <h2 id="before">Before you install</h2>
+        <ul>
+          <li>goui needs a Mac with Apple silicon and macOS 26 or newer.</li>
+          <li>
+            goui EQs every sound the Mac plays. It follows the Mac's default output, and one EQ covers
+            every app. Another system EQ, such as eqMac or SoundSource, stacks its curve on goui's, so
+            run one at a time.
+          </li>
+          <li>
+            Spatial Audio and head tracking on AirPods and Beats drop out while goui plays, as the
+            troubleshooting below explains.
+          </li>
+          <li>
+            macOS asks to let goui record the audio of this Mac. goui EQs the sound on its way to you
+            and keeps none of it.
+          </li>
+          <li>
+            goui is not signed by Apple yet, so each update asks for that permission again. Your
+            settings stay in <code>~/Library/Application Support/goui</code> through updates.
+          </li>
+        </ul>
+
         <h2>Get started</h2>
         <ol>
           <li><b>Turn goui on.</b> Click goui in the menu bar, then press the power button at the top of the panel.</li>

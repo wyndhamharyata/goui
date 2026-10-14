@@ -17,5 +17,9 @@ cp -R ../web "$app/Contents/Resources/web/mac/web"
 # npm run icons draws these from scripts/icon-geometry.mjs, as it draws the extension icons.
 iconutil -c icns ../icons/AppIcon.iconset -o "$app/Contents/Resources/AppIcon.icns"
 cp ../icons/menu-bar.png ../icons/menu-bar@2x.png "$app/Contents/Resources/"
+# install.sh links the goui command from here, so each update brings its own copy.
+cp ../goui "$app/Contents/Resources/goui"
+# The licence and the notices travel with the app, as the MIT licence asks.
+cp ../../LICENSE ../../THIRD_PARTY_NOTICES.md "$app/Contents/Resources/"
 codesign --force --sign - "$app"
 echo "Built $(pwd)/$app"

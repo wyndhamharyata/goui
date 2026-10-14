@@ -143,8 +143,7 @@ Each step starts only when it is asked for, and ends with a commit.
 2. App. Done, see Settled.
 3. Biquads in C. Done, see Settled.
 4. `chrome.js`. Done, see Settled.
-5. Install. A script that builds the tarball, `install.sh` with the plist, and the `goui`
-   command.
+5. Install. Done, see Settled.
 
 ## Settled
 
@@ -199,6 +198,19 @@ Each step starts only when it is asked for, and ends with a commit.
   of an idle process, so the page stays.
 - About goui shows the name, the icon and the version, which `make-app.sh` takes from
   `manifest.json`, so the app and the extension carry one version.
+- `App/make-tarball.sh` packs `goui.app` as `goui-mac.tar.gz`, about 250 KB, with the `goui`
+  command, the licence and the notices inside. `mac/install.sh` unpacks it to
+  `~/Applications/goui.app`, links `~/.local/bin/goui`, writes the plist and starts it, with no
+  admin password. The signature checks out after unpacking. `GOUI_TARBALL` installs a local build.
+  `goui start`, `stop`, `restart`, `logs` and `uninstall` each worked, `start` twice in a row too,
+  and `uninstall` keeps the settings. The installed app and `App/agent.sh` share one label, so
+  each takes the agent over from the other.
+- `install.sh` stops with a reason on an Intel Mac or a macOS before 26, and warns, then asks,
+  when another system EQ runs or the sound goes to AirPods or Beats. It names the version change,
+  lists the limits with a link to goui.mwyndham.dev/mac#before, and asks before it installs. With
+  no terminal it takes the defaults, and `GOUI_YES=1` answers yes.
+- The panel makes goui the active app as it opens. On a fresh start goui is not active, and macOS
+  gave the focus back to the app in front, which hid the panel, so it took three clicks to open.
 - The Mac app has no journeys for now. Playwright cannot drive a `WKWebView`, and the panel's own
   journeys run in the extension. The Mac is checked by hand, with `goui-render-check` for the
   filters and the pages in `mac/web/checks/` for the bridge. If journeys come, they can run the

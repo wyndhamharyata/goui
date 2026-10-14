@@ -1,0 +1,55 @@
+#!/bin/sh
+# The goui command. install.sh links it from inside goui.app, so an update brings its own copy.
+set -eu
+label=com.goui.app
+plist="$HOME/Library/LaunchAgents/$label.plist"
+log="$HOME/Library/Logs/goui.log"
+app="$HOME/Applications/goui.app"
+link="$HOME/.local/bin/goui"
+domain="gui/$(id -u)"
+
+is_loaded() {
+  launchctl print "$domain/$label" >/dev/null 2>&1
+}
+
+stop_agent() {
+  launchctl bootout "$domain/$label" 2>/dev/null || true
+  # bootout returns before the app has gone, and a bootstrap fails while it is still there.
+  while is_loaded; do sleep 0.2; done
+}
+
+case "${1:-}" in
+start)
+  if is_loaded; then
+    launchctl kickstart "$domain/$label"
+  else
+    launchctl bootstrap "$domain" "$plist"
+  fi
+  echo "goui is running."
+  ;;
+stop)
+  stop_agent
+  echo "goui is stopped until you run goui start or log in again."
+  ;;
+restart)
+  if is_loaded; then
+    launchctl kickstart -k "$domain/$label"
+  else
+    launchctl bootstrap "$domain" "$plist"
+  fi
+  echo "goui started again."
+  ;;
+logs)
+  tail -n 40 -f "$log"
+  ;;
+uninstall)
+  stop_agent
+  rm -f "$plist" "$link"
+  rm -rf "$app"
+  echo "goui is removed. Your settings stay in ~/Library/Application Support/goui, and its log in $log."
+  ;;
+*)
+  echo "Usage: goui start | stop | restart | logs | uninstall" >&2
+  exit 2
+  ;;
+esac
