@@ -12,6 +12,7 @@ let analyserNode;
 let preampNode;
 let bandNodes = [];
 let telemetryTimer;
+// The document stays open until the browser closes, so the last sound carries over to the next tab.
 /** @type {import("./shared/config.js").PlayedSound} */
 let playedSound = { enabled: true, preampDb: 0, bands: [] };
 
@@ -124,7 +125,11 @@ async function stop() {
   mediaStream = undefined;
   if (audioContext) await audioContext.close().catch(() => {});
   audioContext = undefined;
+  sourceNode = undefined;
+  analyserNode = undefined;
+  preampNode = undefined;
   chainNodes = [];
+  bandNodes = [];
   return { ok: true };
 }
 
