@@ -161,6 +161,10 @@ Each step starts only when it is asked for, and ends with a commit.
   Power off and on sent a status event each time. An unknown message and a sound with no data were
   refused with the reason. After `kill -9`, the app came back at the -6 dB that `config.json` kept.
 - A new build asks for the permission again, as the ad hoc signature changes.
+- **Restart engine** takes the tap down and builds it again, so the sound plays as it is for a
+  moment, louder, then drops back. A new output device or rate does the same. Building the new tap
+  before taking the old one down would play both at once. **Quit goui** brings the sound back at
+  full level and the item goes away. **Reload panel** loads the same page again, so nothing shows.
 
 ## Open questions
 
