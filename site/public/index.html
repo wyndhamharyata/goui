@@ -34,7 +34,7 @@
           <h1>goui</h1>
           <p class="mantra">Different ear, different head, different sound.</p>
           <p class="pitch">
-            goui runs the sound of one browser tab through a parametric EQ. AutoEQ gives a neutral
+            goui runs the sound of a browser tab, or of the whole Mac, through a parametric EQ. AutoEQ gives a neutral
             baseline for your headphone. An eqbyear test tunes that baseline to your own hearing.
             The two stay apart as two layers, and Bass, Vocals and Treble go on top.
           </p>
@@ -44,9 +44,17 @@
             </a>
             <a class="button" href="https://github.com/wyndhamharyata/goui">View on GitHub</a>
           </div>
+          <div class="hero-install">
+            <span class="hero-install-label">On a Mac, paste this in Terminal</span>
+            <div class="hero-install-row">
+              <code id="mac-curl">curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh</code>
+              <button class="button" id="copy-curl" type="button">Copy</button>
+            </div>
+          </div>
           <p class="fine">
-            Free and open source, under the MIT licence. goui is in the Chrome Web Store, and you can
-            also load the folder by hand from a release.
+            Free and open source, under the MIT licence. The extension is in the Chrome Web Store. The
+            Mac app needs Apple silicon and macOS 26, and <a href="/mac">its page</a> says what to know
+            before you install.
           </p>
         </div>
 
@@ -220,5 +228,12 @@
     </main>
 
     <script src="/panel.js"></script>
+    <script>
+      document.getElementById("copy-curl").addEventListener("click", async (event) => {
+        await navigator.clipboard.writeText(document.getElementById("mac-curl").textContent);
+        event.target.textContent = "Copied";
+        setTimeout(() => (event.target.textContent = "Copy"), 1600);
+      });
+    </script>
   </body>
 </html>

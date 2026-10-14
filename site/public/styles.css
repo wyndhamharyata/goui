@@ -97,6 +97,31 @@ a.name {
   margin-top: 24px;
 }
 
+.hero-install {
+  max-width: 640px;
+  margin-top: 18px;
+}
+
+.hero-install-label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hero-install-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.hero-install-row code {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  white-space: pre;
+}
+
 /* Google allows a resize of the store badge and nothing else, so the glow and the lift go on the link. */
 @property --spin {
   syntax: "<angle>";
