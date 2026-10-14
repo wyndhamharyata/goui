@@ -14,6 +14,8 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 - `sidePanel.open` on a window with no side panel, such as an installed app, crashes Brave. A tab
   in such a window gets `src/panel.html?tab=<id>` as the popup of the icon. That popup starts goui
   on its tab when it opens and has a power button that turns goui on and off.
+- `src/panel/` holds the panel, one file per tab or concern. `state.js` holds the one state object
+  every file shares, and `refresh.js` lets each view register its redraw.
 - The side panel has three tabs: Listen, Tune and Library. From 900 px wide they show as three
   columns. `design/ux-proposals.html` holds the mock the panel follows.
 - `src/graph/` draws the curve as SVG. `graph.js` holds the state and the pointer events. Each other
@@ -160,9 +162,9 @@ Butterworth, gets a link to its explanation on the same line.
 - Write a named constant or a shared object type when two or more places use it.
 - Before you write a new file or helper, ask one question. If you deleted it and put its code back
   where it is used, would the code be harder to follow? If not, do not write it.
-- Each Chrome context has its own entry file: `src/panel.js`, `src/offscreen.js`,
+- Each Chrome context has its own entry file: `src/panel/main.js`, `src/offscreen.js`,
   `src/service-worker.js` and the how-to page (`src/intro.html`). A context can split its code into
-  more files by concern, as the panel does with `src/graph/`, `src/fit.js` and `src/autoeq.js`.
+  more files by concern, as the panel does with `src/panel/`, `src/graph/`, `src/fit.js` and `src/autoeq.js`.
 - Each formula is a named function in `src/shared/math.js`, even when one place uses it, as `clamp`
   is. `20 * Math.log10(x)` is `linearToDb(x)`.
 - Code that two contexts both need goes in `src/shared/`. `bands.js` holds one band and its Web
@@ -225,7 +227,7 @@ Butterworth, gets a link to its explanation on the same line.
 
 Each one names the rule it breaks and the reason.
 
-- The render and event functions in `src/panel.js` and `src/graph/` have one caller each,
+- The render and event functions in `src/panel/` and `src/graph/` have one caller each,
   against rule 7. Folded into their callers, those callers would pass the 15-branch limit. Their
   names are also what a reader scans the file for.
 - Six journeys end in text a person reads, not in a sound, against rule 8.2: the HD 600 result

@@ -55,7 +55,7 @@ export const autoEqBassShelfHz = 105;
 // Every curve goui works out has this many points. targets.json is stored on the same points.
 export const sweepPointCount = 121;
 
-const newBandFrequencyHz = 1000;
+export const newBandFrequencyHz = 1000;
 
 // Gains move in steps of 0.1 dB, the step an AutoEQ file and the gain field show.
 /**

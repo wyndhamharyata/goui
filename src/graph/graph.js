@@ -21,7 +21,7 @@ import { drawnGainDb, readPoint, sweepFrequencies } from "./view.js";
 
 /** @typedef {import("./marks.js").NodePoint} NodePoint */
 
-/** @typedef {{ role: import("./shared/config.js").LayerRole, band: Band }} BandEntry */
+/** @typedef {{ role: import("../shared/config.js").LayerRole, band: Band }} BandEntry */
 
 /**
  * @typedef {object} GraphOptions
