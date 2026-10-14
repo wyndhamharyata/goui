@@ -201,23 +201,23 @@ npm install
 npx playwright install chromium
 ```
 
-| Command                | What it does                                              |
-| ---------------------- | --------------------------------------------------------- |
-| `npm run lint`         | ESLint, then the word check.                              |
-| `npm test`             | The browser journeys.                                     |
-| `npm run icons`        | Rebuild the icon files.                                   |
-| `npm run images`       | Rebuild the pictures in `docs/images`.                    |
-| `npm run dependencies` | Rebuild `DEPENDENCIES.md` from the installed packages.    |
-| `npm run zip`          | Build `dist/goui-<version>.zip`, the file a release uses. |
+| Command                     | What it does                                              |
+| --------------------------- | --------------------------------------------------------- |
+| `npm run lint`              | ESLint, then the word check.                              |
+| `npm test`                  | The browser journeys.                                     |
+| `npm run icons`             | Rebuild the icon files.                                   |
+| `npm run readme-images`     | Rebuild the pictures in `docs/images`.                    |
+| `npm run dependencies-file` | Rebuild `DEPENDENCIES.md` from the installed packages.    |
+| `npm run zip`               | Build `dist/goui-<version>.zip`, the file a release uses. |
 
 The pictures in `docs/images` are drawn by `scripts/make-readme-images.mjs`. Each one is written as an
-SVG and as a PNG. Edit the SVG by hand, or edit the script and run `npm run images`.
+SVG and as a PNG. Edit the SVG by hand, or edit the script and run `npm run readme-images`.
 
 The release zip is built by `scripts/make-extension-zip.mjs`. It holds the `manifest.json`, the
 `src` folder, the `icons` folder, the licence and the notices, all inside one `goui` folder. A person
 who unzips it gets a folder to point Chrome at.
 
-To cut a release, raise `version` in `manifest.json`, then run `npm run images` and `npm run zip`.
+To cut a release, raise `version` in `manifest.json`, then run `npm run readme-images` and `npm run zip`.
 Commit and push, then attach `dist/goui-<version>.zip` to a new release named after the version.
 Past releases stay as they are, and GitHub marks the newest one as Latest.
 

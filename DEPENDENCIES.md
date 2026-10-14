@@ -1,6 +1,6 @@
 # Dependencies
 
-This file is built by `npm run dependencies`. Every package below is a development tool for lint,
+This file is built by `npm run dependencies-file`. Every package below is a development tool for lint,
 test or build. None of them travel in the extension. The release zip holds the manifest, the src
 and icons folders, the licence and the third party notices, and nothing else.
 

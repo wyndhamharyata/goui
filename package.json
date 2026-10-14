@@ -6,10 +6,10 @@
     "lint": "eslint . && node scripts/check-words.mjs",
     "test": "playwright test",
     "icons": "node scripts/make-icons.mjs",
-    "images": "node scripts/make-readme-images.mjs",
-    "dependencies": "node scripts/make-dependencies.mjs",
+    "readme-images": "node scripts/make-readme-images.mjs",
+    "dependencies-file": "node scripts/make-dependencies.mjs",
     "zip": "node scripts/make-extension-zip.mjs",
-    "store": "node scripts/make-store-images.mjs",
+    "store-images": "node scripts/make-store-images.mjs",
     "targets": "node scripts/make-targets.mjs"
   },
   "devDependencies": {

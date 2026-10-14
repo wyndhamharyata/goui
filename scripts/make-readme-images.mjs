@@ -2,14 +2,16 @@
 // a PNG anywhere and a person can edit the SVG by hand.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { layOutIcon, tileColors } from "./icon-geometry.mjs";
 
 // The pictures name the zip of the version in the manifest, so they match the latest release.
 const zipName = `goui-${JSON.parse(readFileSync("manifest.json", "utf8")).version}.zip`;
 
+// The colours of src/base.css, so the pictures match the panel.
 const palette = {
-  bg: "#0e1013",
+  background: "#0e1013",
   panel: "#161a20",
-  panel2: "#1c2129",
+  panelRaised: "#1c2129",
   line: "#262d38",
   text: "#e6e9ef",
   muted: "#8993a2",
@@ -53,31 +55,24 @@ function arrow(fromX, toX, y, color = palette.muted) {
 // The goui icon, the same tile and bars as scripts/make-icons.mjs draws. The artwork is inset by the
 // same amount, so the pictures show the padding the store asks for.
 function icon(x, y, size) {
-  const bars = [0.4, 0.62, 0.48, 0.7];
-  const padding = size * (16 / 128);
-  const artwork = size - (2 * padding);
-  const barWidth = artwork * 0.13;
-  const barGap = artwork * 0.075;
-  const totalWidth = (bars.length * barWidth) + ((bars.length - 1) * barGap);
-  const firstBarX = x + padding + ((artwork - totalWidth) / 2);
-  const baseY = y + padding + (artwork * 0.76);
-  const tile = rect({ x: x + padding, y: y + padding, width: artwork, height: artwork, radius: artwork * 0.22, fill: "url(#tile)" });
-  const drawn = bars.map((height, index) => {
-    const left = firstBarX + (index * (barWidth + barGap));
-    const top = baseY - (height * artwork);
-    return rect({ x: left, y: top, width: barWidth, height: baseY - top, radius: barWidth / 2, fill: "#ffffff" });
-  });
-  return tile + drawn.join("");
+  const { tile, bars } = layOutIcon(x, y, size);
+  /**
+   * @param {import("./icon-geometry.mjs").RoundedRect} box
+   * @param {string} fill
+   * @returns {string}
+   */
+  const draw = (box, fill) => rect({ x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top, radius: box.radius, fill });
+  return draw(tile, "url(#tile)") + bars.map((bar) => draw(bar, "#ffffff")).join("");
 }
 
 const defs = `<defs>
   <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#4a7ae0"/><stop offset="1" stop-color="#8f52d8"/>
+    <stop offset="0" stop-color="${tileColors[0]}"/><stop offset="1" stop-color="${tileColors[1]}"/>
   </linearGradient>
   <clipPath id="boxClip"><rect x="0" y="0" width="176" height="92" rx="12"/></clipPath>
 </defs>`;
 
-function frame(width, height, content, { background = palette.bg } = {}) {
+function frame(width, height, content, { background = palette.background } = {}) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img">`
     + defs + rect({ x: 0, y: 0, width, height, fill: background }) + content + "</svg>";
 }
@@ -126,7 +121,7 @@ function browserChrome(x, y, width, { tabTitle = "Lofi radio", url = "radio.exam
   const rightX = x + width - 44;
   if (showGoui) {
     const badge = showOnBadge
-      ? circle({ cx: rightX + 14, cy: barY + 8, r: 8, fill: palette.good }) + text({ x: rightX + 14, y: barY + 12, content: "ON", size: 8, weight: 700, fill: palette.bg, anchor: "middle" })
+      ? circle({ cx: rightX + 14, cy: barY + 8, r: 8, fill: palette.good }) + text({ x: rightX + 14, y: barY + 12, content: "ON", size: 8, weight: 700, fill: palette.background, anchor: "middle" })
       : "";
     const ring = highlight === "goui" ? rect({ x: rightX - 6, y: barY + 2, width: 40, height: barHeight - 4, radius: 8, fill: "none", stroke: palette.accent, strokeWidth: 2 }) : "";
     parts.push(ring + icon(rightX, barY + 8, 16) + badge);
@@ -180,10 +175,10 @@ function stepCard(x, y, width, step) {
   return { svg: parts.join(""), height };
 }
 
-// One: the extensions page with Developer mode on and its Load unpacked button.
+// The extensions page with Developer mode on and its Load unpacked button.
 function pictureLoadUnpacked(x, y, width) {
   const height = 158;
-  const parts = [rect({ x, y, width, height, radius: 10, fill: palette.panel2 })];
+  const parts = [rect({ x, y, width, height, radius: 10, fill: palette.panelRaised })];
   parts.push(text({ x: x + 14, y: y + 24, content: "chrome://extensions", size: 11, fill: palette.muted, font: monoFont }));
   parts.push(text({ x: x + 14, y: y + 52, content: "Extensions", size: 14, weight: 700 }));
   parts.push(text({ x: x + 14, y: y + 72, content: "Keyboard shortcuts", size: 11, fill: palette.muted }));
@@ -197,10 +192,10 @@ function pictureLoadUnpacked(x, y, width) {
   return parts.join("");
 }
 
-// One: the Releases page with the zip asset.
+// The Releases page with the zip asset.
 function pictureDownload(x, y, width) {
   const height = 158;
-  const parts = [rect({ x, y, width, height, radius: 10, fill: palette.panel2 })];
+  const parts = [rect({ x, y, width, height, radius: 10, fill: palette.panelRaised })];
   parts.push(text({ x: x + 14, y: y + 24, content: "github.com/goui/releases", size: 10, fill: palette.muted, font: monoFont }));
   parts.push(text({ x: x + 14, y: y + 50, content: "Releases", size: 14, weight: 700 }));
   parts.push(rect({ x: x + 92, y: y + 37, width: 56, height: 18, radius: 9, fill: palette.panel, stroke: palette.line }));
@@ -216,13 +211,13 @@ function pictureDownload(x, y, width) {
   return parts.join("");
 }
 
-// Two: the folder picker with the goui folder chosen.
+// The folder picker with the goui folder chosen.
 function picturePickFolder(x, y, width) {
   const height = 158;
-  const parts = [rect({ x, y, width, height, radius: 10, fill: palette.panel2 })];
+  const parts = [rect({ x, y, width, height, radius: 10, fill: palette.panelRaised })];
   parts.push(text({ x: x + 14, y: y + 22, content: "Choose the goui folder", size: 11, fill: palette.muted }));
   parts.push(rect({ x: x + 14, y: y + 32, width: width - 28, height: 100, radius: 8, fill: palette.panel, stroke: palette.line }));
-  parts.push(rect({ x: x + 26, y: y + 44, width: 120, height: 22, radius: 5, fill: palette.panel2 }));
+  parts.push(rect({ x: x + 26, y: y + 44, width: 120, height: 22, radius: 5, fill: palette.panelRaised }));
   parts.push(text({ x: x + 34, y: y + 59, content: "goui", size: 12 }));
   parts.push(text({ x: x + 34, y: y + 82, content: "manifest.json", size: 11, fill: palette.muted, font: monoFont }));
   parts.push(text({ x: x + 34, y: y + 100, content: "src", size: 11, fill: palette.muted, font: monoFont }));
@@ -232,14 +227,14 @@ function picturePickFolder(x, y, width) {
   return parts.join("");
 }
 
-// Three: the toolbar with the pin pressed, and the short menu below it.
+// The toolbar with the pin pressed, and the short menu below it.
 function picturePin(x, y, width) {
   const chrome = browserChrome(x, y, width, { highlight: "puzzle" });
   const menu = compactExtensionsMenu(x + width - 210, chrome.bottom + 6, { highlight: "pin" });
   return chrome.svg + menu;
 }
 
-// Four: the toolbar with the goui icon pressed and its green ON badge.
+// The toolbar with the goui icon pressed and its green ON badge.
 function picturePanel(x, y, width) {
   return browserChrome(x, y, width, { showGoui: true, showOnBadge: true, highlight: "goui", cursorAt: { x: width - 112, y: 96 } }).svg;
 }
@@ -249,7 +244,7 @@ function sidePanel(x, y, width) {
   const height = 168;
   const parts = [rect({ x, y, width, height, radius: 12, fill: palette.panel, stroke: palette.line })];
   parts.push(text({ x: x + 14, y: y + 26, content: "goui", size: 14, weight: 700 }));
-  parts.push(rect({ x: x + 74, y: y + 12, width: 26, height: 18, radius: 4, fill: palette.panel2, stroke: palette.line }));
+  parts.push(rect({ x: x + 74, y: y + 12, width: 26, height: 18, radius: 4, fill: palette.panelRaised, stroke: palette.line }));
   parts.push(text({ x: x + 87, y: y + 25, content: "A/B", size: 9, fill: palette.muted, anchor: "middle" }));
   parts.push(rect({ x: x + 108, y: y + 12, width: 26, height: 18, radius: 9, fill: palette.good }));
   parts.push(circle({ cx: x + 126, cy: y + 21, r: 6, fill: "#ffffff" }));
@@ -260,10 +255,10 @@ function sidePanel(x, y, width) {
   tabs.forEach((label, index) => {
     const tabX = x + 12 + (index * 68);
     const isOn = index === 0;
-    parts.push(rect({ x: tabX, y: y + 82, width: 62, height: 22, radius: 11, fill: isOn ? palette.accent : palette.panel2 }));
+    parts.push(rect({ x: tabX, y: y + 82, width: 62, height: 22, radius: 11, fill: isOn ? palette.accent : palette.panelRaised }));
     parts.push(text({ x: tabX + 31, y: y + 97, content: label, size: 10, fill: isOn ? "#ffffff" : palette.muted, anchor: "middle" }));
   });
-  parts.push(rect({ x: x + 12, y: y + 112, width: width - 24, height: 46, radius: 8, fill: palette.panel2 }));
+  parts.push(rect({ x: x + 12, y: y + 112, width: width - 24, height: 46, radius: 8, fill: palette.panelRaised }));
   parts.push(text({ x: x + 24, y: y + 132, content: "1  Headphone", size: 11 }));
   parts.push(text({ x: x + 24, y: y + 150, content: "2  My ear", size: 11, fill: palette.muted }));
   return parts.join("");
@@ -350,16 +345,16 @@ function makeDownload() {
   parts.push(rect({ x: 32, y: 108, width: 398, height: 150, radius: 12, fill: palette.panel, stroke: palette.line }));
   parts.push(text({ x: 48, y: 134, content: "github.com/wyndhamharyata/goui/releases", size: 11, fill: palette.muted, font: monoFont }));
   parts.push(text({ x: 48, y: 168, content: "Releases", size: 16, weight: 700 }));
-  parts.push(rect({ x: 140, y: 152, width: 62, height: 20, radius: 10, fill: palette.panel2, stroke: palette.line }));
+  parts.push(rect({ x: 140, y: 152, width: 62, height: 20, radius: 10, fill: palette.panelRaised, stroke: palette.line }));
   parts.push(text({ x: 171, y: 166, content: "Latest", size: 10, fill: palette.good, anchor: "middle" }));
-  parts.push(rect({ x: 48, y: 184, width: 366, height: 40, radius: 8, fill: palette.panel2, stroke: palette.line }));
+  parts.push(rect({ x: 48, y: 184, width: 366, height: 40, radius: 8, fill: palette.panelRaised, stroke: palette.line }));
   parts.push(text({ x: 64, y: 209, content: zipName, size: 12, font: monoFont }));
   parts.push(rect({ x: 312, y: 192, width: 88, height: 24, radius: 6, fill: palette.accent }));
   parts.push(text({ x: 356, y: 208, content: "Download", size: 11, weight: 700, fill: "#ffffff", anchor: "middle" }));
   parts.push(cursor(392, 218));
   parts.push(arrow(438, 486, 200));
   parts.push(text({ x: 462, y: 188, content: "unzip", size: 11, fill: palette.muted, anchor: "middle" }));
-  parts.push(rect({ x: 490, y: 150, width: 198, height: 108, radius: 12, fill: palette.panel2, stroke: palette.line }));
+  parts.push(rect({ x: 490, y: 150, width: 198, height: 108, radius: 12, fill: palette.panelRaised, stroke: palette.line }));
   parts.push(folderGlyph(510, 172, 44, palette.accent));
   parts.push(text({ x: 566, y: 196, content: "goui", size: 15, weight: 700 }));
   parts.push(text({ x: 566, y: 216, content: "the unzipped folder", size: 11, fill: palette.muted }));

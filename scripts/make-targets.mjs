@@ -39,26 +39,27 @@ function resample(frequenciesHz, levelsDb) {
 
 /**
  * @param {string} label
- * @returns {Promise<{ frequency: number[], raw: number[] }>}
+ * @returns {Promise<{ frequenciesHz: number[], levelsDb: number[] }>}
  */
 async function readTargetFile(label) {
   const text = await (await fetch(`${repo}/targets/${encodeURIComponent(label)}.csv`)).text();
-  const frequency = [];
-  const raw = [];
+  const frequenciesHz = [];
+  const levelsDb = [];
   for (const line of text.trim().split("\n").slice(1)) {
     const [frequencyHz, levelDb] = line.split(",").map(Number);
-    frequency.push(frequencyHz);
-    raw.push(levelDb);
+    frequenciesHz.push(frequencyHz);
+    levelsDb.push(levelDb);
   }
-  return { frequency, raw };
+  return { frequenciesHz, levelsDb };
 }
 
 const appTargets = await (await fetch(`${repo}/webapp/data/targets.json`)).json();
 const targets = [];
 for (const label of families.flat()) {
   const fromApp = appTargets.find((target) => target.label === label);
-  const curve = fromApp ? fromApp.fr : await readTargetFile(label);
-  targets.push({ label, bassDb: fromApp ? fromApp.bassBoost.gain : 0, curveDb: resample(curve.frequency, curve.raw) });
+  // The web app names the points of a curve frequency and raw.
+  const curve = fromApp ? { frequenciesHz: fromApp.fr.frequency, levelsDb: fromApp.fr.raw } : await readTargetFile(label);
+  targets.push({ label, bassDb: fromApp ? fromApp.bassBoost.gain : 0, curveDb: resample(curve.frequenciesHz, curve.levelsDb) });
 }
 
 const rigFamilies = families.map((family) => {

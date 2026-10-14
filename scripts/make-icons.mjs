@@ -1,5 +1,6 @@
 import { deflateSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
+import { layOutIcon, tileColors } from "./icon-geometry.mjs";
 
 const sizes = [16, 32, 48, 128];
 const samplesPerAxis = 4;
@@ -67,38 +68,21 @@ function isInsideRoundedRect(x, y, rect) {
   return (distanceX * distanceX) + (distanceY * distanceY) <= rect.radius * rect.radius;
 }
 
-const bars = [0.4, 0.62, 0.48, 0.7];
-
-// The store asks for 96 px of artwork inside a 128 px icon, so 16 px stays clear on every side.
-const paddingRatio = 16 / 128;
+/**
+ * @param {string} hex
+ * @returns {number[]}
+ */
+function readRgb(hex) {
+  return [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16));
+}
 
 // The tile carries its own colour and the bars are white, so the icon reads on a light toolbar and
 // on a dark one. A dark tile would disappear on a dark toolbar.
 function sampleColor(x, y, size) {
-  const padding = size * paddingRatio;
-  const artwork = size - (2 * padding);
-  const tile = {
-    left: padding,
-    top: padding,
-    right: size - padding,
-    bottom: size - padding,
-    radius: artwork * 0.22,
-  };
+  const { tile, bars } = layOutIcon(0, 0, size);
   if (!isInsideRoundedRect(x, y, tile)) return [0, 0, 0, 0];
-
-  const tileColor = mixColor([74, 122, 224], [143, 82, 216], (y - padding) / artwork);
-  const barWidth = artwork * 0.13;
-  const barGap = artwork * 0.075;
-  const totalWidth = (bars.length * barWidth) + ((bars.length - 1) * barGap);
-  const firstBarX = padding + ((artwork - totalWidth) / 2);
-  const baseY = padding + (artwork * 0.76);
-
-  for (let index = 0; index < bars.length; index += 1) {
-    const left = firstBarX + (index * (barWidth + barGap));
-    const top = baseY - (bars[index] * artwork);
-    const bar = { left, top, right: left + barWidth, bottom: baseY, radius: barWidth / 2 };
-    if (isInsideRoundedRect(x, y, bar)) return [255, 255, 255, 255];
-  }
+  if (bars.some((bar) => isInsideRoundedRect(x, y, bar))) return [255, 255, 255, 255];
+  const tileColor = mixColor(readRgb(tileColors[0]), readRgb(tileColors[1]), (y - tile.top) / (tile.bottom - tile.top));
   // The tile keeps alpha 255. A three-value colour would write alpha 0 and the icon would be invisible.
   return [...tileColor, 255];
 }

@@ -6,7 +6,7 @@ import unicorn from "eslint-plugin-unicorn";
 
 export default [
   // design/ holds throwaway HTML mocks, and dist/ holds the built release zip. The site folder has
-  // its own packages and SST output, and its public/ holds copies made by npm run assets.
+  // its own packages and SST output, and its public/ holds copies made by the site's npm run assets.
   {
     ignores: [
       "design/**",
@@ -26,7 +26,6 @@ export default [
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
-      globals: { ...globals.node },
     },
     rules: {
       ...js.configs.recommended.rules,
@@ -94,18 +93,19 @@ export default [
     },
   },
   {
-    // The journeys drive the panel in the browser, so they name chrome and window.
-    files: ["tests/**/*.js"],
+    // Everything outside src/ runs in Node. The extension code must not reach for process or Buffer.
+    files: ["**/*.{js,mjs}"],
+    ignores: ["src/**"],
     languageOptions: {
-      globals: { ...globals.node, ...globals.browser, ...globals.webextensions },
+      globals: { ...globals.node },
     },
   },
   {
-    // The store script drives the extension in a browser, so its evaluate callbacks name chrome
-    // and document.
-    files: ["scripts/make-store-images.mjs"],
+    // The journeys and the store script drive the extension in a browser, so their evaluate
+    // callbacks name chrome and document.
+    files: ["tests/**/*.js", "scripts/make-store-images.mjs"],
     languageOptions: {
-      globals: { ...globals.node, ...globals.browser, ...globals.webextensions },
+      globals: { ...globals.browser, ...globals.webextensions },
     },
   },
   {

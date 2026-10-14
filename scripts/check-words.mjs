@@ -19,8 +19,8 @@ const bannedPhrases = [
   "make no mistake", "no op", "read better", "reads better", "this is important",
 ];
 
-// Only the words that read as generated text in a name. Words such as "gap" and "shape"
-// are normal nouns in code, so they stay in the prose list alone.
+// Only the words that read as generated text in a name. A word such as "gap" is a normal noun in
+// code, so it stays in the prose list alone.
 const bannedNames = new Set([
   "absent", "bail", "bailed", "bailing", "bails", "gate", "gated", "gates", "gating",
   "guard", "guarded", "guarding", "guards", "invariant", "invariants", "minted", "outrank",
@@ -30,7 +30,7 @@ const bannedNames = new Set([
 
 const causalWords = new Set(["because", "hence", "therefore"]);
 const skippedFolders = new Set([".build", ".git", ".sst", ".wrangler", "dist", "node_modules", "playwright-report", "test-results"]);
-// The generated files are machine output, so they stay out of the word check.
+// The generated files are machine output, and this file lists the banned words themselves.
 const skippedFiles = new Set([
   "DEPENDENCIES.md",
   "package-lock.json",
@@ -76,6 +76,7 @@ function blankCode(markdown) {
     .join(" ");
 }
 
+// CSS is read with the name list only. Its own words, such as the gap property, are not prose.
 const readers = {
   ".css": (source) => splitLines(source, "name"),
   ".html": (source) => splitLines(source, "text"),
