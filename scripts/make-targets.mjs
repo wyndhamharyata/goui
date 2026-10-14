@@ -57,7 +57,7 @@ const targets = [];
 for (const label of families.flat()) {
   const fromApp = appTargets.find((target) => target.label === label);
   const curve = fromApp ? fromApp.fr : await readTargetFile(label);
-  targets.push({ label, bassDb: fromApp ? fromApp.bassBoost.gain : 0, db: resample(curve.frequency, curve.raw) });
+  targets.push({ label, bassDb: fromApp ? fromApp.bassBoost.gain : 0, curveDb: resample(curve.frequency, curve.raw) });
 }
 
 const rigFamilies = families.map((family) => {

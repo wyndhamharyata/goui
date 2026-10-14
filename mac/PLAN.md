@@ -68,7 +68,7 @@ The web view talks to the server itself, so the tray needs very little Swift.
 | `chrome.runtime.getURL` | A `goui://app` address |
 | `chrome.tabs.create` | A message to the tray, which opens the link in the default browser |
 
-- Before a config goes to the server, `chrome.js` runs `engineConfig` from `src/shared/filters.js`.
+- Before a config goes to the server, `chrome.js` runs `makePlayedSound` from `src/shared/filters.js`.
   The server only ever takes `{ preampDb, bands }` and keeps the last one for the next login.
 
 ### Bands to sound

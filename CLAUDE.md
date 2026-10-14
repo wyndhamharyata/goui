@@ -18,10 +18,6 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
   columns. `design/ux-proposals.html` holds the mock the panel follows.
 - `src/graph.js` draws the curve as SVG. It uses the same Web Audio filters the engine plays, so
   the picture matches the sound.
-- `engineConfig` in `src/shared/filters.js` turns a stored config into what the engine plays: the bands
-  of every layer that is on, the three Listen sliders as fixed bands, and the auto preamp. A config
-  holds a `headphone` layer and an optional `ear` layer, each with its own switch and bands. Bands sum
-  in dB, so the two layers merge exactly. `flatBands` is the same list for the whole-sound export.
 - Each layer has its own preset list, under `headphonePresets` and `earPresets`. A preset holds bands
   only. The sliders and the preamp stay as they are when you pick one. A sound saved before the two
   lists splits into a headphone preset and, when it holds ear bands, an ear preset under that name.
@@ -30,6 +26,32 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
   target, goui also plays the bands `fitTargetChange` in `src/fit.js` fits to the difference between
   the two targets.
 - Playwright runs the tests at side panel width. ESLint and `scripts/check-words.mjs` run the lint.
+
+## Words
+
+| Word | Means |
+| --- | --- |
+| Band | One biquad: type, frequency, gain, Q, and an on switch. |
+| Layer | A list of bands with its own switch, name and source. The `headphone` layer is always there. The `ear` layer is optional. |
+| Preset | A saved band list for one layer. Each layer has its own list. |
+| Config | The stored sound: the main switch, the preamp, the three Listen sliders and the layers. |
+| Played sound | What the audio chain plays. `makePlayedSound` merges the bands of every layer that is on with the three sliders as fixed bands, and works out the auto preamp. Bands sum in dB, so the layers merge exactly. |
+| A/B | Held down, it plays the sound with the EQ off. Level match keeps the preamp while it is held. |
+
+## From a click to the sound
+
+1. A click on the toolbar icon reaches `onClicked` in `src/service-worker.js`. It opens the side
+   panel and checks whether the tab is the one goui hears.
+2. For a new tab, the service worker opens the offscreen document, asks `tabCapture` for a stream
+   id, and sends `audio:start`. `src/offscreen.js` takes the stream and builds the chain.
+3. The service worker sends the stored config as `audio:config` and then `capture:state`. An open
+   panel answers `capture:state` with its own `audio:config`, which holds A/B and Solo.
+4. Each edit in the panel sends `audio:config`. The offscreen document moves the nodes it has, or
+   builds new ones when a band changes type or switch.
+5. The offscreen document sends `audio:telemetry` 20 times a second. The panel shows the level and
+   draws the spectrum.
+
+`src/shared/messages.js` names each message and the context that reads it.
 
 ## Commands
 

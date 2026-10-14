@@ -23,14 +23,14 @@ import { clamp, frequencyRangeHz, hasGain, qRange, qStepRatio, responseDb, round
 
 /**
  * @typedef {object} GraphHooks
- * @property {() => BandEntry[]} bands
+ * @property {() => BandEntry[]} listBandEntries
  * @property {() => Band[]} listCurveBands
- * @property {() => LayerBands[]} curveLayers
- * @property {() => number[]} spectrum
- * @property {() => number} selectedIndex
- * @property {() => boolean} isBypassed
- * @property {(index: number) => void} select
- * @property {() => void} changed
+ * @property {() => LayerBands[]} listCurveLayers
+ * @property {() => number[]} readSpectrumDb
+ * @property {() => number} readSelectedIndex
+ * @property {() => boolean} isEqOff
+ * @property {(index: number) => void} selectBand
+ * @property {() => void} commitBandEdit
  * @property {(frequencyHz: number, gainDb: number) => void} addBand
  */
 
@@ -40,12 +40,12 @@ import { clamp, frequencyRangeHz, hasGain, qRange, qStepRatio, responseDb, round
  * @property {() => void} renderSpectrum
  * @property {() => void} renderHover
  * @property {string} zoom
- * @property {boolean} vertical
+ * @property {boolean} isTall
  * @property {(zoom: string) => void} setZoom
- * @property {(vertical: boolean) => void} setVertical
+ * @property {(isTall: boolean) => void} setTall
  */
 
-const rangeDb = 15;
+const maxShownGainDb = 15;
 const ticksHz = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10_000, 20_000];
 const majorTicksHz = [100, 1000, 10_000];
 const zooms = { all: frequencyRangeHz, lows: [20, 400], mids: [200, 5000], highs: [2000, 20_000] };
@@ -113,7 +113,7 @@ export function qToOctaves(q) {
  * @param {number} frequencyHz
  * @returns {number}
  */
-function readSpectrumDb(spectrumDb, frequencyHz) {
+function readSpectrumAt(spectrumDb, frequencyHz) {
   const position = (Math.log(frequencyHz / 20) / Math.log(1000)) * (spectrumDb.length - 1);
   return spectrumDb[clamp(Math.round(position), 0, spectrumDb.length - 1)];
 }
@@ -135,7 +135,7 @@ function drawnGainDb(band) {
  * @returns {Graph}
  */
 export function makeGraph(host, options, hooks) {
-  const graph = { zoom: "all", vertical: false, hover: null, drag: null, nodes: [], handles: [] };
+  const graph = { zoom: "all", isTall: false, hover: null, drag: null, nodes: [], handles: [] };
   const clipId = `clip-${host.id}`;
 
   /**
@@ -143,15 +143,15 @@ export function makeGraph(host, options, hooks) {
    * @returns {Band | undefined}
    */
   function bandAt(index) {
-    const entry = hooks.bands()[index];
+    const entry = hooks.listBandEntries()[index];
     return entry && entry.band;
   }
 
   /** @returns {PlotSize} */
   function measurePlot() {
-    const height = graph.vertical ? options.tallHeight : options.height;
-    const top = graph.vertical ? 16 : 8;
-    const bottom = graph.vertical ? 6 : 16;
+    const height = graph.isTall ? options.tallHeight : options.height;
+    const top = graph.isTall ? 16 : 8;
+    const bottom = graph.isTall ? 6 : 16;
     return { width: host.clientWidth, height, left: 30, top, plotWidth: host.clientWidth - 38, plotHeight: height - top - bottom };
   }
 
@@ -181,8 +181,8 @@ export function makeGraph(host, options, hooks) {
    */
   function placePoint(frequencyHz, gainDb, size) {
     const along = frequencyToRatio(frequencyHz);
-    const across = (clamp(gainDb, -rangeDb, rangeDb) + rangeDb) / (2 * rangeDb);
-    if (graph.vertical) return { x: size.left + (across * size.plotWidth), y: size.top + (along * size.plotHeight) };
+    const across = (clamp(gainDb, -maxShownGainDb, maxShownGainDb) + maxShownGainDb) / (2 * maxShownGainDb);
+    if (graph.isTall) return { x: size.left + (across * size.plotWidth), y: size.top + (along * size.plotHeight) };
     return { x: size.left + (along * size.plotWidth), y: size.top + ((1 - across) * size.plotHeight) };
   }
 
@@ -193,9 +193,9 @@ export function makeGraph(host, options, hooks) {
    * @returns {{ frequencyHz: number, gainDb: number }}
    */
   function readPoint(x, y, size) {
-    const along = graph.vertical ? (y - size.top) / size.plotHeight : (x - size.left) / size.plotWidth;
-    const across = graph.vertical ? (x - size.left) / size.plotWidth : 1 - ((y - size.top) / size.plotHeight);
-    return { frequencyHz: ratioToFrequency(along), gainDb: clamp((across * 2 * rangeDb) - rangeDb, -rangeDb, rangeDb) };
+    const along = graph.isTall ? (y - size.top) / size.plotHeight : (x - size.left) / size.plotWidth;
+    const across = graph.isTall ? (x - size.left) / size.plotWidth : 1 - ((y - size.top) / size.plotHeight);
+    return { frequencyHz: ratioToFrequency(along), gainDb: clamp((across * 2 * maxShownGainDb) - maxShownGainDb, -maxShownGainDb, maxShownGainDb) };
   }
 
   /**
@@ -224,7 +224,7 @@ export function makeGraph(host, options, hooks) {
    * @returns {Point[]}
    */
   function findGainAxisEnds(frequencyHz, size) {
-    return [placePoint(frequencyHz, -rangeDb, size), placePoint(frequencyHz, rangeDb, size)];
+    return [placePoint(frequencyHz, -maxShownGainDb, size), placePoint(frequencyHz, maxShownGainDb, size)];
   }
 
   /** @returns {Float32Array} */
@@ -273,19 +273,19 @@ export function makeGraph(host, options, hooks) {
 
   function drawRegions(size) {
     return regions.map((region, index) => {
-      const start = placePoint(Math.max(region.lowHz, zooms[graph.zoom][0]), rangeDb, size);
-      const end = placePoint(Math.min(region.highHz, zooms[graph.zoom][1]), -rangeDb, size);
-      const length = graph.vertical ? end.y - start.y : end.x - start.x;
+      const start = placePoint(Math.max(region.lowHz, zooms[graph.zoom][0]), maxShownGainDb, size);
+      const end = placePoint(Math.min(region.highHz, zooms[graph.zoom][1]), -maxShownGainDb, size);
+      const length = graph.isTall ? end.y - start.y : end.x - start.x;
       if (length <= 0) return "";
       const fill = index % 2 ? "rgba(255,255,255,0.025)" : "rgba(0,0,0,0)";
-      const rect = graph.vertical
+      const rect = graph.isTall
         ? `<rect x="${size.left}" y="${start.y}" width="${size.plotWidth}" height="${length}" fill="${fill}"/>`
         : `<rect x="${start.x}" y="${size.top}" width="${length}" height="${size.plotHeight}" fill="${fill}"/>`;
       if (length < 40) return rect;
       const tallSpot = { x: size.left + size.plotWidth - 4, y: start.y + (length / 2) + 3 };
       const wideSpot = { x: start.x + (length / 2), y: size.top + 10 };
-      const anchor = graph.vertical ? "end" : "middle";
-      return rect + makeText(graph.vertical ? tallSpot : wideSpot, region.name, `text-anchor="${anchor}" fill-opacity="0.8"`);
+      const anchor = graph.isTall ? "end" : "middle";
+      return rect + makeText(graph.isTall ? tallSpot : wideSpot, region.name, `text-anchor="${anchor}" fill-opacity="0.8"`);
     }).join("");
   }
 
@@ -299,12 +299,12 @@ export function makeGraph(host, options, hooks) {
       const [low, high] = findGainAxisEnds(frequencyHz, size);
       const opacity = majorTicksHz.includes(frequencyHz) ? 0.13 : 0.05;
       parts.push(makeLine(low, high, `stroke="rgba(255,255,255,${opacity})"`));
-      const labelAt = graph.vertical ? low.y : low.x;
+      const labelAt = graph.isTall ? low.y : low.x;
       const minLabelSpacingPx = 26;
       if (labelAt - lastLabelAt < minLabelSpacingPx) continue;
       lastLabelAt = labelAt;
-      const spot = graph.vertical ? { x: 4, y: low.y + 3 } : { x: low.x, y: size.height - 4 };
-      parts.push(makeText(spot, formatHz(frequencyHz), `text-anchor="${graph.vertical ? "start" : "middle"}"`));
+      const spot = graph.isTall ? { x: 4, y: low.y + 3 } : { x: low.x, y: size.height - 4 };
+      parts.push(makeText(spot, formatHz(frequencyHz), `text-anchor="${graph.isTall ? "start" : "middle"}"`));
     }
     return parts.join("");
   }
@@ -315,8 +315,8 @@ export function makeGraph(host, options, hooks) {
       const from = placePoint(zooms[graph.zoom][0], gainDb, size);
       const to = placePoint(zooms[graph.zoom][1], gainDb, size);
       parts.push(makeLine(from, to, `stroke="rgba(255,255,255,${gainDb === 0 ? 0.22 : 0.05})"`));
-      const spot = graph.vertical ? { x: from.x, y: 11 } : { x: 4, y: from.y + 3 };
-      parts.push(makeText(spot, gainDb > 0 ? `+${gainDb}` : `${gainDb}`, `text-anchor="${graph.vertical ? "middle" : "start"}"`));
+      const spot = graph.isTall ? { x: from.x, y: 11 } : { x: 4, y: from.y + 3 };
+      parts.push(makeText(spot, gainDb > 0 ? `+${gainDb}` : `${gainDb}`, `text-anchor="${graph.isTall ? "middle" : "start"}"`));
     }
     return parts.join("");
   }
@@ -327,16 +327,16 @@ export function makeGraph(host, options, hooks) {
    * @returns {string}
    */
   function drawSpectrum(size, frequencies) {
-    const spectrumDb = hooks.spectrum();
+    const spectrumDb = hooks.readSpectrumDb();
     if (spectrumDb.length === 0) return "";
-    if (graph.vertical) return drawMirroredSpectrum(size, frequencies, spectrumDb);
+    if (graph.isTall) return drawMirroredSpectrum(size, frequencies, spectrumDb);
 
     // The fill starts at the floor and runs up. The floor is 100 dB below full scale, which puts a
     // normal song around the middle with its peaks in the upper half.
     const floorDb = -100;
     // Array.from, not map. A Float32Array.map would turn each point string into a number.
     const points = Array.from(frequencies, (frequencyHz, index) => {
-      const level = clamp((readSpectrumDb(spectrumDb, frequencyHz) - floorDb) / (0 - floorDb), 0, 1);
+      const level = clamp((readSpectrumAt(spectrumDb, frequencyHz) - floorDb) / (0 - floorDb), 0, 1);
       return `${size.left + ((index / 120) * size.plotWidth)},${size.top + (size.plotHeight * (1 - level))}`;
     });
     const floor = [`${size.left + size.plotWidth},${size.top + size.plotHeight}`, `${size.left},${size.top + size.plotHeight}`];
@@ -350,7 +350,7 @@ export function makeGraph(host, options, hooks) {
     const right = [];
     const left = [];
     for (const frequencyHz of frequencies) {
-      const levelDb = readSpectrumDb(spectrumDb, frequencyHz) + (3 * Math.log2(frequencyHz / 1000));
+      const levelDb = readSpectrumAt(spectrumDb, frequencyHz) + (3 * Math.log2(frequencyHz / 1000));
       const halfWidth = clamp((levelDb + 100) / 90, 0, 1) * rise;
       const center = placePoint(frequencyHz, 0, size);
       right.push(`${center.x + halfWidth},${center.y}`);
@@ -385,12 +385,12 @@ export function makeGraph(host, options, hooks) {
   }
 
   function drawNodes(size) {
-    return hooks.bands().map((entry, index) => {
+    return hooks.listBandEntries().map((entry, index) => {
       const band = entry.band;
       const point = placePoint(band.frequencyHz, drawnGainDb(band), size);
       graph.nodes.push({ index, x: point.x, y: point.y });
       const fill = band.on ? typeColor[band.type] : backgroundColor;
-      const ring = index === hooks.selectedIndex() ? `<circle cx="${point.x}" cy="${point.y}" r="11" fill="none" stroke="#fff" stroke-opacity="0.7"/>` : "";
+      const ring = index === hooks.readSelectedIndex() ? `<circle cx="${point.x}" cy="${point.y}" r="11" fill="none" stroke="#fff" stroke-opacity="0.7"/>` : "";
       const earRing = entry.role === "ear" ? `<circle cx="${point.x}" cy="${point.y}" r="9.5" fill="none" stroke="${layerColor.ear}" stroke-width="1.5"/>` : "";
       return `${earRing}${ring}<circle cx="${point.x}" cy="${point.y}" r="7" fill="${fill}" stroke="${typeColor[band.type]}" stroke-width="1.5"/>`
         + `<text x="${point.x}" y="${point.y + 3}" text-anchor="middle" font-size="9" font-weight="700" fill="${backgroundColor}">${index + 1}</text>`;
@@ -421,7 +421,7 @@ export function makeGraph(host, options, hooks) {
     const content = `${formatHz(reading.frequencyHz)} Hz  ${formatDb(valueDb)} dB`;
     const width = (content.length * charWidthPx) + 10;
     const x = size.left + size.plotWidth - width;
-    const y = size.top + (graph.vertical ? 2 : 16);
+    const y = size.top + (graph.isTall ? 2 : 16);
     return makeLine(low, high, `stroke="rgba(255,255,255,0.25)"`)
       + `<circle cx="${dot.x}" cy="${dot.y}" r="3" fill="#fff"/>`
       + `<rect x="${x}" y="${y}" width="${width}" height="15" rx="4" fill="rgba(14,16,19,0.9)"/>`
@@ -430,8 +430,8 @@ export function makeGraph(host, options, hooks) {
 
   // Each layer's own curve, dashed, under the solid total.
   function drawLayerCurves(size, frequencies) {
-    if (!options.layerCurves || !hooks.curveLayers) return "";
-    return hooks.curveLayers().map((layer) => {
+    if (!options.layerCurves || !hooks.listCurveLayers) return "";
+    return hooks.listCurveLayers().map((layer) => {
       const stroke = `stroke="${layerColor[layer.role]}" stroke-width="1.5" stroke-dasharray="4 3"`;
       return drawCurve(size, frequencies, responseDb(layer.bands, frequencies), stroke);
     }).join("");
@@ -463,13 +463,13 @@ export function makeGraph(host, options, hooks) {
     if (size.width === 0) return;
     const frequencies = sweepFrequencies();
     const curveDb = responseDb(hooks.listCurveBands(), frequencies);
-    const band = bandAt(hooks.selectedIndex());
+    const band = bandAt(hooks.readSelectedIndex());
     const showsPoints = options.interactive;
     graph.handles = [];
     graph.nodes = [];
 
     const selectedArea = showsPoints && band ? drawSelectedBand(size, band, frequencies) : "";
-    const curveColor = hooks.isBypassed() ? "rgba(255,255,255,0.35)" : "#5b8cff";
+    const curveColor = hooks.isEqOff() ? "rgba(255,255,255,0.35)" : "#5b8cff";
     const curve = drawCurve(size, frequencies, curveDb, `stroke="${curveColor}" stroke-width="2"`);
     const nodes = showsPoints ? drawNodes(size) : "";
     const pill = showsPoints && band ? drawPill(size, band) : "";
@@ -492,7 +492,7 @@ export function makeGraph(host, options, hooks) {
 
   /**
    * @param {PointerPoint} point
-   * @returns {{ kind: "width" | "move", index: number } | null}
+   * @returns {{ kind: "q" | "move", index: number } | null}
    */
   function findTarget(point) {
     /**
@@ -503,7 +503,7 @@ export function makeGraph(host, options, hooks) {
     const isNear = (item, radiusPx) => Math.hypot(item.x - point.x, item.y - point.y) < radiusPx;
     const handleRadiusPx = 12;
     const pointRadiusPx = 14;
-    if (graph.handles.some((handle) => isNear(handle, handleRadiusPx))) return { kind: "width", index: hooks.selectedIndex() };
+    if (graph.handles.some((handle) => isNear(handle, handleRadiusPx))) return { kind: "q", index: hooks.readSelectedIndex() };
     const node = [...graph.nodes].reverse().find((item) => isNear(item, pointRadiusPx));
     return node ? { kind: "move", index: node.index } : null;
   }
@@ -518,7 +518,7 @@ export function makeGraph(host, options, hooks) {
     if (hasGain(band.type)) band.gainDb = roundGainDb(target.gainDb);
   }
 
-  function widenBand(band, point) {
+  function setQFromPointer(band, point) {
     const octaves = 2 * Math.abs(Math.log2(readPoint(point.x, point.y, point.size).frequencyHz / band.frequencyHz));
     // Q = 1 / (2 sinh(ln2 / 2 * BW)), RBJ Audio EQ Cookbook, with BW in octaves.
     band.q = clamp(1 / (2 * Math.sinh((Math.LN2 / 2) * Math.max(octaves, 0.05))), ...qRange);
@@ -532,7 +532,7 @@ export function makeGraph(host, options, hooks) {
       const band = bandAt(target.index);
       graph.drag = { ...target, startX: point.x, startY: point.y, startHz: band.frequencyHz, startDb: drawnGainDb(band) };
       host.setPointerCapture(event.pointerId);
-      hooks.select(target.index);
+      hooks.selectBand(target.index);
     });
 
     host.addEventListener("pointermove", (event) => {
@@ -552,8 +552,8 @@ export function makeGraph(host, options, hooks) {
         graph.drag.startY = point.y;
       }
       if (graph.drag.kind === "move") moveBand(band, point, event.shiftKey);
-      else widenBand(band, point);
-      hooks.changed();
+      else setQFromPointer(band, point);
+      hooks.commitBandEdit();
     });
 
     host.addEventListener("pointerup", () => {
@@ -582,8 +582,8 @@ export function makeGraph(host, options, hooks) {
       event.preventDefault();
       const band = bandAt(target.index);
       band.q = clamp(band.q * (event.deltaY < 0 ? qStepRatio : 1 / qStepRatio), ...qRange);
-      hooks.select(target.index);
-      hooks.changed();
+      hooks.selectBand(target.index);
+      hooks.commitBandEdit();
     }, { passive: false });
   }
 
@@ -596,15 +596,15 @@ export function makeGraph(host, options, hooks) {
     get zoom() {
       return graph.zoom;
     },
-    get vertical() {
-      return graph.vertical;
+    get isTall() {
+      return graph.isTall;
     },
     setZoom(zoom) {
       graph.zoom = zoom;
       render();
     },
-    setVertical(vertical) {
-      graph.vertical = vertical;
+    setTall(isTall) {
+      graph.isTall = isTall;
       render();
     },
   };

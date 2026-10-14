@@ -18,10 +18,10 @@
  * @property {string} name
  * @property {boolean} isEdited
  * @property {Band[]} bands
- * @property {AutoEqSource} [autoEq]
+ * @property {AutoEqOrigin} [autoEq]
  */
 
-/** @typedef {{ name: string, path: string, target: string }} AutoEqSource */
+/** @typedef {{ name: string, path: string, target: string }} AutoEqOrigin */
 
 /** @typedef {{ bassDb: number, vocalsDb: number, trebleDb: number }} Sliders */
 
@@ -34,7 +34,7 @@
  * @property {{ headphone: Layer, ear?: Layer }} layers
  */
 
-/** @typedef {{ enabled: boolean, preampDb: number, bands: Band[] }} EngineConfig */
+/** @typedef {{ enabled: boolean, preampDb: number, bands: Band[] }} PlayedSound */
 
 /** @typedef {{ role: LayerRole, bands: Band[] }} LayerBands */
 
@@ -96,12 +96,12 @@ export function roundGainDb(gainDb) {
 
 /**
  * @param {number} value
- * @param {number} low
- * @param {number} high
+ * @param {number} min
+ * @param {number} max
  * @returns {number}
  */
-export function clamp(value, low, high) {
-  return Math.min(Math.max(value, low), high);
+export function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
 
 export const layerOrder = ["headphone", "ear"];
@@ -198,9 +198,9 @@ export function sanitizeConfig(raw) {
       bands: raw.bands,
     },
   };
-  const source = raw.layers || older;
-  const layers = { headphone: cleanLayer(source.headphone, "Flat") };
-  if (source.ear) layers.ear = cleanLayer(source.ear, "Ear tuning");
+  const storedLayers = raw.layers || older;
+  const layers = { headphone: cleanLayer(storedLayers.headphone, "Flat") };
+  if (storedLayers.ear) layers.ear = cleanLayer(storedLayers.ear, "Ear tuning");
 
   return {
     enabled: raw.enabled !== false,
@@ -311,12 +311,12 @@ export function listPlayedBands(config) {
   return [...listOnLayers(config).flatMap((layer) => layer.bands), ...sliderBands(config.sliders)];
 }
 
-// What the audio chain plays: the played bands and the preamp.
+// What the audio chain plays, the played bands and the preamp.
 /**
  * @param {Config} config
- * @returns {EngineConfig}
+ * @returns {PlayedSound}
  */
-export function engineConfig(config) {
+export function makePlayedSound(config) {
   const bands = listPlayedBands(config);
   const preampDb = config.autoPreamp ? autoPreampDb(bands) : config.preampDb;
   return { enabled: config.enabled, preampDb, bands };
@@ -327,7 +327,7 @@ export function engineConfig(config) {
  * @param {Config} config
  * @returns {Band[]}
  */
-export function flatBands(config) {
+export function listExportBands(config) {
   return listPlayedBands(config).filter((band) => !hasGain(band.type) || band.gainDb !== 0);
 }
 

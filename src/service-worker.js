@@ -50,6 +50,7 @@ async function isHeardTab(tabId) {
 async function startCaptureForTab(target) {
   await openOffscreenDocument();
   const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: target.id });
+  // Not trySendMessage. A start that fails must reach the panel as an error.
   const reply = await chrome.runtime.sendMessage({ type: messageTypes.audioStart, streamId });
 
   const isStarted = Boolean(reply && reply.ok);

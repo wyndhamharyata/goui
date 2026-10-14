@@ -537,7 +537,7 @@ journey("given a headphone band and an ear band, each layer exports alone and th
   await expect(panel.locator("#wholeText")).toHaveValue(/Filter 2: ON PK Fc 1000 Hz Gain -6\.0 dB/);
 });
 
-journey("given sounds saved by the build before the two lists, each one shows in both lists and plays", async (context, port) => {
+journey("given sounds and Level match saved by older builds, each sound shows in both lists and plays, and Level match stays on", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
   const flat = await readSteadyLevel(panel);
@@ -548,8 +548,9 @@ journey("given sounds saved by the build before the two lists, each one shows in
       ear: { on: true, source: "Pasted", name: "Pasted My ear", bands: [{ on: true, type: "PK", frequencyHz: 1000, gainDb: -6, q: 1 }] },
     },
   };
-  await panel.evaluate((sound) => chrome.storage.local.set({ savedSounds: { old: sound } }), older);
+  await panel.evaluate((sound) => chrome.storage.local.set({ savedSounds: { old: sound }, keepsPreampInCompare: true }), older);
   await panel.reload();
+  await expect(panel.locator("#levelMatch")).toBeChecked();
 
   await pick(panel, "headphone", "old");
   expectAbout6Db(await readSteadyLevel(panel) - flat);
@@ -632,7 +633,7 @@ journey("given a 1 kHz peak under auto preamp, A/B plays a 5 kHz tone 6 dB loude
 
   const reopened = await context.newPage();
   await reopened.goto(panelUrl);
-  await expect(reopened.locator("#keepPreamp")).toBeChecked();
+  await expect(reopened.locator("#levelMatch")).toBeChecked();
   await holdCompare(reopened);
   expect(Math.abs(await readSteadyLevel(reopened) - withEq)).toBeLessThan(0.6);
 });

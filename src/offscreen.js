@@ -1,4 +1,4 @@
-import { biquadQ, engineConfig, hasGain, logSweepHz, makeBiquad, sanitizeConfig } from "./shared/filters.js";
+import { biquadQ, makePlayedSound, hasGain, logSweepHz, makeBiquad, sanitizeConfig } from "./shared/filters.js";
 import { messageTypes, trySendMessage } from "./shared/messages.js";
 
 /** @typedef {import("./shared/messages.js").AudioReply} AudioReply */
@@ -11,14 +11,15 @@ let analyserNode;
 let preampNode;
 let bandNodes = [];
 let telemetryTimer;
-let config = { enabled: true, preampDb: 0, bands: [] };
+/** @type {import("./shared/filters.js").PlayedSound} */
+let playedSound = { enabled: true, preampDb: 0, bands: [] };
 
 // The panel reads these points back on the same log scale.
 const spectrumHz = logSweepHz(128);
 
 /** @returns {import("./shared/filters.js").Band[]} */
 function listActiveBands() {
-  return config.bands.filter((band) => band.on);
+  return playedSound.bands.filter((band) => band.on);
 }
 
 function buildChain() {
@@ -29,12 +30,12 @@ function buildChain() {
   analyserNode.fftSize = 8192;
   analyserNode.smoothingTimeConstant = 0;
   preampNode = audioContext.createGain();
-  preampNode.gain.value = 10 ** (config.preampDb / 20);
+  preampNode.gain.value = 10 ** (playedSound.preampDb / 20);
 
   // With the EQ off, the tab plays straight into the analyser, so the level still reads.
   bandNodes = [];
   chainNodes = [analyserNode];
-  if (config.enabled) {
+  if (playedSound.enabled) {
     bandNodes = listActiveBands().map((band) => makeBiquad(audioContext, band));
     chainNodes = [preampNode, ...bandNodes, analyserNode];
   }
@@ -45,14 +46,14 @@ function buildChain() {
 // Only a change here needs new nodes. A new frequency, gain or Q moves the nodes that exist.
 /** @returns {string} */
 function readChainLayout() {
-  const parts = config.bands.map((band) => [band.type, band.on]);
-  return JSON.stringify([parts, config.enabled]);
+  const parts = playedSound.bands.map((band) => [band.type, band.on]);
+  return JSON.stringify([parts, playedSound.enabled]);
 }
 
 function updateBandNodes() {
   const now = audioContext.currentTime;
   const rampSeconds = 0.01;
-  preampNode.gain.setTargetAtTime(10 ** (config.preampDb / 20), now, rampSeconds);
+  preampNode.gain.setTargetAtTime(10 ** (playedSound.preampDb / 20), now, rampSeconds);
   listActiveBands().forEach((band, index) => {
     const bandNode = bandNodes[index];
     bandNode.frequency.setTargetAtTime(band.frequencyHz, now, rampSeconds);
@@ -63,13 +64,13 @@ function updateBandNodes() {
 
 function applyConfig(next) {
   const previous = readChainLayout();
-  config = next;
+  playedSound = next;
   if (!audioContext) return;
   if (readChainLayout() !== previous) {
     buildChain();
     return;
   }
-  if (config.enabled) updateBandNodes();
+  if (playedSound.enabled) updateBandNodes();
 }
 
 function readLevelDb(buffer) {
@@ -131,7 +132,7 @@ const handlers = new Map([
   [messageTypes.audioStart, (message) => start(message.streamId)],
   [messageTypes.audioStop, () => stop()],
   [messageTypes.audioConfig, async (message) => {
-    applyConfig(engineConfig(sanitizeConfig(message.config)));
+    applyConfig(makePlayedSound(sanitizeConfig(message.config)));
     return { ok: true };
   }],
 ]);
