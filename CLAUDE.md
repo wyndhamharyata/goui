@@ -25,7 +25,8 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
   headphone from AutoEQ plays AutoEQ's file, tuned to the first target of its family. With another
   target, goui also plays the bands `fitTargetChange` in `src/fit.js` fits to the difference between
   the two targets.
-- Playwright runs the tests at side panel width. ESLint and `scripts/check-words.mjs` run the lint.
+- Playwright runs the tests at side panel width. `tests/journeys.spec.js` holds the journeys and
+  `tests/helpers.js` the steps they share. ESLint and `scripts/check-words.mjs` run the lint.
 
 ## Words
 
@@ -219,5 +220,8 @@ Each one names the rule it breaks and the reason.
 - The render and event functions in `src/panel.js` and `src/graph.js` have one caller each,
   against rule 7. Folded into their callers, those callers would pass the 15-branch limit. Their
   names are also what a reader scans the file for.
+- Six journeys end in text a person reads, not in a sound, against rule 8.2: the HD 600 result
+  lines, the eqbyear button, the help page, the credits line, the first-run guide and a second
+  press on a band chip. What they check has no sound of its own.
 - Each word list at the top of `scripts/check-words.mjs` has one reader, against rule 7.
   The lists are data. A person edits them there, next to each other, when rule 2 changes.
