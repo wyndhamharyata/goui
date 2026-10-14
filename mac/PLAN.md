@@ -209,6 +209,10 @@ Each step starts only when it is asked for, and ends with a commit.
   when another system EQ runs or the sound goes to AirPods or Beats. It names the version change,
   lists the limits with a link to goui.mwyndham.dev/mac#before, and asks before it installs. With
   no terminal it takes the defaults, and `GOUI_YES=1` answers yes.
+- After an install or an update, goui opens its panel once, so the menu bar item is easy to find.
+  `install.sh` writes `just-installed` in the settings folder, and the app deletes it at launch. It
+  waits for the tap to be built: building it gives the focus back to the app in front, which hid a
+  panel opened any sooner.
 - The panel makes goui the active app as it opens. On a fresh start goui is not active, and macOS
   gave the focus back to the app in front, which hid the panel, so it took three clicks to open.
 - The Mac app has no journeys for now. Playwright cannot drive a `WKWebView`, and the panel's own

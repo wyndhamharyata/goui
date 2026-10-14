@@ -17,6 +17,8 @@ final class AppController: NSObject, WKNavigationDelegate {
   private static let guideURL = URL(string: "https://goui.mwyndham.dev/mac")!
   // The click on the menu bar item that hides the panel would open it again straight away.
   private static let reopenDelaySeconds = 0.3
+  // install.sh writes this after an install or an update, so the panel opens once and shows where goui lives.
+  private static let installedMarkerURL = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Library/Application Support/goui/just-installed")
 
   private let pagePath: String
   private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -26,6 +28,7 @@ final class AppController: NSObject, WKNavigationDelegate {
   private var bridge: Bridge?
   private var webView: WKWebView?
   private var panel: FloatingPanel?
+  private var isOpeningAfterInstall = false
 
   init(pagePath: String) {
     self.pagePath = pagePath
@@ -48,7 +51,10 @@ final class AppController: NSObject, WKNavigationDelegate {
     }
 
     let bridge = Bridge(engine: engine, config: config)
-    engine.onStatusChange = { _ in bridge.sendStatus() }
+    engine.onStatusChange = { [weak self] status in
+      bridge.sendStatus()
+      self?.openPanelOnceStarted(status)
+    }
     self.engine = engine
     self.bridge = bridge
     print("goui. \(config.isOn ? "On" : "Off"), preamp \(config.playedSound.preampDb) dB, \(config.playedSound.bands.count) bands.")
@@ -65,7 +71,21 @@ final class AppController: NSObject, WKNavigationDelegate {
     statusItem.button?.target = self
     statusItem.button?.action = #selector(clickMenuBarItem)
     statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+    isOpeningAfterInstall = takeInstalledMarker()
     if pagePath != Self.panelPagePath { togglePanel() }
+    openPanelOnceStarted(engine.status)
+  }
+
+  // Building the tap gives the focus back to the app in front, which would hide the panel, so it opens after.
+  private func openPanelOnceStarted(_ status: Engine.Status) {
+    guard isOpeningAfterInstall, status != .starting else { return }
+
+    isOpeningAfterInstall = false
+    togglePanel()
+  }
+
+  private func takeInstalledMarker() -> Bool {
+    (try? FileManager.default.removeItem(at: Self.installedMarkerURL)) != nil
   }
 
   private func buildMenu() {

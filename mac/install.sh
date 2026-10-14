@@ -299,12 +299,6 @@ note "Spatial Audio and head tracking on AirPods and Beats drop out" "while goui
 note "macOS asks to let goui record the audio of this Mac. Press Allow." "goui EQs the sound on its way to you and keeps none of it."
 note "goui is not signed by Apple yet, so each update asks for that" "permission again."
 note "Your settings stay in ~/Library/Application Support/goui," "through updates and after goui uninstall."
-printf '\n  %sRead more:%s %s%s%s\n' "$bold" "$reset" "$cyan" "$guide" "$reset"
-
-if can_ask && ask "Open that page in your browser first?" n; then
-  open "$guide"
-fi
-
 if ! ask "$plan goui $new_version now?" y; then
   printf '\n  %sNothing was installed.%s\n\n' "$dim" "$reset"
   exit 1
@@ -353,13 +347,17 @@ cat > "$plist" <<PLIST
 </dict>
 </plist>
 PLIST
+# The app opens its panel once when it finds this, so the menu bar item is easy to spot.
+mkdir -p "$HOME/Library/Application Support/goui"
+: > "$HOME/Library/Application Support/goui/just-installed"
 launchctl bootstrap "$domain" "$plist"
 passed "Started goui, and set it to start at login"
 
 printf '\n  %s%s♪ goui %s is in.%s\n' "$bold" "$green" "$new_version" "$reset"
-printf '\n  1. Click goui in the menu bar, then the power button.\n'
+printf '\n  1. The goui panel opens under its menu bar item. Press the power button.\n'
 printf '  2. When macOS asks to record the audio of this Mac, press %sAllow%s.\n' "$bold" "$reset"
 printf '  3. Play something.\n'
+printf '\n  %sRead more:%s %s%s%s\n' "$bold" "$reset" "$cyan" "$guide" "$reset"
 printf '\n  %sgoui start · stop · restart · logs · uninstall%s\n' "$dim" "$reset"
 case ":$PATH:" in
 *":$bin:"*) ;;
