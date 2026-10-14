@@ -103,8 +103,9 @@ a.name {
 }
 
 .hero-install-label {
-  color: var(--muted);
-  font-size: 13px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .hero-install-row {
