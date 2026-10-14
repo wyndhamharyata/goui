@@ -24,17 +24,21 @@ code {
 
 .site-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .site-head img {
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
+/* As tall as the icon's bars, so the name and the icon read as one mark. */
 .site-head .name {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 /* On the privacy page the name is a link home, in the text colour like on the homepage. */
@@ -44,7 +48,9 @@ a.name {
 
 .site-head nav {
   display: flex;
-  gap: 18px;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  white-space: nowrap;
   margin-left: auto;
   font-size: 14px;
 }
@@ -52,9 +58,27 @@ a.name {
 .hero {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 48px;
-  margin-top: 48px;
+  margin-top: 28px;
+}
+
+/* The layer rows already name both dashed lines, so the Listen legend goes and the panel fits a laptop screen. */
+.demo [data-pane="listen"] .legend-host {
+  display: none;
+}
+
+/* A short window, such as a laptop with the page zoomed, shows the whole panel and its caption. */
+@media (max-height: 820px) and (min-width: 760px) {
+  .demo {
+    zoom: 0.88;
+  }
+}
+
+@media (max-height: 740px) and (min-width: 760px) {
+  .demo {
+    zoom: 0.82;
+  }
 }
 
 .hero-text {
