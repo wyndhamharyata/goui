@@ -308,11 +308,19 @@ textarea {
     grid-template-columns: 290px minmax(0, 1fr) 300px 300px;
     /* The Library title, My ear, Whole sound and the credits. Whole sound's row takes any spare height. */
     grid-template-rows: auto auto 1fr auto;
+    /* Every column reaches the same bottom line. */
+    align-items: stretch;
   }
 
   .pane[data-pane="listen"],
   .pane[data-pane="tune"] {
-    grid-row: 1 / -1;
+    grid-row: 1 / 4;
+  }
+
+  /* The last card of each column grows to the shared bottom line. Its content stays at the top. */
+  .pane[data-pane="listen"] > :last-child,
+  .pane[data-pane="tune"] > :last-child {
+    flex-grow: 1;
   }
 
   .pane[data-pane="library"] {
@@ -339,7 +347,8 @@ textarea {
   }
 
   .pane[data-pane="library"] > .credits {
-    grid-column: 3 / -1;
+    grid-column: 1 / -1;
+    text-align: right;
   }
 }
 

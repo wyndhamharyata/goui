@@ -257,7 +257,7 @@ journey("given a saved ear preset, it stays on a new headphone, No ear tuning dr
   await expect(sectionOf(panel, "ear").locator(".item[data-name='my ear']")).toHaveCount(0);
 });
 
-journey("given a headphone band and an ear band, each layer exports alone, the whole sound exports both, and a second press puts it away", async (context, port) => {
+journey("given a headphone band and an ear band, each layer exports alone in a box that fits it, the whole sound exports both, and a second press puts it away", async (context, port) => {
   const { panel } = await startGouiOnTone(context, port, 1000);
 
   await turnAutoPreampOff(panel);
@@ -269,6 +269,14 @@ journey("given a headphone band and an ear band, each layer exports alone, the w
   await ear.locator("[data-action=export]").click();
   await expect(ear.locator(".text")).toHaveValue(/Filter 1: ON PK Fc 1000 Hz Gain -6\.0 dB/);
   await expect(ear.locator(".text")).not.toHaveValue(/Gain 6\.0 dB/);
+
+  const exportBox = await ear.locator(".text").evaluate((box) => ({ hidden: box.scrollHeight - box.clientHeight, height: box.offsetHeight }));
+
+  expect(exportBox.hidden).toBe(0);
+  expect(exportBox.height).toBeLessThan(80);
+
+  await ear.locator("[data-action=paste]").click();
+  expect(await ear.locator(".text").evaluate((box) => box.offsetHeight)).toBeGreaterThanOrEqual(80);
 
   await panel.click("#exportAll");
   await expect(panel.locator("#wholeText")).toHaveValue(/Filter 1: ON PK Fc 1000 Hz Gain 6\.0 dB/);

@@ -11,9 +11,9 @@ final class AppController: NSObject, WKNavigationDelegate {
   private static let panelSize = NSSize(width: FloatingPanel.narrowWidthPx, height: 600)
   // At 900 px src/panel.css shows Listen, Tune and Library side by side. At 1300 px each layer has its own column too.
   private static let wideWidthPx = 900.0
-  private static let firstWideWidthPx = 1400.0
+  // Wide panel fills the screen's width up to this, and the room beyond the fixed columns goes to Tune.
+  private static let fullWideWidthPx = 1800.0
   private static let widthKey = "panelWidth"
-  private static let wideWidthKey = "panelWideWidth"
   // The click on the menu bar item that hides the panel would open it again straight away.
   private static let reopenDelaySeconds = 0.3
 
@@ -161,7 +161,6 @@ final class AppController: NSObject, WKNavigationDelegate {
   private func keepWidth(_ width: Double) {
     let isWide = width >= Self.wideWidthPx
     UserDefaults.standard.set(width, forKey: Self.widthKey)
-    if isWide { UserDefaults.standard.set(width, forKey: Self.wideWidthKey) }
     wideItem.state = isWide ? .on : .off
   }
 
@@ -169,9 +168,8 @@ final class AppController: NSObject, WKNavigationDelegate {
     guard let button = statusItem.button else { return }
 
     let panel = panel ?? buildPanel()
-    let lastWideWidth = UserDefaults.standard.double(forKey: Self.wideWidthKey)
     let isWide = panel.frame.width >= Self.wideWidthPx
-    panel.setWidth(isWide ? FloatingPanel.narrowWidthPx : (lastWideWidth >= Self.wideWidthPx ? lastWideWidth : Self.firstWideWidthPx))
+    panel.setWidth(isWide ? FloatingPanel.narrowWidthPx : Self.fullWideWidthPx)
     if !panel.isVisible { panel.show(below: button) }
   }
 

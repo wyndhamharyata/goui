@@ -4,7 +4,7 @@ import { layerLabels, layerOrder, listExportBands, toPlayedSound, preampRangeDb,
 import { findTargetSet, newAutoEqItem, toAutoEq } from "../autoeq.js";
 import { layerColor } from "../graph/colors.js";
 import { formatDb } from "../graph/format.js";
-import { byId, buildElement, sectionOf, setField, showTab } from "./dom.js";
+import { byId, buildElement, sectionOf, setField, showAllLines, showTab } from "./dom.js";
 import { describeLayerName } from "./items.js";
 import { changeTarget, clearHeadphoneLayer } from "./headphones.js";
 import { toggleLibraryAction } from "./library.js";
@@ -164,7 +164,7 @@ export function wireListen() {
     const whole = byId("wholeText");
 
     whole.hidden = !whole.hidden;
-    whole.value = toAutoEq({ preampDb: toPlayedSound(state.config).preampDb, bands: listExportBands(state.config) });
+    showAllLines(whole, toAutoEq({ preampDb: toPlayedSound(state.config).preampDb, bands: listExportBands(state.config) }));
     byId("exportAll").classList.toggle("on", !whole.hidden);
   });
 }

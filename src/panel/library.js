@@ -2,7 +2,7 @@
 import { autoPreampDb } from "../shared/bands.js";
 import { layerLabels, layerOrder } from "../shared/config.js";
 import { parseAutoEq, toAutoEq } from "../autoeq.js";
-import { debounce, buildElement, partOf, sectionOf, showHint } from "./dom.js";
+import { debounce, buildElement, partOf, resetBoxHeight, sectionOf, showAllLines, showHint } from "./dom.js";
 import { renderHeadphoneList } from "./headphones.js";
 import { appendSection, describeBandCount, buildResultItem } from "./items.js";
 import { isSavedPreset, buildPresetItem, renderPresetCards, storePresets } from "./presets.js";
@@ -96,7 +96,7 @@ function fillSaveName(role, action) {
 function fillExportText(role) {
   const bands = readBands(state.config.layers[role]);
 
-  partOf(role, "text").value = toAutoEq({ preampDb: autoPreampDb(bands), bands });
+  showAllLines(partOf(role, "text"), toAutoEq({ preampDb: autoPreampDb(bands), bands }));
   showHint(role, `${layerLabels[role]} alone, as AutoEQ text. Copy it out.`);
 }
 
@@ -104,6 +104,7 @@ function emptyPasteBox(role) {
   const text = partOf(role, "text");
 
   text.value = "";
+  resetBoxHeight(text);
   text.focus();
 }
 

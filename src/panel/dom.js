@@ -67,6 +67,25 @@ export function showHint(role, text) {
   partOf(role, "action-hint").textContent = text;
 }
 
+// An export box is as tall as its text, so every line shows. The box must be on the page to measure.
+/**
+ * @param {HTMLTextAreaElement} box
+ * @param {string} text
+ */
+export function showAllLines(box, text) {
+  box.value = text;
+  box.style.minHeight = "0";
+  box.style.height = "auto";
+  box.style.height = `${box.scrollHeight + box.offsetHeight - box.clientHeight}px`;
+}
+
+// A paste box goes back to the height the stylesheet gives it.
+/** @param {HTMLTextAreaElement} box */
+export function resetBoxHeight(box) {
+  box.style.minHeight = "";
+  box.style.height = "";
+}
+
 // A field the person is typing in keeps their text.
 /**
  * @param {string} id
