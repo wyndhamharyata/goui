@@ -16,8 +16,9 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
   on its tab when it opens and has a power button that turns goui on and off.
 - The side panel has three tabs: Listen, Tune and Library. From 900 px wide they show as three
   columns. `design/ux-proposals.html` holds the mock the panel follows.
-- `src/graph.js` draws the curve as SVG. It uses the same Web Audio filters the engine plays, so
-  the picture matches the sound.
+- `src/graph/` draws the curve as SVG. `graph.js` holds the state and the pointer events. Each other
+  file draws one part from a view. The graph uses the same Web Audio filters the engine plays, so the
+  picture matches the sound.
 - Each layer has its own preset list, under `headphonePresets` and `earPresets`. A preset holds bands
   only. The sliders and the preamp stay as they are when you pick one. A sound saved before the two
   lists splits into a headphone preset and, when it holds ear bands, an ear preset under that name.
@@ -161,7 +162,7 @@ Butterworth, gets a link to its explanation on the same line.
   where it is used, would the code be harder to follow? If not, do not write it.
 - Each Chrome context has its own entry file: `src/panel.js`, `src/offscreen.js`,
   `src/service-worker.js` and the how-to page (`src/intro.html`). A context can split its code into
-  more files by concern, as the panel does with `src/graph.js`, `src/fit.js` and `src/autoeq.js`.
+  more files by concern, as the panel does with `src/graph/`, `src/fit.js` and `src/autoeq.js`.
 - Each formula is a named function in `src/shared/math.js`, even when one place uses it, as `clamp`
   is. `20 * Math.log10(x)` is `linearToDb(x)`.
 - Code that two contexts both need goes in `src/shared/`. `bands.js` holds one band and its Web
@@ -224,7 +225,7 @@ Butterworth, gets a link to its explanation on the same line.
 
 Each one names the rule it breaks and the reason.
 
-- The render and event functions in `src/panel.js` and `src/graph.js` have one caller each,
+- The render and event functions in `src/panel.js` and `src/graph/` have one caller each,
   against rule 7. Folded into their callers, those callers would pass the 15-branch limit. Their
   names are also what a reader scans the file for.
 - Six journeys end in text a person reads, not in a sound, against rule 8.2: the HD 600 result

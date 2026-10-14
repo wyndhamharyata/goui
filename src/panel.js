@@ -30,7 +30,9 @@ import {
 } from "./shared/config.js";
 import { describeMeasurement, fetchHeadphone, findFamily, loadAutoEqIndex, loadTargets, makeAutoEqItem, parseAutoEq, toAutoEq } from "./autoeq.js";
 import { messageTypes, silenceDb, trySendMessage } from "./shared/messages.js";
-import { formatDb, formatHz, layerColor, makeGraph, typeColor } from "./graph.js";
+import { layerColor, typeColor } from "./graph/colors.js";
+import { formatDb, formatHz } from "./graph/format.js";
+import { makeGraph } from "./graph/graph.js";
 
 /** @typedef {import("./shared/bands.js").Band} Band */
 
@@ -44,7 +46,7 @@ import { formatDb, formatHz, layerColor, makeGraph, typeColor } from "./graph.js
 
 /** @typedef {import("./shared/config.js").AutoEqOrigin} AutoEqOrigin */
 
-/** @typedef {import("./graph.js").BandEntry} BandEntry */
+/** @typedef {import("./graph/graph.js").BandEntry} BandEntry */
 
 /** @typedef {import("./autoeq.js").AutoEqItem} AutoEqItem */
 
@@ -333,7 +335,7 @@ function replaceLayer(sound, role) {
 }
 
 // The graph changes the band objects in config itself while you drag, then calls commitBandEdit.
-/** @type {import("./graph.js").GraphHooks} */
+/** @type {import("./graph/graph.js").GraphHooks} */
 const graphHooks = {
   listBandEntries,
   listCurveBands,
