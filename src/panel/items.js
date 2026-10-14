@@ -1,5 +1,5 @@
 // The rows of the Library lists.
-import { makeElement } from "./dom.js";
+import { buildElement } from "./dom.js";
 
 /** @typedef {import("../shared/bands.js").Band} Band */
 
@@ -20,15 +20,15 @@ export function describeBandCount(bands) {
  * @param {() => void} [onRemove]
  * @returns {HTMLElement}
  */
-export function makeResultItem(label, detail, onPick, onRemove) {
-  const labels = [makeElement("span", { text: label }), makeElement("small", { text: detail })];
-  const button = makeElement("button", { className: "item", dataset: { name: label }, on: { click: onPick } }, labels);
+export function buildResultItem(label, detail, onPick, onRemove) {
+  const labels = [buildElement("span", { text: label }), buildElement("small", { text: detail })];
+  const button = buildElement("button", { className: "item", dataset: { name: label }, on: { click: onPick } }, labels);
 
   if (!onRemove) return button;
 
-  const remove = makeElement("button", { className: "remove", text: "×", title: `Delete ${label}`, on: { click: onRemove } });
+  const remove = buildElement("button", { className: "remove", text: "×", title: `Delete ${label}`, on: { click: onRemove } });
 
-  return makeElement("div", { className: "result-row" }, [button, remove]);
+  return buildElement("div", { className: "result-row" }, [button, remove]);
 }
 
 /**
@@ -39,7 +39,7 @@ export function makeResultItem(label, detail, onPick, onRemove) {
 export function appendSection(list, title, items) {
   if (items.length === 0) return;
 
-  list.append(makeElement("h4", { text: title }), ...items);
+  list.append(buildElement("h4", { text: title }), ...items);
 }
 
 /**

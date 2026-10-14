@@ -1,10 +1,10 @@
 // The Listen tab: the layer rows, the sliders, the preamp and Level match.
 import { maxBoostDb } from "../shared/bands.js";
-import { layerLabels, layerOrder, listExportBands, makePlayedSound, preampRangeDb, sliderRangeDb } from "../shared/config.js";
-import { findFamily, makeAutoEqItem, toAutoEq } from "../autoeq.js";
+import { layerLabels, layerOrder, listExportBands, toPlayedSound, preampRangeDb, sliderRangeDb } from "../shared/config.js";
+import { findTargetSet, newAutoEqItem, toAutoEq } from "../autoeq.js";
 import { layerColor } from "../graph/colors.js";
 import { formatDb } from "../graph/format.js";
-import { byId, makeElement, sectionOf, setField, showTab } from "./dom.js";
+import { byId, buildElement, sectionOf, setField, showTab } from "./dom.js";
 import { describeLayerName } from "./items.js";
 import { changeTarget } from "./headphones.js";
 import { toggleLibraryAction } from "./library.js";
@@ -24,54 +24,54 @@ function openLibrarySection(role) {
   sectionOf(role).scrollIntoView({ block: "start" });
 }
 
-// The targets a headphone from AutoEQ can take. A family with one target shows its name only.
-function makeTargetChoice(autoEq) {
-  const family = findFamily(state.targetData.families, makeAutoEqItem(autoEq.name, autoEq.path));
+// The targets a headphone from AutoEQ can take. A target set of one shows its name only.
+function buildTargetChoice(autoEq) {
+  const targetSet = findTargetSet(state.targetData.targetSets, newAutoEqItem(autoEq.name, autoEq.path));
   const choice = { className: "target", text: "Target", title: "The sound AutoEQ tunes your headphone toward" };
 
-  if (!family || family.labels.length < 2) return makeElement("label", choice, [makeElement("span", { text: autoEq.target })]);
+  if (!targetSet || targetSet.labels.length < 2) return buildElement("label", choice, [buildElement("span", { text: autoEq.target })]);
 
-  const options = family.labels.map((label) => new Option(label, label));
-  const select = makeElement("select", { on: { change: (event) => changeTarget(event.target.value) } }, options);
+  const options = targetSet.labels.map((label) => new Option(label, label));
+  const select = buildElement("select", { on: { change: (event) => changeTarget(event.target.value) } }, options);
 
   select.value = autoEq.target;
 
-  return makeElement("label", choice, [select]);
+  return buildElement("label", choice, [select]);
 }
 
-function makeLayerRow(role, layer) {
+function buildLayerRow(role, layer) {
   const switchLayer = (event) => {
     layer.on = event.target.checked;
     commit();
   };
-  const toggle = makeElement("label", { className: "switch", title: `Turn the ${layerLabels[role]} layer on or off` }, [
-    makeElement("input", { type: "checkbox", checked: layer.on, on: { change: switchLayer } }),
-    makeElement("span", { className: "track" }),
+  const toggle = buildElement("label", { className: "switch", title: `Turn the ${layerLabels[role]} layer on or off` }, [
+    buildElement("input", { type: "checkbox", checked: layer.on, on: { change: switchLayer } }),
+    buildElement("span", { className: "track" }),
   ]);
 
-  const mark = makeElement("i", { className: "layer-mark", style: { borderColor: layerColor[role] } });
-  const caption = makeElement("small", { className: "caption" }, [mark, `${layerLabels[role]} · ${layer.source}`]);
-  const texts = [caption, makeElement("b", { text: describeLayerName(layer) })];
+  const mark = buildElement("i", { className: "layer-mark", style: { borderColor: layerColor[role] } });
+  const caption = buildElement("small", { className: "caption" }, [mark, `${layerLabels[role]} · ${layer.source}`]);
+  const texts = [caption, buildElement("b", { text: describeLayerName(layer) })];
 
-  if (layer.autoEq) texts.push(makeTargetChoice(layer.autoEq));
+  if (layer.autoEq) texts.push(buildTargetChoice(layer.autoEq));
 
-  const parts = [toggle, makeElement("div", { className: "grow" }, texts)];
+  const parts = [toggle, buildElement("div", { className: "grow" }, texts)];
 
-  parts.push(makeElement("button", { text: "Change", on: { click: () => openLibrarySection(role) } }));
+  parts.push(buildElement("button", { text: "Change", on: { click: () => openLibrarySection(role) } }));
 
-  if (role === "ear") parts.push(makeElement("button", { text: "×", title: "Take the ear layer off", on: { click: removeEarLayer } }));
+  if (role === "ear") parts.push(buildElement("button", { text: "×", title: "Take the ear layer off", on: { click: removeEarLayer } }));
 
-  return makeElement("div", { className: layer.on ? "layer" : "layer off" }, parts);
+  return buildElement("div", { className: layer.on ? "layer" : "layer off" }, parts);
 }
 
-function makeAddEarButton() {
+function buildAddEarButton() {
   const openEarPaste = () => {
     openLibrarySection("ear");
 
     if (state.openActions.ear !== "paste") toggleLibraryAction("ear", "paste");
   };
 
-  return makeElement("button", {
+  return buildElement("button", {
     text: "Add your ear tuning on top",
     title: "Open My ear in the Library, to paste an eqbyear result or pick a saved ear preset",
     on: { click: openEarPaste },
@@ -87,14 +87,14 @@ function renderLayers() {
   for (const role of layerOrder) {
     const layer = state.config.layers[role];
 
-    if (layer) host.append(makeLayerRow(role, layer));
+    if (layer) host.append(buildLayerRow(role, layer));
   }
 
-  if (!state.config.layers.ear) host.append(makeAddEarButton());
+  if (!state.config.layers.ear) host.append(buildAddEarButton());
 }
 
 function renderSound() {
-  const played = makePlayedSound(state.config);
+  const played = toPlayedSound(state.config);
 
   byId("enabled").checked = state.config.enabled;
 
@@ -121,7 +121,7 @@ function renderSound() {
 
 // Turning Auto off keeps the value Auto had, so the sound does not jump.
 function toggleAutoPreamp() {
-  if (state.config.autoPreamp) state.config.preampDb = makePlayedSound(state.config).preampDb;
+  if (state.config.autoPreamp) state.config.preampDb = toPlayedSound(state.config).preampDb;
 
   state.config.autoPreamp = !state.config.autoPreamp;
   commit();
@@ -162,7 +162,7 @@ export function wireListen() {
     const whole = byId("wholeText");
 
     whole.hidden = false;
-    whole.value = toAutoEq({ preampDb: makePlayedSound(state.config).preampDb, bands: listExportBands(state.config) });
+    whole.value = toAutoEq({ preampDb: toPlayedSound(state.config).preampDb, bands: listExportBands(state.config) });
   });
 }
 

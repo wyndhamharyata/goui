@@ -131,7 +131,7 @@ export function biquadQ(band) {
  * @param {Band} band
  * @returns {BiquadFilterNode}
  */
-export function makeBiquad(context, band) {
+export function createBiquad(context, band) {
   const node = context.createBiquadFilter();
 
   node.type = bandTypeDetails[band.type].node;
@@ -163,7 +163,7 @@ export function responseDb(bands, frequencies) {
   for (const band of bands) {
     if (!band.on) continue;
 
-    makeBiquad(offlineContext, band).getFrequencyResponse(frequencies, magnitudes, phases);
+    createBiquad(offlineContext, band).getFrequencyResponse(frequencies, magnitudes, phases);
 
     for (let index = 0; index < totalsDb.length; index += 1) {
       totalsDb[index] += linearToDb(magnitudes[index]);

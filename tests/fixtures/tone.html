@@ -9,7 +9,7 @@
     <script>
       const params = new URLSearchParams(location.search);
 
-      function makeTone(context) {
+      function createTone(context) {
         const source = context.createOscillator();
         source.frequency.value = Number(params.get("hz")) || 1000;
         return source;
@@ -18,7 +18,7 @@
       // Pink noise, which stands in for music better than white noise. The low bins of white noise
       // carry little energy, so its spectrum reads far lower than a song's. The filter is Paul Kellet's
       // refined pink noise filter.
-      function makePinkNoise(context) {
+      function createPinkNoise(context) {
         const buffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
         const samples = buffer.getChannelData(0);
         const rows = [0, 0, 0, 0, 0, 0, 0];
@@ -44,7 +44,7 @@
         const level = context.createGain();
         const levelLinear = 0.1;
         level.gain.value = levelLinear;
-        const source = params.has("noise") ? makePinkNoise(context) : makeTone(context);
+        const source = params.has("noise") ? createPinkNoise(context) : createTone(context);
         source.connect(level).connect(context.destination);
         source.start();
         document.title = `playing ${context.state}`;

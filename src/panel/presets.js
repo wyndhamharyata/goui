@@ -2,7 +2,7 @@
 import { cleanBands } from "../shared/bands.js";
 import { layerOrder, sanitizeConfig } from "../shared/config.js";
 import { partOf, sectionOf } from "./dom.js";
-import { describeBandCount, describeLayerName, makeResultItem } from "./items.js";
+import { describeBandCount, describeLayerName, buildResultItem } from "./items.js";
 import { onRefresh, renderPresetList } from "./refresh.js";
 import { commit, replaceLayer } from "./sound.js";
 import { layerSources, state } from "./state.js";
@@ -71,14 +71,14 @@ function deletePreset(role, name) {
  * @param {() => void} onPlaced
  * @returns {HTMLElement}
  */
-export function makePresetItem(role, name, onPlaced) {
+export function buildPresetItem(role, name, onPlaced) {
   const { bands } = state.presets[role][name];
   const place = () => {
     replaceLayer({ name, source: layerSources.saved, bands }, role);
     onPlaced();
   };
 
-  return makeResultItem(name, describeBandCount(bands), place, () => deletePreset(role, name));
+  return buildResultItem(name, describeBandCount(bands), place, () => deletePreset(role, name));
 }
 
 /**

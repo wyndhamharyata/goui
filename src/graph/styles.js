@@ -1,4 +1,4 @@
-// Every look the graph draws with, as SVG attributes for makeSvg.
+// Every look the graph draws with, as SVG attributes for buildSvg.
 import { backgroundColor, curveColor, layerColor, textColor, typeColor } from "./colors.js";
 
 /** @typedef {import("./svg.js").SvgAttributes} SvgAttributes */

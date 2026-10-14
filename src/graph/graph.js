@@ -6,7 +6,7 @@ import { drawFrequencyLines, drawGainLines, drawRegions } from "./grid.js";
 import { drawBandLabel, drawBandPoints, drawChosenBand, drawHover } from "./marks.js";
 import { drawSpectrum } from "./spectrum.js";
 import { curveStyle, offCurveStyle } from "./styles.js";
-import { drawCurve, makeRect, makeSvg } from "./svg.js";
+import { drawCurve, buildRect, buildSvg } from "./svg.js";
 import { drawnGainDb, readPoint, sweepFrequencies } from "./view.js";
 
 /** @typedef {import("../shared/bands.js").Band} Band */
@@ -135,25 +135,25 @@ export class EqGraph {
     this.#pressTargets = { points: bandPoints.points, qHandles: chosen.qHandles };
 
     const plotBox = { x: size.left, y: size.top, width: size.plotWidth, height: size.plotHeight };
-    const clipPath = makeSvg("clipPath", { id: this.#clipId }, [makeRect(plotBox, {})]);
+    const clipPath = buildSvg("clipPath", { id: this.#clipId }, [buildRect(plotBox, {})]);
 
-    const plot = makeSvg("g", { clipPath: `url(#${this.#clipId})` }, [
-      makeSvg("g", { dataSpectrum: "" }, drawSpectrum(view, frequencies, this.#hooks.readSpectrumDb())),
+    const plot = buildSvg("g", { clipPath: `url(#${this.#clipId})` }, [
+      buildSvg("g", { dataSpectrum: "" }, drawSpectrum(view, frequencies, this.#hooks.readSpectrumDb())),
       ...drawLoudness(view, frequencies, curveDb),
       ...chosen.elements,
       ...drawLayerCurves(view, frequencies, this.#hooks.listCurveLayers()),
       drawCurve(view, frequencies, curveDb, this.#hooks.isEqOff() ? offCurveStyle : curveStyle),
     ]);
 
-    this.#host.replaceChildren(makeSvg("svg", { viewBox: `0 0 ${size.width} ${size.height}`, height: size.height }, [
-      makeSvg("defs", {}, [clipPath]),
+    this.#host.replaceChildren(buildSvg("svg", { viewBox: `0 0 ${size.width} ${size.height}`, height: size.height }, [
+      buildSvg("defs", {}, [clipPath]),
       ...drawRegions(view),
       ...drawFrequencyLines(view),
       ...drawGainLines(view),
       plot,
       ...bandPoints.elements,
       ...(showsChosenBand ? drawBandLabel(view, chosenBand) : []),
-      makeSvg("g", { dataHover: "" }, this.#drawHoverNow(view)),
+      buildSvg("g", { dataHover: "" }, this.#drawHoverNow(view)),
     ]));
   }
 

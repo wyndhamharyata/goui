@@ -8,7 +8,7 @@ import {
   regionStyles,
   zeroGainLineStyle,
 } from "./styles.js";
-import { makeLine, makeRect, makeText } from "./svg.js";
+import { buildLine, buildRect, buildText } from "./svg.js";
 import { findFrequencyLineEnds, frequencyToRatio, maxShownGainDb, placePoint, zooms } from "./view.js";
 
 /** @typedef {import("./view.js").View} View */
@@ -42,7 +42,7 @@ function drawRegion(view, region, index) {
   const tallBox = { x: size.left, y: start.y, width: size.plotWidth, height: length };
   const wideBox = { x: start.x, y: size.top, width: length, height: size.plotHeight };
 
-  const band = makeRect(view.isTall ? tallBox : wideBox, style);
+  const band = buildRect(view.isTall ? tallBox : wideBox, style);
 
   if (length < minLabelLengthPx) return [band];
 
@@ -50,7 +50,7 @@ function drawRegion(view, region, index) {
   const wideSpot = { x: start.x + (length / 2), y: size.top + 10 };
   const labelStyle = { ...regionLabelStyle, textAnchor: view.isTall ? "end" : "middle" };
 
-  return [band, makeText(view.isTall ? tallSpot : wideSpot, region.name, labelStyle)];
+  return [band, buildText(view.isTall ? tallSpot : wideSpot, region.name, labelStyle)];
 }
 
 /**
@@ -79,7 +79,7 @@ export function drawFrequencyLines(view) {
     const [low, high] = findFrequencyLineEnds(view, frequencyHz);
     const lineStyle = strongFrequencyLinesHz.includes(frequencyHz) ? strongGridLineStyle : faintGridLineStyle;
 
-    elements.push(makeLine(low, high, lineStyle));
+    elements.push(buildLine(low, high, lineStyle));
 
     const labelAt = view.isTall ? low.y : low.x;
 
@@ -89,7 +89,7 @@ export function drawFrequencyLines(view) {
 
     const spot = view.isTall ? { x: 4, y: low.y + 3 } : { x: low.x, y: view.size.height - 4 };
 
-    elements.push(makeText(spot, formatHz(frequencyHz), labelStyle));
+    elements.push(buildText(spot, formatHz(frequencyHz), labelStyle));
   }
 
   return elements;
@@ -110,6 +110,6 @@ export function drawGainLines(view) {
     const label = gainDb > 0 ? `+${gainDb}` : `${gainDb}`;
     const lineStyle = gainDb === 0 ? zeroGainLineStyle : faintGridLineStyle;
 
-    return [makeLine(from, to, lineStyle), makeText(spot, label, labelStyle)];
+    return [buildLine(from, to, lineStyle), buildText(spot, label, labelStyle)];
   });
 }

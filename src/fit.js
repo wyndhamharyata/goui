@@ -44,7 +44,7 @@ function measureMissDbSquared(bands, curveDb) {
   return meanSquare(missesDb);
 }
 
-function makeKnobs(band) {
+function listKnobs(band) {
   const knobs = [{ band, key: "gainDb", min: maxFitCutDb, max: maxFitBoostDb, step: 1, isLog: false }];
 
   if (band.type === "PK") {
@@ -69,7 +69,7 @@ function moveKnob(knob, value, direction) {
  * @param {number[]} curveDb
  */
 function refine(bands, curveDb) {
-  const knobs = bands.flatMap(makeKnobs);
+  const knobs = bands.flatMap(listKnobs);
   const smallestStep = 0.01;
   let error = measureMissDbSquared(bands, curveDb);
   const tryStep = (knob) => {

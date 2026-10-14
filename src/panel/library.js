@@ -2,10 +2,10 @@
 import { autoPreampDb } from "../shared/bands.js";
 import { layerLabels, layerOrder } from "../shared/config.js";
 import { parseAutoEq, toAutoEq } from "../autoeq.js";
-import { debounce, makeElement, partOf, sectionOf, showHint } from "./dom.js";
+import { debounce, buildElement, partOf, sectionOf, showHint } from "./dom.js";
 import { renderHeadphoneList } from "./headphones.js";
-import { appendSection, describeBandCount, makeResultItem } from "./items.js";
-import { isSavedPreset, makePresetItem, renderPresetCards, storePresets } from "./presets.js";
+import { appendSection, describeBandCount, buildResultItem } from "./items.js";
+import { isSavedPreset, buildPresetItem, renderPresetCards, storePresets } from "./presets.js";
 import { onPresetsChange } from "./refresh.js";
 import { commit, readBands, removeEarLayer, replaceLayer } from "./sound.js";
 import { layerSources, state } from "./state.js";
@@ -36,13 +36,13 @@ function savePreset(role, name) {
 /** @returns {void} */
 export function renderEarList() {
   const list = partOf("ear", "results");
-  const items = Object.keys(state.presets.ear).map((name) => makePresetItem("ear", name, () => {}));
+  const items = Object.keys(state.presets.ear).map((name) => buildPresetItem("ear", name, () => {}));
 
   if (items.length === 0) {
-    items.push(makeElement("p", { className: "hint", text: "Nothing saved yet. Run the test, paste the result, then press Save." }));
+    items.push(buildElement("p", { className: "hint", text: "Nothing saved yet. Run the test, paste the result, then press Save." }));
   }
 
-  const turnOff = makeResultItem("No ear tuning", "Headphone only", removeEarLayer);
+  const turnOff = buildResultItem("No ear tuning", "Headphone only", removeEarLayer);
 
   list.replaceChildren();
   appendSection(list, "Your ear state.presets", items);

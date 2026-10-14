@@ -1,9 +1,9 @@
 // The headphone section of the Library: your presets, the starter sounds and the AutoEQ search.
 import { butterworthQ } from "../shared/bands.js";
-import { describeMeasurement, fetchHeadphone, findFamily, loadAutoEqIndex, makeAutoEqItem } from "../autoeq.js";
-import { makeElement, partOf, showTab } from "./dom.js";
-import { appendSection, describeBandCount, makeResultItem } from "./items.js";
-import { makePresetItem, renderPresetCards } from "./presets.js";
+import { describeMeasurement, fetchHeadphone, findTargetSet, loadAutoEqIndex, newAutoEqItem } from "../autoeq.js";
+import { buildElement, partOf, showTab } from "./dom.js";
+import { appendSection, describeBandCount, buildResultItem } from "./items.js";
+import { buildPresetItem, renderPresetCards } from "./presets.js";
 import { onPresetsChange } from "./refresh.js";
 import { replaceLayer } from "./sound.js";
 import { layerSources, state } from "./state.js";
@@ -59,7 +59,7 @@ async function loadHeadphone(item, hint, target) {
 export function changeTarget(target) {
   const { name, path } = state.config.layers.headphone.autoEq;
 
-  loadHeadphone(makeAutoEqItem(name, path), partOf("headphone", "search-hint"), target);
+  loadHeadphone(newAutoEqItem(name, path), partOf("headphone", "search-hint"), target);
 }
 
 // A pick from a typed search is the end of that search. The box empties and Listen shows the sound.
@@ -73,15 +73,15 @@ function endHeadphoneSearch() {
   showTab("listen");
 }
 
-function makeMeasurementItem(item, hint) {
-  const detail = describeMeasurement(item, findFamily(state.targetData.families, item));
-  const row = makeResultItem(item.name, detail, async () => {
+function buildMeasurementItem(item, hint) {
+  const detail = describeMeasurement(item, findTargetSet(state.targetData.targetSets, item));
+  const row = buildResultItem(item.name, detail, async () => {
     if (await loadHeadphone(item, hint)) endHeadphoneSearch();
   });
 
   row.classList.add("measurement");
 
-  const pickMark = makeElement("em", { className: "pick", text: "AutoEQ's pick", title: "AutoEQ recommends this measurement of the headphone" });
+  const pickMark = buildElement("em", { className: "pick", text: "AutoEQ's pick", title: "AutoEQ recommends this measurement of the headphone" });
 
   if (item.isAutoEqPick) row.firstChild.append(pickMark);
 
@@ -129,10 +129,10 @@ export async function renderHeadphoneList() {
   // A slower search for an older query must not draw over the newer one.
   list.dataset.query = query;
 
-  const saved = Object.keys(state.presets.headphone).filter((name) => matchesQuery(name, query)).map((name) => makePresetItem("headphone", name, endHeadphoneSearch));
+  const saved = Object.keys(state.presets.headphone).filter((name) => matchesQuery(name, query)).map((name) => buildPresetItem("headphone", name, endHeadphoneSearch));
 
   if (saved.length === 0 && query === "") {
-    saved.push(makeElement("p", { className: "hint", text: "Nothing saved yet. Pick your headphone, then press Save." }));
+    saved.push(buildElement("p", { className: "hint", text: "Nothing saved yet. Pick your headphone, then press Save." }));
   }
 
   const starter = starterPresets.filter((preset) => matchesQuery(preset.name, query)).map((preset) => {
@@ -141,7 +141,7 @@ export async function renderHeadphoneList() {
       endHeadphoneSearch();
     };
 
-    return makeResultItem(preset.name, describeBandCount(preset.bands), place);
+    return buildResultItem(preset.name, describeBandCount(preset.bands), place);
   });
 
   // Your presets and the starter sounds show at once. The AutoEQ list joins once it loads.
@@ -154,7 +154,7 @@ export async function renderHeadphoneList() {
 
   if (list.dataset.query !== query) return;
 
-  showHeadphoneList(list, { saved, autoEq: headphones.map((item) => makeMeasurementItem(item, hint)), starter });
+  showHeadphoneList(list, { saved, autoEq: headphones.map((item) => buildMeasurementItem(item, hint)), starter });
 
   if (list.children.length === 0) hint.textContent = "No sound by that name.";
 }

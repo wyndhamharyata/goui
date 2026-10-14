@@ -4,7 +4,7 @@ import { layerLabels, layerOrder } from "../shared/config.js";
 import { qToOctaves, semitonesToRatio } from "../shared/math.js";
 import { layerColor, typeColor } from "../graph/colors.js";
 import { formatDb, formatHz } from "../graph/format.js";
-import { byId, makeElement, setField } from "./dom.js";
+import { byId, buildElement, setField } from "./dom.js";
 import { onRefresh } from "./refresh.js";
 import { addBandToLayer, commit, commitBandEdit, deleteSelectedBand, listBandEntries, readSelectedIndex, readSelectedRole, selectBand } from "./sound.js";
 import { state } from "./state.js";
@@ -13,26 +13,26 @@ import { state } from "./state.js";
 
 const gainStepDb = 0.5;
 
-function makeChip(entry, index) {
+function buildChip(entry, index) {
   const classNames = ["chip"];
 
   if (entry.band === state.selectedBand) classNames.push("on");
   if (!entry.band.on) classNames.push("muted");
 
-  const number = makeElement("i", { text: index + 1, style: { background: typeColor[entry.band.type] } });
+  const number = buildElement("i", { text: index + 1, style: { background: typeColor[entry.band.type] } });
 
-  return makeElement("button", { className: classNames.join(" "), dataset: { index } }, [number, formatHz(entry.band.frequencyHz)]);
+  return buildElement("button", { className: classNames.join(" "), dataset: { index } }, [number, formatHz(entry.band.frequencyHz)]);
 }
 
 // One row per layer, each with its own label and its own Add band chip.
 function renderChips() {
   const entries = listBandEntries();
   const rows = layerOrder.map((role) => {
-    const chips = entries.flatMap((entry, index) => (entry.role === role ? [makeChip(entry, index)] : []));
-    const add = makeElement("button", { className: "chip add", text: "Add band", title: `Make a new band in ${layerLabels[role]}`, dataset: { add: role } });
-    const label = makeElement("span", { className: "chip-label", text: layerLabels[role], style: { color: layerColor[role] } });
+    const chips = entries.flatMap((entry, index) => (entry.role === role ? [buildChip(entry, index)] : []));
+    const add = buildElement("button", { className: "chip add", text: "Add band", title: `Make a new band in ${layerLabels[role]}`, dataset: { add: role } });
+    const label = buildElement("span", { className: "chip-label", text: layerLabels[role], style: { color: layerColor[role] } });
 
-    return makeElement("div", { className: "chip-row" }, [label, makeElement("div", { className: "chip-track" }, [...chips, add])]);
+    return buildElement("div", { className: "chip-row" }, [label, buildElement("div", { className: "chip-track" }, [...chips, add])]);
   });
 
   byId("chips").replaceChildren(...rows);
@@ -83,19 +83,19 @@ export function renderInspector() {
   byId("qHint").textContent = describeQ(band);
 }
 
-function makeTableRow({ band }, index) {
-  const number = makeElement("span", { className: "number", text: index + 1, style: { color: typeColor[band.type] } });
+function buildTableRow({ band }, index) {
+  const number = buildElement("span", { className: "number", text: index + 1, style: { color: typeColor[band.type] } });
   const gain = hasGain(band.type) ? formatDb(band.gainDb) : "";
   const values = [Math.round(band.frequencyHz), gain, band.q.toFixed(2)];
-  const cells = [makeElement("td", {}, [number, bandTypeDetails[band.type].label]), ...values.map((value) => makeElement("td", { text: value }))];
+  const cells = [buildElement("td", {}, [number, bandTypeDetails[band.type].label]), ...values.map((value) => buildElement("td", { text: value }))];
 
-  return makeElement("tr", { className: band === state.selectedBand ? "on" : "", dataset: { index } }, cells);
+  return buildElement("tr", { className: band === state.selectedBand ? "on" : "", dataset: { index } }, cells);
 }
 
 function renderTable() {
-  const head = makeElement("tr", {}, ["Band", "Hz", "dB", "Q"].map((label) => makeElement("th", { text: label })));
+  const head = buildElement("tr", {}, ["Band", "Hz", "dB", "Q"].map((label) => buildElement("th", { text: label })));
 
-  byId("table").replaceChildren(head, ...listBandEntries().map(makeTableRow));
+  byId("table").replaceChildren(head, ...listBandEntries().map(buildTableRow));
 }
 
 const bandSteps = {

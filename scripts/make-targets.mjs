@@ -5,8 +5,8 @@ import { clamp, logPosition } from "../src/shared/math.js";
 
 const repo = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master";
 
-// The first label is the target AutoEQ used for the measurements in the family.
-const families = [
+// Each list is one target set. Its first label is the target AutoEQ used for the measurements it suits.
+const targetLabelLists = [
   ["Harman over-ear 2018", "Harman over-ear 2015", "Harman over-ear 2013", "oratory1990 optimum hifi over-ear"],
   ["AutoEq in-ear", "Harman in-ear 2019", "Harman in-ear 2017-1", "Harman in-ear 2016", "oratory1990 in-ear"],
   ["JM-1 with Harman filters", "Diffuse Field 5128 (-1 dB/oct)"],
@@ -54,7 +54,7 @@ async function readTargetFile(label) {
 const appTargets = await (await fetch(`${repo}/webapp/data/targets.json`)).json();
 const targets = [];
 
-for (const label of families.flat()) {
+for (const label of targetLabelLists.flat()) {
   const fromApp = appTargets.find((target) => target.label === label);
   // The web app names the points of a curve frequency and raw.
   const curve = fromApp ? { frequenciesHz: fromApp.fr.frequency, levelsDb: fromApp.fr.raw } : await readTargetFile(label);
@@ -62,12 +62,12 @@ for (const label of families.flat()) {
   targets.push({ label, bassDb: fromApp ? fromApp.bassBoost.gain : 0, curveDb: resample(curve.frequenciesHz, curve.levelsDb) });
 }
 
-const rigFamilies = families.map((family) => {
-  const measurements = appTargets.find((target) => target.label === family[0]).recommended;
-  return { labels: family, measurements };
+const targetSets = targetLabelLists.map((labels) => {
+  const measurements = appTargets.find((target) => target.label === labels[0]).recommended;
+  return { labels, measurements };
 });
 
-const data = { source: `${repo}/targets`, pointCount: sweepPointCount, families: rigFamilies, targets };
+const data = { source: `${repo}/targets`, pointCount: sweepPointCount, targetSets, targets };
 
 writeFileSync("src/targets.json", `${JSON.stringify(data)}\n`);
-console.log(`src/targets.json holds ${targets.length} targets in ${rigFamilies.length} families`);
+console.log(`src/targets.json holds ${targets.length} targets in ${targetSets.length} target sets`);

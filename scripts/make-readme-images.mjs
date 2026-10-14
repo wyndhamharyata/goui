@@ -360,7 +360,7 @@ function sidePanel(x, y, width) {
 }
 
 // The sound path: the tab, then the two layers, then the taste sliders, then you.
-function makeHowItWorks() {
+function buildHowItWorks() {
   const width = 1120;
   const height = 240;
   const boxWidth = 176;
@@ -401,7 +401,7 @@ function makeHowItWorks() {
 }
 
 // The install flow: four numbered cards in a row.
-function makeInstallFlow() {
+function buildInstallFlow() {
   const width = 1120;
   const cardWidth = 254;
   const gap = 32;
@@ -427,7 +427,7 @@ function makeInstallFlow() {
   return frame(width, 366, parts.join(""));
 }
 
-function makeLoadUnpacked() {
+function buildLoadUnpacked() {
   const width = 720;
   const height = 300;
   const parts = [
@@ -440,7 +440,7 @@ function makeLoadUnpacked() {
   return frame(width, height, parts.join(""));
 }
 
-function makeDownload() {
+function buildDownload() {
   const width = 720;
   const height = 330;
   const parts = [
@@ -470,7 +470,7 @@ function makeDownload() {
   return frame(width, height, parts.join(""));
 }
 
-function makePickFolder() {
+function buildPickFolder() {
   const width = 720;
   const height = 300;
   const parts = [
@@ -483,7 +483,7 @@ function makePickFolder() {
   return frame(width, height, parts.join(""));
 }
 
-function makePin() {
+function buildPin() {
   const width = 720;
   const height = 340;
   const parts = [
@@ -502,7 +502,7 @@ function makePin() {
   return frame(width, height, parts.join(""));
 }
 
-function makeClickIcon() {
+function buildClickIcon() {
   const width = 720;
   const height = 320;
   const chromeWidth = 420;
@@ -518,13 +518,13 @@ function makeClickIcon() {
 }
 
 const images = {
-  "install-download": makeDownload(),
-  "install-flow": makeInstallFlow(),
-  "install-load-unpacked": makeLoadUnpacked(),
-  "install-pick-folder": makePickFolder(),
-  "install-pin": makePin(),
-  "install-click-icon": makeClickIcon(),
-  "how-it-works": makeHowItWorks(),
+  "install-download": buildDownload(),
+  "install-flow": buildInstallFlow(),
+  "install-load-unpacked": buildLoadUnpacked(),
+  "install-pick-folder": buildPickFolder(),
+  "install-pin": buildPin(),
+  "install-click-icon": buildClickIcon(),
+  "how-it-works": buildHowItWorks(),
 };
 
 mkdirSync("docs/images", { recursive: true });

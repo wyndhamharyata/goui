@@ -1,4 +1,4 @@
-// The stored config, and makePlayedSound, which merges the layers that are on with the sliders and preamp.
+// The stored config, and toPlayedSound, which merges the layers that are on with the sliders and preamp.
 import { autoEqBassShelfHz, autoPreampDb, butterworthQ, cleanBands, hasGain } from "./bands.js";
 import { clamp } from "./math.js";
 
@@ -45,7 +45,7 @@ export const layerLabels = { headphone: "Headphone", ear: "My ear" };
  * @param {Band[]} [bands]
  * @returns {Layer}
  */
-export function makeLayer(name, source, bands = []) {
+export function newLayer(name, source, bands = []) {
   return { on: true, source, name, isEdited: false, bands };
 }
 
@@ -58,7 +58,7 @@ export function defaultConfig() {
     preampDb: 0,
     autoPreamp: true,
     sliders: { ...flatSliders },
-    layers: { headphone: makeLayer("Flat", "Starter sound") },
+    layers: { headphone: newLayer("Flat", "Starter sound") },
   };
 }
 
@@ -159,7 +159,7 @@ export function listPlayedBands(config) {
  * @param {Config} config
  * @returns {PlayedSound}
  */
-export function makePlayedSound(config) {
+export function toPlayedSound(config) {
   const bands = listPlayedBands(config);
   const preampDb = config.autoPreamp ? autoPreampDb(bands) : config.preampDb;
   return { enabled: config.enabled, preampDb, bands };

@@ -21,14 +21,14 @@ export const sectionOf = (role) => document.querySelector(`.preset-section[data-
  */
 export const partOf = (role, name) => sectionOf(role).querySelector(`.${name}`);
 
-// The panel's one way to build an element, as makeSvg is the graph's. Other keys are element properties.
+// The panel's one way to build an element, as buildSvg is the graph's. Other keys are element properties.
 /**
  * @param {string} tag
  * @param {{ text?: string | number, style?: Partial<CSSStyleDeclaration>, dataset?: Record<string, string | number>, on?: Record<string, (event: Event) => void>, [property: string]: unknown }} [options]
  * @param {(Node | string)[]} [children]
  * @returns {HTMLElement}
  */
-export function makeElement(tag, options = {}, children = []) {
+export function buildElement(tag, options = {}, children = []) {
   const { text = "", style = {}, dataset = {}, on = {}, ...properties } = options;
   const element = document.createElement(tag);
 

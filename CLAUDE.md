@@ -24,8 +24,8 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 - Each layer has its own preset list, under `headphonePresets` and `earPresets`. A preset holds bands
   only. The sliders and the preamp stay as they are when you pick one. A sound saved before the two
   lists splits into a headphone preset and, when it holds ear bands, an ear preset under that name.
-- `src/targets.json` holds AutoEQ's target curves in rig families, built by `npm run targets`. A
-  headphone from AutoEQ plays AutoEQ's file, tuned to the first target of its family. With another
+- `src/targets.json` holds AutoEQ's target curves in target sets, built by `npm run targets`. A
+  headphone from AutoEQ plays AutoEQ's file, tuned to the first target of its target set. With another
   target, goui also plays the bands `fitTargetChange` in `src/fit.js` fits to the difference between
   the two targets.
 - Playwright runs the tests at side panel width. `tests/journeys.spec.js` holds the journeys and
@@ -39,7 +39,7 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 | Layer | A list of bands with its own switch, name and source. The `headphone` layer is always there. The `ear` layer is optional. |
 | Preset | A saved band list for one layer. Each layer has its own list. |
 | Config | The stored sound: the main switch, the preamp, the three Listen sliders and the layers. |
-| Played sound | What the audio chain plays. `makePlayedSound` merges the bands of every layer that is on with the three sliders as fixed bands, and works out the auto preamp. Bands sum in dB, so the layers merge exactly. |
+| Played sound | What the audio chain plays. `toPlayedSound` merges the bands of every layer that is on with the three sliders as fixed bands, and works out the auto preamp. Bands sum in dB, so the layers merge exactly. |
 | A/B | Held down, it plays the sound with the EQ off. Level match keeps the preamp while it is held. |
 
 ## From a click to the sound
@@ -176,9 +176,12 @@ Butterworth, gets a link to its explanation on the same line.
 - Each Chrome context has its own entry file: `src/panel/main.js`, `src/offscreen.js`,
   `src/service-worker.js` and the how-to page (`src/intro.html`). A context can split its code into
   more files by concern, as the panel does with `src/panel/`, `src/graph/`, `src/fit.js` and `src/autoeq.js`.
-- Markup is built with `makeElement` in the panel and `makeSvg` in the graph, never from HTML or SVG
+- Markup is built with `buildElement` in the panel and `buildSvg` in the graph, never from HTML or SVG
   text. A style is an object of camelCase properties. A look the graph draws with is a named
   style in `src/graph/styles.js`, and a colour is a named constant in `src/graph/colors.js`.
+- A function name's verb says what it does. `build` makes an element or a picture that is not on
+  the page yet, and `render` puts one on the page. `new` makes a data object, and `create` makes a
+  Web Audio node. `to` converts one value into another, and `read` reads from state.
 - Each formula is a named function in `src/shared/math.js`, even when one place uses it, as `clamp`
   is. `20 * Math.log10(x)` is `linearToDb(x)`.
 - Code that two contexts both need goes in `src/shared/`. `bands.js` holds one band and its Web

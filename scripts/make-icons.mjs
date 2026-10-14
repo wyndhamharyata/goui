@@ -22,7 +22,7 @@ function crc32(buffer) {
  * @param {Buffer} data
  * @returns {Buffer}
  */
-function makeChunk(type, data) {
+function encodeChunk(type, data) {
   const head = Buffer.from(type, "ascii");
   const body = Buffer.concat([head, data]);
   const length = Buffer.alloc(4);
@@ -57,9 +57,9 @@ function encodePng(width, height, rgba) {
 
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    makeChunk("IHDR", header),
-    makeChunk("IDAT", deflateSync(Buffer.concat(rows), { level: 9 })),
-    makeChunk("IEND", Buffer.alloc(0)),
+    encodeChunk("IHDR", header),
+    encodeChunk("IDAT", deflateSync(Buffer.concat(rows), { level: 9 })),
+    encodeChunk("IEND", Buffer.alloc(0)),
   ]);
 }
 

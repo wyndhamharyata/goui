@@ -25,7 +25,7 @@ function toAttributeName(name) {
  * @param {(SVGElement | string)[]} [children]
  * @returns {SVGElement}
  */
-export function makeSvg(tag, attributes = {}, children = []) {
+export function buildSvg(tag, attributes = {}, children = []) {
   const element = document.createElementNS(svgNamespace, tag);
 
   for (const [name, value] of Object.entries(attributes)) element.setAttribute(toAttributeName(name), String(value));
@@ -41,8 +41,8 @@ export function makeSvg(tag, attributes = {}, children = []) {
  * @param {SvgAttributes} style
  * @returns {SVGElement}
  */
-export function makeLine(from, to, style) {
-  return makeSvg("line", { x1: from.x, y1: from.y, x2: to.x, y2: to.y, ...style });
+export function buildLine(from, to, style) {
+  return buildSvg("line", { x1: from.x, y1: from.y, x2: to.x, y2: to.y, ...style });
 }
 
 /**
@@ -51,8 +51,8 @@ export function makeLine(from, to, style) {
  * @param {SvgAttributes} style
  * @returns {SVGElement}
  */
-export function makeText(point, content, style) {
-  return makeSvg("text", { x: point.x, y: point.y, ...style }, [content]);
+export function buildText(point, content, style) {
+  return buildSvg("text", { x: point.x, y: point.y, ...style }, [content]);
 }
 
 /**
@@ -60,8 +60,8 @@ export function makeText(point, content, style) {
  * @param {SvgAttributes} style
  * @returns {SVGElement}
  */
-export function makeRect(box, style) {
-  return makeSvg("rect", { ...box, ...style });
+export function buildRect(box, style) {
+  return buildSvg("rect", { ...box, ...style });
 }
 
 /**
@@ -70,8 +70,8 @@ export function makeRect(box, style) {
  * @param {SvgAttributes} style
  * @returns {SVGElement}
  */
-export function makeCircle(center, radius, style) {
-  return makeSvg("circle", { cx: center.x, cy: center.y, r: radius, ...style });
+export function buildCircle(center, radius, style) {
+  return buildSvg("circle", { cx: center.x, cy: center.y, r: radius, ...style });
 }
 
 /**
@@ -79,8 +79,8 @@ export function makeCircle(center, radius, style) {
  * @param {SvgAttributes} style
  * @returns {SVGElement}
  */
-export function makePolygon(points, style) {
-  return makeSvg("polygon", { points: points.map((point) => `${point.x},${point.y}`).join(" "), ...style });
+export function buildPolygon(points, style) {
+  return buildSvg("polygon", { points: points.map((point) => `${point.x},${point.y}`).join(" "), ...style });
 }
 
 /**
@@ -105,7 +105,7 @@ export function drawArea(view, frequencies, valuesDb, style) {
   const start = placePoint(view, frequencies[0], 0);
   const end = placePoint(view, frequencies.at(-1), 0);
 
-  return makePolygon([start, ...tracePoints(view, frequencies, valuesDb), end], style);
+  return buildPolygon([start, ...tracePoints(view, frequencies, valuesDb), end], style);
 }
 
 /**
@@ -117,5 +117,5 @@ export function drawArea(view, frequencies, valuesDb, style) {
  */
 export function drawCurve(view, frequencies, valuesDb, style) {
   const points = tracePoints(view, frequencies, valuesDb).map((point) => `${point.x},${point.y}`).join(" ");
-  return makeSvg("polyline", { points, fill: "none", ...style });
+  return buildSvg("polyline", { points, fill: "none", ...style });
 }

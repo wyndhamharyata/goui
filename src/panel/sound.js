@@ -1,6 +1,6 @@
 // The band choice, the sound you hear with A/B and Solo, and every change to the layers.
 import { cleanBands, newBand } from "../shared/bands.js";
-import { flatSliders, layerOrder, listOnLayers, listPlayedBands, makeLayer, makePlayedSound } from "../shared/config.js";
+import { flatSliders, layerOrder, listOnLayers, listPlayedBands, newLayer, toPlayedSound } from "../shared/config.js";
 import { messageTypes, trySendMessage } from "../shared/messages.js";
 import { byId, debounce } from "./dom.js";
 import { refresh } from "./refresh.js";
@@ -84,27 +84,27 @@ function mapLayers(change) {
 }
 
 // Level match plays the preamp the EQ uses with every band off. Auto would set 0 dB for no bands.
-function makePreampOnlyConfig() {
+function readPreampOnlyConfig() {
   const layers = mapLayers((layer) => ({ ...layer, on: false }));
-  return { ...state.config, layers, sliders: flatSliders, autoPreamp: false, preampDb: makePlayedSound(state.config).preampDb };
+  return { ...state.config, layers, sliders: flatSliders, autoPreamp: false, preampDb: toPlayedSound(state.config).preampDb };
 }
 
-function makeSoloConfig() {
+function readSoloConfig() {
   const layers = mapLayers((layer) => ({ ...layer, on: true, bands: layer.bands.map((band) => ({ ...band, on: band === state.soloBand })) }));
   return { ...state.config, layers, sliders: flatSliders };
 }
 
 // The config the engine plays and the graph draws, with A/B and Solo applied. A/B wins over Solo.
 /** @returns {Config} */
-export function makeHeardConfig() {
-  if (state.isComparing) return state.isLevelMatched ? makePreampOnlyConfig() : { ...state.config, enabled: false };
+export function readHeardConfig() {
+  if (state.isComparing) return state.isLevelMatched ? readPreampOnlyConfig() : { ...state.config, enabled: false };
 
-  return state.soloBand ? makeSoloConfig() : state.config;
+  return state.soloBand ? readSoloConfig() : state.config;
 }
 
 /** @returns {Band[]} */
 export function listCurveBands() {
-  const heard = makeHeardConfig();
+  const heard = readHeardConfig();
   return heard.enabled ? listPlayedBands(heard) : [];
 }
 
@@ -116,7 +116,7 @@ export function listCurveLayers() {
 
 /** @returns {void} */
 export function sendAudio() {
-  trySendMessage({ type: messageTypes.audioConfig, config: makeHeardConfig() });
+  trySendMessage({ type: messageTypes.audioConfig, config: readHeardConfig() });
 }
 
 const storeConfig = debounce(() => chrome.storage.local.set({ config: state.config }), storageWaitMs);
@@ -148,7 +148,7 @@ export function commitBandEdit() {
  */
 export function addBandToLayer(role, frequencyHz, gainDb) {
   // The headphone layer is always there. The ear layer starts with its first band.
-  if (role === "ear") state.config.layers.ear ??= makeLayer("My ear tuning", layerSources.yourBands);
+  if (role === "ear") state.config.layers.ear ??= newLayer("My ear tuning", layerSources.yourBands);
 
   const band = { ...newBand(frequencyHz), gainDb };
 
@@ -185,7 +185,7 @@ export function removeEarLayer() {
  * @param {LayerRole} role
  */
 export function replaceLayer(sound, role) {
-  state.config.layers[role] = makeLayer(sound.name, sound.source, cleanBands(sound.bands));
+  state.config.layers[role] = newLayer(sound.name, sound.source, cleanBands(sound.bands));
 
   if (sound.autoEq) state.config.layers[role].autoEq = sound.autoEq;
   if (role === "headphone" && sound.preampDb !== undefined) state.config.preampDb = sound.preampDb;

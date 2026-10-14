@@ -8,9 +8,10 @@ import { fitTargetChange } from "./fit.js";
 
 /** @typedef {{ name: string, path: string, source: string, form: string, rig: string, isAutoEqPick: boolean }} AutoEqItem */
 
-/** @typedef {{ labels: string[], measurements: { source: string, form: string, rig?: string }[] }} RigFamily */
+// The targets that suit a group of measurements, with AutoEQ's own target first.
+/** @typedef {{ labels: string[], measurements: { source: string, form: string, rig?: string }[] }} TargetSet */
 
-/** @typedef {{ families: RigFamily[], targets: import("./fit.js").TargetCurve[] }} TargetData */
+/** @typedef {{ targetSets: TargetSet[], targets: import("./fit.js").TargetCurve[] }} TargetData */
 
 /** @typedef {{ bands: Band[], preampDb: number, autoEq?: AutoEqOrigin }} Headphone */
 
@@ -30,7 +31,7 @@ const formLabels = { "over-ear": "Over-ear", "in-ear": "In-ear", earbud: "Earbud
  * @param {boolean} [isAutoEqPick]
  * @returns {AutoEqItem}
  */
-export function makeAutoEqItem(name, path, isAutoEqPick = false) {
+export function newAutoEqItem(name, path, isAutoEqPick = false) {
   const [source = "", folder = ""] = decodeURIComponent(path).split("/");
   const form = forms.find((each) => folder.endsWith(each)) || "";
   return { name, path, source, form, rig: folder.slice(0, folder.length - form.length).trim(), isAutoEqPick };
@@ -42,39 +43,39 @@ export function loadTargets() {
   return targetData;
 }
 
-// A target only suits the rig it was made for. AutoEQ names the measurements each family suits.
+// A target only suits the rig it was made for. AutoEQ names the measurements each target set suits.
 /**
- * @param {RigFamily[]} families
+ * @param {TargetSet[]} targetSets
  * @param {AutoEqItem} item
- * @returns {RigFamily | undefined}
+ * @returns {TargetSet | undefined}
  */
-export function findFamily(families, item) {
+export function findTargetSet(targetSets, item) {
   const suits = (each) => each.source === item.source && each.form === item.form && (!each.rig || each.rig === item.rig);
 
-  return families.find((family) => family.measurements.some(suits));
+  return targetSets.find((targetSet) => targetSet.measurements.some(suits));
 }
 
-// AutoEQ's own file tunes a headphone to the first target of its family.
+// AutoEQ's own file tunes a headphone to the first target of its target set.
 /**
- * @param {RigFamily} family
+ * @param {TargetSet} targetSet
  * @returns {string}
  */
-function readAutoEqTarget(family) {
-  return family.labels[0];
+function readAutoEqTarget(targetSet) {
+  return targetSet.labels[0];
 }
 
 // The source, form, rig and target tell apart the measurements of one headphone name.
 /**
  * @param {AutoEqItem} item
- * @param {RigFamily | undefined} family
+ * @param {TargetSet | undefined} targetSet
  * @returns {string}
  */
-export function describeMeasurement(item, family) {
+export function describeMeasurement(item, targetSet) {
   const parts = [item.source];
 
   if (item.form) parts.push(formLabels[item.form]);
   if (item.rig) parts.push(item.rig.replace("Bruel & Kjaer", "B&K"));
-  if (family) parts.push(readAutoEqTarget(family));
+  if (targetSet) parts.push(readAutoEqTarget(targetSet));
 
   return parts.join(" · ");
 }
@@ -94,7 +95,7 @@ function readIndex(text) {
 
     const name = line.slice(nameStart, nameEnd);
 
-    items.push(makeAutoEqItem(name, line.slice(nameEnd + "](./".length, pathEnd), !countByName.has(name)));
+    items.push(newAutoEqItem(name, line.slice(nameEnd + "](./".length, pathEnd), !countByName.has(name)));
     countByName.set(name, (countByName.get(name) || 0) + 1);
   }
 
@@ -138,12 +139,12 @@ export async function fetchHeadphone(item, targets, target) {
   if (!response || !response.ok) return null;
 
   const parsed = parseAutoEq(await response.text());
-  const family = findFamily(targets.families, item);
+  const targetSet = findTargetSet(targets.targetSets, item);
 
-  if (!family) return parsed;
+  if (!targetSet) return parsed;
 
-  const autoEqTarget = readAutoEqTarget(family);
-  const chosen = family.labels.includes(target) ? target : autoEqTarget;
+  const autoEqTarget = readAutoEqTarget(targetSet);
+  const chosen = targetSet.labels.includes(target) ? target : autoEqTarget;
   const moveBands = chosen === autoEqTarget ? [] : fitTargetChange(findTargetCurve(targets, autoEqTarget), findTargetCurve(targets, chosen));
 
   return { bands: [...parsed.bands, ...moveBands], preampDb: parsed.preampDb, autoEq: { name: item.name, path: item.path, target: chosen } };

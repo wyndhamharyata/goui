@@ -17,7 +17,7 @@ import {
   qGuideStyle,
   qHandleStyle,
 } from "./styles.js";
-import { drawArea, makeCircle, makeLine, makeRect, makeText } from "./svg.js";
+import { drawArea, buildCircle, buildLine, buildRect, buildText } from "./svg.js";
 import { drawnGainDb, findFrequencyLineEnds, placePoint, readPoint } from "./view.js";
 
 /** @typedef {import("../shared/bands.js").Band} Band */
@@ -62,7 +62,7 @@ export function drawChosenBand(view, band, frequencies) {
     const handle = placePoint(view, frequencyHz, sidesDb[index]);
     const box = { x: handle.x - (qHandleSizePx / 2), y: handle.y - (qHandleSizePx / 2), width: qHandleSizePx, height: qHandleSizePx };
 
-    elements.push(makeLine(low, high, qGuideStyle), makeRect(box, qHandleStyle));
+    elements.push(buildLine(low, high, qGuideStyle), buildRect(box, qHandleStyle));
     qHandles.push(handle);
   });
 
@@ -84,11 +84,11 @@ export function drawBandPoints(view, entries, chosenIndex) {
 
     points.push({ index, ...point });
 
-    if (role === "ear") elements.push(makeCircle(point, 9.5, earRingStyle));
-    if (index === chosenIndex) elements.push(makeCircle(point, 11, chosenRingStyle));
+    if (role === "ear") elements.push(buildCircle(point, 9.5, earRingStyle));
+    if (index === chosenIndex) elements.push(buildCircle(point, 11, chosenRingStyle));
 
-    elements.push(makeCircle(point, bandPointRadiusPx, bandPointStyle(band)));
-    elements.push(makeText({ x: point.x, y: point.y + 3 }, `${index + 1}`, bandNumberStyle));
+    elements.push(buildCircle(point, bandPointRadiusPx, bandPointStyle(band)));
+    elements.push(buildText({ x: point.x, y: point.y + 3 }, `${index + 1}`, bandNumberStyle));
   });
 
   return { elements, points };
@@ -112,8 +112,8 @@ export function drawBandLabel(view, band) {
   const y = point.y > size.top + 30 ? point.y - 30 : point.y + 16;
 
   return [
-    makeRect({ x, y, width, height: 16 }, bandLabelBoxStyle(band.type)),
-    makeText({ x: x + (width / 2), y: y + 11 }, content, bandLabelTextStyle),
+    buildRect({ x, y, width, height: 16 }, bandLabelBoxStyle(band.type)),
+    buildText({ x: x + (width / 2), y: y + 11 }, content, bandLabelTextStyle),
   ];
 }
 
@@ -138,9 +138,9 @@ export function drawHover(view, hover, curveBands) {
   const y = size.top + (view.isTall ? 2 : 16);
 
   return [
-    makeLine(low, high, hoverLineStyle),
-    makeCircle(dot, 3, hoverDotStyle),
-    makeRect({ x, y, width, height: 15 }, hoverBoxStyle),
-    makeText({ x: x + 5, y: y + 11 }, content, hoverTextStyle),
+    buildLine(low, high, hoverLineStyle),
+    buildCircle(dot, 3, hoverDotStyle),
+    buildRect({ x, y, width, height: 15 }, hoverBoxStyle),
+    buildText({ x: x + 5, y: y + 11 }, content, hoverTextStyle),
   ];
 }

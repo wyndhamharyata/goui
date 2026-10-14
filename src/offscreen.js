@@ -1,5 +1,5 @@
-import { biquadQ, hasGain, logSweepHz, makeBiquad } from "./shared/bands.js";
-import { makePlayedSound, sanitizeConfig } from "./shared/config.js";
+import { biquadQ, hasGain, logSweepHz, createBiquad } from "./shared/bands.js";
+import { toPlayedSound, sanitizeConfig } from "./shared/config.js";
 import { dbToLinear, linearToDb, rootMeanSquare } from "./shared/math.js";
 import { messageTypes, silenceDb, spectrumPointCount, trySendMessage } from "./shared/messages.js";
 
@@ -41,7 +41,7 @@ function buildChain() {
   chainNodes = [analyserNode];
 
   if (playedSound.enabled) {
-    bandNodes = listActiveBands().map((band) => makeBiquad(audioContext, band));
+    bandNodes = listActiveBands().map((band) => createBiquad(audioContext, band));
     chainNodes = [preampNode, ...bandNodes, analyserNode];
   }
 
@@ -159,7 +159,7 @@ const handlers = new Map([
   [messageTypes.audioStart, (message) => start(message.streamId)],
   [messageTypes.audioStop, () => stop()],
   [messageTypes.audioConfig, async (message) => {
-    applyConfig(makePlayedSound(sanitizeConfig(message.config)));
+    applyConfig(toPlayedSound(sanitizeConfig(message.config)));
     return { ok: true };
   }],
 ]);

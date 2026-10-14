@@ -2,7 +2,7 @@
 import { frequencyRangeHz } from "../shared/bands.js";
 import { clamp, logPosition, octavesBetween } from "../shared/math.js";
 import { spectrumStyle } from "./styles.js";
-import { makePolygon } from "./svg.js";
+import { buildPolygon } from "./svg.js";
 import { placePoint } from "./view.js";
 
 /** @typedef {import("./view.js").View} View */
@@ -43,7 +43,7 @@ export function drawSpectrum(view, frequencies, spectrumDb) {
   });
   const floor = [{ x: size.left + size.plotWidth, y: bottom }, { x: size.left, y: bottom }];
 
-  return [makePolygon([...edge, ...floor], spectrumStyle)];
+  return [buildPolygon([...edge, ...floor], spectrumStyle)];
 }
 
 // The tall view mirrors the spectrum and tilts it 3 dB per octave upright, so it spans 90 dB, not 100.
@@ -63,5 +63,5 @@ function drawMirroredSpectrum(view, frequencies, spectrumDb) {
     left.unshift({ x: center.x - halfWidth, y: center.y });
   }
 
-  return makePolygon([...right, ...left], spectrumStyle);
+  return buildPolygon([...right, ...left], spectrumStyle);
 }
