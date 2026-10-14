@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#08090b" />
     <meta
       name="description"
-      content="Browser level EQ joining AutoEQ and EQByEar. Different ear, different head, different sound."
+      content="An EQ for a browser tab or the whole Mac, joining AutoEQ and EQByEar. Different ear, different head, different sound."
     />
     <link rel="icon" href="/icons/icon48.png" />
     <link rel="stylesheet" href="/panel.css" />
@@ -22,6 +22,7 @@
         <nav>
           <a href="#try">Try it</a>
           <a href="#install">Install</a>
+          <a href="#mac">Mac</a>
           <a href="#credits">Credits</a>
           <a href="https://github.com/wyndhamharyata/goui">GitHub</a>
         </nav>
@@ -29,7 +30,7 @@
 
       <section class="hero">
         <div class="hero-text">
-          <p class="eyebrow">Chrome and Brave extension</p>
+          <p class="eyebrow">Chrome and Brave extension, and now a Mac app</p>
           <h1>goui</h1>
           <p class="mantra">Different ear, different head, different sound.</p>
           <p class="pitch">
@@ -95,6 +96,40 @@
             uses the real filter math. The spectrum is a stand-in.
           </p>
         </div>
+      </section>
+
+      <section class="block" id="mac">
+        <h2>goui for the Mac</h2>
+        <p class="lead">The same EQ, for every sound the Mac plays. Not one tab, the whole Mac.</p>
+        <div class="two-col">
+          <img src="/images/mac-panel.jpg" alt="The goui panel open under its menu bar item, over YouTube Music, with the Sennheiser HD 600 AutoEQ curve and the live spectrum." />
+          <div>
+            <p>
+              goui lives in the menu bar. One click opens the panel you know from the browser, and it
+              EQs Music, Spotify, a call or a game the same way, all at once.
+            </p>
+            <p>
+              The headphone layer, the ear layer and Bass, Vocals and Treble all carry over, with the
+              AutoEQ search and the live spectrum. The sound runs through the EQ on your Mac, in a
+              native audio engine, and goui keeps none of it.
+            </p>
+            <p>
+              It starts at login, comes back on its own after a crash, and builds its audio path
+              again if the sound stops.
+            </p>
+          </div>
+        </div>
+        <h3>Wide panel</h3>
+        <p class="lead">Spread it across the screen, and Listen, Tune, Headphone and My ear sit side by side.</p>
+        <img class="wide-shot" src="/images/mac-wide.jpg" alt="The wide goui panel across the top of the screen, with Listen, Tune, the Headphone library and My ear in four columns." />
+        <h3>Install</h3>
+        <p class="lead">One line in Terminal. No admin password. It checks your Mac and asks before it installs.</p>
+        <pre class="install-line"><code>curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh</code></pre>
+        <p class="fine">
+          Needs a Mac with Apple silicon and macOS 26 or newer. goui is not signed by Apple yet, so
+          each update asks to record the audio again. <a href="/mac">Read more before you install</a>,
+          including what happens to Spatial Audio on AirPods.
+        </p>
       </section>
 
       <section class="block">
