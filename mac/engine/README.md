@@ -7,6 +7,16 @@ Swift sets up the tap, the aggregate device and the listeners. The audio callbac
 `Sources/Render/`. Swift can allocate or retain without a sign in the code, and the audio thread
 must never wait.
 
+| File in `Sources/goui-engine/` | What it does |
+| --- | --- |
+| `main.swift` | Reads the flags, starts the engine, prints the meters and stops on a signal |
+| `Engine.swift` | Keeps one audio path playing. It builds the path again when the output changes and tries again after a failed start. |
+| `AudioPath.swift` | Builds the tap, the aggregate device and the callback, and takes them down in reverse |
+| `PropertyListener.swift` | Listens to one Core Audio property on the main queue |
+| `CoreAudioProperty.swift` | Reads Core Audio properties and names their errors |
+| `Options.swift` | Parses the flags |
+| `Report.swift` | Prints the summary and the meters |
+
 ## Run
 
 ```sh
@@ -15,7 +25,8 @@ swift build
 ```
 
 `--seconds 10` stops it on its own. Control-C stops it too. Every 2 seconds it prints the callback
-rate, the peak level in and out, and the overload count.
+rate, the peak level in and out, the count of samples above full scale, and the overload count.
+`--gain-db` and `--bass-db` take -24 to 24. A wrong flag prints the usage and exits with 2.
 
 macOS asks for System Audio Recording the first time. Run from a terminal, the prompt names the
 terminal app.
