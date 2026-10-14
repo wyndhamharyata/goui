@@ -1,4 +1,5 @@
 import Foundation
+import GouiEngine
 
 // A pipe holds printed lines until it fills, and kill -9 loses them. Each line goes out at once.
 setvbuf(stdout, nil, _IOLBF, 0)

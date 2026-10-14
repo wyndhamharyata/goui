@@ -12,7 +12,7 @@ struct AudioPathSummary {
   let bufferDelayMs: Double
 }
 
-struct MeterReading {
+public struct MeterReading {
   let callbacksPerSecond: Double
   let inputPeakLinear: Float
   let outputPeakLinear: Float

@@ -132,8 +132,7 @@ waits until goui has users.
 
 Each step starts only when it is asked for, and ends with a commit.
 
-1. Permission check. One app that is also a menu bar icon, started by launchd, asks for System
-   Audio Recording and plays the test tone, as the windowless agent did.
+1. Permission check. Done, see Settled.
 2. App. The menu bar icon, the floating panel, the web view, the bridge, the engine inside the
    app, the config file, and the right-click menu with **Restart engine**, **Reload panel** and
    **Quit**.
@@ -152,6 +151,12 @@ Each step starts only when it is asked for, and ends with a commit.
 - The permission follows the ad hoc signature, which changes with each build. A new build asks
   again.
 - goui is one process, not a server and a tray. See Options set aside.
+- One app that is also a menu bar icon, started by launchd, asks for System Audio Recording, and
+  the prompt names goui. `engine/App/` builds it and starts it as a LaunchAgent. It played the
+  sound of the Mac 6 dB quieter through the speakers at 48 kHz, 94 callbacks a second with no
+  overload. After `kill -9`, launchd started it again within 10 seconds, with no new prompt.
+  **Quit goui** in its menu exits with 0, so launchd does not start it again, and the sound comes back at
+  full level.
 
 ## Open questions
 

@@ -3,8 +3,8 @@ import Foundation
 
 // Keeps one audio path playing, building it again when the output changes or a start fails.
 @MainActor
-final class Engine {
-  enum Status: Equatable {
+public final class Engine {
+  public enum Status: Equatable {
     case stopped
     case running
     case waitingToRetry(lastError: String)
@@ -15,20 +15,20 @@ final class Engine {
   private static let restartSettleSeconds = 0.3
 
   private let options: Options
-  private(set) var status = Status.stopped
+  public private(set) var status = Status.stopped
   private var path: AudioPath?
   private var defaultOutputListener: PropertyListener?
   private var pendingStart: DispatchWorkItem?
   private var failedStartCount = 0
 
-  init(options: Options) throws {
+  public init(options: Options) throws {
     self.options = options
     defaultOutputListener = try PropertyListener(object: AudioObjectID(kAudioObjectSystemObject), selector: kAudioHardwarePropertyDefaultOutputDevice) { [weak self] in
       self?.restart(reason: "The default output changed.")
     }
   }
 
-  func start() {
+  public func start() {
     cancelPendingStart()
     guard path == nil else { return }
     do {
@@ -48,7 +48,7 @@ final class Engine {
     }
   }
 
-  func stop() {
+  public func stop() {
     cancelPendingStart()
     stopPath()
     status = .stopped
@@ -63,7 +63,7 @@ final class Engine {
     }
   }
 
-  func readMeters() -> MeterReading? {
+  public func readMeters() -> MeterReading? {
     path?.readMeters()
   }
 

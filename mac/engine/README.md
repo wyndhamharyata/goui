@@ -3,19 +3,22 @@
 A command line trial of the audio path in `../PLAN.md`. It plays every sound on the Mac through a
 gain and a 105 Hz bass shelf. There is no UI and no AutoEQ yet.
 
+`goui-engine` is the command line tool. `goui` is the same engine in a menu bar app, run by launchd.
+
 Swift sets up the tap, the aggregate device and the listeners. The audio callback is C, in
 `Sources/Render/`. Swift can allocate or retain without a sign in the code, and the audio thread
 must never wait.
 
-| File in `Sources/goui-engine/` | What it does |
+| File | What it does |
 | --- | --- |
-| `main.swift` | Reads the flags, starts the engine, prints the meters and stops on a signal |
-| `Engine.swift` | Keeps one audio path playing. It builds the path again when the output changes and tries again after a failed start. |
-| `AudioPath.swift` | Builds the tap, the aggregate device and the callback, and takes them down in reverse |
-| `PropertyListener.swift` | Listens to one Core Audio property on the main queue |
-| `CoreAudioProperty.swift` | Reads Core Audio properties and names their errors |
-| `Options.swift` | Parses the flags |
-| `Report.swift` | Prints the summary and the meters |
+| `goui-engine/main.swift` | Reads the flags, starts the engine, prints the meters and stops on a signal |
+| `goui/main.swift` | Shows the menu bar icon with **Quit goui**, and plays every sound 6 dB quieter |
+| `GouiEngine/Engine.swift` | Keeps one audio path playing. It builds the path again when the output changes and tries again after a failed start. |
+| `GouiEngine/AudioPath.swift` | Builds the tap, the aggregate device and the callback, and takes them down in reverse |
+| `GouiEngine/PropertyListener.swift` | Listens to one Core Audio property on the main queue |
+| `GouiEngine/CoreAudioProperty.swift` | Reads Core Audio properties and names their errors |
+| `GouiEngine/Options.swift` | Parses the flags |
+| `GouiEngine/Report.swift` | Prints the summary and the meters |
 
 ## Run
 
@@ -30,6 +33,18 @@ rate, the peak level in and out, the count of samples above full scale, and the 
 
 macOS asks for System Audio Recording the first time. Run from a terminal, the prompt names the
 terminal app.
+
+### The menu bar app
+
+```sh
+App/make-app.sh
+App/agent.sh start
+```
+
+`make-app.sh` builds `.build/goui.app` and signs it ad hoc. `agent.sh start` writes
+`~/Library/LaunchAgents/com.goui.app.plist` and starts it. The prompt names goui. launchd starts
+the app again after a crash, and after **Quit goui** it stays quit. The meters go to
+`~/Library/Logs/goui.log`. `agent.sh stop` stops the app and removes the agent.
 
 ## First results
 

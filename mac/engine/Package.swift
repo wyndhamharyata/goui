@@ -10,9 +10,11 @@ let package = Package(
   platforms: [.macOS(.v26)],
   targets: [
     .target(name: "Render"),
+    .target(name: "GouiEngine", dependencies: ["Render"]),
+    .executableTarget(name: "goui", dependencies: ["GouiEngine"]),
     .executableTarget(
       name: "goui-engine",
-      dependencies: ["Render"],
+      dependencies: ["GouiEngine"],
       linkerSettings: [.unsafeFlags(["-Xlinker", "-sectcreate", "-Xlinker", "__TEXT", "-Xlinker", "__info_plist", "-Xlinker", infoPlistPath])]
     ),
   ]
