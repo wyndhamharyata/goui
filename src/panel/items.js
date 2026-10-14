@@ -21,18 +21,13 @@ export function describeBandCount(bands) {
  * @returns {HTMLElement}
  */
 export function makeResultItem(label, detail, onPick, onRemove) {
-  const button = makeElement("button", { className: "item" });
-  button.dataset.name = label;
-  button.append(makeElement("span", { text: label }), makeElement("small", { text: detail }));
-  button.addEventListener("click", onPick);
+  const labels = [makeElement("span", { text: label }), makeElement("small", { text: detail })];
+  const button = makeElement("button", { className: "item", dataset: { name: label }, on: { click: onPick } }, labels);
   if (!onRemove) return button;
 
-  const remove = makeElement("button", { className: "remove", text: "×", title: `Delete ${label}` });
-  remove.addEventListener("click", onRemove);
-  const row = makeElement("div", { className: "result-row" });
-  row.append(button, remove);
+  const remove = makeElement("button", { className: "remove", text: "×", title: `Delete ${label}`, on: { click: onRemove } });
 
-  return row;
+  return makeElement("div", { className: "result-row" }, [button, remove]);
 }
 
 /**

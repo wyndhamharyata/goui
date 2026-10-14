@@ -31,18 +31,14 @@ function openLibrarySection(role) {
  */
 function makeTargetChoice(autoEq) {
   const family = findFamily(state.targetData.families, makeAutoEqItem(autoEq.name, autoEq.path));
-  const choice = makeElement("label", { className: "target", text: "Target", title: "The sound AutoEQ tunes your headphone toward" });
-  if (!family || family.labels.length < 2) {
-    choice.append(makeElement("span", { text: autoEq.target }));
-    return choice;
-  }
-  const select = makeElement("select");
-  for (const label of family.labels) select.append(new Option(label, label));
-  select.value = autoEq.target;
-  select.addEventListener("change", () => changeTarget(select.value));
-  choice.append(select);
+  const choice = { className: "target", text: "Target", title: "The sound AutoEQ tunes your headphone toward" };
+  if (!family || family.labels.length < 2) return makeElement("label", choice, [makeElement("span", { text: autoEq.target })]);
 
-  return choice;
+  const options = family.labels.map((label) => new Option(label, label));
+  const select = makeElement("select", { on: { change: (event) => changeTarget(event.target.value) } }, options);
+  select.value = autoEq.target;
+
+  return makeElement("label", choice, [select]);
 }
 
 /**
@@ -51,50 +47,40 @@ function makeTargetChoice(autoEq) {
  * @returns {HTMLElement}
  */
 function makeLayerRow(role, layer) {
-  const toggle = makeElement("label", { className: "switch", title: `Turn the ${layerLabels[role]} layer on or off` });
-  const box = makeElement("input");
-  box.type = "checkbox";
-  box.checked = layer.on;
-  box.addEventListener("change", () => {
-    layer.on = box.checked;
+  /** @param {Event} event */
+  const switchLayer = (event) => {
+    layer.on = event.target.checked;
     commit();
-  });
-  toggle.append(box, makeElement("span", { className: "track" }));
+  };
+  const toggle = makeElement("label", { className: "switch", title: `Turn the ${layerLabels[role]} layer on or off` }, [
+    makeElement("input", { type: "checkbox", checked: layer.on, on: { change: switchLayer } }),
+    makeElement("span", { className: "track" }),
+  ]);
 
-  const caption = makeElement("small", { className: "caption" });
-  const mark = makeElement("i", { className: "layer-mark" });
-  mark.style.borderColor = layerColor[role];
-  caption.append(mark, `${layerLabels[role]} · ${layer.source}`);
-  const text = makeElement("div", { className: "grow" });
-  text.append(caption, makeElement("b", { text: describeLayerName(layer) }));
-  if (layer.autoEq) text.append(makeTargetChoice(layer.autoEq));
+  const mark = makeElement("i", { className: "layer-mark", style: { borderColor: layerColor[role] } });
+  const caption = makeElement("small", { className: "caption" }, [mark, `${layerLabels[role]} · ${layer.source}`]);
+  const texts = [caption, makeElement("b", { text: describeLayerName(layer) })];
+  if (layer.autoEq) texts.push(makeTargetChoice(layer.autoEq));
 
-  const change = makeElement("button", { text: "Change" });
-  change.addEventListener("click", () => openLibrarySection(role));
+  const parts = [toggle, makeElement("div", { className: "grow" }, texts)];
+  parts.push(makeElement("button", { text: "Change", on: { click: () => openLibrarySection(role) } }));
+  if (role === "ear") parts.push(makeElement("button", { text: "×", title: "Take the ear layer off", on: { click: removeEarLayer } }));
 
-  const row = makeElement("div", { className: layer.on ? "layer" : "layer off" });
-  row.append(toggle, text, change);
-  if (role === "ear") {
-    const remove = makeElement("button", { text: "×", title: "Take the ear layer off" });
-    remove.addEventListener("click", removeEarLayer);
-    row.append(remove);
-  }
-
-  return row;
+  return makeElement("div", { className: layer.on ? "layer" : "layer off" }, parts);
 }
 
 /** @returns {HTMLElement} */
 function makeAddEarButton() {
-  const add = makeElement("button", {
-    text: "Add your ear tuning on top",
-    title: "Open My ear in the Library, to paste an eqbyear result or pick a saved ear preset",
-  });
-  add.addEventListener("click", () => {
+  const openEarPaste = () => {
     openLibrarySection("ear");
     if (state.openActions.ear !== "paste") toggleLibraryAction("ear", "paste");
-  });
+  };
 
-  return add;
+  return makeElement("button", {
+    text: "Add your ear tuning on top",
+    title: "Open My ear in the Library, to paste an eqbyear result or pick a saved ear preset",
+    on: { click: openEarPaste },
+  });
 }
 
 // The stack on Listen. One row per layer, each with its own switch, its source and its name.

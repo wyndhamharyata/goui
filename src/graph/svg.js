@@ -1,41 +1,97 @@
-// The SVG pieces every part of the graph draws with.
+// Builds the graph as SVG elements. Attributes are written in camelCase, as in JSX.
 import { placePoint } from "./view.js";
 
 /** @typedef {import("./view.js").View} View */
 
 /** @typedef {import("./view.js").Point} Point */
 
+/** @typedef {Record<string, string | number>} SvgAttributes */
+
+/** @typedef {{ x: number, y: number, width: number, height: number }} Box */
+
+const svgNamespace = "http://www.w3.org/2000/svg";
+// SVG spells these attributes in camelCase itself. Every other camelCase name becomes kebab-case.
+const camelCaseAttributes = new Set(["viewBox"]);
+
+/**
+ * @param {string} name
+ * @returns {string}
+ */
+function toAttributeName(name) {
+  if (camelCaseAttributes.has(name)) return name;
+  return name.replaceAll(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+}
+
+/**
+ * @param {string} tag
+ * @param {SvgAttributes} [attributes]
+ * @param {(SVGElement | string)[]} [children]
+ * @returns {SVGElement}
+ */
+export function makeSvg(tag, attributes = {}, children = []) {
+  const element = document.createElementNS(svgNamespace, tag);
+  for (const [name, value] of Object.entries(attributes)) element.setAttribute(toAttributeName(name), String(value));
+  element.append(...children);
+
+  return element;
+}
+
 /**
  * @param {Point} from
  * @param {Point} to
- * @param {string} style
- * @returns {string}
+ * @param {SvgAttributes} style
+ * @returns {SVGElement}
  */
 export function makeLine(from, to, style) {
-  return `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" ${style}/>`;
+  return makeSvg("line", { x1: from.x, y1: from.y, x2: to.x, y2: to.y, ...style });
 }
 
 /**
  * @param {Point} point
  * @param {string} content
- * @param {string} style
- * @returns {string}
+ * @param {SvgAttributes} style
+ * @returns {SVGElement}
  */
 export function makeText(point, content, style) {
-  return `<text x="${point.x}" y="${point.y}" fill="rgba(255,255,255,0.45)" font-size="9" ${style}>${content}</text>`;
+  return makeSvg("text", { x: point.x, y: point.y, ...style }, [content]);
+}
+
+/**
+ * @param {Box} box
+ * @param {SvgAttributes} style
+ * @returns {SVGElement}
+ */
+export function makeRect(box, style) {
+  return makeSvg("rect", { ...box, ...style });
+}
+
+/**
+ * @param {Point} center
+ * @param {number} radius
+ * @param {SvgAttributes} style
+ * @returns {SVGElement}
+ */
+export function makeCircle(center, radius, style) {
+  return makeSvg("circle", { cx: center.x, cy: center.y, r: radius, ...style });
+}
+
+/**
+ * @param {Point[]} points
+ * @param {SvgAttributes} style
+ * @returns {SVGElement}
+ */
+export function makePolygon(points, style) {
+  return makeSvg("polygon", { points: points.map((point) => `${point.x},${point.y}`).join(" "), ...style });
 }
 
 /**
  * @param {View} view
  * @param {Float32Array} frequencies
  * @param {ArrayLike<number>} valuesDb
- * @returns {string[]}
+ * @returns {Point[]}
  */
 function tracePoints(view, frequencies, valuesDb) {
-  return Array.from(frequencies, (frequencyHz, index) => {
-    const point = placePoint(view, frequencyHz, valuesDb[index]);
-    return `${point.x},${point.y}`;
-  });
+  return Array.from(frequencies, (frequencyHz, index) => placePoint(view, frequencyHz, valuesDb[index]));
 }
 
 // The area between the 0 dB line and a curve.
@@ -43,24 +99,24 @@ function tracePoints(view, frequencies, valuesDb) {
  * @param {View} view
  * @param {Float32Array} frequencies
  * @param {ArrayLike<number>} valuesDb
- * @param {string} fill
- * @returns {string}
+ * @param {SvgAttributes} style
+ * @returns {SVGElement}
  */
-export function drawArea(view, frequencies, valuesDb, fill) {
+export function drawArea(view, frequencies, valuesDb, style) {
   const start = placePoint(view, frequencies[0], 0);
   const end = placePoint(view, frequencies.at(-1), 0);
-  const edge = tracePoints(view, frequencies, valuesDb);
 
-  return `<polygon points="${start.x},${start.y} ${edge.join(" ")} ${end.x},${end.y}" ${fill}/>`;
+  return makePolygon([start, ...tracePoints(view, frequencies, valuesDb), end], style);
 }
 
 /**
  * @param {View} view
  * @param {Float32Array} frequencies
  * @param {ArrayLike<number>} valuesDb
- * @param {string} stroke
- * @returns {string}
+ * @param {SvgAttributes} style
+ * @returns {SVGElement}
  */
-export function drawCurve(view, frequencies, valuesDb, stroke) {
-  return `<polyline points="${tracePoints(view, frequencies, valuesDb).join(" ")}" fill="none" ${stroke}/>`;
+export function drawCurve(view, frequencies, valuesDb, style) {
+  const points = tracePoints(view, frequencies, valuesDb).map((point) => `${point.x},${point.y}`).join(" ");
+  return makeSvg("polyline", { points, fill: "none", ...style });
 }

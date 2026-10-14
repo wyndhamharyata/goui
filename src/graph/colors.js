@@ -1,13 +1,15 @@
-// The colours of the graph, which match src/base.css.
+// The colours of the graph and the panel, which match src/base.css.
 
 export const backgroundColor = "#0e1013";
 export const textColor = "#e6e9ef";
 export const curveColor = "#5b8cff";
 
+const peakColor = "#b06bff";
 const shelfColor = "#2ec4b6";
 const passColor = "#ff9f43";
+
 export const typeColor = {
-  PK: "#b06bff",
+  PK: peakColor,
   LSC: shelfColor,
   HSC: shelfColor,
   LSF: shelfColor,

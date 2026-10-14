@@ -78,9 +78,8 @@ function makeMeasurementItem(item, hint) {
     if (await loadHeadphone(item, hint)) endHeadphoneSearch();
   });
   row.classList.add("measurement");
-  if (item.isAutoEqPick) {
-    row.firstChild.append(makeElement("em", { className: "pick", text: "AutoEQ's pick", title: "AutoEQ recommends this measurement of the headphone" }));
-  }
+  const pickMark = makeElement("em", { className: "pick", text: "AutoEQ's pick", title: "AutoEQ recommends this measurement of the headphone" });
+  if (item.isAutoEqPick) row.firstChild.append(pickMark);
 
   return row;
 }

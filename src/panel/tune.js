@@ -13,34 +13,31 @@ import { state } from "./state.js";
 
 const gainStepDb = 0.5;
 
+/**
+ * @param {import("../graph/graph.js").BandEntry} entry
+ * @param {number} index
+ * @returns {HTMLElement}
+ */
+function makeChip(entry, index) {
+  const classNames = ["chip"];
+  if (entry.band === state.selectedBand) classNames.push("on");
+  if (!entry.band.on) classNames.push("muted");
+  const number = makeElement("i", { text: index + 1, style: { background: typeColor[entry.band.type] } });
+
+  return makeElement("button", { className: classNames.join(" "), dataset: { index } }, [number, formatHz(entry.band.frequencyHz)]);
+}
+
 // One row per layer, each with its own label and its own Add band chip.
 function renderChips() {
-  const host = byId("chips");
-  host.replaceChildren();
   const entries = listBandEntries();
-  for (const role of layerOrder) {
-    const track = makeElement("div", { className: "chip-track" });
-    entries.forEach((entry, index) => {
-      if (entry.role !== role) return;
-      const chip = makeElement("button", { className: "chip" });
-      chip.classList.toggle("on", entry.band === state.selectedBand);
-      chip.classList.toggle("muted", !entry.band.on);
-      chip.dataset.index = index;
-      const number = makeElement("i", { text: index + 1 });
-      number.style.background = typeColor[entry.band.type];
-      chip.append(number, formatHz(entry.band.frequencyHz));
-      track.append(chip);
-    });
+  const rows = layerOrder.map((role) => {
+    const chips = entries.flatMap((entry, index) => (entry.role === role ? [makeChip(entry, index)] : []));
+    const add = makeElement("button", { className: "chip add", text: "Add band", title: `Make a new band in ${layerLabels[role]}`, dataset: { add: role } });
+    const label = makeElement("span", { className: "chip-label", text: layerLabels[role], style: { color: layerColor[role] } });
 
-    const add = makeElement("button", { className: "chip add", text: "Add band", title: `Make a new band in ${layerLabels[role]}` });
-    add.dataset.add = role;
-    track.append(add);
-    const label = makeElement("span", { className: "chip-label", text: layerLabels[role] });
-    label.style.color = layerColor[role];
-    const row = makeElement("div", { className: "chip-row" });
-    row.append(label, track);
-    host.append(row);
-  }
+    return makeElement("div", { className: "chip-row" }, [label, makeElement("div", { className: "chip-track" }, [...chips, add])]);
+  });
+  byId("chips").replaceChildren(...rows);
 }
 
 /**
@@ -64,7 +61,7 @@ export function renderInspector() {
 
   const title = byId("bandTitle");
   title.textContent = `${layerLabels[readSelectedRole()]} · ${index + 1}. ${bandTypeDetails[band.type].label}`;
-  title.style.color = typeColor[band.type];
+  Object.assign(title.style, { color: typeColor[band.type] });
   setField("bandType", band.type);
   // The segment buttons hold the common types. The others are under More.
   const isCommon = Boolean(byId("bandSegments").querySelector(`[data-type="${band.type}"]`));
@@ -84,24 +81,23 @@ export function renderInspector() {
   byId("qHint").textContent = describeQ(band);
 }
 
-function renderTable() {
-  const head = makeElement("tr");
-  for (const label of ["Band", "Hz", "dB", "Q"]) head.append(makeElement("th", { text: label }));
-  const rows = listBandEntries().map(({ band }, index) => {
-    const row = makeElement("tr");
-    row.dataset.index = index;
-    row.classList.toggle("on", band === state.selectedBand);
-    const number = makeElement("span", { className: "number", text: index + 1 });
-    number.style.color = typeColor[band.type];
-    const typeCell = makeElement("td");
-    typeCell.append(number, bandTypeDetails[band.type].label);
-    row.append(typeCell);
+/**
+ * @param {import("../graph/graph.js").BandEntry} entry
+ * @param {number} index
+ * @returns {HTMLElement}
+ */
+function makeTableRow({ band }, index) {
+  const number = makeElement("span", { className: "number", text: index + 1, style: { color: typeColor[band.type] } });
+  const gain = hasGain(band.type) ? formatDb(band.gainDb) : "";
+  const values = [Math.round(band.frequencyHz), gain, band.q.toFixed(2)];
+  const cells = [makeElement("td", {}, [number, bandTypeDetails[band.type].label]), ...values.map((value) => makeElement("td", { text: value }))];
 
-    const gain = hasGain(band.type) ? formatDb(band.gainDb) : "";
-    for (const value of [Math.round(band.frequencyHz), gain, band.q.toFixed(2)]) row.append(makeElement("td", { text: value }));
-    return row;
-  });
-  byId("table").replaceChildren(head, ...rows);
+  return makeElement("tr", { className: band === state.selectedBand ? "on" : "", dataset: { index } }, cells);
+}
+
+function renderTable() {
+  const head = makeElement("tr", {}, ["Band", "Hz", "dB", "Q"].map((label) => makeElement("th", { text: label })));
+  byId("table").replaceChildren(head, ...listBandEntries().map(makeTableRow));
 }
 
 const bandSteps = {

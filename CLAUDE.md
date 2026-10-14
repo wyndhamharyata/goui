@@ -165,6 +165,9 @@ Butterworth, gets a link to its explanation on the same line.
 - Each Chrome context has its own entry file: `src/panel/main.js`, `src/offscreen.js`,
   `src/service-worker.js` and the how-to page (`src/intro.html`). A context can split its code into
   more files by concern, as the panel does with `src/panel/`, `src/graph/`, `src/fit.js` and `src/autoeq.js`.
+- Markup is built with `makeElement` in the panel and `makeSvg` in the graph, never from HTML or SVG
+  text. A style is an object of camelCase properties. A look the graph draws with is a named
+  style in `src/graph/styles.js`, and a colour is a named constant in `src/graph/colors.js`.
 - Each formula is a named function in `src/shared/math.js`, even when one place uses it, as `clamp`
   is. `20 * Math.log10(x)` is `linearToDb(x)`.
 - Code that two contexts both need goes in `src/shared/`. `bands.js` holds one band and its Web

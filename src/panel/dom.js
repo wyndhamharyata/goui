@@ -21,17 +21,22 @@ export const sectionOf = (role) => document.querySelector(`.preset-section[data-
  */
 export const partOf = (role, name) => sectionOf(role).querySelector(`.${name}`);
 
+// The panel's one way to build an element, as makeSvg is the graph's. Other keys are element properties.
 /**
  * @param {string} tag
- * @param {{ className?: string, text?: string | number, title?: string }} [options]
+ * @param {{ text?: string | number, style?: Partial<CSSStyleDeclaration>, dataset?: Record<string, string | number>, on?: Record<string, (event: Event) => void>, [property: string]: unknown }} [options]
+ * @param {(Node | string)[]} [children]
  * @returns {HTMLElement}
  */
-export function makeElement(tag, options = {}) {
-  const { className = "", text = "", title = "" } = options;
+export function makeElement(tag, options = {}, children = []) {
+  const { text = "", style = {}, dataset = {}, on = {}, ...properties } = options;
   const element = document.createElement(tag);
-  if (className) element.className = className;
+  Object.assign(element, properties);
+  Object.assign(element.style, style);
+  for (const [key, value] of Object.entries(dataset)) element.dataset[key] = String(value);
+  for (const [type, listener] of Object.entries(on)) element.addEventListener(type, listener);
   if (text !== "") element.textContent = text;
-  if (title) element.title = title;
+  element.append(...children);
 
   return element;
 }

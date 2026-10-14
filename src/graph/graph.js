@@ -1,12 +1,12 @@
 // makeGraph draws one EQ graph into a host element and turns presses on it into band edits.
 import { qStepRatio, responseDb, roundGainDb, setBandQ } from "../shared/bands.js";
-import { curveColor } from "./colors.js";
 import { drawLayerCurves, drawLoudness } from "./curves.js";
 import { moveBand, setQFromPointer } from "./drag.js";
 import { drawFrequencyGrid, drawGainGrid, drawRegions } from "./grid.js";
-import { drawHover, drawNodes, drawPill, drawSelectedBand } from "./marks.js";
-import { drawCurve } from "./svg.js";
+import { drawBandLabel, drawBandPoints, drawChosenBand, drawHover } from "./marks.js";
 import { drawSpectrum } from "./spectrum.js";
+import { curveStyle, offCurveStyle } from "./styles.js";
+import { drawCurve, makeRect, makeSvg } from "./svg.js";
 import { drawnGainDb, readPoint, sweepFrequencies } from "./view.js";
 
 /** @typedef {import("../shared/bands.js").Band} Band */
@@ -19,7 +19,10 @@ import { drawnGainDb, readPoint, sweepFrequencies } from "./view.js";
 
 /** @typedef {import("./drag.js").Drag} Drag */
 
-/** @typedef {import("./marks.js").NodePoint} NodePoint */
+/** @typedef {import("./marks.js").BandPoint} BandPoint */
+
+// Where the last render drew each band point and Q handle, so a press can find what it is on.
+/** @typedef {{ points: BandPoint[], qHandles: Point[] }} PressTargets */
 
 /** @typedef {{ role: import("../shared/config.js").LayerRole, band: Band }} BandEntry */
 
@@ -67,9 +70,8 @@ export function makeGraph(host, options, hooks) {
   let hover = null;
   /** @type {Drag | null} */
   let drag = null;
-  // Where the last render put the points and the handles, so a press can find them.
-  /** @type {{ nodes: NodePoint[], handles: Point[] }} */
-  let hitPoints = { nodes: [], handles: [] };
+  /** @type {PressTargets} */
+  let pressTargets = { points: [], qHandles: [] };
   const clipId = `clip-${host.id}`;
 
   /** @returns {View} */
@@ -92,21 +94,21 @@ export function makeGraph(host, options, hooks) {
 
   /**
    * @param {View} view
-   * @returns {string}
+   * @returns {SVGElement[]}
    */
   function drawHoverNow(view) {
-    if (!hover || drag) return "";
+    if (!hover || drag) return [];
     return drawHover(view, hover, hooks.listCurveBands());
   }
 
   // Replacing the whole SVG would remove the element under the pointer, and the browser would send no click.
   /**
    * @param {string} name
-   * @param {(view: View) => string} draw
+   * @param {(view: View) => SVGElement[]} draw
    */
   function renderGroup(name, draw) {
     const group = host.querySelector(`[data-${name}]`);
-    if (group) group.innerHTML = draw(measureView());
+    if (group) group.replaceChildren(...draw(measureView()));
     else render();
   }
 
@@ -118,30 +120,40 @@ export function makeGraph(host, options, hooks) {
     renderGroup("hover", drawHoverNow);
   }
 
+  // The plot clips the spectrum and the curves. The grid labels, the points and the hover box draw outside it.
   function render() {
     const view = measureView();
     const { size } = view;
     if (size.width === 0) return;
     const frequencies = sweepFrequencies(view);
     const curveDb = responseDb(hooks.listCurveBands(), frequencies);
-    const selectedIndex = hooks.readSelectedIndex();
-    const band = bandAt(selectedIndex);
-    const showsPoints = options.interactive;
+    const chosenIndex = hooks.readSelectedIndex();
+    const chosenBand = bandAt(chosenIndex);
+    const showsChosenBand = options.interactive && Boolean(chosenBand);
 
-    const selected = showsPoints && band ? drawSelectedBand(view, band, frequencies) : { svg: "", handles: [] };
-    const nodes = showsPoints ? drawNodes(view, hooks.listBandEntries(), selectedIndex) : { svg: "", nodes: [] };
-    hitPoints = { nodes: nodes.nodes, handles: selected.handles };
-    const curveStroke = hooks.isEqOff() ? "rgba(255,255,255,0.35)" : curveColor;
-    const curve = drawCurve(view, frequencies, curveDb, `stroke="${curveStroke}" stroke-width="2"`);
-    const pill = showsPoints && band ? drawPill(view, band) : "";
-    const spectrum = drawSpectrum(view, frequencies, hooks.readSpectrumDb());
-    const layerCurves = drawLayerCurves(view, frequencies, hooks.listCurveLayers());
-    host.innerHTML = `<svg viewBox="0 0 ${size.width} ${size.height}" height="${size.height}">
-      <defs><clipPath id="${clipId}"><rect x="${size.left}" y="${size.top}" width="${size.plotWidth}" height="${size.plotHeight}"/></clipPath></defs>
-      ${drawRegions(view)}${drawFrequencyGrid(view)}${drawGainGrid(view)}
-      <g clip-path="url(#${clipId})"><g data-spectrum>${spectrum}</g>${drawLoudness(view, frequencies, curveDb)}${selected.svg}${layerCurves}${curve}</g>
-      ${nodes.svg}${pill}<g data-hover>${drawHoverNow(view)}</g>
-    </svg>`;
+    const chosen = showsChosenBand ? drawChosenBand(view, chosenBand, frequencies) : { elements: [], qHandles: [] };
+    const bandPoints = options.interactive ? drawBandPoints(view, hooks.listBandEntries(), chosenIndex) : { elements: [], points: [] };
+    pressTargets = { points: bandPoints.points, qHandles: chosen.qHandles };
+
+    const plotBox = { x: size.left, y: size.top, width: size.plotWidth, height: size.plotHeight };
+    const clipPath = makeSvg("clipPath", { id: clipId }, [makeRect(plotBox, {})]);
+    const plot = makeSvg("g", { clipPath: `url(#${clipId})` }, [
+      makeSvg("g", { dataSpectrum: "" }, drawSpectrum(view, frequencies, hooks.readSpectrumDb())),
+      ...drawLoudness(view, frequencies, curveDb),
+      ...chosen.elements,
+      ...drawLayerCurves(view, frequencies, hooks.listCurveLayers()),
+      drawCurve(view, frequencies, curveDb, hooks.isEqOff() ? offCurveStyle : curveStyle),
+    ]);
+    host.replaceChildren(makeSvg("svg", { viewBox: `0 0 ${size.width} ${size.height}`, height: size.height }, [
+      makeSvg("defs", {}, [clipPath]),
+      ...drawRegions(view),
+      ...drawFrequencyGrid(view),
+      ...drawGainGrid(view),
+      plot,
+      ...bandPoints.elements,
+      ...(showsChosenBand ? drawBandLabel(view, chosenBand) : []),
+      makeSvg("g", { dataHover: "" }, drawHoverNow(view)),
+    ]));
   }
 
   /**
@@ -166,10 +178,10 @@ export function makeGraph(host, options, hooks) {
     const isNear = (item, radiusPx) => Math.hypot(item.x - pointer.x, item.y - pointer.y) < radiusPx;
     const handleRadiusPx = 12;
     const pointRadiusPx = 14;
-    if (hitPoints.handles.some((handle) => isNear(handle, handleRadiusPx))) return { kind: "q", index: hooks.readSelectedIndex() };
+    if (pressTargets.qHandles.some((handle) => isNear(handle, handleRadiusPx))) return { kind: "q", index: hooks.readSelectedIndex() };
     // The last point drawn is on top, so it wins a press on two points.
-    const node = [...hitPoints.nodes].reverse().find((item) => isNear(item, pointRadiusPx));
-    return node ? { kind: "move", index: node.index } : null;
+    const point = [...pressTargets.points].reverse().find((item) => isNear(item, pointRadiusPx));
+    return point ? { kind: "move", index: point.index } : null;
   }
 
   /** @param {PointerEvent} event */
@@ -200,7 +212,7 @@ export function makeGraph(host, options, hooks) {
       drag.startY = pointer.y;
     }
     const band = bandAt(drag.index);
-    drag.isFine = event.shiftKey;
+    drag.isQuarterSpeed = event.shiftKey;
     if (drag.kind === "move") moveBand(measureView(), band, drag, pointer);
     else setQFromPointer(measureView(), band, pointer);
     hooks.commitBandEdit();
