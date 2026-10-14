@@ -98,9 +98,12 @@ swaps to new filters without a lock and fades across about 20 ms, so a change do
   controls. The output device will need a place of its own when it comes.
 - The panel takes the height of its page, up to the height of the screen.
 - The panel has no console on the Mac, so `chrome.js` sends its errors to the app's log.
-- The web view is built when the panel first opens. If it holds too much memory with the panel
-  closed, the app can drop it on close and build it again on open.
-- Words about the tab read oddly on a Mac for now. They wait for the branding pass.
+- The web view is built when the panel first opens, and stays. See Settled for why it is not
+  dropped on close.
+- The panel's words and its Get started steps speak of the Mac, not a tab. `chrome.js` sets
+  `window.gouiWords`, which `src/panel/capture.js` reads for the status line and the power button,
+  and `mac/web/guide.js` puts the Mac's own steps in place of the extension's. The guide and help
+  links open goui.mwyndham.dev/mac.
 
 ## Install
 
@@ -189,6 +192,13 @@ Each step starts only when it is asked for, and ends with a commit.
 - The engine reads its callback count every 2 s, and builds the path again when it has not moved.
   A build whose callbacks stopped after 5 s was built again each time, and a healthy engine ran on
   with no restart.
+- A hidden panel's page costs 50 to 65 MB in WebKit's processes, against 24 MB for goui. Letting
+  it go was tried three ways, and none freed it. With the web view taken out of the panel, AppKit
+  and WebKit still held it. When it was freed, WebKit kept its page process. Loading
+  `about:blank` in its place left the page in the back-forward cache. macOS compresses the memory
+  of an idle process, so the page stays.
+- About goui shows the name, the icon and the version, which `make-app.sh` takes from
+  `manifest.json`, so the app and the extension carry one version.
 - The Mac app has no journeys for now. Playwright cannot drive a `WKWebView`, and the panel's own
   journeys run in the extension. The Mac is checked by hand, with `goui-render-check` for the
   filters and the pages in `mac/web/checks/` for the bridge. If journeys come, they can run the

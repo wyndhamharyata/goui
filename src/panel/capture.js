@@ -6,9 +6,13 @@ import { graphs } from "./graphs.js";
 import { sendAudio } from "./sound.js";
 import { isPopup, popupTabId, state } from "./state.js";
 
-const idleInstruction = isPopup
-  ? "goui is off on this tab. Press the power button to EQ it."
-  : "Click the goui icon in the toolbar while you are on the tab you want to EQ.";
+// A page that holds the panel, as the Mac app does, can name what goui hears with window.gouiWords.
+const words = {
+  idleInstruction: isPopup ? "goui is off on this tab. Press the power button to EQ it." : "Click the goui icon in the toolbar while you are on the tab you want to EQ.",
+  powerOffTitle: "Turn goui off on this tab",
+  powerOnTitle: "Turn goui on for this tab",
+  ...globalThis.gouiWords,
+};
 
 /** @param {import("../shared/messages.js").CaptureState} capture */
 export function applyCaptureState(capture) {
@@ -22,14 +26,14 @@ export function applyCaptureState(capture) {
 
   const status = byId("status");
 
-  status.textContent = capture.error || (isCapturing ? capture.title : idleInstruction);
+  status.textContent = capture.error || (isCapturing ? capture.title : words.idleInstruction);
   status.classList.toggle("instruction", !isCapturing);
   status.title = isCapturing && !isPopup ? "Click the goui icon on this tab to turn goui off, or on another tab to move it there." : "";
 
   state.isPopupTabHeard = isCapturing && capture.tabId === popupTabId;
   byId("powerText").textContent = state.isPopupTabHeard ? "ON" : "OFF";
   byId("power").setAttribute("aria-pressed", String(state.isPopupTabHeard));
-  byId("power").title = state.isPopupTabHeard ? "Turn goui off on this tab" : "Turn goui on for this tab";
+  byId("power").title = state.isPopupTabHeard ? words.powerOffTitle : words.powerOnTitle;
 }
 
 function applyTelemetry(message) {

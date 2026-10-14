@@ -14,6 +14,7 @@ final class AppController: NSObject, WKNavigationDelegate {
   // Wide panel fills the screen's width up to this, and the room beyond the fixed columns goes to Tune.
   private static let fullWideWidthPx = 1800.0
   private static let widthKey = "panelWidth"
+  private static let guideURL = URL(string: "https://goui.mwyndham.dev/mac")!
   // The click on the menu bar item that hides the panel would open it again straight away.
   private static let reopenDelaySeconds = 0.3
 
@@ -60,6 +61,7 @@ final class AppController: NSObject, WKNavigationDelegate {
     statusItem.button?.image = menuBarIcon
     statusItem.button?.title = menuBarIcon == nil ? "goui" : ""
     statusItem.button?.setAccessibilityLabel("goui")
+    statusItem.button?.toolTip = "goui. Click for the panel, right-click for the menu."
     statusItem.button?.target = self
     statusItem.button?.action = #selector(clickMenuBarItem)
     statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -67,6 +69,8 @@ final class AppController: NSObject, WKNavigationDelegate {
   }
 
   private func buildMenu() {
+    menu.addItem(withTitle: "About goui", action: #selector(showAbout), keyEquivalent: "").target = self
+    menu.addItem(.separator())
     menu.addItem(withTitle: "Restart engine", action: #selector(restartEngine), keyEquivalent: "").target = self
     menu.addItem(withTitle: "Reload panel", action: #selector(reloadPanel), keyEquivalent: "").target = self
     wideItem.target = self
@@ -171,6 +175,16 @@ final class AppController: NSObject, WKNavigationDelegate {
     let isWide = panel.frame.width >= Self.wideWidthPx
     panel.setWidth(isWide ? FloatingPanel.narrowWidthPx : Self.fullWideWidthPx)
     if !panel.isVisible { panel.show(below: button) }
+  }
+
+  // The name, icon and version come from the bundle. The credits add what goui is and where its guide lives.
+  @objc private func showAbout() {
+    let credits = NSMutableAttributedString(string: "An EQ for every sound on your Mac. AutoEQ tunes it to your headphone, and eqbyear to your ear.\n\n")
+    credits.append(NSAttributedString(string: "goui.mwyndham.dev/mac", attributes: [.link: Self.guideURL]))
+    credits.addAttributes([.font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize), .foregroundColor: NSColor.labelColor], range: NSRange(location: 0, length: credits.length))
+    // A menu bar app is never in front on its own, so the About window would open behind other windows.
+    NSApp.activate()
+    NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
   }
 
   @objc private func restartEngine() {

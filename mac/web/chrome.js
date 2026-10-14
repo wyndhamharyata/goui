@@ -3,8 +3,8 @@
 const macAppUrl = "goui://app/";
 // The panel opens as the popup of this one stand-in tab, so its power button shows.
 const macTabId = 1;
-// The guide pages are written for Chrome, so the Mac opens the homepage until it has its own guide.
-const macHomepageUrl = "https://goui.mwyndham.dev";
+// The guide pages are written for Chrome, so the Mac opens its own page on the homepage.
+const macGuideUrl = "https://goui.mwyndham.dev/mac";
 // As often as the extension's offscreen document sends the level and spectrum.
 const macTelemetryEveryMs = 50;
 const macListeners = [];
@@ -116,12 +116,24 @@ async function sendTelemetry() {
   deliverToPanel({ type: messageTypes.audioTelemetry, ...telemetry });
 }
 
+// The panel's words for what goui hears, told for the whole Mac and not one tab.
+window.gouiWords = {
+  idleInstruction: "goui is off. Press the power button to EQ every sound on this Mac.",
+  powerOffTitle: "Turn goui off",
+  powerOnTitle: "Turn goui on for every sound on this Mac",
+};
+
 // The page takes the panel's width, so a wide panel shows three columns. It also stops the page's edge from bouncing.
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const style = document.createElement("style");
 
   style.textContent = ".popup body { width: auto; } html, body { overscroll-behavior: none; }";
   document.head.append(style);
+  document.getElementById("eqbyear").title = "Open eqbyear.com in your browser, with My ear off, to measure your ear";
+
+  const { renderMacGuide } = await importFromApp("mac/web/guide.js");
+
+  renderMacGuide();
 });
 
 // The panel has no console on the Mac, so its errors go to the app's log.
@@ -164,7 +176,7 @@ window.chrome = {
     },
   },
   tabs: {
-    create: ({ url }) => sendToMac({ type: "open", url: url.startsWith(macAppUrl) ? macHomepageUrl : url }),
+    create: ({ url }) => sendToMac({ type: "open", url: url.startsWith(macAppUrl) ? macGuideUrl : url }),
   },
 };
 
