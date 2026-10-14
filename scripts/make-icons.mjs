@@ -44,6 +44,7 @@ function encodePng(width, height, rgba) {
     rows.push(Buffer.from([0]));
     rows.push(rgba.subarray(y * width * 4, (y + 1) * width * 4));
   }
+
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
     makeChunk("IHDR", header),
@@ -84,6 +85,7 @@ function sampleColor(x, y, size) {
   const { tile, bars } = layOutIcon(0, 0, size);
   if (!isInsideRoundedRect(x, y, tile)) return [0, 0, 0, 0];
   if (bars.some((bar) => isInsideRoundedRect(x, y, bar))) return [255, 255, 255, 255];
+
   const tileColor = mixColor(readRgb(tileColors[0]), readRgb(tileColors[1]), (y - tile.top) / (tile.bottom - tile.top));
   // The tile keeps alpha 255. A three-value colour would write alpha 0 and the icon would be invisible.
 

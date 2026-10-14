@@ -28,12 +28,6 @@ const regions = [
   { lowHz: 6000, highHz: 20_000, name: "Treble" },
 ];
 
-/**
- * @param {View} view
- * @param {{ lowHz: number, highHz: number, name: string }} region
- * @param {number} index
- * @returns {SVGElement[]}
- */
 function drawRegion(view, region, index) {
   const { size } = view;
   const [firstHz, lastHz] = zooms[view.zoom];

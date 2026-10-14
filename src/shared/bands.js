@@ -159,6 +159,7 @@ export function responseDb(bands, frequencies) {
 
   for (const band of bands) {
     if (!band.on) continue;
+
     makeBiquad(offlineContext, band).getFrequencyResponse(frequencies, magnitudes, phases);
 
     for (let index = 0; index < totalsDb.length; index += 1) {

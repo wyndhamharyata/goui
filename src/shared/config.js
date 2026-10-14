@@ -82,6 +82,14 @@ function cleanLayer(raw, fallbackName) {
   return layer;
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number}
+ */
+function cleanSliderDb(value) {
+  return clamp(Number(value) || 0, ...sliderRangeDb);
+}
+
 // Used on a stored config and on an imported saved sound, so a bad file cannot reach the audio chain.
 /**
  * @param {unknown} raw
@@ -89,12 +97,8 @@ function cleanLayer(raw, fallbackName) {
  */
 export function sanitizeConfig(raw) {
   if (!raw || typeof raw !== "object") return defaultConfig();
+
   const sliders = raw.sliders || raw.macros || {};
-  /**
-   * @param {unknown} value
-   * @returns {number}
-   */
-  const sliderDb = (value) => clamp(Number(value) || 0, ...sliderRangeDb);
 
   // An older config holds one flat list, named by soundName or profileName. It becomes the headphone layer.
   const older = {
@@ -114,7 +118,7 @@ export function sanitizeConfig(raw) {
     enabled: raw.enabled !== false,
     preampDb: clamp(Number(raw.preampDb) || 0, ...preampRangeDb),
     autoPreamp: raw.autoPreamp !== false,
-    sliders: { bassDb: sliderDb(sliders.bassDb), vocalsDb: sliderDb(sliders.vocalsDb), trebleDb: sliderDb(sliders.trebleDb) },
+    sliders: { bassDb: cleanSliderDb(sliders.bassDb), vocalsDb: cleanSliderDb(sliders.vocalsDb), trebleDb: cleanSliderDb(sliders.trebleDb) },
     layers,
   };
 }

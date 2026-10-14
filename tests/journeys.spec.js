@@ -23,6 +23,7 @@ import {
   readBadge,
   readPopup,
   readSteadyLevel,
+  readStillBandPoint,
   releaseCompare,
   routeAutoEq,
   saveAs,
@@ -354,20 +355,7 @@ journey("given a press on a point that wobbles 3 px, the tone keeps its boost, a
   await openTab(panel, "tune");
   const withPeak = await readSteadyLevel(panel);
 
-  // Each render draws a new SVG, so the point is found and read in one step, until it holds still.
-  /** @returns {Promise<{ centerX: number, centerY: number }>} */
-  const readPoint = () => panel.locator("#tuneGraph circle[r='7']").first().evaluate((circle) => {
-    const bounds = circle.getBoundingClientRect();
-    return { centerX: bounds.x + (bounds.width / 2), centerY: bounds.y + (bounds.height / 2) };
-  });
-  let position = await readPoint();
-  await expect.poll(async () => {
-    const next = await readPoint();
-    const isStill = next.centerX === position.centerX && next.centerY === position.centerY;
-    position = next;
-    return isStill;
-  }).toBe(true);
-  const { centerX, centerY } = position;
+  const { centerX, centerY } = await readStillBandPoint(panel);
 
   await panel.mouse.move(centerX, centerY);
   await panel.mouse.down();

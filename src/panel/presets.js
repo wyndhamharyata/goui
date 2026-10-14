@@ -19,7 +19,6 @@ export function isSavedPreset(role) {
 }
 
 // Each Library section shows what plays in its layer now, and whether that is one of your presets.
-/** @param {LayerRole} role */
 function renderPresetCard(role) {
   const layer = state.config.layers[role];
   const isSaved = isSavedPreset(role);
@@ -49,10 +48,6 @@ export function storePresets(role) {
   renderPresetList(role);
 }
 
-/**
- * @param {LayerRole} role
- * @param {string} name
- */
 function deletePreset(role, name) {
   delete state.presets[role][name];
   // The layer keeps its bands. It is no longer a saved preset, so Save asks for a name again.

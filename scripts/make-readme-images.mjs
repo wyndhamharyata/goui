@@ -30,38 +30,68 @@ function escapeText(text) {
   return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
-function rect({ x = 0, y = 0, width, height, fill = palette.panel, stroke = "", radius = 0, strokeWidth = 1 }) {
+/**
+ * @param {{ x?: number, y?: number, width: number, height: number, fill?: string, stroke?: string, radius?: number, strokeWidth?: number }} options
+ * @returns {string}
+ */
+function rect(options) {
+  const { x = 0, y = 0, width, height, fill = palette.panel, stroke = "", radius = 0, strokeWidth = 1 } = options;
   const outline = stroke ? ` stroke="${stroke}" stroke-width="${strokeWidth}"` : "";
   return `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${radius}" fill="${fill}"${outline}/>`;
 }
 
-function circle({ cx, cy, r, fill = "none", stroke = "", strokeWidth = 2 }) {
+/**
+ * @param {{ cx: number, cy: number, r: number, fill?: string, stroke?: string, strokeWidth?: number }} options
+ * @returns {string}
+ */
+function circle(options) {
+  const { cx, cy, r, fill = "none", stroke = "", strokeWidth = 2 } = options;
   const outline = stroke ? ` stroke="${stroke}" stroke-width="${strokeWidth}"` : "";
   return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}"${outline}/>`;
 }
 
 // A run of text. The anchor puts the middle or the end of the run at x.
-function text({ x, y, content, size = 13, fill = palette.text, weight = 400, font = bodyFont, anchor = "start" }) {
+/**
+ * @param {{ x: number, y: number, content: string, size?: number, fill?: string, weight?: number, font?: string, anchor?: string }} options
+ * @returns {string}
+ */
+function text(options) {
+  const { x, y, content, size = 13, fill = palette.text, weight = 400, font = bodyFont, anchor = "start" } = options;
   return `<text x="${x}" y="${y}" font-family="${font}" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}">${escapeText(content)}</text>`;
 }
 
 // A right-pointing arrow from one x to another, on one line.
+/**
+ * @param {number} fromX
+ * @param {number} toX
+ * @param {number} y
+ * @param {string} [color]
+ * @returns {string}
+ */
 function arrow(fromX, toX, y, color = palette.muted) {
   return `<path d="M${fromX} ${y} H${toX}" stroke="${color}" stroke-width="1.6" fill="none"/>`
     + `<path d="M${toX} ${y} l-6 -3.5 v7 z" fill="${color}"/>`;
 }
 
+/**
+ * @param {import("./icon-geometry.mjs").RoundedRect} box
+ * @param {string} fill
+ * @returns {string}
+ */
+function drawIconBox(box, fill) {
+  return rect({ x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top, radius: box.radius, fill });
+}
+
 // The goui icon with the inset of the real icon, so the pictures show the padding the store asks for.
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} size
+ * @returns {string}
+ */
 function icon(x, y, size) {
   const { tile, bars } = layOutIcon(x, y, size);
-  /**
-   * @param {import("./icon-geometry.mjs").RoundedRect} box
-   * @param {string} fill
-   * @returns {string}
-   */
-  const draw = (box, fill) => rect({ x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top, radius: box.radius, fill });
-
-  return draw(tile, "url(#tile)") + bars.map((bar) => draw(bar, "#ffffff")).join("");
+  return drawIconBox(tile, "url(#tile)") + bars.map((bar) => drawIconBox(bar, "#ffffff")).join("");
 }
 
 const defs = `<defs>
@@ -71,7 +101,15 @@ const defs = `<defs>
   <clipPath id="boxClip"><rect x="0" y="0" width="176" height="92" rx="12"/></clipPath>
 </defs>`;
 
-function frame(width, height, content, { background = palette.background } = {}) {
+/**
+ * @param {number} width
+ * @param {number} height
+ * @param {string} content
+ * @param {{ background?: string }} [options]
+ * @returns {string}
+ */
+function frame(width, height, content, options = {}) {
+  const { background = palette.background } = options;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img">`
     + defs + rect({ x: 0, y: 0, width, height, fill: background }) + content + "</svg>";
 }
@@ -81,6 +119,13 @@ function puzzleGlyph(x, y, size) {
   return `<g transform="translate(${x} ${y}) scale(${scale})"><path fill="#c4c7c5" d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-2 .9-2 2v3.8h1.5c1.49 0 2.7 1.21 2.7 2.7S4.99 16.2 3.5 16.2H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7s2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z"/></g>`;
 }
 
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} size
+ * @param {string} color
+ * @returns {string}
+ */
 function pinGlyph(x, y, size, color) {
   const scale = size / 24;
   return `<g transform="translate(${x} ${y}) scale(${scale})"><path fill="${color}" d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h6v7l1 1 1-1v-7h6v-2c-1.66 0-3-1.34-3-3z"/></g>`;
@@ -91,17 +136,37 @@ function downloadGlyph(x, y, size) {
   return `<g transform="translate(${x} ${y}) scale(${scale})"><path d="M7 0 h2 v6 h3 l-4 4.5 -4-4.5 h3 z" fill="#ffffff"/><rect x="1" y="12" width="14" height="2" fill="#ffffff"/></g>`;
 }
 
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} size
+ * @param {string} color
+ * @returns {string}
+ */
 function folderGlyph(x, y, size, color) {
   const scale = size / 24;
   return `<g transform="translate(${x} ${y}) scale(${scale})"><path fill="${color}" d="M4 4h6l2 3h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></g>`;
 }
 
+/**
+ * @param {number} x
+ * @param {number} y
+ * @returns {string}
+ */
 function cursor(x, y) {
   return `<g transform="translate(${x} ${y})"><path d="M0 0 l13 10.5 -6 0.7 3.2 6.8 -2.9 1.3 -3.1-6.9 -4.2 4z" fill="#ffffff" stroke="#000000" stroke-width="1.2"/></g>`;
 }
 
 // The tab bar and toolbar of a browser window, as the guide draws it.
-function browserChrome(x, y, width, { tabTitle = "Lofi radio", url = "radio.example.com", showGoui = false, showOnBadge = false, highlight = "", cursorAt = null } = {}) {
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} width
+ * @param {{ tabTitle?: string, url?: string, showGoui?: boolean, showOnBadge?: boolean, highlight?: string, cursorAt?: { x: number, y: number } | null }} [options]
+ * @returns {string}
+ */
+function browserChrome(x, y, width, options = {}) {
+  const { tabTitle = "Lofi radio", url = "radio.example.com", showGoui = false, showOnBadge = false, highlight = "", cursorAt = null } = options;
   const parts = [];
   const tabHeight = 34;
   parts.push(rect({ x, y, width, height: tabHeight, radius: 10, fill: "#202124" }));
@@ -179,6 +244,12 @@ function stepCard(x, y, width, step) {
 }
 
 // The extensions page with Developer mode on and its Load unpacked button.
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} width
+ * @returns {string}
+ */
 function pictureLoadUnpacked(x, y, width) {
   const height = 158;
   const parts = [rect({ x, y, width, height, radius: 10, fill: palette.panelRaised })];

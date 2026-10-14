@@ -73,6 +73,7 @@ function applyConfig(next) {
     buildChain();
     return;
   }
+
   if (playedSound.enabled) updateBandNodes();
 }
 
@@ -101,10 +102,6 @@ function sendTelemetry() {
   trySendMessage({ type: messageTypes.audioTelemetry, levelDb, spectrumDb });
 }
 
-/**
- * @param {string} streamId
- * @returns {Promise<AudioReply>}
- */
 async function start(streamId) {
   await stop();
   mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -150,6 +147,8 @@ const handlers = new Map([
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   const handle = message && handlers.get(message.type);
   if (!handle) return false;
+
   handle(message).then(respond, (error) => respond({ ok: false, error: error.message }));
+
   return true;
 });

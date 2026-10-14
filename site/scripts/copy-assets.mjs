@@ -3,19 +3,17 @@ import { cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const repo = "..";
 
-/**
- * @param {string} source
- * @returns {{ text: string, blockCount: number }}
- */
 function runBlocksOnTheirOwnPage(source) {
   const lines = source.split("\n");
   let blockCount = 0;
   for (let index = 0; index < lines.length; index += 1) {
     if (lines[index] !== "{") continue;
+
     const end = lines.indexOf("}", index + 1);
     const body = lines.slice(index + 1, end).join("\n");
     const found = body.match(/byId\("([a-z]+)-/) ?? body.match(/mountTabs\("([a-z]+)-/);
     if (!found) continue;
+
     blockCount += 1;
     lines[index] = `if (byId("${found[1]}-head")) {`;
   }

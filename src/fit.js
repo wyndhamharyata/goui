@@ -44,10 +44,6 @@ function measureMissDbSquared(bands, curveDb) {
   return meanSquare(missesDb);
 }
 
-/**
- * @param {Band} band
- * @returns {Knob[]}
- */
 function makeKnobs(band) {
   const knobs = [{ band, key: "gainDb", min: maxFitCutDb, max: maxFitBoostDb, step: 1, isLog: false }];
   if (band.type === "PK") {
@@ -60,12 +56,6 @@ function makeKnobs(band) {
 }
 
 // A frequency or a Q moves in octaves, so a step means the same at 50 Hz and at 5 kHz.
-/**
- * @param {Knob} knob
- * @param {number} value
- * @param {number} direction
- * @returns {number}
- */
 function moveKnob(knob, value, direction) {
   const moved = knob.isLog ? value * octavesToRatio(direction * knob.step) : value + (direction * knob.step);
   return clamp(moved, knob.min, knob.max);
@@ -80,10 +70,6 @@ function refine(bands, curveDb) {
   const knobs = bands.flatMap(makeKnobs);
   const smallestStep = 0.01;
   let error = measureMissDbSquared(bands, curveDb);
-  /**
-   * @param {Knob} knob
-   * @returns {boolean}
-   */
   const tryStep = (knob) => {
     const before = knob.band[knob.key];
     for (const direction of [1, -1]) {
@@ -95,6 +81,7 @@ function refine(bands, curveDb) {
       }
     }
     knob.band[knob.key] = before;
+
     return false;
   };
   for (let round = 0; round < maxRefineRounds && knobs.some((knob) => knob.step > smallestStep); round += 1) {
@@ -127,6 +114,7 @@ export function fitTargetChange(from, to) {
     }
     const missDb = curveDb[worst] - playedDb[worst];
     if (Math.abs(missDb) < closeEnoughDb) break;
+
     bands.push({ on: true, type: "PK", frequencyHz: sweepHz[worst], gainDb: clamp(missDb, maxFitCutDb, maxFitBoostDb), q: newPeakQ });
     refine(bands, curveDb);
   }

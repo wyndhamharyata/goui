@@ -1,6 +1,6 @@
 // The Listen graph and the Tune graph, and the zoom and tall buttons they share.
 import { byId } from "./dom.js";
-import { makeGraph } from "../graph/graph.js";
+import { EqGraph } from "../graph/graph.js";
 import { onRefresh } from "./refresh.js";
 import { addBandToLayer, commitBandEdit, isEqOff, listBandEntries, listCurveBands, listCurveLayers, readSelectedIndex, readSelectedRole, selectBand } from "./sound.js";
 import { state } from "./state.js";
@@ -22,8 +22,8 @@ const graphHooks = {
 
 // The Listen graph is a preview. It matches the Tune graph in size and follows its zoom and turn.
 const graphHeights = { height: 210, tallHeight: 440 };
-const listenGraph = makeGraph(byId("listenGraph"), { ...graphHeights, interactive: false }, graphHooks);
-export const tuneGraph = makeGraph(byId("tuneGraph"), { ...graphHeights, interactive: true }, graphHooks);
+const listenGraph = new EqGraph(byId("listenGraph"), { ...graphHeights, interactive: false }, graphHooks);
+export const tuneGraph = new EqGraph(byId("tuneGraph"), { ...graphHeights, interactive: true }, graphHooks);
 export const graphs = [listenGraph, tuneGraph];
 
 /** @returns {void} */

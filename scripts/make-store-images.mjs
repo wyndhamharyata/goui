@@ -65,6 +65,15 @@ async function screenshots() {
 }
 
 /**
+ * @param {import("./icon-geometry.mjs").RoundedRect} box
+ * @param {string} fill
+ * @returns {string}
+ */
+function drawIconBox(box, fill) {
+  return `<rect x="${box.left}" y="${box.top}" width="${box.right - box.left}" height="${box.bottom - box.top}" rx="${box.radius}" fill="${fill}"/>`;
+}
+
+/**
  * @param {number} x
  * @param {number} y
  * @param {number} size
@@ -72,14 +81,7 @@ async function screenshots() {
  */
 function gouiTile(x, y, size) {
   const { tile, bars } = layOutIcon(x, y, size);
-  /**
-   * @param {import("./icon-geometry.mjs").RoundedRect} box
-   * @param {string} fill
-   * @returns {string}
-   */
-  const draw = (box, fill) => `<rect x="${box.left}" y="${box.top}" width="${box.right - box.left}" height="${box.bottom - box.top}" rx="${box.radius}" fill="${fill}"/>`;
-
-  return draw(tile, "url(#tile)") + bars.map((bar) => draw(bar, "#ffffff")).join("");
+  return drawIconBox(tile, "url(#tile)") + bars.map((bar) => drawIconBox(bar, "#ffffff")).join("");
 }
 
 /**
@@ -100,6 +102,12 @@ function frame(width, height, content) {
 }
 
 // A smooth EQ curve across the tile, drawn from a few real bands.
+/**
+ * @param {number} width
+ * @param {number} height
+ * @param {number} lift
+ * @returns {string}
+ */
 function curvePath(width, height, lift) {
   const mid = height / 2;
   return [

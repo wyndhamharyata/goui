@@ -81,13 +81,11 @@ function mapLayers(change) {
 }
 
 // Level match plays the preamp the EQ uses with every band off. Auto would set 0 dB for no bands.
-/** @returns {Config} */
 function makePreampOnlyConfig() {
   const layers = mapLayers((layer) => ({ ...layer, on: false }));
   return { ...state.config, layers, sliders: flatSliders, autoPreamp: false, preampDb: makePlayedSound(state.config).preampDb };
 }
 
-/** @returns {Config} */
 function makeSoloConfig() {
   const layers = mapLayers((layer) => ({ ...layer, on: true, bands: layer.bands.map((band) => ({ ...band, on: band === state.soloBand })) }));
   return { ...state.config, layers, sliders: flatSliders };
@@ -97,6 +95,7 @@ function makeSoloConfig() {
 /** @returns {Config} */
 export function makeHeardConfig() {
   if (state.isComparing) return state.isLevelMatched ? makePreampOnlyConfig() : { ...state.config, enabled: false };
+
   return state.soloBand ? makeSoloConfig() : state.config;
 }
 
@@ -188,6 +187,7 @@ export function replaceLayer(sound, role) {
 /** @param {boolean} isOn */
 export function setComparing(isOn) {
   if (state.isComparing === isOn) return;
+
   state.isComparing = isOn;
   byId("compare").classList.toggle("on", isOn);
   sendAudio();

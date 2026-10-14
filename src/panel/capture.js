@@ -29,7 +29,6 @@ export function applyCaptureState(capture) {
   byId("power").title = state.isPopupTabHeard ? "Turn goui off on this tab" : "Turn goui on for this tab";
 }
 
-/** @param {{ levelDb: number, spectrumDb: number[] }} message */
 function applyTelemetry(message) {
   byId("level").textContent = message.levelDb <= silenceDb ? "--" : message.levelDb.toFixed(1);
   // Each reading is raw. Blending with the last frame keeps the spectrum calm to look at.
@@ -48,6 +47,7 @@ export function wireMessages() {
       if (message.state.isCapturing) sendAudio();
     }
     if (message && message.type === messageTypes.audioTelemetry) applyTelemetry(message);
+
     return false;
   });
 }

@@ -45,12 +45,6 @@ export function drawSpectrum(view, frequencies, spectrumDb) {
 }
 
 // The tall view mirrors the spectrum and tilts it 3 dB per octave upright, so it spans 90 dB, not 100.
-/**
- * @param {View} view
- * @param {Float32Array} frequencies
- * @param {number[]} spectrumDb
- * @returns {SVGElement}
- */
 function drawMirroredSpectrum(view, frequencies, spectrumDb) {
   const spanDb = 90;
   const rise = view.size.plotWidth * 0.45;

@@ -16,11 +16,6 @@ const families = [
   ["LMG 5128 0.6 without bass"],
 ];
 
-/**
- * @param {number[]} frequenciesHz
- * @param {number[]} levelsDb
- * @returns {number[]}
- */
 function resample(frequenciesHz, levelsDb) {
   const curve = [];
   for (const frequencyHz of logSweepHz(sweepPointCount)) {
@@ -37,10 +32,6 @@ function resample(frequenciesHz, levelsDb) {
   return curve;
 }
 
-/**
- * @param {string} label
- * @returns {Promise<{ frequenciesHz: number[], levelsDb: number[] }>}
- */
 async function readTargetFile(label) {
   const text = await (await fetch(`${repo}/targets/${encodeURIComponent(label)}.csv`)).text();
   const frequenciesHz = [];

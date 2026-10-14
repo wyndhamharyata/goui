@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { extname, join } from "node:path";
 import { tokenize } from "espree";
+import { findLayoutProblems, layoutMessages } from "./layout-rules.mjs";
 
 /** @typedef {{ text: string, kind: string, line: number }} Piece */
 
@@ -28,6 +29,8 @@ const bannedNames = new Set([
 ]);
 
 const causalWords = new Set(["because", "hence", "therefore"]);
+// design/ holds throwaway mocks. ESLint skips them too, so only their words are checked.
+const layoutSkippedFolder = "design";
 // site/public holds copies that the site's npm run assets makes, so only the originals are read.
 const skippedPaths = new Set([join("site", "public")]);
 const skippedFolders = new Set([".build", ".git", ".sst", ".wrangler", "dist", "node_modules", "playwright-report", "test-results"]);
@@ -35,7 +38,7 @@ const skippedFolders = new Set([".build", ".git", ".sst", ".wrangler", "dist", "
 const skippedFiles = new Set([
   "DEPENDENCIES.md",
   "package-lock.json",
-  join("scripts", "check-words.mjs"),
+  join("scripts", "check-rules.mjs"),
 ]);
 
 /**
@@ -67,41 +70,7 @@ function readScript(source) {
     pieces.push({ text: comment.value, kind: "comment", line: comment.loc.start.line });
   }
 
-  return pieces.concat(findLongComments(tokens.comments), findCrowdedReturns(source));
-}
-
-// A function of more than three lines keeps a blank line above its last return.
-/**
- * @param {string} source
- * @returns {Piece[]}
- */
-function findCrowdedReturns(source) {
-  const lines = source.split("\n");
-  const pieces = [];
-  let start = -1;
-  lines.forEach((text, index) => {
-    const isStart = /^(export )?(async )?function /.test(text) && text.endsWith("{");
-    if (isStart) start = index;
-    const isEnd = text === "}" && start >= 0;
-    if (!isEnd) return;
-
-    const bodyLength = index - start - 1;
-    const isCrowded = bodyLength > 3 && lines[index - 1].startsWith("  return") && lines[index - 2].trim() !== "";
-    if (isCrowded) pieces.push({ text: "", kind: "crowdedReturn", line: index });
-    start = -1;
-  });
-
   return pieces;
-}
-
-// Rule 3 keeps a comment to one line. A second line comment right under the first breaks it.
-/**
- * @param {{ type: string, loc: { start: { line: number } } }[]} comments
- * @returns {Piece[]}
- */
-function findLongComments(comments) {
-  const lines = new Set(comments.filter((comment) => comment.type === "Line").map((comment) => comment.loc.start.line));
-  return [...lines].filter((line) => lines.has(line - 1)).map((line) => ({ text: "", kind: "longComment", line }));
 }
 
 // Splitting on every backtick also blanks fenced blocks, since a fence has an odd count of them.
@@ -131,8 +100,7 @@ function findPunctuationProblems(text, kind) {
 }
 
 function findProblems(text, kind) {
-  if (kind === "longComment") return ["comment runs over one line"];
-  if (kind === "crowdedReturn") return ["no blank line above the last return"];
+  if (layoutMessages[kind]) return [layoutMessages[kind]];
   const words = text.replaceAll(/([a-z])([A-Z])/g, "$1 $2").toLowerCase().split(/[^a-z]+/);
   const spaced = ` ${words.join(" ")} `;
   const problems = [];
@@ -170,7 +138,12 @@ for (const path of listFiles(".")) {
   const read = readers[extname(path)];
   if (!read || skippedFiles.has(path)) continue;
 
-  for (const piece of read(readFileSync(path, "utf8"))) {
+  const source = readFileSync(path, "utf8");
+  const pieces = read(source);
+  const hasLayoutRules = (path.endsWith(".js") || path.endsWith(".mjs")) && !path.startsWith(layoutSkippedFolder);
+  if (hasLayoutRules) pieces.push(...findLayoutProblems(source));
+
+  for (const piece of pieces) {
     for (const problem of findProblems(piece.text, piece.kind)) {
       console.log(`${path}:${piece.line} ${problem}`);
       problemCount += 1;
@@ -179,6 +152,6 @@ for (const path of listFiles(".")) {
 }
 
 if (problemCount > 0) {
-  console.log(`${problemCount} problems. CLAUDE.md rules 2, 3 and 6 explain each one.`);
+  console.log(`${problemCount} problems. CLAUDE.md rules 2, 3, 6 and 10 explain each one.`);
   process.exit(1);
 }

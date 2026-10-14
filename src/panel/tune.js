@@ -13,11 +13,6 @@ import { state } from "./state.js";
 
 const gainStepDb = 0.5;
 
-/**
- * @param {import("../graph/graph.js").BandEntry} entry
- * @param {number} index
- * @returns {HTMLElement}
- */
 function makeChip(entry, index) {
   const classNames = ["chip"];
   if (entry.band === state.selectedBand) classNames.push("on");
@@ -40,13 +35,10 @@ function renderChips() {
   byId("chips").replaceChildren(...rows);
 }
 
-/**
- * @param {Band} band
- * @returns {string}
- */
 function describeQ(band) {
   if (band.type === "PK") return `Q, ${qToOctaves(band.q).toFixed(1)} octaves wide`;
   if (bandTypeDetails[band.type].node.endsWith("shelf")) return "Q, not used by a shelf yet";
+
   return "Q";
 }
 
@@ -81,11 +73,6 @@ export function renderInspector() {
   byId("qHint").textContent = describeQ(band);
 }
 
-/**
- * @param {import("../graph/graph.js").BandEntry} entry
- * @param {number} index
- * @returns {HTMLElement}
- */
 function makeTableRow({ band }, index) {
   const number = makeElement("span", { className: "number", text: index + 1, style: { color: typeColor[band.type] } });
   const gain = hasGain(band.type) ? formatDb(band.gainDb) : "";
@@ -121,6 +108,7 @@ export function wireTune() {
       addBandToLayer(chip.dataset.add, newBandFrequencyHz, 0);
       return;
     }
+
     // A second press on the chosen chip unselects it.
     const index = Number(chip.dataset.index);
     selectBand(index === readSelectedIndex() ? -1 : index);
@@ -132,12 +120,14 @@ export function wireTune() {
   byId("inspector").addEventListener("click", (event) => {
     const button = event.target.closest("[data-step]");
     if (!button) return;
+
     bandSteps[button.dataset.step](state.selectedBand, Number(button.dataset.direction));
     commitBandEdit();
   });
   byId("inspector").addEventListener("input", (event) => {
     const setBandField = bandFieldSetters[event.target.id];
     if (!setBandField) return;
+
     setBandField(state.selectedBand, Number(event.target.value.replace(",", ".")));
     commitBandEdit();
   });
@@ -149,6 +139,7 @@ export function wireTune() {
       renderInspector();
       return;
     }
+
     state.selectedBand.type = button.dataset.type;
     commitBandEdit();
   });

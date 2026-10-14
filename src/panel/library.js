@@ -58,6 +58,7 @@ function applyAutoEqText(role, text, name, source) {
     showHint(role, "No AutoEQ filters found in that text.");
     return;
   }
+
   replaceLayer({ name, source, bands: parsed.bands, preampDb: parsed.preampDb }, role);
   showHint(role, `Applied ${describeBandCount(parsed.bands)} to ${layerLabels[role]}. Press Save to keep it.`);
 }
@@ -86,14 +87,12 @@ function fillSaveName(role, action) {
   partOf(role, "save-name").focus();
 }
 
-/** @param {LayerRole} role */
 function fillExportText(role) {
   const bands = readBands(state.config.layers[role]);
   partOf(role, "text").value = toAutoEq({ preampDb: autoPreampDb(bands), bands });
   showHint(role, `${layerLabels[role]} alone, as AutoEQ text. Copy it out.`);
 }
 
-/** @param {LayerRole} role */
 function emptyPasteBox(role) {
   const text = partOf(role, "text");
   text.value = "";
@@ -118,7 +117,6 @@ export function toggleLibraryAction(role, action) {
   if (openAction) fillActionRow[openAction](role, openAction);
 }
 
-/** @param {LayerRole} role */
 function closeLibraryAction(role) {
   if (state.openActions[role]) toggleLibraryAction(role, state.openActions[role]);
 }
@@ -147,10 +145,6 @@ const libraryActions = {
   },
 };
 
-/**
- * @param {LayerRole} role
- * @param {File} file
- */
 async function importFile(role, file) {
   const dot = file.name.lastIndexOf(".");
   const name = dot > 0 ? file.name.slice(0, dot) : file.name;

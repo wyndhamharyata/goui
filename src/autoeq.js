@@ -49,10 +49,6 @@ export function loadTargets() {
  * @returns {RigFamily | undefined}
  */
 export function findFamily(families, item) {
-  /**
-   * @param {{ source: string, form: string, rig?: string }} each
-   * @returns {boolean}
-   */
   const suits = (each) => each.source === item.source && each.form === item.form && (!each.rig || each.rig === item.rig);
 
   return families.find((family) => family.measurements.some(suits));
@@ -82,10 +78,6 @@ export function describeMeasurement(item, family) {
   return parts.join(" · ");
 }
 
-/**
- * @param {string} text
- * @returns {AutoEqItem[]}
- */
 function readIndex(text) {
   const items = [];
   const countByName = new Map();
@@ -96,6 +88,7 @@ function readIndex(text) {
     const pathEnd = line.lastIndexOf(") by ");
     const isEntry = line.startsWith("- [") && nameEnd > 0 && pathEnd > nameEnd;
     if (!isEntry) continue;
+
     const name = line.slice(nameStart, nameEnd);
     items.push(makeAutoEqItem(name, line.slice(nameEnd + "](./".length, pathEnd), !countByName.has(name)));
     countByName.set(name, (countByName.get(name) || 0) + 1);
@@ -110,6 +103,7 @@ function readIndex(text) {
 /** @returns {Promise<AutoEqItem[]>} */
 export async function loadAutoEqIndex() {
   if (autoEqItems) return autoEqItems;
+
   const cached = await chrome.storage.local.get(["autoEqIndex", "autoEqIndexAt"]);
   const indexLifetimeMs = 7 * 24 * 60 * 60 * 1000;
   const isFresh = cached.autoEqIndexAt && Date.now() - cached.autoEqIndexAt < indexLifetimeMs;
@@ -134,23 +128,40 @@ export async function fetchHeadphone(item, targets, target) {
   const file = encodeURIComponent(`${item.name} ParametricEQ.txt`);
   const response = await fetch(`${autoEqBase}${item.path}/${file}`).catch(() => null);
   if (!response || !response.ok) return null;
+
   const parsed = parseAutoEq(await response.text());
   const family = findFamily(targets.families, item);
   if (!family) return parsed;
 
   const autoEqTarget = readAutoEqTarget(family);
   const chosen = family.labels.includes(target) ? target : autoEqTarget;
-  /**
-   * @param {string} label
-   * @returns {import("./fit.js").TargetCurve}
-   */
-  const curveOf = (label) => targets.targets.find((curve) => curve.label === label);
-  const moveBands = chosen === autoEqTarget ? [] : fitTargetChange(curveOf(autoEqTarget), curveOf(chosen));
+  const moveBands = chosen === autoEqTarget ? [] : fitTargetChange(findTargetCurve(targets, autoEqTarget), findTargetCurve(targets, chosen));
 
   return { bands: [...parsed.bands, ...moveBands], preampDb: parsed.preampDb, autoEq: { name: item.name, path: item.path, target: chosen } };
 }
 
+/**
+ * @param {TargetData} targets
+ * @param {string} label
+ * @returns {import("./fit.js").TargetCurve}
+ */
+function findTargetCurve(targets, label) {
+  return targets.targets.find((curve) => curve.label === label);
+}
+
 /** @typedef {{ preampDb: number, bands: Band[] }} AutoEqFile */
+
+// "Gain -3.1" in an AutoEQ line reads as -3.1. A missing word gives undefined.
+/**
+ * @param {string[]} words
+ * @param {string} name
+ * @returns {number | undefined}
+ */
+function readNumberAfter(words, name) {
+  const at = words.findIndex((word) => word.toLowerCase() === name);
+
+  return at < 0 ? undefined : Number(words[at + 1]);
+}
 
 const typeAliases = { PEAK: "PK", PEAKING: "PK", LOWPASS: "LP", HIGHPASS: "HP", NOTCH: "NO" };
 
@@ -171,21 +182,13 @@ export function parseAutoEq(text) {
     }
     if (label !== "filter") continue;
 
-    /**
-     * @param {string} name
-     * @returns {number | undefined}
-     */
-    const readAfter = (name) => {
-      const at = words.findIndex((word) => word.toLowerCase() === name);
-      return at < 0 ? undefined : Number(words[at + 1]);
-    };
     const typeWord = (words[3] || "").toUpperCase();
     const type = typeAliases[typeWord] || typeWord;
-    const frequencyHz = readAfter("fc");
+    const frequencyHz = readNumberAfter(words, "fc");
     const isBand = bandTypes.includes(type) && Number.isFinite(frequencyHz);
     if (!isBand) continue;
 
-    bands.push({ on: words[2].toUpperCase() === "ON", type, frequencyHz, gainDb: readAfter("gain") ?? 0, q: readAfter("q") ?? butterworthQ });
+    bands.push({ on: words[2].toUpperCase() === "ON", type, frequencyHz, gainDb: readNumberAfter(words, "gain") ?? 0, q: readNumberAfter(words, "q") ?? butterworthQ });
   }
 
   return { bands, preampDb };

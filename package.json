@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "eslint . && node scripts/check-words.mjs",
+    "lint": "eslint . && node scripts/check-rules.mjs",
     "test": "playwright test",
     "icons": "node scripts/make-icons.mjs",
     "readme-images": "node scripts/make-readme-images.mjs",

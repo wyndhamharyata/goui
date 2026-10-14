@@ -13,12 +13,9 @@ const svgNamespace = "http://www.w3.org/2000/svg";
 // SVG spells these attributes in camelCase itself. Every other camelCase name becomes kebab-case.
 const camelCaseAttributes = new Set(["viewBox"]);
 
-/**
- * @param {string} name
- * @returns {string}
- */
 function toAttributeName(name) {
   if (camelCaseAttributes.has(name)) return name;
+
   return name.replaceAll(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
 

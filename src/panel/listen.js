@@ -25,10 +25,6 @@ function openLibrarySection(role) {
 }
 
 // The targets a headphone from AutoEQ can take. A family with one target shows its name only.
-/**
- * @param {AutoEqOrigin} autoEq
- * @returns {HTMLElement}
- */
 function makeTargetChoice(autoEq) {
   const family = findFamily(state.targetData.families, makeAutoEqItem(autoEq.name, autoEq.path));
   const choice = { className: "target", text: "Target", title: "The sound AutoEQ tunes your headphone toward" };
@@ -41,13 +37,7 @@ function makeTargetChoice(autoEq) {
   return makeElement("label", choice, [select]);
 }
 
-/**
- * @param {LayerRole} role
- * @param {Layer} layer
- * @returns {HTMLElement}
- */
 function makeLayerRow(role, layer) {
-  /** @param {Event} event */
   const switchLayer = (event) => {
     layer.on = event.target.checked;
     commit();
@@ -69,7 +59,6 @@ function makeLayerRow(role, layer) {
   return makeElement("div", { className: layer.on ? "layer" : "layer off" }, parts);
 }
 
-/** @returns {HTMLElement} */
 function makeAddEarButton() {
   const openEarPaste = () => {
     openLibrarySection("ear");
@@ -125,7 +114,6 @@ function toggleAutoPreamp() {
   commit();
 }
 
-/** @param {HTMLInputElement} slider */
 function readSlider(slider) {
   const valueDb = Number(slider.value);
   if (slider.id === "preamp") {

@@ -8,7 +8,7 @@ import { clamp, logInterpolate, logPosition } from "../shared/math.js";
 
 /** @typedef {{ width: number, height: number, left: number, top: number, plotWidth: number, plotHeight: number }} PlotSize */
 
-// The drawing is plain functions of a view: the zoom, the turn and the plot size. Only makeGraph holds state.
+// The drawing is plain functions of a view: the zoom, the turn and the plot size. Only EqGraph holds state.
 /** @typedef {{ zoom: string, isTall: boolean, size: PlotSize }} View */
 
 // The graph shows ±15 dB. A band beyond that draws at the edge.

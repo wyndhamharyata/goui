@@ -5,6 +5,7 @@ import { messageTypes, trySendMessage } from "./shared/messages.js";
 // The how-to page opens once, on the first install. A later reload of the folder does not open it.
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason !== "install") return;
+
   chrome.tabs.create({ url: chrome.runtime.getURL("src/intro.html") });
 });
 
@@ -13,6 +14,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() =>
 
 async function openOffscreenDocument() {
   if (await chrome.offscreen.hasDocument()) return;
+
   await chrome.offscreen.createDocument({
     url: "src/offscreen.html",
     reasons: ["USER_MEDIA"],
@@ -89,6 +91,7 @@ function setPanelPopupForTab(tabId) {
 /** @param {chrome.windows.Window} window */
 function usePopupInWindowWithoutPanel(window) {
   if (window.type === "normal") return;
+
   popupWindowIds.add(window.id);
   for (const tab of window.tabs || []) setPanelPopupForTab(tab.id);
 }
@@ -103,6 +106,7 @@ const knownWindows = chrome.windows.getAll({ populate: true, windowTypes: allWin
 // Chrome forgets the popup of a tab on each page load, so each load sets it again.
 chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
   if (change.status !== "loading") return;
+
   chrome.windows.get(tab.windowId, { populate: true, windowTypes: allWindowTypes }).then(usePopupInWindowWithoutPanel, () => {});
 });
 
@@ -134,12 +138,13 @@ chrome.action.onClicked.addListener(async (tab) => {
     publishCapture({ isCapturing: false, error: "Open a web page with audio, then click the goui icon." });
     return;
   }
+
   startCaptureForTab(tab).catch((error) => publishCapture({ isCapturing: false, error: error.message }));
 });
 
-/** @param {number} tabId */
 async function startCaptureFromPopup(tabId) {
   if (await isHeardTab(tabId)) return;
+
   const tab = await chrome.tabs.get(tabId);
   await startCaptureForTab(tab);
 }
@@ -149,6 +154,7 @@ chrome.runtime.onMessage.addListener((message) => {
   const isStart = message && message.type === messageTypes.captureStart && Number.isInteger(message.tabId);
   if (isStart) startCaptureFromPopup(message.tabId).catch((error) => publishCapture({ isCapturing: false, error: error.message }));
   if (message && message.type === messageTypes.captureStop) stopCapture();
+
   return false;
 });
 

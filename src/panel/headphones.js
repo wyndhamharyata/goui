@@ -45,6 +45,7 @@ async function loadHeadphone(item, hint, target) {
     hint.textContent = `${item.name} did not load. Check the network and try again.`;
     return false;
   }
+
   replaceLayer({ ...headphone, name: item.name, source: layerSources.autoEq }, "headphone");
   hint.textContent = "";
 
@@ -62,16 +63,12 @@ export function changeTarget(target) {
 function endHeadphoneSearch() {
   const box = partOf("headphone", "search");
   if (box.value.trim() === "") return;
+
   box.value = "";
   renderHeadphoneList();
   showTab("listen");
 }
 
-/**
- * @param {AutoEqItem} item
- * @param {HTMLElement} hint
- * @returns {HTMLElement}
- */
 function makeMeasurementItem(item, hint) {
   const detail = describeMeasurement(item, findFamily(state.targetData.families, item));
   const row = makeResultItem(item.name, detail, async () => {
@@ -84,11 +81,6 @@ function makeMeasurementItem(item, hint) {
   return row;
 }
 
-/**
- * @param {string} query
- * @param {HTMLElement} hint
- * @returns {Promise<AutoEqItem[]>}
- */
 async function findHeadphones(query, hint) {
   hint.textContent = "Searching AutoEQ...";
   const items = await loadAutoEqIndex().catch(() => null);
@@ -110,6 +102,15 @@ function showHeadphoneList(list, sections) {
 }
 
 // An empty box lists your headphone presets and the starter sounds. Typing also searches AutoEQ.
+/**
+ * @param {string} name
+ * @param {string} query
+ * @returns {boolean}
+ */
+function matchesQuery(name, query) {
+  return name.toLowerCase().includes(query);
+}
+
 /** @returns {Promise<void>} */
 export async function renderHeadphoneList() {
   const list = partOf("headphone", "results");
@@ -117,21 +118,17 @@ export async function renderHeadphoneList() {
   const query = partOf("headphone", "search").value.trim().toLowerCase();
   // A slower search for an older query must not draw over the newer one.
   list.dataset.query = query;
-  /**
-   * @param {string} name
-   * @returns {boolean}
-   */
-  const matches = (name) => name.toLowerCase().includes(query);
 
-  const saved = Object.keys(state.presets.headphone).filter(matches).map((name) => makePresetItem("headphone", name, endHeadphoneSearch));
+  const saved = Object.keys(state.presets.headphone).filter((name) => matchesQuery(name, query)).map((name) => makePresetItem("headphone", name, endHeadphoneSearch));
   if (saved.length === 0 && query === "") {
     saved.push(makeElement("p", { className: "hint", text: "Nothing saved yet. Pick your headphone, then press Save." }));
   }
-  const starter = starterPresets.filter((preset) => matches(preset.name)).map((preset) => {
+  const starter = starterPresets.filter((preset) => matchesQuery(preset.name, query)).map((preset) => {
     const place = () => {
       replaceLayer({ name: preset.name, source: layerSources.starter, bands: preset.bands }, "headphone");
       endHeadphoneSearch();
     };
+
     return makeResultItem(preset.name, describeBandCount(preset.bands), place);
   });
 
@@ -142,6 +139,7 @@ export async function renderHeadphoneList() {
 
   const headphones = await findHeadphones(query, hint);
   if (list.dataset.query !== query) return;
+
   showHeadphoneList(list, { saved, autoEq: headphones.map((item) => makeMeasurementItem(item, hint)), starter });
   if (list.children.length === 0) hint.textContent = "No sound by that name.";
 }

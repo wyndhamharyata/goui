@@ -153,10 +153,13 @@ async function runOnActiveTab(context, page, step) {
   const worker = await findWorker(context);
   await page.bringToFront();
   const details = { url: page.url(), title: await page.title() };
+
   return worker.evaluate(async ({ tabDetails, stepName }) => {
     const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
     const activeTab = { ...tab, ...tabDetails };
     if (stepName === "pressIcon") return chrome.action.onClicked.dispatch(activeTab);
+
+
     return chrome.action.getBadgeText({ tabId: activeTab.id });
   }, { tabDetails: details, stepName: step });
 }
@@ -298,10 +301,41 @@ export async function readSteadyLevel(page) {
     const reading = Number(await page.locator("#level").textContent());
     const isSettled = Number.isFinite(reading) && reading > silentBelowDb && previous !== null && Math.abs(reading - previous) < settledWithinDb;
     if (isSettled) return reading;
+
     previous = Number.isFinite(reading) ? reading : null;
     await page.waitForTimeout(readingIntervalMs);
   }
   throw new Error("The level did not settle.");
+}
+
+/**
+ * @param {Page} panel
+ * @returns {Promise<{ centerX: number, centerY: number }>}
+ */
+function readBandPointCenter(panel) {
+  return panel.locator("#tuneGraph circle[r='7']").first().evaluate((circle) => {
+    const bounds = circle.getBoundingClientRect();
+
+    return { centerX: bounds.x + (bounds.width / 2), centerY: bounds.y + (bounds.height / 2) };
+  });
+}
+
+// The graph draws again once the page scrollbar shows, so the first band point is read until it holds still.
+/**
+ * @param {Page} panel
+ * @returns {Promise<{ centerX: number, centerY: number }>}
+ */
+export async function readStillBandPoint(panel) {
+  let position = await readBandPointCenter(panel);
+  await expect.poll(async () => {
+    const next = await readBandPointCenter(panel);
+    const isStill = next.centerX === position.centerX && next.centerY === position.centerY;
+    position = next;
+
+    return isStill;
+  }).toBe(true);
+
+  return position;
 }
 
 // A level changed by expectedDb, to within 0.6 dB.

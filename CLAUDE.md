@@ -18,9 +18,9 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
   every file shares, and `refresh.js` lets each view register its redraw.
 - The side panel has three tabs: Listen, Tune and Library. From 900 px wide they show as three
   columns. `design/ux-proposals.html` holds the mock the panel follows.
-- `src/graph/` draws the curve as SVG. `graph.js` holds the state and the pointer events. Each other
-  file draws one part from a view. The graph uses the same Web Audio filters the engine plays, so the
-  picture matches the sound.
+- `src/graph/` draws the curve as SVG. `EqGraph` in `graph.js` holds the state and the pointer
+  events. Each other file draws one part from a view. The graph uses the same Web Audio filters the
+  engine plays, so the picture matches the sound.
 - Each layer has its own preset list, under `headphonePresets` and `earPresets`. A preset holds bands
   only. The sliders and the preamp stay as they are when you pick one. A sound saved before the two
   lists splits into a headphone preset and, when it holds ear bands, an ear preset under that name.
@@ -29,7 +29,7 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
   target, goui also plays the bands `fitTargetChange` in `src/fit.js` fits to the difference between
   the two targets.
 - Playwright runs the tests at side panel width. `tests/journeys.spec.js` holds the journeys and
-  `tests/helpers.js` the steps they share. ESLint and `scripts/check-words.mjs` run the lint.
+  `tests/helpers.js` the steps they share. ESLint and `scripts/check-rules.mjs` run the lint.
 
 ## Words
 
@@ -61,7 +61,7 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 
 | Command        | What it does                                                         |
 | -------------- | -------------------------------------------------------------------- |
-| `npm run lint` | ESLint, then the word check in `scripts/check-words.mjs`.            |
+| `npm run lint` | ESLint, then the word and layout checks in `scripts/check-rules.mjs`. |
 | `npm test`     | Playwright journeys in Chromium with the extension loaded.           |
 
 # Rules
@@ -143,7 +143,10 @@ Butterworth, gets a link to its explanation on the same line.
 - Return early. The main path comes last. Keep each `if` one level deep where you can.
 - Check a value once, where it enters: a storage read, an AutoEQ file, a message from another
   Chrome context, a field the user typed in. Code past that point trusts the value.
-- A blank line groups a block. One idea per block, about five statements.
+- A blank line groups a block. One idea per block, about five statements. Setup, such as the state
+  a drag starts with, is its own block, apart from the calls that act on it.
+- An early exit is its own block. An `if` that ends in `return`, `continue`, `break` or `throw` has
+  a blank line under it. Several exits in a row stay together. `npm run lint` checks it.
 - A function of more than three lines keeps a blank line above its last return. `npm run lint`
   checks it.
 - Name a compound condition before you test it: `const canDrag = isCapturing && !isLocked`.
@@ -157,6 +160,8 @@ Butterworth, gets a link to its explanation on the same line.
 ## 7. Functions, constants and files
 
 - When two or more places do the same work, pull it into one function. Two copies drift apart.
+- A function inside a function that is called twice moves to the top level, with its inputs as
+  parameters. `npm run lint` checks it. A class keeps state its methods share, as `EqGraph` does.
 - A one-line body counts when two copies could disagree, such as a formula, a selector or a rule
   about when something is off. A plain call with a new name does not count.
 - Write a named constant or a shared object type when two or more places use it.
@@ -201,9 +206,9 @@ Butterworth, gets a link to its explanation on the same line.
 
 ## 10. JSDoc gives types and nothing else.
 
-- A function gets a JSDoc block when two or more places use it, or when another file imports it.
-- A function also gets one when it passes data to a higher layer: a message to another Chrome
-  context, the reply to one, a hook the graph calls in the panel, or a fetch.
+- A top-level function gets a JSDoc block when another file imports it, or when two or more places
+  in its file use it. No other function gets one: not a function with one caller, and never a
+  function inside another function. A method follows the same rule.
 - The block holds one `@param {Type} name` for each parameter. It holds `@returns {Type}` when the
   function returns a value. An async function returns `Promise<Type>`. A function with no
   parameter and no return value needs no block.
@@ -213,8 +218,8 @@ Butterworth, gets a link to its explanation on the same line.
 - A type that two or more places use is a `@typedef` in the file that owns it.
   `src/shared/bands.js` owns the band types, and `src/shared/config.js` owns the layer and config
   types. Another file names them as `import("./shared/bands.js").Band`.
-- `npm run lint` checks that every export has a block, that each type parses and is known, and that
-  no block holds prose. A person checks the functions with two callers.
+- `npm run lint` checks that every export has a block, that each type parses and is known, that no
+  block holds prose, and that each block is on a function this rule gives one to.
 
 ## Differences from the global rules
 
@@ -236,5 +241,5 @@ Each one names the rule it breaks and the reason.
 - Six journeys end in text a person reads, not in a sound, against rule 8.2: the HD 600 result
   lines, the eqbyear button, the help page, the credits line, the first-run guide and a second
   press on a band chip. What they check has no sound of its own.
-- Each word list at the top of `scripts/check-words.mjs` has one reader, against rule 7.
+- Each word list at the top of `scripts/check-rules.mjs` has one reader, against rule 7.
   The lists are data. A person edits them there, next to each other, when rule 2 changes.

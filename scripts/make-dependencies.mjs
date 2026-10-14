@@ -4,13 +4,10 @@ import { join } from "node:path";
 
 const direct = new Set(Object.keys(JSON.parse(readFileSync("package.json", "utf8")).devDependencies || {}));
 
-/**
- * @param {Record<string, unknown>} manifest
- * @returns {string}
- */
 function readLicense(manifest) {
   if (manifest.license) return String(manifest.license);
   if (Array.isArray(manifest.licenses)) return manifest.licenses.map((entry) => entry.type).join(" OR ");
+
   return "not stated";
 }
 
@@ -18,12 +15,14 @@ function installedPackages() {
   const found = [];
   for (const entry of readdirSync("node_modules")) {
     if (entry.startsWith(".")) continue;
+
     const names = entry.startsWith("@")
       ? readdirSync(join("node_modules", entry)).map((name) => `${entry}/${name}`)
       : [entry];
     for (const name of names) {
       const file = join("node_modules", name, "package.json");
       if (!existsSync(file)) continue;
+
       const manifest = JSON.parse(readFileSync(file, "utf8"));
       found.push({ name, version: manifest.version, license: readLicense(manifest) });
     }

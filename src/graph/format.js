@@ -6,6 +6,7 @@
  */
 export function formatHz(frequencyHz) {
   if (frequencyHz >= 1000) return `${Math.round(frequencyHz / 100) / 10}k`;
+
   return `${Math.round(frequencyHz)}`;
 }
 

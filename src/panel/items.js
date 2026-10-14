@@ -37,6 +37,7 @@ export function makeResultItem(label, detail, onPick, onRemove) {
  */
 export function appendSection(list, title, items) {
   if (items.length === 0) return;
+
   list.append(makeElement("h4", { text: title }), ...items);
 }
 
