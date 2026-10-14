@@ -27,6 +27,7 @@ function savePreset(role, name) {
   layer.name = name;
   layer.source = layerSources.saved;
   layer.isEdited = false;
+
   closeLibraryAction(role);
   commit();
   storePresets(role);
