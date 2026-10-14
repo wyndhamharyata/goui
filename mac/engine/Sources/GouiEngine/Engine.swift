@@ -78,6 +78,10 @@ public final class Engine {
     path?.readMeters()
   }
 
+  public func readScope() -> ScopeReading? {
+    path?.readScope()
+  }
+
   private func finishStart(_ result: Result<BuiltAudioPath, any Error>, number: Int) {
     guard number == startNumber else {
       if case .success(var built) = result { built.teardown.runAll() }

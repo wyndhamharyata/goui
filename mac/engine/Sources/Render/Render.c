@@ -45,6 +45,9 @@ struct RenderState {
   _Atomic unsigned int tapChannelCountSeen;
   _Atomic float inputPeakLinear;
   _Atomic float outputPeakLinear;
+  // A ring the audio thread writes and the main thread copies. A copy may catch a few frames of a newer callback.
+  _Atomic float scope[scopeFrameCount];
+  _Atomic unsigned int scopeEnd;
 };
 
 typedef struct {
@@ -105,6 +108,13 @@ void renderReadMeters(RenderState *state, RenderMeters *meters) {
   meters->tapChannelCount = atomic_load_explicit(&state->tapChannelCountSeen, memory_order_relaxed);
   meters->inputPeakLinear = atomic_exchange_explicit(&state->inputPeakLinear, 0, memory_order_relaxed);
   meters->outputPeakLinear = atomic_exchange_explicit(&state->outputPeakLinear, 0, memory_order_relaxed);
+}
+
+void renderReadScope(RenderState *state, float *samples) {
+  unsigned int end = atomic_load_explicit(&state->scopeEnd, memory_order_acquire);
+  for (unsigned int index = 0; index < scopeFrameCount; index += 1) {
+    samples[index] = atomic_load_explicit(&state->scope[(end + index) % scopeFrameCount], memory_order_relaxed);
+  }
 }
 
 static void raisePeak(_Atomic float *peak, float value) {
@@ -215,8 +225,10 @@ OSStatus renderAudio(AudioObjectID device, const AudioTimeStamp *now, const Audi
   float inputPeakLinear = 0;
   float outputPeakLinear = 0;
   unsigned long long clippedSampleCount = 0;
+  unsigned int scopeEnd = atomic_load_explicit(&state->scopeEnd, memory_order_relaxed);
   for (UInt32 frame = 0; frame < frameCount; frame += 1) {
     float processed[maxTapChannelCount];
+    float mono = 0;
     bool isFading = state->fadingFromChain >= 0;
     double fadeShare = (double)(state->fadeFrame + 1) / state->fadeFrameCount;
     for (UInt32 channel = 0; channel < channelCount; channel += 1) {
@@ -228,13 +240,17 @@ OSStatus renderAudio(AudioObjectID device, const AudioTimeStamp *now, const Audi
       }
       processed[channel] = (float)result;
       float outputLevel = fabsf(processed[channel]);
+      mono += processed[channel];
       clippedSampleCount += outputLevel > 1.0f;
       inputPeakLinear = fmaxf(inputPeakLinear, fabsf(sample));
       outputPeakLinear = fmaxf(outputPeakLinear, outputLevel);
     }
     writeFrame(outputBuffers, outputBufferCount, frame, processed, channelCount);
+    atomic_store_explicit(&state->scope[scopeEnd], mono / (float)channelCount, memory_order_relaxed);
+    scopeEnd = (scopeEnd + 1) % scopeFrameCount;
     advanceFade(state);
   }
+  atomic_store_explicit(&state->scopeEnd, scopeEnd, memory_order_release);
   raisePeak(&state->inputPeakLinear, inputPeakLinear);
   raisePeak(&state->outputPeakLinear, outputPeakLinear);
   atomic_fetch_add_explicit(&state->clippedSampleCount, clippedSampleCount, memory_order_relaxed);

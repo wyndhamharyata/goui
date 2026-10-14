@@ -5,7 +5,8 @@
 
 CF_ASSUME_NONNULL_BEGIN
 
-enum { maxTapChannelCount = 16, maxBandCount = 32 };
+// scopeFrameCount is the fftSize of the extension's AnalyserNode, so the panel reads the same spectrum.
+enum { maxTapChannelCount = 16, maxBandCount = 32, scopeFrameCount = 8192 };
 
 // The eight Web Audio filters. goui's two kinds of shelf each play as the one Web Audio shelf.
 typedef CF_ENUM(int, BandKind) {
@@ -49,6 +50,9 @@ bool renderTrySetSound(RenderState *state, double preampDb, const RenderBand *_N
 
 // Reads the meters and starts the peaks again from silence.
 void renderReadMeters(RenderState *state, RenderMeters *meters);
+
+// Copies the last scopeFrameCount frames played, mixed to mono, oldest first.
+void renderReadScope(RenderState *state, float *samples);
 
 // The linear gain of one band at each frequency, from the same coefficients the audio plays.
 void renderBandResponse(RenderBand band, double sampleRateHz, const double *frequenciesHz, double *magnitudes,

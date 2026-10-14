@@ -1,7 +1,7 @@
-import { biquadQ, hasGain, logSweepHz, createBiquad } from "./shared/bands.js";
+import { biquadQ, hasGain, createBiquad } from "./shared/bands.js";
 import { toPlayedSound, sanitizeConfig } from "./shared/config.js";
 import { dbToLinear, linearToDb, rootMeanSquare } from "./shared/math.js";
-import { messageTypes, silenceDb, spectrumPointCount, trySendMessage } from "./shared/messages.js";
+import { messageTypes, silenceDb, toSpectrumDb, trySendMessage } from "./shared/messages.js";
 
 /** @typedef {import("./shared/messages.js").AudioReply} AudioReply */
 
@@ -16,9 +16,6 @@ let telemetryTimer;
 // The document stays open until the browser closes, so the last sound carries over to the next tab.
 /** @type {import("./shared/config.js").PlayedSound} */
 let playedSound = { enabled: true, preampDb: 0, bands: [] };
-
-// The panel reads these points back on the same log scale.
-const spectrumHz = logSweepHz(spectrumPointCount);
 
 /** @returns {import("./shared/bands.js").Band[]} */
 function listActiveBands() {
@@ -97,16 +94,7 @@ function readLevelDb(buffer) {
 function readSpectrum(bins) {
   analyserNode.getFloatFrequencyData(bins);
 
-  const hzPerBin = audioContext.sampleRate / analyserNode.fftSize;
-  const points = [];
-
-  for (const frequencyHz of spectrumHz) {
-    const bin = Math.min(Math.round(frequencyHz / hzPerBin), bins.length - 1);
-
-    points.push(Number.isFinite(bins[bin]) ? bins[bin] : silenceDb);
-  }
-
-  return points;
+  return toSpectrumDb(bins, audioContext.sampleRate / analyserNode.fftSize);
 }
 
 function sendTelemetry() {

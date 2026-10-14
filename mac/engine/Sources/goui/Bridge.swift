@@ -61,7 +61,7 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
     case "status":
       return describeStatus()
     case "meters":
-      return engine.readMeters().map(describeMeters)
+      return engine.readMeters().map { describeMeters($0, scope: engine.readScope()) }
     case "sound":
       guard let sound = request.sound, sound.preampDb.isFinite else { throw BridgeError(description: "A sound message needs a sound with a finite preampDb") }
 
@@ -137,13 +137,21 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
     }
   }
 
-  private func describeMeters(_ reading: MeterReading) -> [String: Any] {
-    [
+  // The scope goes as base64 of its Float32 bytes, far smaller and quicker than 8192 numbers.
+  private func describeMeters(_ reading: MeterReading, scope: ScopeReading?) -> [String: Any] {
+    var meters: [String: Any] = [
       "callbacksPerSecond": reading.callbacksPerSecond,
       "inputPeakDb": toDbfs(reading.inputPeakLinear) as Any,
       "outputPeakDb": toDbfs(reading.outputPeakLinear) as Any,
       "overloadCount": reading.overloadCount,
     ]
+    if let scope {
+      meters["scope"] = [
+        "samples": scope.samples.withUnsafeBytes { Data($0).base64EncodedString() },
+        "sampleRateHz": scope.sampleRateHz,
+      ]
+    }
+    return meters
   }
 }
 

@@ -5,7 +5,8 @@ const macAppUrl = "goui://app/";
 const macTabId = 1;
 // The guide pages are written for Chrome, so the Mac opens the homepage until it has its own guide.
 const macHomepageUrl = "https://goui.mwyndham.dev";
-const macLevelEveryMs = 100;
+// As often as the extension's offscreen document sends the level and spectrum.
+const macTelemetryEveryMs = 50;
 const macListeners = [];
 const macSession = {};
 
@@ -104,13 +105,15 @@ async function sendMessage(message) {
   }
 }
 
-async function sendLevel() {
+async function sendTelemetry() {
   if (document.visibilityState !== "visible" || macListeners.length === 0) return;
 
   const { messageTypes, silenceDb } = await importFromApp("src/shared/messages.js");
+  const { toTelemetry } = await importFromApp("mac/web/spectrum.js");
   const meters = await sendToMac({ type: "meters" });
+  const telemetry = meters?.scope ? toTelemetry(meters.scope) : { levelDb: silenceDb, spectrumDb: [] };
 
-  deliverToPanel({ type: messageTypes.audioTelemetry, levelDb: meters?.outputPeakDb ?? silenceDb, spectrumDb: [] });
+  deliverToPanel({ type: messageTypes.audioTelemetry, ...telemetry });
 }
 
 // The page takes the panel's width, so a wide panel shows three columns. It also stops the page's edge from bouncing.
@@ -165,6 +168,6 @@ window.chrome = {
   },
 };
 
-setInterval(sendLevel, macLevelEveryMs);
+setInterval(sendTelemetry, macTelemetryEveryMs);
 // The page's own height. Its scrollHeight never drops below the window, so the panel could only grow.
 new ResizeObserver(() => sendToMac({ type: "size", height: Math.ceil(document.documentElement.getBoundingClientRect().height) })).observe(document.documentElement);

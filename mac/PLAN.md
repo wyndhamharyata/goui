@@ -100,8 +100,7 @@ swaps to new filters without a lock and fades across about 20 ms, so a change do
 - The panel has no console on the Mac, so `chrome.js` sends its errors to the app's log.
 - The web view is built when the panel first opens. If it holds too much memory with the panel
   closed, the app can drop it on close and build it again on open.
-- Words about the tab read oddly on a Mac for now. They wait for the branding pass, with the level
-  and spectrum meters.
+- Words about the tab read oddly on a Mac for now. They wait for the branding pass.
 
 ## Install
 
@@ -184,6 +183,9 @@ Each step starts only when it is asked for, and ends with a commit.
   moment, louder, then drops back. A new output device or rate does the same. Building the new tap
   before taking the old one down would play both at once. **Quit goui** brings the sound back at
   full level and the item goes away. **Reload panel** loads the same page again, so nothing shows.
+- The level and spectrum show in the Mac panel. The audio callback keeps the last 8192 frames it
+  played, mixed to mono, and `mac/web/spectrum.js` reads them as the extension's `AnalyserNode`
+  does, 20 times a second. On the same samples it matches Chromium's spectrum to 0.0001 dB.
 
 ## Open questions
 

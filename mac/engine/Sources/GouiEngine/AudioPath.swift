@@ -22,6 +22,12 @@ public struct MeterReading {
   public let overloadCount: Int
 }
 
+public struct ScopeReading {
+  // The last frames played, mixed to mono, oldest first.
+  public let samples: [Float]
+  public let sampleRateHz: Double
+}
+
 // Undoes each built step in reverse order. A failed step is printed and the rest still run.
 struct Teardown: @unchecked Sendable {
   private var steps: [(name: String, run: () -> OSStatus)] = []
@@ -151,6 +157,14 @@ final class AudioPath {
       inputBufferCount: meters.inputBufferCount, tapChannelCount: meters.tapChannelCount,
       clippedSampleCount: meters.clippedSampleCount, overloadCount: overloadCount
     )
+  }
+
+  // Returns nil once the path has stopped.
+  func readScope() -> ScopeReading? {
+    guard let render else { return nil }
+    var samples = [Float](repeating: 0, count: Int(scopeFrameCount))
+    samples.withUnsafeMutableBufferPointer { renderReadScope(render, $0.baseAddress!) }
+    return ScopeReading(samples: samples, sampleRateHz: summary.sampleRateHz)
   }
 }
 
