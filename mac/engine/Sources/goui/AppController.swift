@@ -54,7 +54,12 @@ final class AppController: NSObject, WKNavigationDelegate {
     if config.isOn { engine.start() }
 
     buildMenu()
-    statusItem.button?.title = "goui"
+    // A template image takes the menu bar's own colour, in light mode and dark.
+    let menuBarIcon = Bundle.main.image(forResource: "menu-bar")
+    menuBarIcon?.isTemplate = true
+    statusItem.button?.image = menuBarIcon
+    statusItem.button?.title = menuBarIcon == nil ? "goui" : ""
+    statusItem.button?.setAccessibilityLabel("goui")
     statusItem.button?.target = self
     statusItem.button?.action = #selector(clickMenuBarItem)
     statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])

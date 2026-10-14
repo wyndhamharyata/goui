@@ -5,17 +5,21 @@
 // The tile fades from the first colour at the top to the second at the bottom.
 export const tileColors = ["#4a7ae0", "#8f52d8"];
 
-const barHeights = [0.4, 0.62, 0.48, 0.7];
 // The store asks for 96 px of artwork inside a 128 px icon, so 16 px stays clear on every side.
-const paddingRatio = 16 / 128;
+export const storePaddingRatio = 16 / 128;
+// A Mac app icon fills 824 of 1024 px, as Apple's icon grid has it.
+export const macPaddingRatio = 100 / 1024;
+
+const barHeights = [0.4, 0.62, 0.48, 0.7];
 
 /**
  * @param {number} x
  * @param {number} y
  * @param {number} size
+ * @param {number} [paddingRatio]
  * @returns {{ tile: RoundedRect, bars: RoundedRect[] }}
  */
-export function layOutIcon(x, y, size) {
+export function layOutIcon(x, y, size, paddingRatio = storePaddingRatio) {
   const padding = size * paddingRatio;
   const artwork = size - (2 * padding);
   const tile = { left: x + padding, top: y + padding, right: x + size - padding, bottom: y + size - padding, radius: artwork * 0.22 };

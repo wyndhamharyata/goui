@@ -1,8 +1,14 @@
 import { deflateSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { layOutIcon, tileColors } from "./icon-geometry.mjs";
+import { layOutIcon, macPaddingRatio, tileColors } from "./icon-geometry.mjs";
 
-const sizes = [16, 32, 48, 128];
+const extensionSizes = [16, 32, 48, 128];
+// iconutil takes each size at 1x and at 2x, and makes the Mac app icon from them.
+const macIconSizes = [16, 32, 128, 256, 512];
+const macIconFolder = "mac/icons/AppIcon.iconset";
+// A menu bar icon is 18 points, so 18 px and 36 px for a Retina screen.
+const menuBarSizes = [18, 36];
+const menuBarFillRatio = 0.85;
 const samplesPerAxis = 4;
 
 function crc32(buffer) {
@@ -91,9 +97,13 @@ function readRgb(hex) {
 }
 
 // A coloured tile with white bars reads on a light toolbar and on a dark one.
-function sampleColor(x, y, size) {
-  const { tile, bars } = layOutIcon(0, 0, size);
-
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {{ tile: import("./icon-geometry.mjs").RoundedRect, bars: import("./icon-geometry.mjs").RoundedRect[] }} layout
+ * @returns {number[]}
+ */
+function sampleTileColor(x, y, { tile, bars }) {
   if (!isInsideRoundedRect(x, y, tile)) return [0, 0, 0, 0];
   if (bars.some((bar) => isInsideRoundedRect(x, y, bar))) return [255, 255, 255, 255];
 
@@ -103,14 +113,37 @@ function sampleColor(x, y, size) {
   return [...tileColor, 255];
 }
 
-function samplePixel(x, y, size) {
+// macOS colours a menu bar icon itself, so the bars are black and only their alpha counts.
+function sampleBarColor(x, y, bars) {
+  return bars.some((bar) => isInsideRoundedRect(x, y, bar)) ? [0, 0, 0, 255] : [0, 0, 0, 0];
+}
+
+// The menu bar shows the bars alone, filling the icon, as other menu bar icons do.
+function layOutMenuBarBars(size) {
+  const { bars } = layOutIcon(0, 0, 1);
+  const left = bars[0].left;
+  const top = Math.min(...bars.map((bar) => bar.top));
+  const width = bars.at(-1).right - left;
+  const height = bars[0].bottom - top;
+  const scale = (size * menuBarFillRatio) / Math.max(width, height);
+  const offsetX = (size - (width * scale)) / 2;
+  const offsetY = (size - (height * scale)) / 2;
+
+  return bars.map((bar) => ({
+    left: offsetX + ((bar.left - left) * scale),
+    top: offsetY + ((bar.top - top) * scale),
+    right: offsetX + ((bar.right - left) * scale),
+    bottom: offsetY + ((bar.bottom - top) * scale),
+    radius: bar.radius * scale,
+  }));
+}
+
+function samplePixel(x, y, readColor) {
   const total = [0, 0, 0, 0];
 
   for (let sampleY = 0; sampleY < samplesPerAxis; sampleY += 1) {
     for (let sampleX = 0; sampleX < samplesPerAxis; sampleX += 1) {
-      const pointX = x + ((sampleX + 0.5) / samplesPerAxis);
-      const pointY = y + ((sampleY + 0.5) / samplesPerAxis);
-      const color = sampleColor(pointX, pointY, size);
+      const color = readColor(x + ((sampleX + 0.5) / samplesPerAxis), y + ((sampleY + 0.5) / samplesPerAxis));
 
       for (let channelIndex = 0; channelIndex < 4; channelIndex += 1) {
         total[channelIndex] += color[channelIndex];
@@ -123,23 +156,42 @@ function samplePixel(x, y, size) {
   return total.map((sum) => Math.round(sum / count));
 }
 
-for (const size of sizes) {
+/**
+ * @param {string} path
+ * @param {number} size
+ * @param {(x: number, y: number) => number[]} readColor
+ */
+function writeIcon(path, size, readColor) {
   const rgba = Buffer.alloc(size * size * 4);
 
   for (let y = 0; y < size; y += 1) {
-    for (let x = 0; x < size; x += 1) {
-      const color = samplePixel(x, y, size);
-      const offset = (((y * size) + x) * 4);
-
-      rgba[offset] = color[0];
-      rgba[offset + 1] = color[1];
-      rgba[offset + 2] = color[2];
-      rgba[offset + 3] = color[3];
-    }
+    for (let x = 0; x < size; x += 1) rgba.set(samplePixel(x, y, readColor), ((y * size) + x) * 4);
   }
 
-  mkdirSync("icons", { recursive: true });
-  writeFileSync(`icons/icon${size}.png`, encodePng(size, size, rgba));
+  writeFileSync(path, encodePng(size, size, rgba));
 }
 
-console.log("Wrote icons at 16, 32, 48 and 128 pixels.");
+mkdirSync("icons", { recursive: true });
+mkdirSync(macIconFolder, { recursive: true });
+
+for (const size of extensionSizes) {
+  const layout = layOutIcon(0, 0, size);
+
+  writeIcon(`icons/icon${size}.png`, size, (x, y) => sampleTileColor(x, y, layout));
+}
+
+for (const size of macIconSizes) {
+  for (const [scale, suffix] of [[1, ""], [2, "@2x"]]) {
+    const layout = layOutIcon(0, 0, size * scale, macPaddingRatio);
+
+    writeIcon(`${macIconFolder}/icon_${size}x${size}${suffix}.png`, size * scale, (x, y) => sampleTileColor(x, y, layout));
+  }
+}
+
+for (const [index, size] of menuBarSizes.entries()) {
+  const bars = layOutMenuBarBars(size);
+
+  writeIcon(`mac/icons/menu-bar${index === 0 ? "" : "@2x"}.png`, size, (x, y) => sampleBarColor(x, y, bars));
+}
+
+console.log("Wrote the extension icons at 16, 32, 48 and 128 px, the Mac app icon set and the menu bar icon.");
