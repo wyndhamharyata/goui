@@ -113,11 +113,11 @@ async function sendLevel() {
   deliverToPanel({ type: messageTypes.audioTelemetry, levelDb: meters?.outputPeakDb ?? silenceDb, spectrumDb: [] });
 }
 
-// The popup style holds the page at 400 px. Here the page takes the panel's width, so a wide panel shows three columns.
+// The page takes the panel's width, so a wide panel shows three columns. It also stops the page's edge from bouncing.
 document.addEventListener("DOMContentLoaded", () => {
   const style = document.createElement("style");
 
-  style.textContent = ".popup body { width: auto; }";
+  style.textContent = ".popup body { width: auto; } html, body { overscroll-behavior: none; }";
   document.head.append(style);
 });
 
