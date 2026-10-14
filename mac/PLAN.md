@@ -134,11 +134,18 @@ Each step starts only when it is asked for, and ends with a commit.
 5. Install. A script that builds the tarball, `install.sh` with the two plists, and the `goui`
    command.
 
+## Settled
+
+- A LaunchAgent with no window can ask for System Audio Recording. macOS names the agent's own
+  binary in the prompt, not the terminal or the tray. Until the person presses Allow, the engine
+  waits at the request and builds no tap. So the server reports a status that says it waits for
+  the permission. Once allowed, the agent played a test tone at -40.2 dBFS out at -46.2 with -6 dB
+  of gain, on a Bluetooth headphone at 44.1 kHz.
+- The permission follows the ad hoc signature, which changes with each build. A new build asks
+  again.
+
 ## Open questions
 
-- Which process macOS asks about for System Audio Recording when the server is a LaunchAgent inside
-  the app, and whether a LaunchAgent with no window can show the prompt at all. If it cannot, the
-  tray starts the first capture. A short check settles it before step 1.
 - How the Mac journeys run. Playwright cannot drive a `WKWebView`. One way is the panel in Chromium
   against the real server, with the server writing what it plays to a file the journey reads.
 - How the floating panel and the web view handle keyboard focus. Typing in the AutoEQ search must
