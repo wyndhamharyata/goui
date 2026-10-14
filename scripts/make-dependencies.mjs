@@ -37,7 +37,7 @@ const lines = [
   "",
   "This file is built by `npm run dependencies`. Every package below is a development tool for lint,",
   "test or build. None of them travel in the extension. The release zip holds the manifest, the src",
-  "folder and the icons, and nothing else.",
+  "and icons folders, the licence and the third party notices, and nothing else.",
   "",
   "A direct dependency is one named in `package.json`. The rest arrive with those.",
   "",
@@ -45,9 +45,10 @@ const lines = [
   "| --- | --- | --- | --- |",
 ];
 
-for (const { name, version, license } of installedPackages()) {
+const packages = installedPackages();
+for (const { name, version, license } of packages) {
   lines.push(`| \`${name}\` | ${version} | ${license} | ${direct.has(name) ? "yes" : ""} |`);
 }
 
 writeFileSync("DEPENDENCIES.md", `${lines.join("\n")}\n`);
-console.log(`DEPENDENCIES.md, ${lines.length - 11} packages.`);
+console.log(`DEPENDENCIES.md, ${packages.length} packages.`);

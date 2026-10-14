@@ -190,7 +190,7 @@ function listCurveLayers() {
   return listOnLayers(config);
 }
 
-// Solo follows the chosen band, so both go together.
+// Solo ends with the choice. Solo is kept as a position, so after a delete it would name another band.
 function unselectBand() {
   selectedIndex = -1;
   soloIndex = -1;
@@ -1142,8 +1142,13 @@ byId("exportAll").addEventListener("click", () => {
   whole.value = toAutoEq({ preampDb: engineConfig(config).preampDb, bands: flatBands(config) });
 });
 
+// The service worker starts a new tab with the stored config, which has no A/B or Solo and can be
+// up to storageWaitMs old. An open panel then sends the sound it shows.
 chrome.runtime.onMessage.addListener((message) => {
-  if (message && message.type === messageTypes.captureState) applyCaptureState(message.state);
+  if (message && message.type === messageTypes.captureState) {
+    applyCaptureState(message.state);
+    if (message.state.isCapturing) sendAudio();
+  }
   if (message && message.type === messageTypes.audioTelemetry) showTelemetry(message);
   return false;
 });

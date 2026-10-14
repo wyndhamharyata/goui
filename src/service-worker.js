@@ -8,7 +8,8 @@ chrome.runtime.onInstalled.addListener((details) => {
   chrome.tabs.create({ url: chrome.runtime.getURL("src/intro.html") });
 });
 
-// Chrome keeps this setting from older builds. With it on, an icon click never reaches onClicked.
+// Older goui builds turned this setting on, and Chrome keeps it. With it on, an icon click never
+// reaches onClicked.
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => {});
 
 async function openOffscreenDocument() {
@@ -75,49 +76,58 @@ async function stopCapture() {
 }
 
 // Brave crashes the whole browser when sidePanel.open names a window with no side panel, such as an
-// installed app. A tab in such a window opens goui as a popup instead, so its click never comes here.
-const everyWindowType = ["normal", "popup", "panel", "app", "devtools"];
+// installed app. A tab in such a window opens goui as a popup instead. Its click reaches onClicked
+// only before its popup is set.
+const allWindowTypes = ["normal", "popup", "panel", "app", "devtools"];
 const popupWindowIds = new Set();
 
 /** @param {number} tabId */
-function usePopupOn(tabId) {
+function setPanelPopupForTab(tabId) {
   chrome.action.setPopup({ tabId, popup: `src/panel.html?tab=${tabId}` }).catch(() => {});
 }
 
 /** @param {chrome.windows.Window} window */
-function rememberWindow(window) {
+function usePopupInWindowWithoutPanel(window) {
   if (window.type === "normal") return;
   popupWindowIds.add(window.id);
-  for (const tab of window.tabs || []) usePopupOn(tab.id);
+  for (const tab of window.tabs || []) setPanelPopupForTab(tab.id);
 }
 
-chrome.windows.getAll({ populate: true, windowTypes: everyWindowType }).then((windows) => windows.forEach(rememberWindow));
+// The set lives in memory. A click can wake the service worker before the list arrives.
+let areWindowsKnown = false;
+const knownWindows = chrome.windows.getAll({ populate: true, windowTypes: allWindowTypes }).then((windows) => {
+  windows.forEach(usePopupInWindowWithoutPanel);
+  areWindowsKnown = true;
+});
 
 // Chrome forgets the popup of a tab on each page load, so each load sets it again.
 chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
   if (change.status !== "loading") return;
-  chrome.windows.get(tab.windowId, { populate: true, windowTypes: everyWindowType }).then(rememberWindow, () => {});
+  chrome.windows.get(tab.windowId, { populate: true, windowTypes: allWindowTypes }).then(usePopupInWindowWithoutPanel, () => {});
 });
 
 // "Open in Brave" moves the tab of an app into a normal window, where the side panel works again.
 chrome.tabs.onAttached.addListener(async (tabId, attach) => {
-  const window = await chrome.windows.get(attach.newWindowId, { populate: true, windowTypes: everyWindowType });
+  const window = await chrome.windows.get(attach.newWindowId, { populate: true, windowTypes: allWindowTypes });
   if (window.type === "normal") chrome.action.setPopup({ tabId, popup: "" }).catch(() => {});
-  rememberWindow(window);
+  usePopupInWindowWithoutPanel(window);
 });
 
-// The click is what invokes the extension for the tab, which grants the right to take its audio.
-// Open the panel first, while the gesture is fresh. A click on the tab goui hears turns it off. A
-// click on any other tab moves goui there. With the panel closed, a click on the tab goui hears only
-// brings the panel back. Chrome answers in the order it is asked, so the question asked before the
-// panel opens sees the panel as it was before the click.
+// The click grants the right to take the tab's audio. A click on the tab goui hears turns it off
+// while the panel is open, and only brings the panel back while it is closed. A click on any other
+// tab moves goui there.
 chrome.action.onClicked.addListener(async (tab) => {
-  const openPanels = chrome.runtime.getContexts({ documentUrls: [chrome.runtime.getURL("src/panel.html")] });
-  if (popupWindowIds.has(tab.windowId)) usePopupOn(tab.id);
+  // Chrome answers in the order it is asked. Asked before the panel opens, this sees the panel as it
+  // was before the click.
+  const panelsBeforeClick = chrome.runtime.getContexts({ documentUrls: [chrome.runtime.getURL("src/panel.html")] });
+  // A wait can cost the click its gesture, so sidePanel.open fails and a second click is needed.
+  // That beats a crash. Only a click that wakes the service worker waits.
+  if (!areWindowsKnown) await knownWindows;
+  if (popupWindowIds.has(tab.windowId)) setPanelPopupForTab(tab.id);
   else chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
 
   if (await isHeardTab(tab.id)) {
-    const wasPanelOpen = (await openPanels).length > 0;
+    const wasPanelOpen = (await panelsBeforeClick).length > 0;
     if (wasPanelOpen) stopCapture();
     return;
   }

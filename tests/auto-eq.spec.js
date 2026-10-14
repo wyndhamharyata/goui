@@ -582,7 +582,7 @@ journey("given a ParametricEQ.txt file, Import plays its 1 kHz peak in the headp
   expectAbout6Db(await readSteadyLevel(panel) - flat);
 });
 
-journey("given a 6 dB boost and a 6 dB cut at 1 kHz, Solo on the boost plays the tone 6 dB louder", async (context, port) => {
+journey("given a 6 dB boost and a 6 dB cut at 1 kHz, Solo on the boost plays the tone 6 dB louder, also on a tab goui moves to", async (context, port) => {
   const panel = await openPanel(context, port, 1000);
   await panel.click("#autoPreamp");
   await pasteInto(panel, "headphone", peakText);
@@ -592,6 +592,11 @@ journey("given a 6 dB boost and a 6 dB cut at 1 kHz, Solo on the boost plays the
   await openTab(panel, "tune");
   await panel.click("#chips [data-index='0']");
   await panel.click("#bandSolo");
+  expectAbout6Db(await readSteadyLevel(panel) - flat);
+
+  const second = await openTone(context, port, 1000);
+  await pressIcon(context, second);
+  await expect.poll(() => readBadge(context, second)).toBe("ON");
   expectAbout6Db(await readSteadyLevel(panel) - flat);
 });
 
@@ -822,7 +827,7 @@ journey("given the panel, the help button opens the how-to page with the steps, 
   await expect(badge).toBeVisible();
   expect(await badge.evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
   await expect(intro.locator("a[href='https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md']")).toHaveCount(1);
-  await expect(intro.locator(".links")).toContainText("under the MIT licence");
+  await expect(intro.locator(".fine")).toContainText("goui is under the MIT licence");
 });
 
 journey("given the Library, the credits line names the three sources and its button opens the guide", async (context, port) => {
