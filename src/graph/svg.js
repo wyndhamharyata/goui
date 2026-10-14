@@ -27,7 +27,9 @@ function toAttributeName(name) {
  */
 export function makeSvg(tag, attributes = {}, children = []) {
   const element = document.createElementNS(svgNamespace, tag);
+
   for (const [name, value] of Object.entries(attributes)) element.setAttribute(toAttributeName(name), String(value));
+
   element.append(...children);
 
   return element;

@@ -15,8 +15,10 @@ const gainStepDb = 0.5;
 
 function makeChip(entry, index) {
   const classNames = ["chip"];
+
   if (entry.band === state.selectedBand) classNames.push("on");
   if (!entry.band.on) classNames.push("muted");
+
   const number = makeElement("i", { text: index + 1, style: { background: typeColor[entry.band.type] } });
 
   return makeElement("button", { className: classNames.join(" "), dataset: { index } }, [number, formatHz(entry.band.frequencyHz)]);
@@ -32,6 +34,7 @@ function renderChips() {
 
     return makeElement("div", { className: "chip-row" }, [label, makeElement("div", { className: "chip-track" }, [...chips, add])]);
   });
+
   byId("chips").replaceChildren(...rows);
 }
 
@@ -47,21 +50,28 @@ export function renderInspector() {
   const index = readSelectedIndex();
   const band = state.selectedBand;
   const isChosen = index >= 0;
+
   byId("inspectorEmpty").hidden = isChosen;
   byId("inspectorBody").hidden = !isChosen;
+
   if (!isChosen) return;
 
   const title = byId("bandTitle");
+
   title.textContent = `${layerLabels[readSelectedRole()]} · ${index + 1}. ${bandTypeDetails[band.type].label}`;
   Object.assign(title.style, { color: typeColor[band.type] });
   setField("bandType", band.type);
+
   // The segment buttons hold the common types. The others are under More.
   const isCommon = Boolean(byId("bandSegments").querySelector(`[data-type="${band.type}"]`));
+
   byId("bandType").hidden = isCommon && !state.isMoreOpen;
   byId("moreTypes").classList.toggle("on", !byId("bandType").hidden);
+
   for (const button of byId("bandSegments").querySelectorAll("[data-type]")) {
     button.classList.toggle("on", button.dataset.type === band.type);
   }
+
   byId("bandOn").textContent = band.on ? "On" : "Off";
   byId("bandOn").classList.toggle("on", band.on);
   byId("bandSolo").classList.toggle("on", state.soloBand === band);
@@ -84,6 +94,7 @@ function makeTableRow({ band }, index) {
 
 function renderTable() {
   const head = makeElement("tr", {}, ["Band", "Hz", "dB", "Q"].map((label) => makeElement("th", { text: label })));
+
   byId("table").replaceChildren(head, ...listBandEntries().map(makeTableRow));
 }
 
@@ -103,6 +114,7 @@ const bandFieldSetters = {
 export function wireTune() {
   byId("chips").addEventListener("click", (event) => {
     const chip = event.target.closest("[data-index], [data-add]");
+
     if (!chip) return;
     if (chip.dataset.add) {
       addBandToLayer(chip.dataset.add, newBandFrequencyHz, 0);
@@ -111,14 +123,17 @@ export function wireTune() {
 
     // A second press on the chosen chip unselects it.
     const index = Number(chip.dataset.index);
+
     selectBand(index === readSelectedIndex() ? -1 : index);
   });
   byId("table").addEventListener("click", (event) => {
     const row = event.target.closest("[data-index]");
+
     if (row) selectBand(Number(row.dataset.index));
   });
   byId("inspector").addEventListener("click", (event) => {
     const button = event.target.closest("[data-step]");
+
     if (!button) return;
 
     bandSteps[button.dataset.step](state.selectedBand, Number(button.dataset.direction));
@@ -126,6 +141,7 @@ export function wireTune() {
   });
   byId("inspector").addEventListener("input", (event) => {
     const setBandField = bandFieldSetters[event.target.id];
+
     if (!setBandField) return;
 
     setBandField(state.selectedBand, Number(event.target.value.replace(",", ".")));
@@ -133,6 +149,7 @@ export function wireTune() {
   });
   byId("bandSegments").addEventListener("click", (event) => {
     const button = event.target.closest("button");
+
     if (!button) return;
     if (button.id === "moreTypes") {
       state.isMoreOpen = !state.isMoreOpen;

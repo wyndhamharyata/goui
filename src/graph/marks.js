@@ -18,7 +18,7 @@ import {
   qHandleStyle,
 } from "./styles.js";
 import { drawArea, makeCircle, makeLine, makeRect, makeText } from "./svg.js";
-import { drawnGainDb, findGainAxisEnds, placePoint, readPoint } from "./view.js";
+import { drawnGainDb, findFrequencyLineEnds, placePoint, readPoint } from "./view.js";
 
 /** @typedef {import("../shared/bands.js").Band} Band */
 
@@ -45,18 +45,23 @@ const bandPointRadiusPx = 7;
  */
 export function drawChosenBand(view, band, frequencies) {
   const alone = [{ ...band, on: true }];
+
   const area = drawArea(view, frequencies, responseDb(alone, frequencies), chosenAreaStyle(band.type));
+
   if (band.type !== "PK") return { elements: [area], qHandles: [] };
 
   const halfOctaves = qToOctaves(band.q) / 2;
   const sidesHz = Float32Array.from([-1, 1], (side) => band.frequencyHz * octavesToRatio(side * halfOctaves));
   const sidesDb = responseDb(alone, sidesHz);
+
   const elements = [area];
   const qHandles = [];
+
   sidesHz.forEach((frequencyHz, index) => {
-    const [low, high] = findGainAxisEnds(view, frequencyHz);
+    const [low, high] = findFrequencyLineEnds(view, frequencyHz);
     const handle = placePoint(view, frequencyHz, sidesDb[index]);
     const box = { x: handle.x - (qHandleSizePx / 2), y: handle.y - (qHandleSizePx / 2), width: qHandleSizePx, height: qHandleSizePx };
+
     elements.push(makeLine(low, high, qGuideStyle), makeRect(box, qHandleStyle));
     qHandles.push(handle);
   });
@@ -73,11 +78,15 @@ export function drawChosenBand(view, band, frequencies) {
 export function drawBandPoints(view, entries, chosenIndex) {
   const elements = [];
   const points = [];
+
   entries.forEach(({ role, band }, index) => {
     const point = placePoint(view, band.frequencyHz, drawnGainDb(band));
+
     points.push({ index, ...point });
+
     if (role === "ear") elements.push(makeCircle(point, 9.5, earRingStyle));
     if (index === chosenIndex) elements.push(makeCircle(point, 11, chosenRingStyle));
+
     elements.push(makeCircle(point, bandPointRadiusPx, bandPointStyle(band)));
     elements.push(makeText({ x: point.x, y: point.y + 3 }, `${index + 1}`, bandNumberStyle));
   });
@@ -93,9 +102,11 @@ export function drawBandPoints(view, entries, chosenIndex) {
  */
 export function drawBandLabel(view, band) {
   const { size } = view;
+
   const point = placePoint(view, band.frequencyHz, drawnGainDb(band));
   const gain = hasGain(band.type) ? `${formatDb(band.gainDb)} dB  ` : "";
   const content = `${formatHz(band.frequencyHz)} Hz  ${gain}Q ${band.q.toFixed(2)}`;
+
   const width = (content.length * charWidthPx) + 12;
   const x = clamp(point.x - (width / 2), 2, size.width - width - 2);
   const y = point.y > size.top + 30 ? point.y - 30 : point.y + 16;
@@ -115,10 +126,12 @@ export function drawBandLabel(view, band) {
  */
 export function drawHover(view, hover, curveBands) {
   const { size } = view;
+
   const reading = readPoint(view, hover.x, hover.y);
   const [valueDb] = responseDb(curveBands, Float32Array.of(reading.frequencyHz));
-  const [low, high] = findGainAxisEnds(view, reading.frequencyHz);
+  const [low, high] = findFrequencyLineEnds(view, reading.frequencyHz);
   const dot = placePoint(view, reading.frequencyHz, valueDb);
+
   const content = `${formatHz(reading.frequencyHz)} Hz  ${formatDb(valueDb)} dB`;
   const width = (content.length * charWidthPx) + 10;
   const x = size.left + size.plotWidth - width;

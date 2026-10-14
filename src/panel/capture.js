@@ -13,12 +13,15 @@ const idleInstruction = isPopup
 /** @param {import("../shared/messages.js").CaptureState} capture */
 export function applyCaptureState(capture) {
   const isCapturing = Boolean(capture.isCapturing);
+
   // The first tab goui hears ends the guide for good.
   if (isCapturing && byId("app").dataset.started === "no") {
     byId("app").dataset.started = "yes";
     chrome.storage.local.set({ hasCaptured: true });
   }
+
   const status = byId("status");
+
   status.textContent = capture.error || (isCapturing ? capture.title : idleInstruction);
   status.classList.toggle("instruction", !isCapturing);
   status.title = isCapturing && !isPopup ? "Click the goui icon on this tab to turn goui off, or on another tab to move it there." : "";
@@ -31,10 +34,13 @@ export function applyCaptureState(capture) {
 
 function applyTelemetry(message) {
   byId("level").textContent = message.levelDb <= silenceDb ? "--" : message.levelDb.toFixed(1);
+
   // Each reading is raw. Blending with the last frame keeps the spectrum calm to look at.
   const newShare = 0.3;
   const previous = state.spectrumDb;
+
   state.spectrumDb = message.spectrumDb.map((levelDb, index) => (previous.length ? blend(previous[index], levelDb, newShare) : levelDb));
+
   for (const graph of graphs) graph.renderSpectrum();
 }
 
@@ -44,8 +50,10 @@ export function wireMessages() {
   chrome.runtime.onMessage.addListener((message) => {
     if (message && message.type === messageTypes.captureState) {
       applyCaptureState(message.state);
+
       if (message.state.isCapturing) sendAudio();
     }
+
     if (message && message.type === messageTypes.audioTelemetry) applyTelemetry(message);
 
     return false;
@@ -57,7 +65,9 @@ export function wireMessages() {
 export function startPopup() {
   document.documentElement.classList.add("popup");
   byId("power").hidden = false;
+
   const start = { type: messageTypes.captureStart, tabId: popupTabId };
+
   byId("power").addEventListener("click", () => trySendMessage(state.isPopupTabHeard ? { type: messageTypes.captureStop } : start));
   trySendMessage(start);
 }

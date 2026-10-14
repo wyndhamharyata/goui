@@ -133,10 +133,12 @@ export function biquadQ(band) {
  */
 export function makeBiquad(context, band) {
   const node = context.createBiquadFilter();
+
   node.type = bandTypeDetails[band.type].node;
 
   node.frequency.value = band.frequencyHz;
   node.Q.value = biquadQ(band);
+
   if (hasGain(band.type)) node.gain.value = band.gainDb;
 
   return node;
@@ -153,6 +155,7 @@ let offlineContext;
  */
 export function responseDb(bands, frequencies) {
   offlineContext ??= new OfflineAudioContext(1, 1, 48_000);
+
   const totalsDb = new Float32Array(frequencies.length);
   const magnitudes = new Float32Array(frequencies.length);
   const phases = new Float32Array(frequencies.length);

@@ -2,7 +2,7 @@
 import { qStepRatio, responseDb, roundGainDb, setBandQ } from "../shared/bands.js";
 import { drawLayerCurves, drawLoudness } from "./curves.js";
 import { moveBand, setQFromPointer } from "./drag.js";
-import { drawFrequencyGrid, drawGainGrid, drawRegions } from "./grid.js";
+import { drawFrequencyLines, drawGainLines, drawRegions } from "./grid.js";
 import { drawBandLabel, drawBandPoints, drawChosenBand, drawHover } from "./marks.js";
 import { drawSpectrum } from "./spectrum.js";
 import { curveStyle, offCurveStyle } from "./styles.js";
@@ -119,20 +119,24 @@ export class EqGraph {
   render() {
     const view = this.#measureView();
     const { size } = view;
+
     if (size.width === 0) return;
 
     const frequencies = sweepFrequencies(view);
     const curveDb = responseDb(this.#hooks.listCurveBands(), frequencies);
+
     const chosenIndex = this.#hooks.readSelectedIndex();
     const chosenBand = this.#bandAt(chosenIndex);
     const showsChosenBand = this.#options.interactive && Boolean(chosenBand);
 
     const chosen = showsChosenBand ? drawChosenBand(view, chosenBand, frequencies) : { elements: [], qHandles: [] };
     const bandPoints = this.#options.interactive ? drawBandPoints(view, this.#hooks.listBandEntries(), chosenIndex) : { elements: [], points: [] };
+
     this.#pressTargets = { points: bandPoints.points, qHandles: chosen.qHandles };
 
     const plotBox = { x: size.left, y: size.top, width: size.plotWidth, height: size.plotHeight };
     const clipPath = makeSvg("clipPath", { id: this.#clipId }, [makeRect(plotBox, {})]);
+
     const plot = makeSvg("g", { clipPath: `url(#${this.#clipId})` }, [
       makeSvg("g", { dataSpectrum: "" }, drawSpectrum(view, frequencies, this.#hooks.readSpectrumDb())),
       ...drawLoudness(view, frequencies, curveDb),
@@ -140,11 +144,12 @@ export class EqGraph {
       ...drawLayerCurves(view, frequencies, this.#hooks.listCurveLayers()),
       drawCurve(view, frequencies, curveDb, this.#hooks.isEqOff() ? offCurveStyle : curveStyle),
     ]);
+
     this.#host.replaceChildren(makeSvg("svg", { viewBox: `0 0 ${size.width} ${size.height}`, height: size.height }, [
       makeSvg("defs", {}, [clipPath]),
       ...drawRegions(view),
-      ...drawFrequencyGrid(view),
-      ...drawGainGrid(view),
+      ...drawFrequencyLines(view),
+      ...drawGainLines(view),
       plot,
       ...bandPoints.elements,
       ...(showsChosenBand ? drawBandLabel(view, chosenBand) : []),
@@ -158,6 +163,7 @@ export class EqGraph {
     const top = this.isTall ? 16 : 8;
     const bottom = this.isTall ? 6 : 16;
     const width = this.#host.clientWidth;
+
     const size = { width, height, left: 30, top, plotWidth: width - 38, plotHeight: height - top - bottom };
 
     return { zoom: this.zoom, isTall: this.isTall, size };
@@ -189,6 +195,7 @@ export class EqGraph {
    */
   #renderGroup(name, draw) {
     const group = this.#host.querySelector(`[data-${name}]`);
+
     if (group) group.replaceChildren(...draw(this.#measureView()));
     else this.render();
   }
@@ -212,6 +219,7 @@ export class EqGraph {
    */
   #findTarget(pointer) {
     const isOnQHandle = this.#pressTargets.qHandles.some((handle) => isNear(handle, pointer, handleRadiusPx));
+
     if (isOnQHandle) return { kind: "q", index: this.#hooks.readSelectedIndex() };
 
     // The last point drawn is on top, so it wins a press on two points.
@@ -223,9 +231,11 @@ export class EqGraph {
   #startDrag(event) {
     const pointer = this.#readPointer(event);
     const target = this.#findTarget(pointer);
+
     if (!target) return;
 
     const band = this.#bandAt(target.index);
+
     this.#drag = { ...target, startX: pointer.x, startY: pointer.y, startHz: band.frequencyHz, startDb: drawnGainDb(band) };
 
     this.#host.setPointerCapture(event.pointerId);
@@ -234,8 +244,11 @@ export class EqGraph {
 
   #followPointer(event) {
     const pointer = this.#readPointer(event);
+
     this.#hover = pointer;
+
     const drag = this.#drag;
+
     if (!drag) {
       this.#renderHover();
       return;
@@ -250,39 +263,51 @@ export class EqGraph {
     }
 
     const band = this.#bandAt(drag.index);
+
     drag.isQuarterSpeed = event.shiftKey;
+
     if (drag.kind === "move") moveBand(this.#measureView(), band, drag, pointer);
     else setQFromPointer(this.#measureView(), band, pointer);
+
     this.#hooks.commitBandEdit();
   }
 
   #endDrag() {
     const wasDragging = Boolean(this.#drag);
+
     this.#drag = null;
+
     // A full redraw would remove the pressed point, and the browser would send no click, so only the hover redraws.
     if (wasDragging) this.#renderHover();
   }
 
   #leave() {
     this.#hover = null;
+
     if (!this.#drag) this.#renderHover();
   }
 
   #addBandAtPointer(event) {
     const pointer = this.#readPointer(event);
+
     if (this.#findTarget(pointer)) return;
 
     const reading = readPoint(this.#measureView(), pointer.x, pointer.y);
+
     this.#hooks.addBand(Math.round(reading.frequencyHz), roundGainDb(reading.gainDb));
   }
 
   #stepQWithWheel(event) {
     const target = this.#findTarget(this.#readPointer(event));
+
     if (!target) return;
 
     event.preventDefault();
+
     const band = this.#bandAt(target.index);
+
     setBandQ(band, band.q * (qStepRatio ** (event.deltaY < 0 ? 1 : -1)));
+
     this.#hooks.selectBand(target.index);
     this.#hooks.commitBandEdit();
   }

@@ -23,6 +23,7 @@ const graphHooks = {
 // The Listen graph is a preview. It matches the Tune graph in size and follows its zoom and turn.
 const graphHeights = { height: 210, tallHeight: 440 };
 const listenGraph = new EqGraph(byId("listenGraph"), { ...graphHeights, interactive: false }, graphHooks);
+
 export const tuneGraph = new EqGraph(byId("tuneGraph"), { ...graphHeights, interactive: true }, graphHooks);
 export const graphs = [listenGraph, tuneGraph];
 
@@ -31,6 +32,7 @@ export function renderPills() {
   for (const button of byId("zoom").querySelectorAll("[data-zoom]")) {
     button.classList.toggle("on", button.dataset.zoom === tuneGraph.zoom);
   }
+
   byId("tall").classList.toggle("on", tuneGraph.isTall);
 }
 
@@ -38,12 +40,16 @@ export function renderPills() {
 export function wireGraphButtons() {
   byId("zoom").addEventListener("click", (event) => {
     const button = event.target.closest("[data-zoom]");
+
     if (button) for (const graph of graphs) graph.setZoom(button.dataset.zoom);
+
     renderPills();
   });
   byId("tall").addEventListener("click", () => {
     const isTall = !tuneGraph.isTall;
+
     for (const graph of graphs) graph.setTall(isTall);
+
     chrome.storage.local.set({ view: isTall ? "tall" : "wide" });
     renderPills();
   });

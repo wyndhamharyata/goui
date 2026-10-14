@@ -46,10 +46,12 @@ function measureMissDbSquared(bands, curveDb) {
 
 function makeKnobs(band) {
   const knobs = [{ band, key: "gainDb", min: maxFitCutDb, max: maxFitBoostDb, step: 1, isLog: false }];
+
   if (band.type === "PK") {
     knobs.push({ band, key: "frequencyHz", min: 20, max: 10_000, step: 0.25, isLog: true });
     knobs.push({ band, key: "q", min: 0.4, max: 4, step: 0.25, isLog: true });
   }
+
   if (band.type === "HSC") knobs.push({ band, key: "frequencyHz", min: 5000, max: fitTopHz, step: 0.25, isLog: true });
 
   return knobs;
@@ -72,18 +74,23 @@ function refine(bands, curveDb) {
   let error = measureMissDbSquared(bands, curveDb);
   const tryStep = (knob) => {
     const before = knob.band[knob.key];
+
     for (const direction of [1, -1]) {
       knob.band[knob.key] = moveKnob(knob, before, direction);
+
       const next = measureMissDbSquared(bands, curveDb);
+
       if (next < error) {
         error = next;
         return true;
       }
     }
+
     knob.band[knob.key] = before;
 
     return false;
   };
+
   for (let round = 0; round < maxRefineRounds && knobs.some((knob) => knob.step > smallestStep); round += 1) {
     for (const knob of knobs) if (!tryStep(knob)) knob.step /= 2;
   }
@@ -104,15 +111,20 @@ export function fitTargetChange(from, to) {
     { on: true, type: "LSC", frequencyHz: autoEqBassShelfHz, gainDb: 0, q: butterworthQ },
     { on: true, type: "HSC", frequencyHz: 10_000, gainDb: 0, q: butterworthQ },
   ];
+
   refine(bands, curveDb);
+
   // Each new peak goes where the fit misses most, then every band moves again.
   for (let count = 0; count < maxPeakCount; count += 1) {
     const playedDb = responseDb(bands, sweepHz);
     let worst = 0;
+
     for (let index = 1; index < fittedPoints; index += 1) {
       if (Math.abs(curveDb[index] - playedDb[index]) > Math.abs(curveDb[worst] - playedDb[worst])) worst = index;
     }
+
     const missDb = curveDb[worst] - playedDb[worst];
+
     if (Math.abs(missDb) < closeEnoughDb) break;
 
     bands.push({ on: true, type: "PK", frequencyHz: sweepHz[worst], gainDb: clamp(missDb, maxFitCutDb, maxFitBoostDb), q: newPeakQ });

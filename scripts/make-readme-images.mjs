@@ -169,6 +169,7 @@ function browserChrome(x, y, width, options = {}) {
   const { tabTitle = "Lofi radio", url = "radio.example.com", showGoui = false, showOnBadge = false, highlight = "", cursorAt = null } = options;
   const parts = [];
   const tabHeight = 34;
+
   parts.push(rect({ x, y, width, height: tabHeight, radius: 10, fill: "#202124" }));
   parts.push(rect({ x: x + 10, y: y + 7, width: 150, height: tabHeight - 14, radius: 8, fill: "#292a2d" }));
   parts.push(circle({ cx: x + 26, cy: y + 17, r: 6, fill: "#8ab4f8" }));
@@ -177,21 +178,26 @@ function browserChrome(x, y, width, options = {}) {
 
   const barY = y + tabHeight + 8;
   const barHeight = 32;
+
   parts.push(rect({ x, y: barY, width, height: barHeight, radius: 10, fill: "#202124" }));
   parts.push(circle({ cx: x + 22, cy: barY + 16, r: 8, fill: "#303134" }));
   parts.push(rect({ x: x + 40, y: barY + 6, width: width - 120, height: barHeight - 12, radius: 8, fill: "#303134" }));
   parts.push(text({ x: x + 52, y: barY + 21, content: url, size: 12, fill: "#9aa0a6" }));
 
   const rightX = x + width - 44;
+
   if (showGoui) {
     const badge = showOnBadge
       ? circle({ cx: rightX + 14, cy: barY + 8, r: 8, fill: palette.good }) + text({ x: rightX + 14, y: barY + 12, content: "ON", size: 8, weight: 700, fill: palette.background, anchor: "middle" })
       : "";
     const ring = highlight === "goui" ? rect({ x: rightX - 6, y: barY + 2, width: 40, height: barHeight - 4, radius: 8, fill: "none", stroke: palette.accent, strokeWidth: 2 }) : "";
+
     parts.push(ring + icon(rightX, barY + 8, 16) + badge);
   }
+
   const puzzleX = x + width - 78;
   const puzzleRing = highlight === "puzzle" ? rect({ x: puzzleX - 8, y: barY + 2, width: 32, height: barHeight - 4, radius: 8, fill: "none", stroke: palette.accent, strokeWidth: 2 }) : "";
+
   parts.push(puzzleRing + puzzleGlyph(puzzleX, barY + 9, 14));
   parts.push(circle({ cx: x + width - 22, cy: barY + 16, r: 9, fill: "#5f6368" }));
 
@@ -205,9 +211,12 @@ function extensionsMenu(x, y, { highlight = "" } = {}) {
   const width = 232;
   const height = 96;
   const parts = [rect({ x, y, width, height, radius: 12, fill: "#292a2d", stroke: "#3c4043" })];
+
   parts.push(text({ x: x + 14, y: y + 22, content: "Extensions", size: 11, fill: "#9aa0a6", weight: 500 }));
+
   const rowY = y + 34;
   const rowRing = highlight === "row" ? rect({ x: x + 6, y: rowY, width: width - 12, height: 34, radius: 8, fill: "none", stroke: palette.accent, strokeWidth: 2 }) : "";
+
   parts.push(rowRing + icon(x + 14, rowY + 5, 24));
   parts.push(text({ x: x + 48, y: rowY + 22, content: "goui", size: 13, fill: chromeText }));
   parts.push(pinGlyph(x + width - 30, rowY + 8, 16, highlight === "pin" ? palette.accent : "#9aa0a6"));
@@ -221,6 +230,7 @@ function compactExtensionsMenu(x, y, { highlight = "" } = {}) {
   const height = 46;
   const parts = [rect({ x, y, width, height, radius: 10, fill: "#292a2d", stroke: "#3c4043" })];
   const rowRing = highlight === "row" ? rect({ x: x + 5, y: y + 5, width: width - 10, height: 36, radius: 8, fill: "none", stroke: palette.accent, strokeWidth: 2 }) : "";
+
   parts.push(rowRing + icon(x + 12, y + 11, 22));
   parts.push(text({ x: x + 44, y: y + 29, content: "goui", size: 12, fill: chromeText }));
   parts.push(pinGlyph(x + width - 26, y + 14, 15, highlight === "pin" ? palette.accent : "#9aa0a6"));
@@ -253,6 +263,7 @@ function stepCard(x, y, width, step) {
 function pictureLoadUnpacked(x, y, width) {
   const height = 158;
   const parts = [rect({ x, y, width, height, radius: 10, fill: palette.panelRaised })];
+
   parts.push(text({ x: x + 14, y: y + 24, content: "chrome://extensions", size: 11, fill: palette.muted, font: monoFont }));
   parts.push(text({ x: x + 14, y: y + 52, content: "Extensions", size: 14, weight: 700 }));
   parts.push(text({ x: x + 14, y: y + 72, content: "Keyboard shortcuts", size: 11, fill: palette.muted }));
@@ -271,6 +282,7 @@ function pictureLoadUnpacked(x, y, width) {
 function pictureDownload(x, y, width) {
   const height = 158;
   const parts = [rect({ x, y, width, height, radius: 10, fill: palette.panelRaised })];
+
   parts.push(text({ x: x + 14, y: y + 24, content: "github.com/goui/releases", size: 10, fill: palette.muted, font: monoFont }));
   parts.push(text({ x: x + 14, y: y + 50, content: "Releases", size: 14, weight: 700 }));
   parts.push(rect({ x: x + 92, y: y + 37, width: 56, height: 18, radius: 9, fill: palette.panel, stroke: palette.line }));
@@ -291,6 +303,7 @@ function pictureDownload(x, y, width) {
 function picturePickFolder(x, y, width) {
   const height = 158;
   const parts = [rect({ x, y, width, height, radius: 10, fill: palette.panelRaised })];
+
   parts.push(text({ x: x + 14, y: y + 22, content: "Choose the goui folder", size: 11, fill: palette.muted }));
   parts.push(rect({ x: x + 14, y: y + 32, width: width - 28, height: 100, radius: 8, fill: palette.panel, stroke: palette.line }));
   parts.push(rect({ x: x + 26, y: y + 44, width: 120, height: 22, radius: 5, fill: palette.panelRaised }));
@@ -320,6 +333,7 @@ function picturePanel(x, y, width) {
 function sidePanel(x, y, width) {
   const height = 168;
   const parts = [rect({ x, y, width, height, radius: 12, fill: palette.panel, stroke: palette.line })];
+
   parts.push(text({ x: x + 14, y: y + 26, content: "goui", size: 14, weight: 700 }));
   parts.push(rect({ x: x + 74, y: y + 12, width: 26, height: 18, radius: 4, fill: palette.panelRaised, stroke: palette.line }));
   parts.push(text({ x: x + 87, y: y + 25, content: "A/B", size: 9, fill: palette.muted, anchor: "middle" }));
@@ -328,10 +342,13 @@ function sidePanel(x, y, width) {
   parts.push(text({ x: x + 14, y: y + 50, content: "playing", size: 12, fill: palette.muted }));
   parts.push(text({ x: x + width - 14, y: y + 50, content: "-24.0 dB", size: 12, fill: palette.good, anchor: "end" }));
   parts.push(text({ x: x + 14, y: y + 70, content: "Lofi radio", size: 12 }));
+
   const tabs = ["Listen", "Tune", "Library"];
+
   tabs.forEach((label, index) => {
     const tabX = x + 12 + (index * 68);
     const isOn = index === 0;
+
     parts.push(rect({ x: tabX, y: y + 82, width: 62, height: 22, radius: 11, fill: isOn ? palette.accent : palette.panelRaised }));
     parts.push(text({ x: tabX + 31, y: y + 97, content: label, size: 10, fill: isOn ? "#ffffff" : palette.muted, anchor: "middle" }));
   });
@@ -363,14 +380,19 @@ function makeHowItWorks() {
     text({ x: 40, y: 68, content: "goui joins two audio tools. Each one corrects a different thing.", size: 13, fill: palette.muted }),
   ];
   const borders = { plain: palette.line, headphone: headphoneBorder, ear: earBorder };
+
   boxes.forEach((box, index) => {
     const x = startX + (index * (boxWidth + gap));
+
     parts.push(rect({ x, y: boxY, width: boxWidth, height: boxHeight, radius: 12, fill: palette.panel, stroke: borders[box.tone] }));
+
     if (box.tone !== "plain") {
       parts.push(`<g clip-path="url(#boxClip)" transform="translate(${x} ${boxY})">${rect({ x: 0, y: 0, width: 8, height: boxHeight, fill: borders[box.tone] })}</g>`);
     }
+
     parts.push(text({ x: x + (boxWidth / 2), y: boxY + 40, content: box.title, size: 16, weight: 700, anchor: "middle" }));
     parts.push(text({ x: x + (boxWidth / 2), y: boxY + 64, content: box.note, size: 12, fill: palette.muted, anchor: "middle" }));
+
     if (index < boxes.length - 1) parts.push(arrow(x + boxWidth + 8, x + boxWidth + gap - 8, boxY + (boxHeight / 2)));
   });
   parts.push(text({ x: 40, y: 214, content: "Headphone and My ear add up in dB, so the two layers merge with no loss.", size: 12, fill: palette.muted }));
@@ -393,9 +415,12 @@ function makeInstallFlow() {
     text({ x: 40, y: 46, content: "Install goui in four steps", size: 20, weight: 700, font: headFont }),
     text({ x: 40, y: 68, content: "Download the zip and unzip it. Then load the folder in Chrome.", size: 13, fill: palette.muted }),
   ];
+
   steps.forEach((step, index) => {
     const x = 40 + (index * (cardWidth + gap));
+
     parts.push(stepCard(x, 96, cardWidth, step).svg);
+
     if (index < steps.length - 1) parts.push(arrow(x + cardWidth + 6, x + cardWidth + gap - 6, 220));
   });
 
@@ -423,6 +448,7 @@ function makeDownload() {
     text({ x: 32, y: 68, content: `Open the Releases page on GitHub. Press ${zipName} under the newest release.`, size: 13, fill: palette.muted }),
     text({ x: 32, y: 88, content: "Unzip the file after the download. Double clicking it is enough.", size: 13, fill: palette.muted }),
   ];
+
   parts.push(rect({ x: 32, y: 108, width: 398, height: 150, radius: 12, fill: palette.panel, stroke: palette.line }));
   parts.push(text({ x: 48, y: 134, content: "github.com/wyndhamharyata/goui/releases", size: 11, fill: palette.muted, font: monoFont }));
   parts.push(text({ x: 48, y: 168, content: "Releases", size: 16, weight: 700 }));
@@ -466,6 +492,7 @@ function makePin() {
     text({ x: 32, y: 88, content: "The goui icon then stays in the toolbar, one click away.", size: 13, fill: palette.muted }),
   ];
   const chrome = browserChrome(32, 108, width - 64, { highlight: "puzzle" });
+
   parts.push(chrome.svg);
   parts.push(rect({ x: 32, y: chrome.bottom + 6, width: width - 64, height: 96, radius: 10, fill: palette.panel, stroke: palette.line }));
   parts.push(text({ x: 48, y: chrome.bottom + 34, content: "radio.example.com", size: 12, fill: palette.muted, font: monoFont }));
@@ -501,9 +528,11 @@ const images = {
 };
 
 mkdirSync("docs/images", { recursive: true });
+
 for (const [name, svg] of Object.entries(images)) {
   writeFileSync(`docs/images/${name}.svg`, svg);
   execFileSync("rsvg-convert", ["-z", "2", "-o", `docs/images/${name}.png`, `docs/images/${name}.svg`]);
   console.log(`docs/images/${name}.svg and .png`);
 }
+
 console.log(`Wrote ${Object.keys(images).length} pictures.`);

@@ -26,6 +26,7 @@ async function screenshots() {
 
   // Pink noise fills the spectrum, so the graph reads like a song rather than a single tone.
   const tone = await context.newPage();
+
   await tone.goto(`http://localhost:${port}/?noise`);
   await tone.click("#play");
   await tone.evaluate(() => {
@@ -34,6 +35,7 @@ async function screenshots() {
   await pressIcon(context, tone);
 
   const panel = await context.newPage();
+
   await panel.goto(`chrome-extension://${extensionId}/src/panel.html`);
   await panel.waitForTimeout(600);
   await pasteInto(panel, "headphone", headphoneText);
@@ -50,6 +52,7 @@ async function screenshots() {
   await panel.screenshot({ path: `${out}/screenshot-2-tune.png` });
 
   const guide = await context.newPage();
+
   await guide.goto(`chrome-extension://${extensionId}/src/intro.html`);
   await guide.setViewportSize(panelSize);
   await guide.waitForTimeout(500);
@@ -133,10 +136,12 @@ function tiles() {
       + `<path d="${curvePath(1400, 560, 150)}" fill="none" stroke="#5b8cff" stroke-width="10" stroke-linecap="round" opacity="0.75"/>`
       + gouiTile(600, 180, 200),
   );
+
   writeFileSync(`${out}/promo-small.svg`, small);
   writeFileSync(`${out}/promo-marquee.svg`, marquee);
   execFileSync("rsvg-convert", ["-w", "440", "-h", "280", "-o", `${out}/promo-small-440x280.png`, `${out}/promo-small.svg`]);
   execFileSync("rsvg-convert", ["-w", "1400", "-h", "560", "-o", `${out}/promo-marquee-1400x560.png`, `${out}/promo-marquee.svg`]);
+
   for (const name of ["promo-small-440x280.png", "promo-marquee-1400x560.png"]) {
     execFileSync("convert", [`${out}/${name}`, "-background", "#0b0d10", "-alpha", "remove", "-alpha", "off", `PNG24:${out}/${name}`]);
   }

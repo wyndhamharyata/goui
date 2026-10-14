@@ -21,9 +21,9 @@ export const regionStyles = { even: { fill: "rgba(0,0,0,0)" }, odd: { fill: whit
 export const regionLabelStyle = { fill: white(0.45), fontSize: 9, fillOpacity: 0.8 };
 
 export const gridLabelStyle = { fill: white(0.45), fontSize: 9 };
-export const majorGridLineStyle = { stroke: white(0.13) };
-export const minorGridLineStyle = { stroke: white(0.05) };
-export const zeroLineStyle = { stroke: white(0.22) };
+export const strongGridLineStyle = { stroke: white(0.13) };
+export const faintGridLineStyle = { stroke: white(0.05) };
+export const zeroGainLineStyle = { stroke: white(0.22) };
 
 export const spectrumStyle = { fill: "rgba(150,165,200,0.13)" };
 export const boostAreaStyle = { fill: "rgba(255,122,144,0.24)" };

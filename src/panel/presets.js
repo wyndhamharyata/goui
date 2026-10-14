@@ -23,15 +23,19 @@ function renderPresetCard(role) {
   const layer = state.config.layers[role];
   const isSaved = isSavedPreset(role);
   let caption = "Nothing yet";
+
   if (layer) caption = isSaved ? "Your preset" : `${layer.source}, not saved yet`;
+
   partOf(role, "current-caption").textContent = caption;
   partOf(role, "current-name").textContent = layer ? describeLayerName(layer) : "No ear tuning";
 
   const save = partOf(role, "save");
   const hasNothingNew = isSaved && !layer.isEdited;
+
   save.textContent = isSaved ? "Save changes" : "Save";
   save.disabled = !layer || hasNothingNew;
   partOf(role, "save-as").disabled = !layer;
+
   for (const item of sectionOf(role).querySelectorAll(".item[data-name]")) {
     item.classList.toggle("on", Boolean(layer) && item.dataset.name === layer.name);
   }
@@ -50,10 +54,13 @@ export function storePresets(role) {
 
 function deletePreset(role, name) {
   delete state.presets[role][name];
+
   // The layer keeps its bands. It is no longer a saved preset, so Save asks for a name again.
   const layer = state.config.layers[role];
   const isPlaying = Boolean(layer) && layer.source === layerSources.saved && layer.name === name;
+
   if (isPlaying) layer.source = layerSources.deleted;
+
   commit();
   storePresets(role);
 }
@@ -81,18 +88,25 @@ export function makePresetItem(role, name, onPlaced) {
 export async function readPresets(stored) {
   for (const role of layerOrder) {
     const storedPresets = stored[`${role}Presets`] || {};
+
     for (const [name, preset] of Object.entries(storedPresets)) state.presets[role][name] = { bands: cleanBands(preset && preset.bands) };
   }
+
   const olderSounds = stored.savedSounds || stored.presets;
+
   if (!olderSounds) return;
 
   // An older sound becomes a headphone preset, and an ear preset when it has ear bands. A preset of that name wins.
   for (const [name, sound] of Object.entries(olderSounds)) {
     const layers = sanitizeConfig(sound).layers;
+
     state.presets.headphone[name] ??= { bands: layers.headphone.bands };
+
     const hasEarBands = Boolean(layers.ear) && layers.ear.bands.length > 0;
+
     if (hasEarBands) state.presets.ear[name] ??= { bands: layers.ear.bands };
   }
+
   // The old key goes only once the new lists are written, so a failed write loses nothing.
   await chrome.storage.local.set({ headphonePresets: state.presets.headphone, earPresets: state.presets.ear });
   await chrome.storage.local.remove(["savedSounds", "state.presets"]);

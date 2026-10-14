@@ -10,11 +10,13 @@ const contents = ["src", "icons", "LICENSE", "THIRD_PARTY_NOTICES.md"];
 
 rmSync("dist", { recursive: true, force: true });
 mkdirSync(staging, { recursive: true });
+
 // The licence and the notices travel with the extension, as the MIT licence asks.
 for (const path of contents) cpSync(path, `${staging}/${path}`, { recursive: true });
 
 // The store hands out its own key. The repo manifest keeps one, so the tests know the extension id.
 const manifest = JSON.parse(readFileSync("manifest.json", "utf8"));
+
 delete manifest.key;
 writeFileSync(`${staging}/manifest.json`, `${JSON.stringify(manifest, null, 2)}\n`);
 

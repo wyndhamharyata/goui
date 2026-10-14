@@ -22,6 +22,7 @@ const typingPauseMs = 150;
 function savePreset(role, name) {
   const layer = state.config.layers[role];
   const isUpdate = Boolean(state.presets[role][name]);
+
   state.presets[role][name] = { bands: structuredClone(layer.bands) };
   layer.name = name;
   layer.source = layerSources.saved;
@@ -36,10 +37,13 @@ function savePreset(role, name) {
 export function renderEarList() {
   const list = partOf("ear", "results");
   const items = Object.keys(state.presets.ear).map((name) => makePresetItem("ear", name, () => {}));
+
   if (items.length === 0) {
     items.push(makeElement("p", { className: "hint", text: "Nothing saved yet. Run the test, paste the result, then press Save." }));
   }
+
   const turnOff = makeResultItem("No ear tuning", "Headphone only", removeEarLayer);
+
   list.replaceChildren();
   appendSection(list, "Your ear state.presets", items);
   list.append(turnOff);
@@ -54,6 +58,7 @@ export function renderEarList() {
  */
 function applyAutoEqText(role, text, name, source) {
   const parsed = parseAutoEq(text);
+
   if (parsed.bands.length === 0) {
     showHint(role, "No AutoEQ filters found in that text.");
     return;
@@ -89,12 +94,14 @@ function fillSaveName(role, action) {
 
 function fillExportText(role) {
   const bands = readBands(state.config.layers[role]);
+
   partOf(role, "text").value = toAutoEq({ preampDb: autoPreampDb(bands), bands });
   showHint(role, `${layerLabels[role]} alone, as AutoEQ text. Copy it out.`);
 }
 
 function emptyPasteBox(role) {
   const text = partOf(role, "text");
+
   text.value = "";
   text.focus();
 }
@@ -108,12 +115,16 @@ const fillActionRow = { save: fillSaveName, saveAs: fillSaveName, export: fillEx
  */
 export function toggleLibraryAction(role, action) {
   const openAction = state.openActions[role] === action ? "" : action;
+
   state.openActions[role] = openAction;
   partOf(role, "save-row").hidden = openAction !== "save" && openAction !== "saveAs";
   partOf(role, "drawer").hidden = openAction !== "paste" && openAction !== "export";
   partOf(role, "apply").hidden = openAction !== "paste";
+
   for (const button of partOf(role, "library-actions").children) button.classList.toggle("on", button.dataset.action === openAction);
+
   showHint(role, "");
+
   if (openAction) fillActionRow[openAction](role, openAction);
 }
 
@@ -129,6 +140,7 @@ const libraryActions = {
   saveAs: (role) => toggleLibraryAction(role, "saveAs"),
   confirmSave: (role) => {
     const name = readSaveName(role);
+
     if (name) savePreset(role, name);
     else showHint(role, "Give the preset a name first.");
   },
@@ -139,6 +151,7 @@ const libraryActions = {
   // The test measures what you hear, so My ear comes off first. The headphone layer stays on.
   measure: () => {
     if (state.config.layers.ear) state.config.layers.ear.on = false;
+
     commit();
     chrome.tabs.create({ url: "https://eqbyear.com" });
     showHint("ear", "eqbyear is open in a new tab, with My ear off. Click the goui icon on that tab, run the test, then Paste the result here.");
@@ -148,6 +161,7 @@ const libraryActions = {
 async function importFile(role, file) {
   const dot = file.name.lastIndexOf(".");
   const name = dot > 0 ? file.name.slice(0, dot) : file.name;
+
   applyAutoEqText(role, await file.text(), name, layerSources.file);
 }
 
@@ -156,6 +170,7 @@ export function wireLibrary() {
   for (const role of layerOrder) {
     sectionOf(role).addEventListener("click", (event) => {
       const button = event.target.closest("[data-action]");
+
       if (button) libraryActions[button.dataset.action](role);
     });
     partOf(role, "save-name").addEventListener("input", () => renderConfirmSaveLabel(role));
@@ -164,10 +179,13 @@ export function wireLibrary() {
     });
     partOf(role, "import-file").addEventListener("change", (event) => {
       const [file] = event.target.files;
+
       event.target.value = "";
+
       if (file) importFile(role, file);
     });
   }
+
   partOf("headphone", "search").addEventListener("input", debounce(renderHeadphoneList, typingPauseMs));
 }
 

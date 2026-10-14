@@ -2,19 +2,19 @@
 import { formatHz } from "./format.js";
 import {
   gridLabelStyle,
-  majorGridLineStyle,
-  minorGridLineStyle,
+  strongGridLineStyle,
+  faintGridLineStyle,
   regionLabelStyle,
   regionStyles,
-  zeroLineStyle,
+  zeroGainLineStyle,
 } from "./styles.js";
 import { makeLine, makeRect, makeText } from "./svg.js";
-import { findGainAxisEnds, frequencyToRatio, maxShownGainDb, placePoint, zooms } from "./view.js";
+import { findFrequencyLineEnds, frequencyToRatio, maxShownGainDb, placePoint, zooms } from "./view.js";
 
 /** @typedef {import("./view.js").View} View */
 
-const ticksHz = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10_000, 20_000];
-const majorTicksHz = [100, 1000, 10_000];
+const frequencyLinesHz = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10_000, 20_000];
+const strongFrequencyLinesHz = [100, 1000, 10_000];
 const gainLinesDb = [-12, -6, 0, 6, 12];
 const minLabelLengthPx = 40;
 const minLabelSpacingPx = 26;
@@ -31,15 +31,19 @@ const regions = [
 function drawRegion(view, region, index) {
   const { size } = view;
   const [firstHz, lastHz] = zooms[view.zoom];
+
   const start = placePoint(view, Math.max(region.lowHz, firstHz), maxShownGainDb);
   const end = placePoint(view, Math.min(region.highHz, lastHz), -maxShownGainDb);
   const length = view.isTall ? end.y - start.y : end.x - start.x;
+
   if (length <= 0) return [];
 
   const style = index % 2 ? regionStyles.odd : regionStyles.even;
   const tallBox = { x: size.left, y: start.y, width: size.plotWidth, height: length };
   const wideBox = { x: start.x, y: size.top, width: length, height: size.plotHeight };
+
   const band = makeRect(view.isTall ? tallBox : wideBox, style);
+
   if (length < minLabelLengthPx) return [band];
 
   const tallSpot = { x: size.left + size.plotWidth - 4, y: start.y + (length / 2) + 3 };
@@ -61,22 +65,30 @@ export function drawRegions(view) {
  * @param {View} view
  * @returns {SVGElement[]}
  */
-export function drawFrequencyGrid(view) {
+export function drawFrequencyLines(view) {
   const elements = [];
   const labelStyle = { ...gridLabelStyle, textAnchor: view.isTall ? "start" : "middle" };
   let lastLabelAt = -Infinity;
-  for (const frequencyHz of ticksHz) {
+
+  for (const frequencyHz of frequencyLinesHz) {
     const ratio = frequencyToRatio(view, frequencyHz);
     const isInView = ratio > -0.001 && ratio < 1.001;
+
     if (!isInView) continue;
 
-    const [low, high] = findGainAxisEnds(view, frequencyHz);
-    elements.push(makeLine(low, high, majorTicksHz.includes(frequencyHz) ? majorGridLineStyle : minorGridLineStyle));
+    const [low, high] = findFrequencyLineEnds(view, frequencyHz);
+    const lineStyle = strongFrequencyLinesHz.includes(frequencyHz) ? strongGridLineStyle : faintGridLineStyle;
+
+    elements.push(makeLine(low, high, lineStyle));
+
     const labelAt = view.isTall ? low.y : low.x;
+
     if (labelAt - lastLabelAt < minLabelSpacingPx) continue;
 
     lastLabelAt = labelAt;
+
     const spot = view.isTall ? { x: 4, y: low.y + 3 } : { x: low.x, y: view.size.height - 4 };
+
     elements.push(makeText(spot, formatHz(frequencyHz), labelStyle));
   }
 
@@ -87,15 +99,17 @@ export function drawFrequencyGrid(view) {
  * @param {View} view
  * @returns {SVGElement[]}
  */
-export function drawGainGrid(view) {
+export function drawGainLines(view) {
   const [firstHz, lastHz] = zooms[view.zoom];
   const labelStyle = { ...gridLabelStyle, textAnchor: view.isTall ? "middle" : "start" };
+
   return gainLinesDb.flatMap((gainDb) => {
     const from = placePoint(view, firstHz, gainDb);
     const to = placePoint(view, lastHz, gainDb);
     const spot = view.isTall ? { x: from.x, y: 11 } : { x: 4, y: from.y + 3 };
     const label = gainDb > 0 ? `+${gainDb}` : `${gainDb}`;
+    const lineStyle = gainDb === 0 ? zeroGainLineStyle : faintGridLineStyle;
 
-    return [makeLine(from, to, gainDb === 0 ? zeroLineStyle : minorGridLineStyle), makeText(spot, label, labelStyle)];
+    return [makeLine(from, to, lineStyle), makeText(spot, label, labelStyle)];
   });
 }

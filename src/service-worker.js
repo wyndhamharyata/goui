@@ -26,11 +26,14 @@ async function openOffscreenDocument() {
 /** @param {CaptureState} state */
 async function publishCapture(state) {
   const { capture: previous } = await chrome.storage.session.get("capture");
+
   if (previous && previous.tabId) chrome.action.setBadgeText({ tabId: previous.tabId, text: "" }).catch(() => {});
+
   if (state.isCapturing) {
     chrome.action.setBadgeBackgroundColor({ tabId: state.tabId, color: "#43d39e" }).catch(() => {});
     chrome.action.setBadgeText({ tabId: state.tabId, text: "ON" }).catch(() => {});
   }
+
   await chrome.storage.session.set({ capture: state });
   trySendMessage({ type: messageTypes.captureState, state });
 }
@@ -50,21 +53,26 @@ async function isHeardTab(tabId) {
  */
 async function startCaptureForTab(target) {
   await openOffscreenDocument();
+
   const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: target.id });
   // Not trySendMessage. A start that fails must reach the panel as an error.
   const reply = await chrome.runtime.sendMessage({ type: messageTypes.audioStart, streamId });
 
   const isStarted = Boolean(reply && reply.ok);
+
   if (!isStarted) {
     const state = { isCapturing: false, error: reply ? reply.error : "The audio did not start." };
+
     await publishCapture(state);
     return state;
   }
 
   const stored = await chrome.storage.local.get("config");
+
   if (stored.config) await chrome.runtime.sendMessage({ type: messageTypes.audioConfig, config: stored.config });
 
   const state = { isCapturing: true, tabId: target.id, title: target.title || "Capturing" };
+
   await publishCapture(state);
 
   return state;
@@ -73,7 +81,9 @@ async function startCaptureForTab(target) {
 /** @returns {Promise<CaptureState>} */
 async function stopCapture() {
   await trySendMessage({ type: messageTypes.audioStop });
+
   const state = { isCapturing: false };
+
   await publishCapture(state);
 
   return state;
@@ -93,6 +103,7 @@ function usePopupInWindowWithoutPanel(window) {
   if (window.type === "normal") return;
 
   popupWindowIds.add(window.id);
+
   for (const tab of window.tabs || []) setPanelPopupForTab(tab.id);
 }
 
@@ -113,7 +124,9 @@ chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
 // "Open in Brave" moves the tab of an app into a normal window, where the side panel works again.
 chrome.tabs.onAttached.addListener(async (tabId, attach) => {
   const window = await chrome.windows.get(attach.newWindowId, { populate: true, windowTypes: allWindowTypes });
+
   if (window.type === "normal") chrome.action.setPopup({ tabId, popup: "" }).catch(() => {});
+
   usePopupInWindowWithoutPanel(window);
 });
 
@@ -121,19 +134,24 @@ chrome.tabs.onAttached.addListener(async (tabId, attach) => {
 chrome.action.onClicked.addListener(async (tab) => {
   // Chrome answers in the order it is asked, so this sees the panel as it was before the click.
   const panelsBeforeClick = chrome.runtime.getContexts({ documentUrls: [chrome.runtime.getURL("src/panel.html")] });
+
   // A wait can cost the gesture and need a second click, which beats a crash. Only a waking worker waits.
   if (!areWindowsKnown) await knownWindows;
+
   if (popupWindowIds.has(tab.windowId)) setPanelPopupForTab(tab.id);
   else chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
 
   if (await isHeardTab(tab.id)) {
     const wasPanelOpen = (await panelsBeforeClick).length > 0;
+
     if (wasPanelOpen) stopCapture();
+
     return;
   }
 
   const url = tab.url || "";
   const isWebPage = url.startsWith("http://") || url.startsWith("https://");
+
   if (!tab.id || !isWebPage) {
     publishCapture({ isCapturing: false, error: "Open a web page with audio, then click the goui icon." });
     return;
@@ -146,12 +164,14 @@ async function startCaptureFromPopup(tabId) {
   if (await isHeardTab(tabId)) return;
 
   const tab = await chrome.tabs.get(tabId);
+
   await startCaptureForTab(tab);
 }
 
 // The popup has no click to answer, so it asks for its own tab. An app window always shows a web page.
 chrome.runtime.onMessage.addListener((message) => {
   const isStart = message && message.type === messageTypes.captureStart && Number.isInteger(message.tabId);
+
   if (isStart) startCaptureFromPopup(message.tabId).catch((error) => publishCapture({ isCapturing: false, error: error.message }));
   if (message && message.type === messageTypes.captureStop) stopCapture();
 

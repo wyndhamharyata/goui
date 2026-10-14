@@ -13,12 +13,14 @@ import { join } from "node:path";
 /** @typedef {import("@playwright/test").Locator} Locator */
 
 const here = import.meta.dirname;
+
 export const extensionDir = join(here, "..");
 export const manifest = JSON.parse(readFileSync(join(extensionDir, "manifest.json"), "utf8"));
 export const peakText = "Preamp: 0 dB\nFilter 1: ON PK Fc 1000 Hz Gain 6.0 dB Q 1.0";
 export const earCutText = "Filter 1: ON PK Fc 1000 Hz Gain -6.0 dB Q 1.0";
 // tone.html sets this title once it plays. The panel shows the title of the tab goui hears.
 export const playingToneTitle = "playing running";
+
 const levelToleranceDb = 0.6;
 
 // Chrome derives the id from the public key in the manifest, so the test knows it before launch.
@@ -60,6 +62,7 @@ export async function openBrowser(viewport) {
     response.setHeader("content-type", "text/html");
     response.end(readFixture("tone.html"));
   });
+
   await new Promise((ready) => server.listen(0, ready));
 
   const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), "goui-")), {
@@ -86,6 +89,7 @@ export async function openBrowser(viewport) {
 export function journey(name, run) {
   test(name, async () => {
     const { context, server, port } = await openBrowser({ width: 400, height: 900 });
+
     try {
       await run(context, port);
     } finally {
@@ -118,6 +122,7 @@ async function playTone(tone) {
  */
 export async function openTone(context, port, toneHz) {
   const tone = await context.newPage();
+
   await tone.goto(toneUrl(port, toneHz));
   await playTone(tone);
 
@@ -151,12 +156,15 @@ function findTone(context, toneHz) {
  */
 async function runOnActiveTab(context, page, step) {
   const worker = await findWorker(context);
+
   await page.bringToFront();
+
   const details = { url: page.url(), title: await page.title() };
 
   return worker.evaluate(async ({ tabDetails, stepName }) => {
     const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
     const activeTab = { ...tab, ...tabDetails };
+
     if (stepName === "pressIcon") return chrome.action.onClicked.dispatch(activeTab);
 
 
@@ -192,8 +200,11 @@ export async function readBadge(context, page) {
 export async function openToneInApp(context, port, toneHz) {
   const worker = await findWorker(context);
   const tabId = await worker.evaluate(async (url) => (await chrome.windows.create({ type: "popup", url })).tabs[0].id, toneUrl(port, toneHz));
+
   await expect.poll(() => findTone(context, toneHz)).toBeTruthy();
+
   const tone = findTone(context, toneHz);
+
   await tone.waitForLoadState();
   await playTone(tone);
 
@@ -217,7 +228,9 @@ export async function readPopup(context, tabId) {
  */
 export async function openPanelPage(context) {
   const panel = await context.newPage();
+
   await panel.goto(panelUrl);
+
   return panel;
 }
 
@@ -231,6 +244,7 @@ export async function openPanelPage(context) {
 export async function startGouiOnTone(context, port, toneHz) {
   const tone = await openTone(context, port, toneHz);
   const panel = await openPanelPage(context);
+
   await expect(panel.locator("#status")).toContainText("Click the goui icon");
   await pressIcon(context, tone);
   await expect(panel.locator("#status")).toHaveText(playingToneTitle);
@@ -281,6 +295,7 @@ export async function chooseBand(panel, index) {
  */
 export async function nudgeSlider(panel, selector, pressCount) {
   await panel.locator(selector).focus();
+
   for (let press = 0; press < pressCount; press += 1) await panel.keyboard.press("ArrowRight");
 }
 
@@ -295,16 +310,21 @@ export async function readSteadyLevel(page) {
   const maxReadings = 75;
   const silentBelowDb = -100;
   const settledWithinDb = 0.3;
+
   await page.waitForTimeout(reactionMs);
+
   let previous = null;
+
   for (let attempt = 0; attempt < maxReadings; attempt += 1) {
     const reading = Number(await page.locator("#level").textContent());
     const isSettled = Number.isFinite(reading) && reading > silentBelowDb && previous !== null && Math.abs(reading - previous) < settledWithinDb;
+
     if (isSettled) return reading;
 
     previous = Number.isFinite(reading) ? reading : null;
     await page.waitForTimeout(readingIntervalMs);
   }
+
   throw new Error("The level did not settle.");
 }
 
@@ -327,9 +347,11 @@ function readBandPointCenter(panel) {
  */
 export async function readStillBandPoint(panel) {
   let position = await readBandPointCenter(panel);
+
   await expect.poll(async () => {
     const next = await readBandPointCenter(panel);
     const isStill = next.centerX === position.centerX && next.centerY === position.centerY;
+
     position = next;
 
     return isStill;
@@ -356,6 +378,7 @@ export function expectChangeDb(afterDb, beforeDb, expectedDb) {
 export async function openTab(panel, name) {
   // From 900 px wide the three tabs show side by side, and the tab buttons are hidden.
   const tab = panel.locator(`#tabs [data-tab=${name}]`);
+
   if (await tab.isVisible()) await tab.click();
 }
 
@@ -385,8 +408,11 @@ export function sectionOf(panel, role) {
  */
 export async function pasteInto(panel, role, text) {
   await openTab(panel, "library");
+
   const section = sectionOf(panel, role);
+
   if (!(await section.locator("[data-action=apply]").isVisible())) await section.locator("[data-action=paste]").click();
+
   await section.locator(".text").fill(text);
   await section.locator("[data-action=apply]").click();
 }
@@ -398,7 +424,9 @@ export async function pasteInto(panel, role, text) {
  */
 export async function saveAs(panel, role, name) {
   await openTab(panel, "library");
+
   const section = sectionOf(panel, role);
+
   await section.locator("[data-action=saveAs]").click();
   await section.locator(".save-name").fill(name);
   await section.locator("[data-action=confirmSave]").click();
@@ -431,8 +459,11 @@ export function layerSwitch(panel, label) {
  */
 export async function setLayer(panel, label, isOn) {
   await openTab(panel, "listen");
+
   const input = layerSwitch(panel, label);
+
   if ((await input.isChecked()) !== isOn) await layerRow(panel, label).locator(".switch").click();
+
   await expect.poll(() => input.isChecked()).toBe(isOn);
 }
 
@@ -444,9 +475,11 @@ export async function routeAutoEq(context) {
     "/oratory1990/over-ear/Sennheiser%20HD%20600/Sennheiser%20HD%20600%20ParametricEQ.txt": "Sennheiser HD 600 ParametricEQ.txt",
     "INDEX.md": "autoeq-index.md",
   };
+
   await context.route("https://raw.githubusercontent.com/**", (route) => {
     const url = route.request().url();
     const fixture = Object.entries(fixturesByPath).find(([path]) => url.endsWith(path));
+
     if (fixture) route.fulfill({ contentType: "text/plain", body: readFixture(fixture[1]) });
     else route.fulfill({ status: 404, body: "404: Not Found" });
   });

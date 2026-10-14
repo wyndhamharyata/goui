@@ -27,6 +27,7 @@ function listActiveBands() {
 
 function buildChain() {
   sourceNode.disconnect();
+
   for (const node of chainNodes) node.disconnect();
 
   analyserNode = audioContext.createAnalyser();
@@ -38,11 +39,14 @@ function buildChain() {
   // With the EQ off, the tab plays straight into the analyser, so the level still reads.
   bandNodes = [];
   chainNodes = [analyserNode];
+
   if (playedSound.enabled) {
     bandNodes = listActiveBands().map((band) => makeBiquad(audioContext, band));
     chainNodes = [preampNode, ...bandNodes, analyserNode];
   }
+
   const path = [sourceNode, ...chainNodes, audioContext.destination];
+
   for (let index = 1; index < path.length; index += 1) path[index - 1].connect(path[index]);
 }
 
@@ -56,18 +60,23 @@ function readChainLayout() {
 function updateBandNodes() {
   const now = audioContext.currentTime;
   const rampSeconds = 0.01;
+
   preampNode.gain.setTargetAtTime(dbToLinear(playedSound.preampDb), now, rampSeconds);
   listActiveBands().forEach((band, index) => {
     const bandNode = bandNodes[index];
+
     bandNode.frequency.setTargetAtTime(band.frequencyHz, now, rampSeconds);
     bandNode.Q.setTargetAtTime(biquadQ(band), now, rampSeconds);
+
     if (hasGain(band.type)) bandNode.gain.setTargetAtTime(band.gainDb, now, rampSeconds);
   });
 }
 
 function applyConfig(next) {
   const previous = readChainLayout();
+
   playedSound = next;
+
   if (!audioContext) return;
   if (readChainLayout() !== previous) {
     buildChain();
@@ -79,6 +88,7 @@ function applyConfig(next) {
 
 function readLevelDb(buffer) {
   analyserNode.getFloatTimeDomainData(buffer);
+
   const rms = rootMeanSquare(buffer);
 
   return rms > 0 ? Math.max(linearToDb(rms), silenceDb) : silenceDb;
@@ -86,10 +96,13 @@ function readLevelDb(buffer) {
 
 function readSpectrum(bins) {
   analyserNode.getFloatFrequencyData(bins);
+
   const hzPerBin = audioContext.sampleRate / analyserNode.fftSize;
   const points = [];
+
   for (const frequencyHz of spectrumHz) {
     const bin = Math.min(Math.round(frequencyHz / hzPerBin), bins.length - 1);
+
     points.push(Number.isFinite(bins[bin]) ? bins[bin] : silenceDb);
   }
 
@@ -99,6 +112,7 @@ function readSpectrum(bins) {
 function sendTelemetry() {
   const levelDb = readLevelDb(new Float32Array(analyserNode.fftSize));
   const spectrumDb = readSpectrum(new Float32Array(analyserNode.frequencyBinCount));
+
   trySendMessage({ type: messageTypes.audioTelemetry, levelDb, spectrumDb });
 }
 
@@ -110,7 +124,9 @@ async function start(streamId) {
   audioContext = new AudioContext();
   sourceNode = audioContext.createMediaStreamSource(mediaStream);
   buildChain();
+
   const telemetryIntervalMs = 50;
+
   telemetryTimer = setInterval(sendTelemetry, telemetryIntervalMs);
 
   return { ok: true };
@@ -119,10 +135,15 @@ async function start(streamId) {
 /** @returns {Promise<AudioReply>} */
 async function stop() {
   if (telemetryTimer) clearInterval(telemetryTimer);
+
   telemetryTimer = undefined;
+
   if (mediaStream) for (const track of mediaStream.getTracks()) track.stop();
+
   mediaStream = undefined;
+
   if (audioContext) await audioContext.close().catch(() => {});
+
   audioContext = undefined;
   sourceNode = undefined;
   analyserNode = undefined;
@@ -146,6 +167,7 @@ const handlers = new Map([
 // Every handler answers with a reply, or with the error that stopped it.
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   const handle = message && handlers.get(message.type);
+
   if (!handle) return false;
 
   handle(message).then(respond, (error) => respond({ ok: false, error: error.message }));

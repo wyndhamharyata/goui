@@ -40,7 +40,9 @@ const minQueryLength = 2;
  */
 async function loadHeadphone(item, hint, target) {
   hint.textContent = `Loading ${item.name}...`;
+
   const headphone = await fetchHeadphone(item, state.targetData, target);
+
   if (!headphone) {
     hint.textContent = `${item.name} did not load. Check the network and try again.`;
     return false;
@@ -56,12 +58,14 @@ async function loadHeadphone(item, hint, target) {
 /** @param {string} target */
 export function changeTarget(target) {
   const { name, path } = state.config.layers.headphone.autoEq;
+
   loadHeadphone(makeAutoEqItem(name, path), partOf("headphone", "search-hint"), target);
 }
 
 // A pick from a typed search is the end of that search. The box empties and Listen shows the sound.
 function endHeadphoneSearch() {
   const box = partOf("headphone", "search");
+
   if (box.value.trim() === "") return;
 
   box.value = "";
@@ -74,8 +78,11 @@ function makeMeasurementItem(item, hint) {
   const row = makeResultItem(item.name, detail, async () => {
     if (await loadHeadphone(item, hint)) endHeadphoneSearch();
   });
+
   row.classList.add("measurement");
+
   const pickMark = makeElement("em", { className: "pick", text: "AutoEQ's pick", title: "AutoEQ recommends this measurement of the headphone" });
+
   if (item.isAutoEqPick) row.firstChild.append(pickMark);
 
   return row;
@@ -83,7 +90,9 @@ function makeMeasurementItem(item, hint) {
 
 async function findHeadphones(query, hint) {
   hint.textContent = "Searching AutoEQ...";
+
   const items = await loadAutoEqIndex().catch(() => null);
+
   hint.textContent = items ? "" : "The AutoEQ list did not load. Check the network.";
 
   return (items || []).filter((item) => item.name.toLowerCase().includes(query)).slice(0, maxResultCount);
@@ -116,13 +125,16 @@ export async function renderHeadphoneList() {
   const list = partOf("headphone", "results");
   const hint = partOf("headphone", "search-hint");
   const query = partOf("headphone", "search").value.trim().toLowerCase();
+
   // A slower search for an older query must not draw over the newer one.
   list.dataset.query = query;
 
   const saved = Object.keys(state.presets.headphone).filter((name) => matchesQuery(name, query)).map((name) => makePresetItem("headphone", name, endHeadphoneSearch));
+
   if (saved.length === 0 && query === "") {
     saved.push(makeElement("p", { className: "hint", text: "Nothing saved yet. Pick your headphone, then press Save." }));
   }
+
   const starter = starterPresets.filter((preset) => matchesQuery(preset.name, query)).map((preset) => {
     const place = () => {
       replaceLayer({ name: preset.name, source: layerSources.starter, bands: preset.bands }, "headphone");
@@ -135,12 +147,15 @@ export async function renderHeadphoneList() {
   // Your presets and the starter sounds show at once. The AutoEQ list joins once it loads.
   showHeadphoneList(list, { saved, autoEq: [], starter });
   hint.textContent = "";
+
   if (query.length < minQueryLength) return;
 
   const headphones = await findHeadphones(query, hint);
+
   if (list.dataset.query !== query) return;
 
   showHeadphoneList(list, { saved, autoEq: headphones.map((item) => makeMeasurementItem(item, hint)), starter });
+
   if (list.children.length === 0) hint.textContent = "No sound by that name.";
 }
 

@@ -7,11 +7,16 @@ import { parse } from "espree";
 
 const exitTypes = new Set(["ReturnStatement", "ContinueStatement", "BreakStatement", "ThrowStatement"]);
 const functionTypes = new Set(["FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"]);
+const controlTypes = new Set([
+  "IfStatement", "ForStatement", "ForOfStatement", "ForInStatement", "WhileStatement", "DoWhileStatement", "SwitchStatement", "TryStatement",
+]);
 
 export const layoutMessages = {
   longComment: "comment runs over one line",
   crowdedReturn: "no blank line above the last return",
   crowdedExit: "no blank line after an early exit",
+  crowdedControl: "no blank line around a control statement",
+  crowdedUse: "no blank line between a run of declarations and the statements around it",
   nestedJsdoc: "JSDoc on a function inside a function",
   lonelyJsdoc: "JSDoc on a function with one caller in its own file",
   missingJsdoc: "no JSDoc on a function with two or more callers",
@@ -54,8 +59,10 @@ function hasTypes(node) {
   if (node.body.type !== "BlockStatement") return true;
 
   let returnsValue = false;
+
   walk(node.body, (child, parents) => {
     const isOwnReturn = child.type === "ReturnStatement" && child.argument && !parents.some(isFunction);
+
     if (isOwnReturn) returnsValue = true;
   });
 
@@ -69,7 +76,9 @@ function hasTypes(node) {
  */
 function walk(node, visit, parents = []) {
   visit(node, parents);
+
   const children = Object.values(node).flat().filter((child) => child && typeof child.type === "string");
+
   for (const child of children) walk(child, visit, [...parents, node]);
 }
 
@@ -90,19 +99,62 @@ function findCrowdedReturn(body, lines) {
   return isCrowded ? [{ text: "", kind: "crowdedReturn", line: last.loc.start.line }] : [];
 }
 
-// Rule 6 makes an early exit its own block, so the line under it is blank.
+/**
+ * @param {object} node
+ * @returns {boolean}
+ */
+function isControl(node) {
+  return controlTypes.has(node.type);
+}
+
+/**
+ * @param {object} node
+ * @returns {boolean}
+ */
+function isOneLineIf(node) {
+  return node.type === "IfStatement" && !node.alternate && node.loc.start.line === node.loc.end.line;
+}
+
+/**
+ * @param {object} node
+ * @returns {boolean}
+ */
+function isDeclaration(node) {
+  return node.type === "VariableDeclaration";
+}
+
+// Two statements stand apart when a blank line follows the one above.
+function isApart(above, below, lines) {
+  return below.loc.start.line - above.loc.end.line > 1 && lines[above.loc.end.line].trim() === "";
+}
+
+// Rule 6. Control statements, runs of exits or one-line ifs, and runs of declarations are each their own block.
 /**
  * @param {object[]} statements
  * @param {string[]} lines
  * @returns {Piece[]}
  */
-function findCrowdedExits(statements, lines) {
-  return statements.flatMap((statement, index) => {
-    const next = statements[index + 1];
-    const isCrowded = isEarlyExit(statement) && next && !isEarlyExit(next) && lines[statement.loc.end.line].trim() !== "";
+function findCrowdedStatements(statements, lines) {
+  const pieces = [];
 
-    return isCrowded ? [{ text: "", kind: "crowdedExit", line: statement.loc.end.line }] : [];
+  statements.forEach((statement, index) => {
+    const next = statements[index + 1];
+
+    if (!next || isApart(statement, next, lines)) return;
+
+    const isExitRun = isEarlyExit(statement) && isEarlyExit(next);
+    const isShortIfRun = isOneLineIf(statement) && isOneLineIf(next);
+
+    if (isExitRun || isShortIfRun) return;
+
+    const line = statement.loc.end.line;
+
+    if (isEarlyExit(statement)) pieces.push({ text: "", kind: "crowdedExit", line });
+    else if (isControl(statement) || isControl(next)) pieces.push({ text: "", kind: "crowdedControl", line });
+    else if (isDeclaration(statement) !== isDeclaration(next) && next.type !== "ReturnStatement") pieces.push({ text: "", kind: "crowdedUse", line });
   });
+
+  return pieces;
 }
 
 function listFunctions(source, ast) {
@@ -110,8 +162,10 @@ function listFunctions(source, ast) {
     .filter((comment) => comment.type === "Block" && comment.value.startsWith("*") && !/@typedef|@type\b/.test(comment.value))
     .map((comment) => comment.range[1]);
   const functions = [];
+
   walk(ast, (node, parents) => {
     const isNamedArrow = node.type === "VariableDeclarator" && isFunction(node.init);
+
     if (!isNamedArrow && node.type !== "FunctionDeclaration") return;
 
     const parent = parents.at(-1);
@@ -122,6 +176,7 @@ function listFunctions(source, ast) {
     const hasJsdoc = jsdocEnds.some((end) => end <= start && /^(\s*\/\/[^\n]*)*\s*$/.test(source.slice(end, start)));
     const depth = parents.filter(isFunction).length;
     const isExported = Boolean(outer) && outer.type === "ExportNamedDeclaration";
+
     functions.push({ name: node.id.name, depth, isExported, hasJsdoc, hasTypes: hasTypes(isNamedArrow ? node.init : node), line: node.loc.start.line });
   });
 
@@ -131,9 +186,11 @@ function listFunctions(source, ast) {
 // Rule 10. A top-level function used in another file or in two places has JSDoc. No other function has it.
 function findJsdocProblems(functions, referenceCounts) {
   const pieces = [];
+
   for (const facts of functions) {
     const callerCount = (referenceCounts.get(facts.name) || 0) - 1;
     const isUsedElsewhere = facts.isExported || callerCount >= 2;
+
     if (facts.depth > 0 && facts.hasJsdoc) pieces.push({ text: "", kind: "nestedJsdoc", line: facts.line });
     if (facts.depth > 0 && callerCount >= 2) pieces.push({ text: "", kind: "repeatedInner", line: facts.line });
     if (facts.depth === 0 && facts.hasJsdoc && !isUsedElsewhere) pieces.push({ text: "", kind: "lonelyJsdoc", line: facts.line });
@@ -155,9 +212,13 @@ export function findLayoutProblems(source) {
 
   walk(ast, (node, parents) => {
     if (node.type === "Identifier") referenceCounts.set(node.name, (referenceCounts.get(node.name) || 0) + 1);
-    if (Array.isArray(node.body)) pieces.push(...findCrowdedExits(node.body, lines));
-    if (node.type === "SwitchCase") pieces.push(...findCrowdedExits(node.consequent, lines));
+
+    if (Array.isArray(node.body)) pieces.push(...findCrowdedStatements(node.body, lines));
+
+    if (node.type === "SwitchCase") pieces.push(...findCrowdedStatements(node.consequent, lines));
+
     const isFunctionBody = node.type === "BlockStatement" && isFunction(parents.at(-1));
+
     if (isFunctionBody) pieces.push(...findCrowdedReturn(node, lines));
   });
 

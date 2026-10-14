@@ -28,10 +28,12 @@ function openLibrarySection(role) {
 function makeTargetChoice(autoEq) {
   const family = findFamily(state.targetData.families, makeAutoEqItem(autoEq.name, autoEq.path));
   const choice = { className: "target", text: "Target", title: "The sound AutoEQ tunes your headphone toward" };
+
   if (!family || family.labels.length < 2) return makeElement("label", choice, [makeElement("span", { text: autoEq.target })]);
 
   const options = family.labels.map((label) => new Option(label, label));
   const select = makeElement("select", { on: { change: (event) => changeTarget(event.target.value) } }, options);
+
   select.value = autoEq.target;
 
   return makeElement("label", choice, [select]);
@@ -50,10 +52,13 @@ function makeLayerRow(role, layer) {
   const mark = makeElement("i", { className: "layer-mark", style: { borderColor: layerColor[role] } });
   const caption = makeElement("small", { className: "caption" }, [mark, `${layerLabels[role]} · ${layer.source}`]);
   const texts = [caption, makeElement("b", { text: describeLayerName(layer) })];
+
   if (layer.autoEq) texts.push(makeTargetChoice(layer.autoEq));
 
   const parts = [toggle, makeElement("div", { className: "grow" }, texts)];
+
   parts.push(makeElement("button", { text: "Change", on: { click: () => openLibrarySection(role) } }));
+
   if (role === "ear") parts.push(makeElement("button", { text: "×", title: "Take the ear layer off", on: { click: removeEarLayer } }));
 
   return makeElement("div", { className: layer.on ? "layer" : "layer off" }, parts);
@@ -62,6 +67,7 @@ function makeLayerRow(role, layer) {
 function makeAddEarButton() {
   const openEarPaste = () => {
     openLibrarySection("ear");
+
     if (state.openActions.ear !== "paste") toggleLibraryAction("ear", "paste");
   };
 
@@ -75,16 +81,21 @@ function makeAddEarButton() {
 // The stack on Listen. One row per layer, each with its own switch, its source and its name.
 function renderLayers() {
   const host = byId("layers");
+
   host.replaceChildren();
+
   for (const role of layerOrder) {
     const layer = state.config.layers[role];
+
     if (layer) host.append(makeLayerRow(role, layer));
   }
+
   if (!state.config.layers.ear) host.append(makeAddEarButton());
 }
 
 function renderSound() {
   const played = makePlayedSound(state.config);
+
   byId("enabled").checked = state.config.enabled;
 
   for (const sliderName of ["bass", "vocals", "treble"]) {
@@ -101,6 +112,7 @@ function renderSound() {
   const clipMarginDb = 0.05;
   const headroomDb = maxBoostDb(played.bands) + played.preampDb;
   const isClipping = state.config.enabled && headroomDb > clipMarginDb;
+
   byId("clip").classList.toggle("red", isClipping);
   byId("meter").title = isClipping
     ? `The EQ can clip by ${headroomDb.toFixed(1)} dB. Turn the preamp down or press Auto.`
@@ -110,18 +122,21 @@ function renderSound() {
 // Turning Auto off keeps the value Auto had, so the sound does not jump.
 function toggleAutoPreamp() {
   if (state.config.autoPreamp) state.config.preampDb = makePlayedSound(state.config).preampDb;
+
   state.config.autoPreamp = !state.config.autoPreamp;
   commit();
 }
 
 function readSlider(slider) {
   const valueDb = Number(slider.value);
+
   if (slider.id === "preamp") {
     state.config.autoPreamp = false;
     state.config.preampDb = valueDb;
   } else {
     state.config.sliders[`${slider.id}Db`] = valueDb;
   }
+
   commit();
 }
 
@@ -129,6 +144,7 @@ function readSlider(slider) {
 /** @returns {void} */
 export function setSliderRanges() {
   const ranges = { bass: sliderRangeDb, vocals: sliderRangeDb, treble: sliderRangeDb, preamp: preampRangeDb };
+
   for (const [id, [minDb, maxDb]] of Object.entries(ranges)) Object.assign(byId(id), { min: minDb, max: maxDb });
 }
 
@@ -144,6 +160,7 @@ export function wireListen() {
   byId("autoPreamp").addEventListener("click", toggleAutoPreamp);
   byId("exportAll").addEventListener("click", () => {
     const whole = byId("wholeText");
+
     whole.hidden = false;
     whole.value = toAutoEq({ preampDb: makePlayedSound(state.config).preampDb, bands: listExportBands(state.config) });
   });

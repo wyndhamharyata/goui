@@ -145,8 +145,13 @@ Butterworth, gets a link to its explanation on the same line.
   Chrome context, a field the user typed in. Code past that point trusts the value.
 - A blank line groups a block. One idea per block, about five statements. Setup, such as the state
   a drag starts with, is its own block, apart from the calls that act on it.
-- An early exit is its own block. An `if` that ends in `return`, `continue`, `break` or `throw` has
-  a blank line under it. Several exits in a row stay together. `npm run lint` checks it.
+- Control flow is its own block. An `if`, a loop, a `switch` or a `try` has a blank line above and
+  below it, unless it opens or closes its block. A run of early exits, or of one-line `if`s, stays
+  together. `npm run lint` checks it.
+- Declare, then use. A run of declarations has a blank line between it and the statements that
+  use it, and between it and the statements before it. `npm run lint` checks it.
+- Inside a run of declarations, the inputs come first, then the values worked out from them, then
+  what is built from those, each with a blank line between. A person checks this one.
 - A function of more than three lines keeps a blank line above its last return. `npm run lint`
   checks it.
 - Name a compound condition before you test it: `const canDrag = isCapturing && !isLocked`.

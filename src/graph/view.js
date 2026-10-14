@@ -55,6 +55,7 @@ export function placePoint(view, frequencyHz, gainDb) {
   const { size } = view;
   const along = frequencyToRatio(view, frequencyHz);
   const across = (clamp(gainDb, -maxShownGainDb, maxShownGainDb) + maxShownGainDb) / (2 * maxShownGainDb);
+
   if (view.isTall) return { x: size.left + (across * size.plotWidth), y: size.top + (along * size.plotHeight) };
 
   return { x: size.left + (along * size.plotWidth), y: size.top + ((1 - across) * size.plotHeight) };
@@ -80,7 +81,7 @@ export function readPoint(view, x, y) {
  * @param {number} frequencyHz
  * @returns {Point[]}
  */
-export function findGainAxisEnds(view, frequencyHz) {
+export function findFrequencyLineEnds(view, frequencyHz) {
   return [placePoint(view, frequencyHz, -maxShownGainDb), placePoint(view, frequencyHz, maxShownGainDb)];
 }
 

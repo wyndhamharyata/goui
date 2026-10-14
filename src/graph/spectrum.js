@@ -35,8 +35,10 @@ export function drawSpectrum(view, frequencies, spectrumDb) {
 
   const { size } = view;
   const bottom = size.top + size.plotHeight;
+
   const edge = Array.from(frequencies, (frequencyHz) => {
     const level = clamp((readSpectrumAt(spectrumDb, frequencyHz) - spectrumFloorDb) / (0 - spectrumFloorDb), 0, 1);
+
     return { x: placePoint(view, frequencyHz, 0).x, y: size.top + (size.plotHeight * (1 - level)) };
   });
   const floor = [{ x: size.left + size.plotWidth, y: bottom }, { x: size.left, y: bottom }];
@@ -48,12 +50,15 @@ export function drawSpectrum(view, frequencies, spectrumDb) {
 function drawMirroredSpectrum(view, frequencies, spectrumDb) {
   const spanDb = 90;
   const rise = view.size.plotWidth * 0.45;
+
   const right = [];
   const left = [];
+
   for (const frequencyHz of frequencies) {
     const levelDb = readSpectrumAt(spectrumDb, frequencyHz) + (3 * octavesBetween(1000, frequencyHz));
     const halfWidth = clamp((levelDb - spectrumFloorDb) / spanDb, 0, 1) * rise;
     const center = placePoint(view, frequencyHz, 0);
+
     right.push({ x: center.x + halfWidth, y: center.y });
     left.unshift({ x: center.x - halfWidth, y: center.y });
   }

@@ -53,6 +53,7 @@ export function readSelectedRole() {
 /** @param {number} index */
 export function selectBand(index) {
   const entry = listBandEntries()[index];
+
   state.selectedBand = entry ? entry.band : null;
   refresh();
 }
@@ -76,7 +77,9 @@ export function isEqOff() {
  */
 function mapLayers(change) {
   const layers = {};
+
   for (const role of layerOrder) if (state.config.layers[role]) layers[role] = change(state.config.layers[role]);
+
   return layers;
 }
 
@@ -146,7 +149,9 @@ export function commitBandEdit() {
 export function addBandToLayer(role, frequencyHz, gainDb) {
   // The headphone layer is always there. The ear layer starts with its first band.
   if (role === "ear") state.config.layers.ear ??= makeLayer("My ear tuning", layerSources.yourBands);
+
   const band = { ...newBand(frequencyHz), gainDb };
+
   state.config.layers[role].bands.push(band);
   state.selectedBand = band;
   markEdited(role);
@@ -157,8 +162,11 @@ export function addBandToLayer(role, frequencyHz, gainDb) {
 export function deleteSelectedBand() {
   const role = readSelectedRole();
   const layer = state.config.layers[role];
+
   layer.bands.splice(layer.bands.indexOf(state.selectedBand), 1);
+
   if (state.soloBand === state.selectedBand) state.soloBand = null;
+
   state.selectedBand = null;
   markEdited(role);
   commit();
@@ -178,8 +186,10 @@ export function removeEarLayer() {
  */
 export function replaceLayer(sound, role) {
   state.config.layers[role] = makeLayer(sound.name, sound.source, cleanBands(sound.bands));
+
   if (sound.autoEq) state.config.layers[role].autoEq = sound.autoEq;
   if (role === "headphone" && sound.preampDb !== undefined) state.config.preampDb = sound.preampDb;
+
   dropBandChoice();
   commit();
 }

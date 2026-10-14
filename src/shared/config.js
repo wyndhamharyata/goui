@@ -77,6 +77,7 @@ function cleanLayer(raw, fallbackName) {
   };
   const autoEq = raw && raw.autoEq;
   const isAutoEq = Boolean(autoEq) && ["name", "path", "target"].every((key) => typeof autoEq[key] === "string");
+
   if (isAutoEq) layer.autoEq = { name: autoEq.name, path: autoEq.path, target: autoEq.target };
 
   return layer;
@@ -112,6 +113,7 @@ export function sanitizeConfig(raw) {
   };
   const storedLayers = raw.layers || older;
   const layers = { headphone: cleanLayer(storedLayers.headphone, "Flat") };
+
   if (storedLayers.ear) layers.ear = cleanLayer(storedLayers.ear, "Ear tuning");
 
   return {

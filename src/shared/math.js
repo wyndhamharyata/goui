@@ -44,6 +44,7 @@ export function blend(from, to, share) {
  */
 export function meanSquare(values) {
   let total = 0;
+
   for (let index = 0; index < values.length; index += 1) total += values[index] ** 2;
 
   return total / values.length;

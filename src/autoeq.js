@@ -71,6 +71,7 @@ function readAutoEqTarget(family) {
  */
 export function describeMeasurement(item, family) {
   const parts = [item.source];
+
   if (item.form) parts.push(formLabels[item.form]);
   if (item.rig) parts.push(item.rig.replace("Bruel & Kjaer", "B&K"));
   if (family) parts.push(readAutoEqTarget(family));
@@ -81,18 +82,22 @@ export function describeMeasurement(item, family) {
 function readIndex(text) {
   const items = [];
   const countByName = new Map();
+
   for (const line of text.split("\n")) {
     // A line reads "- [Name](./path) by source". A path can hold brackets, so it runs to the last ") by ".
     const nameStart = "- [".length;
     const nameEnd = line.indexOf("](./");
     const pathEnd = line.lastIndexOf(") by ");
     const isEntry = line.startsWith("- [") && nameEnd > 0 && pathEnd > nameEnd;
+
     if (!isEntry) continue;
 
     const name = line.slice(nameStart, nameEnd);
+
     items.push(makeAutoEqItem(name, line.slice(nameEnd + "](./".length, pathEnd), !countByName.has(name)));
     countByName.set(name, (countByName.get(name) || 0) + 1);
   }
+
   // The first measurement of a name is the one AutoEQ recommends. A name with one measurement has no pick.
   for (const item of items) item.isAutoEqPick &&= countByName.get(item.name) > 1;
 
@@ -108,10 +113,12 @@ export async function loadAutoEqIndex() {
   const indexLifetimeMs = 7 * 24 * 60 * 60 * 1000;
   const isFresh = cached.autoEqIndexAt && Date.now() - cached.autoEqIndexAt < indexLifetimeMs;
   let text = isFresh ? cached.autoEqIndex : null;
+
   if (!text) {
     text = await (await fetch(`${autoEqBase}INDEX.md`)).text();
     await chrome.storage.local.set({ autoEqIndex: text, autoEqIndexAt: Date.now() });
   }
+
   autoEqItems = readIndex(text);
 
   return autoEqItems;
@@ -127,10 +134,12 @@ export async function loadAutoEqIndex() {
 export async function fetchHeadphone(item, targets, target) {
   const file = encodeURIComponent(`${item.name} ParametricEQ.txt`);
   const response = await fetch(`${autoEqBase}${item.path}/${file}`).catch(() => null);
+
   if (!response || !response.ok) return null;
 
   const parsed = parseAutoEq(await response.text());
   const family = findFamily(targets.families, item);
+
   if (!family) return parsed;
 
   const autoEqTarget = readAutoEqTarget(family);
@@ -173,9 +182,11 @@ const typeAliases = { PEAK: "PK", PEAKING: "PK", LOWPASS: "LP", HIGHPASS: "HP", 
 export function parseAutoEq(text) {
   const bands = [];
   let preampDb = 0;
+
   for (const line of text.split("\n")) {
     const words = line.trim().split(" ").filter((word) => word !== "");
     const label = (words[0] || "").toLowerCase();
+
     if (label === "preamp:") {
       preampDb = Number(words[1]);
       continue;
@@ -186,6 +197,7 @@ export function parseAutoEq(text) {
     const type = typeAliases[typeWord] || typeWord;
     const frequencyHz = readNumberAfter(words, "fc");
     const isBand = bandTypes.includes(type) && Number.isFinite(frequencyHz);
+
     if (!isBand) continue;
 
     bands.push({ on: words[2].toUpperCase() === "ON", type, frequencyHz, gainDb: readNumberAfter(words, "gain") ?? 0, q: readNumberAfter(words, "q") ?? butterworthQ });
@@ -200,9 +212,11 @@ export function parseAutoEq(text) {
  */
 export function toAutoEq(file) {
   const lines = [`Preamp: ${file.preampDb.toFixed(1)} dB`];
+
   file.bands.forEach((band, index) => {
     const on = band.on ? "ON" : "OFF";
     const gain = hasGain(band.type) ? ` Gain ${band.gainDb.toFixed(1)} dB` : "";
+
     lines.push(`Filter ${index + 1}: ${on} ${band.type} Fc ${Math.round(band.frequencyHz)} Hz${gain} Q ${band.q.toFixed(2)}`);
   });
 

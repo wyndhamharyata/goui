@@ -23,6 +23,7 @@ export function describeBandCount(bands) {
 export function makeResultItem(label, detail, onPick, onRemove) {
   const labels = [makeElement("span", { text: label }), makeElement("small", { text: detail })];
   const button = makeElement("button", { className: "item", dataset: { name: label }, on: { click: onPick } }, labels);
+
   if (!onRemove) return button;
 
   const remove = makeElement("button", { className: "remove", text: "×", title: `Delete ${label}`, on: { click: onRemove } });

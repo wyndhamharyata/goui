@@ -31,11 +31,16 @@ export const partOf = (role, name) => sectionOf(role).querySelector(`.${name}`);
 export function makeElement(tag, options = {}, children = []) {
   const { text = "", style = {}, dataset = {}, on = {}, ...properties } = options;
   const element = document.createElement(tag);
+
   Object.assign(element, properties);
   Object.assign(element.style, style);
+
   for (const [key, value] of Object.entries(dataset)) element.dataset[key] = String(value);
+
   for (const [type, listener] of Object.entries(on)) element.addEventListener(type, listener);
+
   if (text !== "") element.textContent = text;
+
   element.append(...children);
 
   return element;
@@ -69,12 +74,15 @@ export function showHint(role, text) {
  */
 export function setField(id, value) {
   const field = byId(id);
+
   if (field !== document.activeElement) field.value = value;
 }
 
 /** @param {string} name */
 export function showTab(name) {
   byId("app").dataset.showing = name;
+
   for (const button of byId("tabs").children) button.classList.toggle("on", button.dataset.tab === name);
+
   chrome.storage.local.set({ tab: name });
 }

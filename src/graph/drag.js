@@ -31,8 +31,10 @@ import { placePoint, readPoint } from "./view.js";
  */
 export function moveBand(view, band, drag, pointer) {
   const scale = drag.isQuarterSpeed ? 0.25 : 1;
+
   const start = placePoint(view, drag.startHz, drag.startDb);
   const target = readPoint(view, start.x + ((pointer.x - drag.startX) * scale), start.y + ((pointer.y - drag.startY) * scale));
+
   setBandFrequency(band, target.frequencyHz);
   setBandGain(band, target.gainDb);
 }
@@ -47,5 +49,6 @@ export function setQFromPointer(view, band, pointer) {
   const pointerHz = readPoint(view, pointer.x, pointer.y).frequencyHz;
   const octaves = 2 * Math.abs(octavesBetween(band.frequencyHz, pointerHz));
   const narrowestOctaves = 0.05;
+
   setBandQ(band, octavesToQ(Math.max(octaves, narrowestOctaves)));
 }
