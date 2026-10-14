@@ -28,9 +28,8 @@ import {
   sanitizeConfig,
   sliderRangeDb,
 } from "./shared/config.js";
-import { parseAutoEq, toAutoEq } from "./autoeq.js";
+import { describeMeasurement, fetchHeadphone, findFamily, loadAutoEqIndex, loadTargets, makeAutoEqItem, parseAutoEq, toAutoEq } from "./autoeq.js";
 import { messageTypes, silenceDb, trySendMessage } from "./shared/messages.js";
-import { fitTargetChange } from "./fit.js";
 import { formatDb, formatHz, layerColor, makeGraph, typeColor } from "./graph.js";
 
 /** @typedef {import("./shared/bands.js").Band} Band */
@@ -43,13 +42,9 @@ import { formatDb, formatHz, layerColor, makeGraph, typeColor } from "./graph.js
 
 /** @typedef {import("./graph.js").BandEntry} BandEntry */
 
-/** @typedef {{ name: string, path: string, source: string, form: string, rig: string, isAutoEqPick: boolean }} AutoEqItem */
+/** @typedef {import("./autoeq.js").AutoEqItem} AutoEqItem */
 
-/** @typedef {{ labels: string[], measurements: { source: string, form: string, rig?: string }[] }} RigFamily */
-
-/** @typedef {import("./fit.js").TargetCurve} TargetCurve */
-
-/** @typedef {{ families: RigFamily[], targets: TargetCurve[] }} TargetData */
+/** @typedef {import("./autoeq.js").TargetData} TargetData */
 
 /**
  * @param {string} id
@@ -67,7 +62,6 @@ const sectionOf = (role) => document.querySelector(`.preset-section[data-role="$
  * @returns {HTMLElement}
  */
 const partOf = (role, name) => sectionOf(role).querySelector(`.${name}`);
-const autoEqBase = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master/results/";
 // The source a layer shows once it matches one of your presets.
 const savedSource = "Saved";
 
@@ -134,12 +128,9 @@ let selectedIndex = -1;
 let soloIndex = -1;
 let isComparing = false;
 let isLevelMatched = false;
-let autoEqItems = null;
-/** @type {Promise<TargetData> | null} */
-let targetData = null;
-// The same data once it has loaded, for the Listen row, which draws at once.
-/** @type {TargetData | null} */
-let loadedTargets = null;
+// Loaded before the first draw, so the Listen row can show the target choice at once.
+/** @type {TargetData} */
+let targetData;
 let isMoreOpen = false;
 const openActions = { headphone: "", ear: "" };
 
@@ -335,7 +326,7 @@ function openLibrarySection(role) {
  * @returns {HTMLElement}
  */
 function makeTargetChoice(autoEq) {
-  const family = loadedTargets && findFamily(loadedTargets.families, { ...readMeasurement(autoEq.path), name: autoEq.name, path: autoEq.path, isAutoEqPick: false });
+  const family = findFamily(targetData.families, makeAutoEqItem(autoEq.name, autoEq.path));
   const choice = makeElement("label", { className: "target", text: "Target", title: "The sound AutoEQ tunes your headphone toward" });
   if (!family || family.labels.length < 2) {
     choice.append(makeElement("span", { text: autoEq.target }));
@@ -604,91 +595,6 @@ function deletePreset(role, name) {
   storePresets(role);
 }
 
-const forms = ["over-ear", "in-ear", "earbud"];
-const formLabels = { "over-ear": "Over-ear", "in-ear": "In-ear", earbud: "Earbud" };
-
-// A path reads "source/folder/name". The folder holds the form, after the rig when the source names
-// one, as in "GRAS 43AG-7 over-ear".
-/**
- * @param {string} path
- * @returns {{ source: string, form: string, rig: string }}
- */
-function readMeasurement(path) {
-  const [source = "", folder = ""] = decodeURIComponent(path).split("/");
-  const form = forms.find((each) => folder.endsWith(each)) || "";
-  return { source, form, rig: folder.slice(0, folder.length - form.length).trim() };
-}
-
-/** @returns {Promise<TargetData>} */
-function loadTargets() {
-  targetData ??= fetch(chrome.runtime.getURL("src/targets.json")).then((response) => response.json());
-  return targetData;
-}
-
-// A target only suits the rig it was made for. AutoEQ names the measurements each family suits.
-/**
- * @param {RigFamily[]} families
- * @param {AutoEqItem} item
- * @returns {RigFamily | undefined}
- */
-function findFamily(families, item) {
-  /**
-   * @param {{ source: string, form: string, rig?: string }} each
-   * @returns {boolean}
-   */
-  const suits = (each) => each.source === item.source && each.form === item.form && (!each.rig || each.rig === item.rig);
-  return families.find((family) => family.measurements.some(suits));
-}
-
-// Eight measurements of one headphone read the same by name. The source, form, rig and target tell
-// them apart.
-/**
- * @param {AutoEqItem} item
- * @param {RigFamily | undefined} family
- * @returns {string}
- */
-function describeMeasurement(item, family) {
-  const parts = [item.source];
-  if (item.form) parts.push(formLabels[item.form]);
-  if (item.rig) parts.push(item.rig.replace("Bruel & Kjaer", "B&K"));
-  if (family) parts.push(family.labels[0]);
-  return parts.join(" · ");
-}
-
-/** @returns {Promise<AutoEqItem[]>} */
-async function loadAutoEqIndex() {
-  if (autoEqItems) return autoEqItems;
-  const cached = await chrome.storage.local.get(["autoEqIndex", "autoEqIndexAt"]);
-  const indexLifetimeMs = 7 * 24 * 60 * 60 * 1000;
-  const isFresh = cached.autoEqIndexAt && Date.now() - cached.autoEqIndexAt < indexLifetimeMs;
-  let text = isFresh ? cached.autoEqIndex : null;
-  if (!text) {
-    text = await (await fetch(`${autoEqBase}INDEX.md`)).text();
-    await chrome.storage.local.set({ autoEqIndex: text, autoEqIndexAt: Date.now() });
-  }
-
-  autoEqItems = [];
-  const countByName = new Map();
-  for (const line of text.split("\n")) {
-    // A line reads "- [Name](./path) by source". The path can hold brackets of its own, such as
-    // "(ANC Off)", so it runs to the last ") by ".
-    const nameEnd = line.indexOf("](./");
-    const pathEnd = line.lastIndexOf(") by ");
-    const isEntry = line.startsWith("- [") && nameEnd > 0 && pathEnd > nameEnd;
-    if (!isEntry) continue;
-    const name = line.slice(3, nameEnd);
-    const path = line.slice(nameEnd + 4, pathEnd);
-    autoEqItems.push({ name, path, ...readMeasurement(path), isAutoEqPick: !countByName.has(name) });
-    countByName.set(name, (countByName.get(name) || 0) + 1);
-  }
-  // The index lists the measurements of one headphone in AutoEQ's order. The first one is the one
-  // AutoEQ recommends. A name with one measurement has nothing to choose between.
-  for (const item of autoEqItems) item.isAutoEqPick &&= countByName.get(item.name) > 1;
-  return autoEqItems;
-}
-
-// AutoEQ's file tunes the headphone to the first target of its family. Another target also plays
-// the bands that move the sound from that one to it.
 /**
  * @param {AutoEqItem} item
  * @param {HTMLElement} hint
@@ -697,22 +603,12 @@ async function loadAutoEqIndex() {
  */
 async function loadHeadphone(item, hint, target) {
   hint.textContent = `Loading ${item.name}...`;
-  const file = encodeURIComponent(`${item.name} ParametricEQ.txt`);
-  const response = await fetch(`${autoEqBase}${item.path}/${file}`).catch(() => null);
-  if (!response || !response.ok) {
+  const headphone = await fetchHeadphone(item, targetData, target);
+  if (!headphone) {
     hint.textContent = `${item.name} did not load. Check the network and try again.`;
     return false;
   }
-  const parsed = parseAutoEq(await response.text());
-  const { families, targets } = await loadTargets();
-  const family = findFamily(families, item);
-  const autoEqTarget = family ? family.labels[0] : "";
-  const chosen = family && family.labels.includes(target) ? target : autoEqTarget;
-  const curveOf = (label) => targets.find((curve) => curve.label === label);
-  const moveBands = chosen === autoEqTarget ? [] : fitTargetChange(curveOf(autoEqTarget), curveOf(chosen));
-
-  const autoEq = family ? { name: item.name, path: item.path, target: chosen } : undefined;
-  replaceLayer({ name: item.name, source: "AutoEQ", bands: [...parsed.bands, ...moveBands], preampDb: parsed.preampDb, autoEq }, "headphone");
+  replaceLayer({ ...headphone, name: item.name, source: "AutoEQ" }, "headphone");
   hint.textContent = "";
   return true;
 }
@@ -721,7 +617,7 @@ async function loadHeadphone(item, hint, target) {
 /** @param {string} target */
 function changeTarget(target) {
   const { name, path } = config.layers.headphone.autoEq;
-  loadHeadphone({ name, path, ...readMeasurement(path), isAutoEqPick: false }, partOf("headphone", "search-hint"), target);
+  loadHeadphone(makeAutoEqItem(name, path), partOf("headphone", "search-hint"), target);
 }
 
 // A pick from a typed search is the end of that search. The box empties and Listen shows the sound.
@@ -836,10 +732,10 @@ async function renderHeadphoneList() {
   if (text.length < minQueryLength) return;
 
   const headphones = await findHeadphones(text, hint);
-  const { families } = await loadTargets();
+  // A slower search for an older text must not draw over the newer one.
   if (list.dataset.query !== text) return;
   show(headphones.map((item) => {
-    const row = makeResultItem(item.name, describeMeasurement(item, findFamily(families, item)), () => pickFromSearch(() => loadHeadphone(item, hint)));
+    const row = makeResultItem(item.name, describeMeasurement(item, findFamily(targetData.families, item)), () => pickFromSearch(() => loadHeadphone(item, hint)));
     row.classList.add("measurement");
     if (item.isAutoEqPick) row.firstChild.append(makeElement("em", { className: "pick", text: "AutoEQ's pick", title: "AutoEQ recommends this measurement of the headphone" }));
     return row;
@@ -1193,7 +1089,7 @@ async function startPanel() {
   for (const type of bandTypes) byId("bandType").append(new Option(typeLabels[type], type));
   setSliderRanges();
 
-  loadedTargets = await loadTargets();
+  targetData = await loadTargets();
   const stored = await chrome.storage.local.get(["config", "headphonePresets", "earPresets", "savedSounds", "presets", "view", "tab", "hasCaptured", "isLevelMatched", "keepsPreampInCompare"]);
   byId("app").dataset.started = stored.hasCaptured ? "yes" : "no";
   // goui 0.1.4 stored Level match as keepsPreampInCompare and the tall view as "vertical".

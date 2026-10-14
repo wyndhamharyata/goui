@@ -1,6 +1,155 @@
+// Everything goui reads from AutoEQ: the search index, a headphone's ParametricEQ.txt, the target
+// curves in targets.json, and the AutoEQ text format itself.
 import { bandTypes, butterworthQ, hasGain } from "./shared/bands.js";
+import { fitTargetChange } from "./fit.js";
 
 /** @typedef {import("./shared/bands.js").Band} Band */
+
+/** @typedef {import("./shared/config.js").AutoEqOrigin} AutoEqOrigin */
+
+/** @typedef {{ name: string, path: string, source: string, form: string, rig: string, isAutoEqPick: boolean }} AutoEqItem */
+
+/** @typedef {{ labels: string[], measurements: { source: string, form: string, rig?: string }[] }} RigFamily */
+
+/** @typedef {{ families: RigFamily[], targets: import("./fit.js").TargetCurve[] }} TargetData */
+
+/** @typedef {{ bands: Band[], preampDb: number, autoEq?: AutoEqOrigin }} Headphone */
+
+const autoEqBase = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master/results/";
+/** @type {AutoEqItem[] | null} */
+let autoEqItems = null;
+/** @type {Promise<TargetData> | null} */
+let targetData = null;
+
+const forms = ["over-ear", "in-ear", "earbud"];
+const formLabels = { "over-ear": "Over-ear", "in-ear": "In-ear", earbud: "Earbud" };
+
+// A path reads "source/folder/name". The folder holds the form, after the rig when the source names
+// one, as in "GRAS 43AG-7 over-ear".
+/**
+ * @param {string} name
+ * @param {string} path
+ * @param {boolean} [isAutoEqPick]
+ * @returns {AutoEqItem}
+ */
+export function makeAutoEqItem(name, path, isAutoEqPick = false) {
+  const [source = "", folder = ""] = decodeURIComponent(path).split("/");
+  const form = forms.find((each) => folder.endsWith(each)) || "";
+  return { name, path, source, form, rig: folder.slice(0, folder.length - form.length).trim(), isAutoEqPick };
+}
+
+/** @returns {Promise<TargetData>} */
+export function loadTargets() {
+  targetData ??= fetch(chrome.runtime.getURL("src/targets.json")).then((response) => response.json());
+  return targetData;
+}
+
+// A target only suits the rig it was made for. AutoEQ names the measurements each family suits.
+/**
+ * @param {RigFamily[]} families
+ * @param {AutoEqItem} item
+ * @returns {RigFamily | undefined}
+ */
+export function findFamily(families, item) {
+  /**
+   * @param {{ source: string, form: string, rig?: string }} each
+   * @returns {boolean}
+   */
+  const suits = (each) => each.source === item.source && each.form === item.form && (!each.rig || each.rig === item.rig);
+  return families.find((family) => family.measurements.some(suits));
+}
+
+// AutoEQ's own file tunes a headphone to the first target of its family.
+/**
+ * @param {RigFamily} family
+ * @returns {string}
+ */
+function readAutoEqTarget(family) {
+  return family.labels[0];
+}
+
+// Eight measurements of one headphone read the same by name. The source, form, rig and target tell
+// them apart.
+/**
+ * @param {AutoEqItem} item
+ * @param {RigFamily | undefined} family
+ * @returns {string}
+ */
+export function describeMeasurement(item, family) {
+  const parts = [item.source];
+  if (item.form) parts.push(formLabels[item.form]);
+  if (item.rig) parts.push(item.rig.replace("Bruel & Kjaer", "B&K"));
+  if (family) parts.push(readAutoEqTarget(family));
+  return parts.join(" · ");
+}
+
+/**
+ * @param {string} text
+ * @returns {AutoEqItem[]}
+ */
+function readIndex(text) {
+  const items = [];
+  const countByName = new Map();
+  for (const line of text.split("\n")) {
+    // A line reads "- [Name](./path) by source". The path can hold brackets of its own, such as
+    // "(ANC Off)", so it runs to the last ") by ".
+    const nameStart = "- [".length;
+    const nameEnd = line.indexOf("](./");
+    const pathEnd = line.lastIndexOf(") by ");
+    const isEntry = line.startsWith("- [") && nameEnd > 0 && pathEnd > nameEnd;
+    if (!isEntry) continue;
+    const name = line.slice(nameStart, nameEnd);
+    items.push(makeAutoEqItem(name, line.slice(nameEnd + "](./".length, pathEnd), !countByName.has(name)));
+    countByName.set(name, (countByName.get(name) || 0) + 1);
+  }
+  // The index lists the measurements of one headphone in AutoEQ's order. The first one is the one
+  // AutoEQ recommends. A name with one measurement has nothing to choose between.
+  for (const item of items) item.isAutoEqPick &&= countByName.get(item.name) > 1;
+  return items;
+}
+
+// The index is kept for a week, so a second search is fast.
+/** @returns {Promise<AutoEqItem[]>} */
+export async function loadAutoEqIndex() {
+  if (autoEqItems) return autoEqItems;
+  const cached = await chrome.storage.local.get(["autoEqIndex", "autoEqIndexAt"]);
+  const indexLifetimeMs = 7 * 24 * 60 * 60 * 1000;
+  const isFresh = cached.autoEqIndexAt && Date.now() - cached.autoEqIndexAt < indexLifetimeMs;
+  let text = isFresh ? cached.autoEqIndex : null;
+  if (!text) {
+    text = await (await fetch(`${autoEqBase}INDEX.md`)).text();
+    await chrome.storage.local.set({ autoEqIndex: text, autoEqIndexAt: Date.now() });
+  }
+  autoEqItems = readIndex(text);
+  return autoEqItems;
+}
+
+// AutoEQ's file tunes the headphone to the first target of its family. Another target also plays
+// the bands that move the sound from that one to it. A failed download gives null.
+/**
+ * @param {AutoEqItem} item
+ * @param {TargetData} targets
+ * @param {string} [target]
+ * @returns {Promise<Headphone | null>}
+ */
+export async function fetchHeadphone(item, targets, target) {
+  const file = encodeURIComponent(`${item.name} ParametricEQ.txt`);
+  const response = await fetch(`${autoEqBase}${item.path}/${file}`).catch(() => null);
+  if (!response || !response.ok) return null;
+  const parsed = parseAutoEq(await response.text());
+  const family = findFamily(targets.families, item);
+  if (!family) return parsed;
+
+  const autoEqTarget = readAutoEqTarget(family);
+  const chosen = family.labels.includes(target) ? target : autoEqTarget;
+  /**
+   * @param {string} label
+   * @returns {import("./fit.js").TargetCurve}
+   */
+  const curveOf = (label) => targets.targets.find((curve) => curve.label === label);
+  const moveBands = chosen === autoEqTarget ? [] : fitTargetChange(curveOf(autoEqTarget), curveOf(chosen));
+  return { bands: [...parsed.bands, ...moveBands], preampDb: parsed.preampDb, autoEq: { name: item.name, path: item.path, target: chosen } };
+}
 
 /** @typedef {{ preampDb: number, bands: Band[] }} AutoEqFile */
 
