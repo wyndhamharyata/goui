@@ -360,7 +360,7 @@ journey("given sounds and Level match saved by older builds, each sound shows in
   expectChangeDb(await readSteadyLevel(panel), flat, 0);
 });
 
-journey("given an ear layer, the eqbyear button turns it off and opens the test in a new tab", async (context, port) => {
+journey("given an ear layer, the EQByEar button turns it off and opens the test in a new tab", async (context, port) => {
   await context.route("https://eqbyear.com/**", (route) => route.fulfill({ contentType: "text/html", body: "<h1>eqbyear</h1>" }));
 
   const { panel } = await startGouiOnTone(context, port, 1000);

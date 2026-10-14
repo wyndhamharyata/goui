@@ -71,7 +71,7 @@ hearing that page.
 
 A how-to guide opens in a tab once, on the first install. The **?** button in the panel opens it
 again. It shows how goui works as a picture, each step with a picture of what to press, and links to
-AutoEQ and eqbyear. Until goui hears its first tab, the panel itself shows the first three steps in
+AutoEQ and EQByEar. Until goui hears its first tab, the panel itself shows the first three steps in
 place of the EQ.
 
 ### The icon is the switch
@@ -140,8 +140,8 @@ own Save, Import, Paste and Export.
   one AutoEQ recommends.
 - **Import** loads a `ParametricEQ.txt` file into that layer. **Paste** takes the same text. **Export**
   writes that one layer as AutoEQ text.
-- **Measure my ear with eqbyear** is in the ear section. It turns My ear off, so the test hears the
-  headphone alone, and opens eqbyear in a new tab.
+- **Measure my ear with EQByEar** is in the ear section. It turns My ear off, so the test hears the
+  headphone alone, and opens EQByEar in a new tab.
 - The ear list starts with **No ear tuning**, which turns the ear layer off.
 - **Export the whole sound** at the bottom writes both layers and the sliders as one AutoEQ file.
 
@@ -149,12 +149,12 @@ On a panel 900 px or wider, the three tabs show side by side.
 
 ## Measure your ear
 
-An AutoEQ profile corrects the headphone, not your ear. An eqbyear test measures what your ear still
+An AutoEQ profile corrects the headphone, not your ear. An EQByEar test measures what your ear still
 wants, and goui keeps the two apart.
 
-1. In the Library, press **Measure my ear with eqbyear** in the My ear section. The ear layer turns off,
+1. In the Library, press **Measure my ear with EQByEar** in the My ear section. The ear layer turns off,
    so the test hears the headphone alone.
-2. eqbyear opens in a new tab. Click the goui icon on that tab to capture it, then run the test.
+2. EQByEar opens in a new tab. Click the goui icon on that tab to capture it, then run the test.
 3. Copy the result, return to goui, and **Paste** it into the My ear section.
 4. Press **Save** to keep it, then turn the ear layer on to hear the headphone plus your ear.
 

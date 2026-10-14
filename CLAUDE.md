@@ -277,7 +277,7 @@ Each one names the rule it breaks and the reason.
   against rule 7. Folded into their callers, those callers would pass the 15-branch limit. Their
   names are also what a reader scans the file for.
 - Six journeys end in text a person reads, not in a sound, against rule 8.2: the HD 600 result
-  lines, the eqbyear button, the help page, the credits line, the first-run guide and a second
+  lines, the EQByEar button, the help page, the credits line, the first-run guide and a second
   press on a band chip. What they check has no sound of its own.
 - Each word list at the top of `scripts/check-rules.mjs` has one reader, against rule 7.
   The lists are data. A person edits them there, next to each other, when rule 2 changes.

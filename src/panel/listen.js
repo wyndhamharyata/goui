@@ -74,7 +74,7 @@ function buildAddEarButton() {
 
   return buildElement("button", {
     text: "Add your ear tuning on top",
-    title: "Open My ear in the Library, to paste an eqbyear result or pick a saved ear preset",
+    title: "Open My ear in the Library, to paste an EQByEar result or pick a saved ear preset",
     on: { click: openEarPaste },
   });
 }

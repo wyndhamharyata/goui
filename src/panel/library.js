@@ -1,4 +1,4 @@
-// The Library actions: save, import, paste, export and the eqbyear test, and the ear section's list.
+// The Library actions: save, import, paste, export and the EQByEar test, and the ear section's list.
 import { autoPreampDb } from "../shared/bands.js";
 import { layerLabels, layerOrder } from "../shared/config.js";
 import { parseAutoEq, toAutoEq } from "../autoeq.js";

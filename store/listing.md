@@ -14,7 +14,7 @@ Most EQ tools stop at the headphone. goui joins two corrections that belong toge
 
 1. Headphone. AutoEQ measures your headphone and writes a profile that cancels its colour, which
    gives a neutral baseline.
-2. My ear. An eqbyear hearing test measures what your ear still wants on top of that baseline.
+2. My ear. An EQByEar hearing test measures what your ear still wants on top of that baseline.
 
 goui keeps the two apart, as two layers. The bands of both layers add up in dB, so the merge is
 exact. Each layer has its own switch, so you can hear the AutoEQ baseline alone in one press, then
@@ -86,7 +86,7 @@ optional. To set it later, verify `mwyndham.dev` in Search Console, then pick it
 
 ```
 goui runs the audio of one browser tab through a parametric EQ. It joins an AutoEQ headphone profile
-with an eqbyear ear-correction profile, keeps them as two layers, and adds Bass, Vocals and Treble on
+with an EQByEar ear-correction profile, keeps them as two layers, and adds Bass, Vocals and Treble on
 top.
 ```
 

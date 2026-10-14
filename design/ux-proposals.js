@@ -903,7 +903,7 @@ function mountLayers(host, model, onChange) {
   model.bands.push(...parseAutoEqText(earText, "ear"));
   model.layers = {
     headphone: { label: "Headphone", source: "AutoEQ", name: "AKG N700NC M2", on: true },
-    ear: { label: "My ear", source: "eqbyear", name: "Ear test, 12 Oct", on: true },
+    ear: { label: "My ear", source: "EQByEar", name: "Ear test, 12 Oct", on: true },
   };
   let target = "ear";
   const showTab = mountTabs("f-tabs", model);

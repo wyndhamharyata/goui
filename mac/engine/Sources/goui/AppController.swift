@@ -199,7 +199,7 @@ final class AppController: NSObject, WKNavigationDelegate {
 
   // The name, icon and version come from the bundle. The credits add what goui is and where its guide lives.
   @objc private func showAbout() {
-    let credits = NSMutableAttributedString(string: "An EQ for every sound on your Mac. AutoEQ tunes it to your headphone, and eqbyear to your ear.\n\n")
+    let credits = NSMutableAttributedString(string: "An EQ for every sound on your Mac. AutoEQ tunes it to your headphone, and EQByEar to your ear.\n\n")
     credits.append(NSAttributedString(string: "goui.mwyndham.dev/mac", attributes: [.link: Self.guideURL]))
     credits.addAttributes([.font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize), .foregroundColor: NSColor.labelColor], range: NSRange(location: 0, length: credits.length))
     // A menu bar app is never in front on its own, so the About window would open behind other windows.
