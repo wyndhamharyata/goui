@@ -1,6 +1,6 @@
 // Fits a few bands to the difference between two target curves. AutoEQ's own file already tunes the
 // headphone to its default target, so these bands only move that sound to the target you pick.
-import { clamp, logSweepHz, responseDb, roundGainDb } from "./shared/filters.js";
+import { autoEqBassShelfHz, butterworthQ, clamp, logSweepHz, responseDb, roundGainDb, sweepPointCount } from "./shared/filters.js";
 
 /** @typedef {import("./shared/filters.js").Band} Band */
 
@@ -8,24 +8,28 @@ import { clamp, logSweepHz, responseDb, roundGainDb } from "./shared/filters.js"
 
 /** @typedef {{ band: Band, key: "frequencyHz" | "gainDb" | "q", min: number, max: number, step: number, isLog: boolean }} Knob */
 
-const sweepHz = logSweepHz(121);
+const sweepHz = logSweepHz(sweepPointCount);
+// The two targets are compared at the same level at 1 kHz, as AutoEQ sets every target.
 const oneKhzIndex = sweepHz.findIndex((frequencyHz) => frequencyHz >= 1000);
 // Above 12 kHz the targets fall away steeply and differ by rig and by person, so the fit skips them.
 const fitTopHz = 12_000;
 const fittedPoints = sweepHz.filter((frequencyHz) => frequencyHz <= fitTopHz).length;
 // AutoEQ lets its own file boost by 6 dB at most. The change of target keeps to the same limit.
 const maxFitBoostDb = 6;
+const maxFitCutDb = -12;
+const newPeakQ = 1.4;
+const maxRefineRounds = 80;
 const maxPeakCount = 4;
 const closeEnoughDb = 0.5;
 const smallestGainDb = 0.2;
 
-// AutoEQ puts the bass of a target in a 105 Hz shelf, apart from the curve.
+// AutoEQ puts the bass of a target in a low shelf, apart from the curve.
 /**
  * @param {TargetCurve} target
  * @returns {number[]}
  */
 function readTargetDb(target) {
-  const bassDb = responseDb([{ on: true, type: "LSC", frequencyHz: 105, gainDb: target.bassDb, q: 0.71 }], sweepHz);
+  const bassDb = responseDb([{ on: true, type: "LSC", frequencyHz: autoEqBassShelfHz, gainDb: target.bassDb, q: butterworthQ }], sweepHz);
   return target.curveDb.map((levelDb, index) => levelDb + bassDb[index]);
 }
 
@@ -46,7 +50,7 @@ function measureMissDbSquared(bands, curveDb) {
  * @returns {Knob[]}
  */
 function makeKnobs(band) {
-  const knobs = [{ band, key: "gainDb", min: -12, max: maxFitBoostDb, step: 1, isLog: false }];
+  const knobs = [{ band, key: "gainDb", min: maxFitCutDb, max: maxFitBoostDb, step: 1, isLog: false }];
   if (band.type === "PK") {
     knobs.push({ band, key: "frequencyHz", min: 20, max: 10_000, step: 0.25, isLog: true });
     knobs.push({ band, key: "q", min: 0.4, max: 4, step: 0.25, isLog: true });
@@ -68,7 +72,8 @@ function moveKnob(knob, value, direction) {
 }
 
 // Each knob tries a step up and a step down. A step that helps stays. A knob that cannot help
-// halves its step, until every step is too small to matter.
+// halves its step, until every step is too small to matter. A step is in dB for a gain and in
+// octaves for a frequency or a Q.
 /**
  * @param {Band[]} bands
  * @param {number[]} curveDb
@@ -94,7 +99,7 @@ function refine(bands, curveDb) {
     knob.band[knob.key] = before;
     return false;
   };
-  for (let round = 0; round < 80 && knobs.some((knob) => knob.step > smallestStep); round += 1) {
+  for (let round = 0; round < maxRefineRounds && knobs.some((knob) => knob.step > smallestStep); round += 1) {
     for (const knob of knobs) if (!tryStep(knob)) knob.step /= 2;
   }
 }
@@ -111,8 +116,8 @@ export function fitTargetChange(from, to) {
   const curveDb = toDb.map((db, index) => Math.min(db - fromDb[index] - oneKhzDb, maxFitBoostDb));
 
   const bands = [
-    { on: true, type: "LSC", frequencyHz: 105, gainDb: 0, q: 0.71 },
-    { on: true, type: "HSC", frequencyHz: 10_000, gainDb: 0, q: 0.71 },
+    { on: true, type: "LSC", frequencyHz: autoEqBassShelfHz, gainDb: 0, q: butterworthQ },
+    { on: true, type: "HSC", frequencyHz: 10_000, gainDb: 0, q: butterworthQ },
   ];
   refine(bands, curveDb);
   // Each new peak goes where the fit misses most, then every band moves again.
@@ -124,7 +129,7 @@ export function fitTargetChange(from, to) {
     }
     const missDb = curveDb[worst] - playedDb[worst];
     if (Math.abs(missDb) < closeEnoughDb) break;
-    bands.push({ on: true, type: "PK", frequencyHz: sweepHz[worst], gainDb: clamp(missDb, -12, maxFitBoostDb), q: 1.4 });
+    bands.push({ on: true, type: "PK", frequencyHz: sweepHz[worst], gainDb: clamp(missDb, maxFitCutDb, maxFitBoostDb), q: newPeakQ });
     refine(bands, curveDb);
   }
 

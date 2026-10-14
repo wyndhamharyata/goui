@@ -2,33 +2,35 @@ import {
   audioNodeType,
   autoPreampDb,
   bandTypes,
-  clamp,
+  butterworthQ,
   cleanBands,
   defaultConfig,
-  makePlayedSound,
-  listExportBands,
   flatSliders,
-  frequencyRangeHz,
-  gainRangeDb,
   hasGain,
   layerLabels,
   layerOrder,
+  listExportBands,
   listOnLayers,
   listPlayedBands,
   makeLayer,
+  makePlayedSound,
   maxBoostDb,
   newBand,
   parseAutoEq,
-  qRange,
+  preampRangeDb,
   qStepRatio,
-  roundGainDb,
+  qToOctaves,
   sanitizeConfig,
+  setBandFrequency,
+  setBandGain,
+  setBandQ,
+  sliderRangeDb,
   toAutoEq,
   typeLabels,
 } from "./shared/filters.js";
-import { messageTypes, trySendMessage } from "./shared/messages.js";
+import { messageTypes, silenceDb, trySendMessage } from "./shared/messages.js";
 import { fitTargetChange } from "./fit.js";
-import { formatDb, formatHz, layerColor, makeGraph, qToOctaves, typeColor } from "./graph.js";
+import { formatDb, formatHz, layerColor, makeGraph, typeColor } from "./graph.js";
 
 /** @typedef {import("./shared/filters.js").Band} Band */
 
@@ -108,16 +110,16 @@ const starterPresets = [
   {
     name: "Warm",
     bands: [
-      { on: true, type: "LSC", frequencyHz: 120, gainDb: 3, q: 0.71 },
-      { on: true, type: "HSC", frequencyHz: 8000, gainDb: -2, q: 0.71 },
+      { on: true, type: "LSC", frequencyHz: 120, gainDb: 3, q: butterworthQ },
+      { on: true, type: "HSC", frequencyHz: 8000, gainDb: -2, q: butterworthQ },
     ],
   },
   { name: "Clear vocals", bands: [{ on: true, type: "PK", frequencyHz: 2500, gainDb: 3, q: 1 }] },
   {
     name: "Night listening",
     bands: [
-      { on: true, type: "LSC", frequencyHz: 100, gainDb: -3, q: 0.71 },
-      { on: true, type: "HSC", frequencyHz: 6000, gainDb: -3, q: 0.71 },
+      { on: true, type: "LSC", frequencyHz: 100, gainDb: -3, q: butterworthQ },
+      { on: true, type: "HSC", frequencyHz: 6000, gainDb: -3, q: butterworthQ },
     ],
   },
 ];
@@ -174,20 +176,51 @@ function isEqOff() {
   return isComparing || !config.enabled;
 }
 
-// What the panel draws is what the engine plays, with the A/B button and Solo applied.
-/** @returns {Band[]} */
-function listCurveBands() {
-  if (isEqOff()) return [];
-  const soloed = bandAt(soloIndex);
-  if (soloed) return [{ ...soloed, on: true }];
-  return listPlayedBands(config);
+/**
+ * @param {(layer: Layer) => Layer} change
+ * @returns {{ headphone: Layer, ear?: Layer }}
+ */
+function mapLayers(change) {
+  const layers = {};
+  for (const role of layerOrder) if (config.layers[role]) layers[role] = change(config.layers[role]);
+  return layers;
 }
 
-// Each layer's own curve, for the dashed lines under the total.
+// Level match plays the preamp the EQ uses with every band off. Auto would set 0 dB for no bands.
+/** @returns {import("./shared/filters.js").Config} */
+function makePreampOnlyConfig() {
+  const layers = mapLayers((layer) => ({ ...layer, on: false }));
+  return { ...config, layers, sliders: flatSliders, autoPreamp: false, preampDb: makePlayedSound(config).preampDb };
+}
+
+/**
+ * @param {Band} soloed
+ * @returns {import("./shared/filters.js").Config}
+ */
+function makeSoloConfig(soloed) {
+  const layers = mapLayers((layer) => ({ ...layer, on: true, bands: layer.bands.map((band) => ({ ...band, on: band === soloed })) }));
+  return { ...config, layers, sliders: flatSliders };
+}
+
+// The config the engine plays and the graph draws, with A/B and Solo applied. A/B wins over Solo.
+/** @returns {import("./shared/filters.js").Config} */
+function makeHeardConfig() {
+  if (isComparing) return isLevelMatched ? makePreampOnlyConfig() : { ...config, enabled: false };
+  const soloed = bandAt(soloIndex);
+  return soloed ? makeSoloConfig(soloed) : config;
+}
+
+/** @returns {Band[]} */
+function listCurveBands() {
+  const heard = makeHeardConfig();
+  return heard.enabled ? listPlayedBands(heard) : [];
+}
+
+// Each layer's own curve, for the dashed lines under the total. Solo and A/B draw none.
 /** @returns {LayerBands[]} */
 function listCurveLayers() {
-  if (isEqOff() || soloIndex >= 0) return [];
-  return listOnLayers(config);
+  const isSoloing = Boolean(bandAt(soloIndex));
+  return isEqOff() || isSoloing ? [] : listOnLayers(config);
 }
 
 // Solo ends with the choice. Solo is kept as a position, so after a delete it would name another band.
@@ -233,32 +266,13 @@ const graphHooks = {
 };
 
 // The Listen graph is a preview. It matches the Tune graph in size and follows its zoom and turn.
-const listenGraph = makeGraph(byId("listenGraph"), { height: 210, tallHeight: 440, interactive: false, regions: true, layerCurves: true }, graphHooks);
-const tuneGraph = makeGraph(byId("tuneGraph"), { height: 210, tallHeight: 440, interactive: true, layerCurves: true }, graphHooks);
+const graphHeights = { height: 210, tallHeight: 440 };
+const listenGraph = makeGraph(byId("listenGraph"), { ...graphHeights, interactive: false, regions: true, layerCurves: true }, graphHooks);
+const tuneGraph = makeGraph(byId("tuneGraph"), { ...graphHeights, interactive: true, layerCurves: true }, graphHooks);
 const graphs = [listenGraph, tuneGraph];
 
-// Level match plays the preamp the EQ uses with every band off. Auto would set 0 dB for no bands.
-/** @returns {import("./shared/filters.js").Config} */
-function makePreampOnlyConfig() {
-  const layers = {};
-  for (const role of layerOrder) if (config.layers[role]) layers[role] = { ...config.layers[role], on: false };
-  return { ...config, layers, sliders: flatSliders, autoPreamp: false, preampDb: makePlayedSound(config).preampDb };
-}
-
 function sendAudio() {
-  let value = config;
-  const soloed = bandAt(soloIndex);
-  const isSoloing = !isComparing && Boolean(soloed);
-  if (isComparing) value = isLevelMatched ? makePreampOnlyConfig() : { ...config, enabled: false };
-  if (isSoloing) {
-    const layers = {};
-    for (const role of layerOrder) {
-      const layer = config.layers[role];
-      if (layer) layers[role] = { ...layer, on: true, bands: layer.bands.map((band) => ({ ...band, on: band === soloed })) };
-    }
-    value = { ...config, layers, sliders: flatSliders };
-  }
-  trySendMessage({ type: messageTypes.audioConfig, config: value });
+  trySendMessage({ type: messageTypes.audioConfig, config: makeHeardConfig() });
 }
 
 const storageWaitMs = 120;
@@ -458,7 +472,8 @@ function renderInspector() {
   title.textContent = `${layerLabels[roleAt(selectedIndex)]} · ${selectedIndex + 1}. ${typeLabels[band.type]}`;
   title.style.color = typeColor[band.type];
   setField("bandType", band.type);
-  const isCommon = ["PK", "LSC", "HSC", "HP", "LP"].includes(band.type);
+  // The segment buttons hold the common types. The others are under More.
+  const isCommon = Boolean(byId("bandSegments").querySelector(`[data-type="${band.type}"]`));
   byId("bandType").hidden = isCommon && !isMoreOpen;
   byId("moreTypes").classList.toggle("on", !byId("bandType").hidden);
   for (const button of byId("bandSegments").querySelectorAll("[data-type]")) {
@@ -782,7 +797,8 @@ async function findHeadphones(text, hint) {
   hint.textContent = "Searching AutoEQ...";
   const items = await loadAutoEqIndex().catch(() => null);
   hint.textContent = items ? "" : "The AutoEQ list did not load. Check the network.";
-  return (items || []).filter((item) => item.name.toLowerCase().includes(text)).slice(0, 20);
+  const maxResultCount = 20;
+  return (items || []).filter((item) => item.name.toLowerCase().includes(text)).slice(0, maxResultCount);
 }
 
 // An empty box lists your headphone presets and the starter sounds. Typing also searches AutoEQ.
@@ -815,7 +831,8 @@ async function renderHeadphoneList() {
   };
   show([]);
   hint.textContent = "";
-  if (text.length < 2) return;
+  const minQueryLength = 2;
+  if (text.length < minQueryLength) return;
 
   const headphones = await findHeadphones(text, hint);
   const { families } = await loadTargets();
@@ -951,7 +968,7 @@ function applyCaptureState(state) {
 }
 
 function applyTelemetry(message) {
-  byId("level").textContent = message.levelDb <= -120 ? "--" : message.levelDb.toFixed(1);
+  byId("level").textContent = message.levelDb <= silenceDb ? "--" : message.levelDb.toFixed(1);
   // Each reading is raw. Blending with the last frame keeps the spectrum calm to look at.
   const newShare = 0.3;
   const previous = spectrumDb;
@@ -968,28 +985,19 @@ function setComparing(isOn) {
   refresh();
 }
 
+const semitonesPerOctave = 12;
+const gainStepDb = 0.5;
+
 const bandSteps = {
-  frequency: (band, direction) => {
-    band.frequencyHz = Math.round(clamp(band.frequencyHz * (2 ** (direction / 12)), ...frequencyRangeHz));
-  },
-  gain: (band, direction) => {
-    if (hasGain(band.type)) band.gainDb = clamp(roundGainDb(band.gainDb + (direction * 0.5)), ...gainRangeDb);
-  },
-  q: (band, direction) => {
-    band.q = clamp(band.q * (qStepRatio ** direction), ...qRange);
-  },
+  frequency: (band, direction) => setBandFrequency(band, band.frequencyHz * (2 ** (direction / semitonesPerOctave))),
+  gain: (band, direction) => setBandGain(band, band.gainDb + (direction * gainStepDb)),
+  q: (band, direction) => setBandQ(band, band.q * (qStepRatio ** direction)),
 };
 
 const bandFieldSetters = {
-  frequencyInput: (band, value) => {
-    band.frequencyHz = clamp(value || 1000, ...frequencyRangeHz);
-  },
-  gainInput: (band, value) => {
-    band.gainDb = clamp(value || 0, ...gainRangeDb);
-  },
-  qInput: (band, value) => {
-    band.q = clamp(value || 1, ...qRange);
-  },
+  frequencyInput: setBandFrequency,
+  gainInput: setBandGain,
+  qInput: setBandQ,
 };
 
 byId("tabs").addEventListener("click", (event) => {
@@ -1174,8 +1182,15 @@ async function readPresets(stored) {
   await chrome.storage.local.remove(["savedSounds", "presets"]);
 }
 
+// The slider limits come from the same numbers that clean a stored config.
+function setSliderRanges() {
+  const ranges = { bass: sliderRangeDb, vocals: sliderRangeDb, treble: sliderRangeDb, preamp: preampRangeDb };
+  for (const [id, [minDb, maxDb]] of Object.entries(ranges)) Object.assign(byId(id), { min: minDb, max: maxDb });
+}
+
 async function startPanel() {
   for (const type of bandTypes) byId("bandType").append(new Option(typeLabels[type], type));
+  setSliderRanges();
 
   loadedTargets = await loadTargets();
   const stored = await chrome.storage.local.get(["config", "headphonePresets", "earPresets", "savedSounds", "presets", "view", "tab", "hasCaptured", "isLevelMatched", "keepsPreampInCompare"]);

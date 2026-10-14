@@ -1,4 +1,4 @@
-import { clamp, frequencyRangeHz, hasGain, qRange, qStepRatio, responseDb, roundGainDb } from "./shared/filters.js";
+import { clamp, frequencyRangeHz, hasGain, octavesToQ, qStepRatio, qToOctaves, responseDb, roundGainDb, setBandFrequency, setBandGain, setBandQ, sweepPointCount } from "./shared/filters.js";
 
 /** @typedef {import("./shared/filters.js").Band} Band */
 
@@ -45,6 +45,7 @@ import { clamp, frequencyRangeHz, hasGain, qRange, qStepRatio, responseDb, round
  * @property {(isTall: boolean) => void} setTall
  */
 
+// The graph shows ±15 dB. A band beyond that draws at the edge.
 const maxShownGainDb = 15;
 const ticksHz = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10_000, 20_000];
 const majorTicksHz = [100, 1000, 10_000];
@@ -52,6 +53,9 @@ const zooms = { all: frequencyRangeHz, lows: [20, 400], mids: [200, 5000], highs
 const backgroundColor = "#0e1013";
 const textColor = "#e6e9ef";
 const spectrumFill = `fill="rgba(150,165,200,0.13)"`;
+// The spectrum fill starts at the floor and runs up. A floor 100 dB below full scale puts a normal
+// song around the middle, with its peaks in the upper half.
+const spectrumFloorDb = -100;
 // The width of one character of the 9.5 px label text, to size the box around a label.
 const charWidthPx = 5.6;
 
@@ -98,23 +102,16 @@ export function formatDb(gainDb) {
   return `${gainDb > 0 ? "+" : ""}${gainDb.toFixed(1)}`;
 }
 
-// BW = (2 / ln2) * asinh(1 / (2Q)), RBJ Audio EQ Cookbook, with BW in octaves.
-/**
- * @param {number} q
- * @returns {number}
- */
-export function qToOctaves(q) {
-  return (2 / Math.LN2) * Math.asinh(1 / (2 * q));
-}
-
-// The engine sends its points from logSweepHz, from 20 Hz to 20 kHz on a log scale.
+// The offscreen document sends its points on logSweepHz, so the point for a frequency is found the
+// same way back.
 /**
  * @param {number[]} spectrumDb
  * @param {number} frequencyHz
  * @returns {number}
  */
 function readSpectrumAt(spectrumDb, frequencyHz) {
-  const position = (Math.log(frequencyHz / 20) / Math.log(1000)) * (spectrumDb.length - 1);
+  const [lowHz, highHz] = frequencyRangeHz;
+  const position = (Math.log(frequencyHz / lowHz) / Math.log(highHz / lowHz)) * (spectrumDb.length - 1);
   return spectrumDb[clamp(Math.round(position), 0, spectrumDb.length - 1)];
 }
 
@@ -229,7 +226,7 @@ export function makeGraph(host, options, hooks) {
 
   /** @returns {Float32Array} */
   function sweepFrequencies() {
-    return Float32Array.from({ length: 121 }, (_, index) => ratioToFrequency(index / 120));
+    return Float32Array.from({ length: sweepPointCount }, (_, index) => ratioToFrequency(index / (sweepPointCount - 1)));
   }
 
   /**
@@ -331,27 +328,26 @@ export function makeGraph(host, options, hooks) {
     if (spectrumDb.length === 0) return "";
     if (graph.isTall) return drawMirroredSpectrum(size, frequencies, spectrumDb);
 
-    // The fill starts at the floor and runs up. The floor is 100 dB below full scale, which puts a
-    // normal song around the middle with its peaks in the upper half.
-    const floorDb = -100;
     // Array.from, not map. A Float32Array.map would turn each point string into a number.
-    const points = Array.from(frequencies, (frequencyHz, index) => {
-      const level = clamp((readSpectrumAt(spectrumDb, frequencyHz) - floorDb) / (0 - floorDb), 0, 1);
-      return `${size.left + ((index / 120) * size.plotWidth)},${size.top + (size.plotHeight * (1 - level))}`;
+    const points = Array.from(frequencies, (frequencyHz) => {
+      const level = clamp((readSpectrumAt(spectrumDb, frequencyHz) - spectrumFloorDb) / (0 - spectrumFloorDb), 0, 1);
+      return `${placePoint(frequencyHz, 0, size).x},${size.top + (size.plotHeight * (1 - level))}`;
     });
     const floor = [`${size.left + size.plotWidth},${size.top + size.plotHeight}`, `${size.left},${size.top + size.plotHeight}`];
     return `<polygon points="${[...points, ...floor].join(" ")}" ${spectrumFill}/>`;
   }
 
-  // The Tall view stays even on both sides of the center line, with the 3 dB per octave slope that
-  // stands the spectrum upright.
+  // The tall view stays even on both sides of the center line, with the 3 dB per octave slope that
+  // stands the spectrum upright. That slope lifts the treble, so the span is 90 dB, not 100, and each
+  // side takes up to 45% of the width.
   function drawMirroredSpectrum(size, frequencies, spectrumDb) {
+    const spanDb = 90;
     const rise = size.plotWidth * 0.45;
     const right = [];
     const left = [];
     for (const frequencyHz of frequencies) {
       const levelDb = readSpectrumAt(spectrumDb, frequencyHz) + (3 * Math.log2(frequencyHz / 1000));
-      const halfWidth = clamp((levelDb + 100) / 90, 0, 1) * rise;
+      const halfWidth = clamp((levelDb - spectrumFloorDb) / spanDb, 0, 1) * rise;
       const center = placePoint(frequencyHz, 0, size);
       right.push(`${center.x + halfWidth},${center.y}`);
       left.unshift(`${center.x - halfWidth},${center.y}`);
@@ -514,14 +510,14 @@ export function makeGraph(host, options, hooks) {
     const scale = isFine ? 0.25 : 1;
     const start = placePoint(graph.drag.startHz, graph.drag.startDb, point.size);
     const target = readPoint(start.x + ((point.x - graph.drag.startX) * scale), start.y + ((point.y - graph.drag.startY) * scale), point.size);
-    band.frequencyHz = Math.round(target.frequencyHz);
-    if (hasGain(band.type)) band.gainDb = roundGainDb(target.gainDb);
+    setBandFrequency(band, target.frequencyHz);
+    setBandGain(band, target.gainDb);
   }
 
   function setQFromPointer(band, point) {
     const octaves = 2 * Math.abs(Math.log2(readPoint(point.x, point.y, point.size).frequencyHz / band.frequencyHz));
-    // Q = 1 / (2 sinh(ln2 / 2 * BW)), RBJ Audio EQ Cookbook, with BW in octaves.
-    band.q = clamp(1 / (2 * Math.sinh((Math.LN2 / 2) * Math.max(octaves, 0.05))), ...qRange);
+    const narrowestOctaves = 0.05;
+    setBandQ(band, octavesToQ(Math.max(octaves, narrowestOctaves)));
   }
 
   if (options.interactive) {
@@ -581,7 +577,7 @@ export function makeGraph(host, options, hooks) {
       if (!target) return;
       event.preventDefault();
       const band = bandAt(target.index);
-      band.q = clamp(band.q * (event.deltaY < 0 ? qStepRatio : 1 / qStepRatio), ...qRange);
+      setBandQ(band, band.q * (qStepRatio ** (event.deltaY < 0 ? 1 : -1)));
       hooks.selectBand(target.index);
       hooks.commitBandEdit();
     }, { passive: false });

@@ -12,6 +12,10 @@
  *   | { type: "capture:stop" }} Message
  */
 
+// The quietest level the offscreen document reports, for silence and for an empty spectrum bin.
+export const silenceDb = -120;
+export const spectrumPointCount = 128;
+
 // Every context hears every message. Each group names the context that reads it.
 export const messageTypes = {
   // To the offscreen document, from the service worker. Each one gets an AudioReply.
@@ -20,7 +24,7 @@ export const messageTypes = {
   // To the offscreen document, from the service worker and the panel. It holds a stored Config. The
   // offscreen document turns it into a PlayedSound.
   audioConfig: "audio:config",
-  // To the panel, from the offscreen document, 20 times a second. spectrumDb holds logSweepHz(128).
+  // To the panel, from the offscreen document, 20 times a second. spectrumDb holds logSweepHz(spectrumPointCount).
   audioTelemetry: "audio:telemetry",
   // To the panel, from the service worker.
   captureState: "capture:state",

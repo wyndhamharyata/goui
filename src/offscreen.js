@@ -1,5 +1,5 @@
 import { biquadQ, makePlayedSound, hasGain, logSweepHz, makeBiquad, sanitizeConfig } from "./shared/filters.js";
-import { messageTypes, trySendMessage } from "./shared/messages.js";
+import { messageTypes, silenceDb, spectrumPointCount, trySendMessage } from "./shared/messages.js";
 
 /** @typedef {import("./shared/messages.js").AudioReply} AudioReply */
 
@@ -15,7 +15,7 @@ let telemetryTimer;
 let playedSound = { enabled: true, preampDb: 0, bands: [] };
 
 // The panel reads these points back on the same log scale.
-const spectrumHz = logSweepHz(128);
+const spectrumHz = logSweepHz(spectrumPointCount);
 
 /** @returns {import("./shared/filters.js").Band[]} */
 function listActiveBands() {
@@ -78,7 +78,7 @@ function readLevelDb(buffer) {
   let sum = 0;
   for (const sample of buffer) sum += sample * sample;
   const rms = Math.sqrt(sum / buffer.length);
-  return rms > 0 ? Math.max(20 * Math.log10(rms), -120) : -120;
+  return rms > 0 ? Math.max(20 * Math.log10(rms), silenceDb) : silenceDb;
 }
 
 function readSpectrum(bins) {
@@ -87,7 +87,7 @@ function readSpectrum(bins) {
   const points = [];
   for (const frequencyHz of spectrumHz) {
     const bin = Math.min(Math.round(frequencyHz / hzPerBin), bins.length - 1);
-    points.push(Number.isFinite(bins[bin]) ? bins[bin] : -120);
+    points.push(Number.isFinite(bins[bin]) ? bins[bin] : silenceDb);
   }
   return points;
 }

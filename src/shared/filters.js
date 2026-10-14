@@ -84,6 +84,32 @@ export const qRange = [0.1, 18];
 export const qStepRatio = 1.12;
 export const frequencyRangeHz = [20, 20_000];
 export const gainRangeDb = [-20, 20];
+export const sliderRangeDb = [-6, 6];
+export const preampRangeDb = [-24, 12];
+// 1/√2 to two places, the Q AutoEQ writes on its shelves. A file with no Q gets it too.
+export const butterworthQ = 0.71;
+// AutoEQ puts the bass of its targets in a low shelf at this corner. The Bass slider uses the same.
+export const autoEqBassShelfHz = 105;
+// Every curve goui works out uses this many points. The targets in targets.json are stored on it.
+export const sweepPointCount = 121;
+
+// BW = (2 / ln2) * asinh(1 / (2Q)), RBJ Audio EQ Cookbook, with BW in octaves.
+/**
+ * @param {number} q
+ * @returns {number}
+ */
+export function qToOctaves(q) {
+  return (2 / Math.LN2) * Math.asinh(1 / (2 * q));
+}
+
+// Q = 1 / (2 sinh(ln2 / 2 * BW)), RBJ Audio EQ Cookbook, with BW in octaves.
+/**
+ * @param {number} octaves
+ * @returns {number}
+ */
+export function octavesToQ(octaves) {
+  return 1 / (2 * Math.sinh((Math.LN2 / 2) * octaves));
+}
 
 // Gains move in steps of 0.1 dB, the step an AutoEQ file and the gain field show.
 /**
@@ -135,7 +161,34 @@ export function defaultConfig() {
  * @returns {Band}
  */
 export function newBand(frequencyHz) {
-  return { on: true, type: "PK", frequencyHz: frequencyHz || 1000, gainDb: 0, q: 1 };
+  return { on: true, type: "PK", frequencyHz: frequencyHz || newBandFrequencyHz, gainDb: 0, q: 1 };
+}
+
+const newBandFrequencyHz = 1000;
+
+// Every edit of a band goes through these, so a typed, stepped and dragged value keep one range.
+/**
+ * @param {Band} band
+ * @param {number} frequencyHz
+ */
+export function setBandFrequency(band, frequencyHz) {
+  band.frequencyHz = Math.round(clamp(frequencyHz || newBandFrequencyHz, ...frequencyRangeHz));
+}
+
+/**
+ * @param {Band} band
+ * @param {number} gainDb
+ */
+export function setBandGain(band, gainDb) {
+  if (hasGain(band.type)) band.gainDb = clamp(roundGainDb(gainDb || 0), ...gainRangeDb);
+}
+
+/**
+ * @param {Band} band
+ * @param {number} q
+ */
+export function setBandQ(band, q) {
+  band.q = clamp(q || 1, ...qRange);
 }
 
 // A layer's bands, cleaned one by one, so a bad file cannot reach the audio chain.
@@ -148,9 +201,9 @@ export function cleanBands(raw) {
   return bands.filter((band) => band && typeof band === "object").map((band) => ({
     on: band.on !== false,
     type: bandTypes.includes(band.type) ? band.type : "PK",
-    frequencyHz: clamp(Number(band.frequencyHz) || 1000, ...frequencyRangeHz),
+    frequencyHz: clamp(Number(band.frequencyHz) || newBandFrequencyHz, ...frequencyRangeHz),
     gainDb: clamp(Number(band.gainDb) || 0, ...gainRangeDb),
-    q: clamp(Number(band.q) || 0.71, ...qRange),
+    q: clamp(Number(band.q) || butterworthQ, ...qRange),
   }));
 }
 
@@ -185,7 +238,7 @@ export function sanitizeConfig(raw) {
    * @param {unknown} value
    * @returns {number}
    */
-  const sliderDb = (value) => clamp(Number(value) || 0, -6, 6);
+  const sliderDb = (value) => clamp(Number(value) || 0, ...sliderRangeDb);
 
   // A config stored before the layers holds one flat list. That list becomes the headphone layer.
   // A config stored before the rename uses profileName and profileKind.
@@ -204,7 +257,7 @@ export function sanitizeConfig(raw) {
 
   return {
     enabled: raw.enabled !== false,
-    preampDb: clamp(Number(raw.preampDb) || 0, -24, 12),
+    preampDb: clamp(Number(raw.preampDb) || 0, ...preampRangeDb),
     autoPreamp: raw.autoPreamp !== false,
     sliders: { bassDb: sliderDb(sliders.bassDb), vocalsDb: sliderDb(sliders.vocalsDb), trebleDb: sliderDb(sliders.trebleDb) },
     layers,
@@ -226,9 +279,9 @@ export function listOnLayers(config) {
 // 0 dB, so a slider move never rebuilds the audio nodes.
 function sliderBands(sliders) {
   return [
-    { on: true, type: "LSC", frequencyHz: 105, gainDb: sliders.bassDb, q: 0.71 },
+    { on: true, type: "LSC", frequencyHz: autoEqBassShelfHz, gainDb: sliders.bassDb, q: butterworthQ },
     { on: true, type: "PK", frequencyHz: 2500, gainDb: sliders.vocalsDb, q: 0.9 },
-    { on: true, type: "HSC", frequencyHz: 8000, gainDb: sliders.trebleDb, q: 0.71 },
+    { on: true, type: "HSC", frequencyHz: 8000, gainDb: sliders.trebleDb, q: butterworthQ },
   ];
 }
 
@@ -256,8 +309,9 @@ export function makeBiquad(context, band) {
   return node;
 }
 
-// The panel draws with the same nodes the engine plays, so the curve matches the sound.
-const offlineContext = new OfflineAudioContext(1, 1, 48_000);
+// The panel draws with the same nodes the engine plays, so the curve matches the sound. Made on
+// first use, so a file that only reads AutoEQ text can load where Web Audio is missing.
+let offlineContext;
 
 /**
  * @param {Band[]} bands
@@ -268,6 +322,7 @@ export function responseDb(bands, frequencies) {
   const totals = new Float32Array(frequencies.length);
   const magnitudes = new Float32Array(frequencies.length);
   const phases = new Float32Array(frequencies.length);
+  offlineContext ??= new OfflineAudioContext(1, 1, 48_000);
   for (const band of bands) {
     if (!band.on) continue;
     makeBiquad(offlineContext, band).getFrequencyResponse(frequencies, magnitudes, phases);
@@ -282,7 +337,8 @@ export function responseDb(bands, frequencies) {
  * @returns {Float32Array}
  */
 export function logSweepHz(pointCount) {
-  return Float32Array.from({ length: pointCount }, (_, index) => 20 * 1000 ** (index / (pointCount - 1)));
+  const [lowHz, highHz] = frequencyRangeHz;
+  return Float32Array.from({ length: pointCount }, (_, index) => lowHz * ((highHz / lowHz) ** (index / (pointCount - 1))));
 }
 
 /**
@@ -290,7 +346,7 @@ export function logSweepHz(pointCount) {
  * @returns {number}
  */
 export function maxBoostDb(bands) {
-  return Math.max(0, ...responseDb(bands, logSweepHz(121)));
+  return Math.max(0, ...responseDb(bands, logSweepHz(sweepPointCount)));
 }
 
 // Auto preamp lowers the sound by its highest boost, so the loudest frequency never clips.
@@ -364,7 +420,7 @@ export function parseAutoEq(text) {
     const isBand = bandTypes.includes(type) && Number.isFinite(frequencyHz);
     if (!isBand) continue;
 
-    bands.push({ on: words[2].toUpperCase() === "ON", type, frequencyHz, gainDb: readAfter("gain") ?? 0, q: readAfter("q") ?? 0.71 });
+    bands.push({ on: words[2].toUpperCase() === "ON", type, frequencyHz, gainDb: readAfter("gain") ?? 0, q: readAfter("q") ?? butterworthQ });
   }
   return { bands, preampDb };
 }
