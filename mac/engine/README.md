@@ -17,11 +17,12 @@ during a fade waits for it to end, and then only the newest sound goes in.
 | File | What it does |
 | --- | --- |
 | `goui-engine/main.swift` | Reads the flags, starts the engine, prints the meters and stops on a signal |
-| `goui/main.swift` | Starts the app. `--page` opens another page of `mac/web/`, such as a check |
+| `goui/main.swift` | Starts the app. `--page` opens another page, such as a check, in place of the panel |
 | `goui/AppController.swift` | Owns the engine, the menu bar item with its right-click menu, and the panel |
 | `goui/FloatingPanel.swift` | The panel under the menu bar item, which hides on a click elsewhere |
 | `goui/WebFileServer.swift` | Serves `goui://app/` from the web files inside the app |
-| `goui/Bridge.swift` | Answers the page's messages: status, meters, sound, power, response, restart, print |
+| `goui/Bridge.swift` | Answers the page's messages: status, meters, sound, power, storage, open, size, response, restart, print |
+| `goui/WebStorage.swift` | `chrome.storage.local` for the panel, in `~/Library/Application Support/goui/storage.json` |
 | `goui/SavedConfig.swift` | The power switch and the last sound, in `~/Library/Application Support/goui/config.json` |
 | `Render/Biquad.c` | The Web Audio spec's formulas for the eight filters, and each band's response |
 | `Render/Render.c` | The audio callback: the two chains, the fade and the meters |

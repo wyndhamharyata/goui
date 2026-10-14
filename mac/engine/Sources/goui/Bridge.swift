@@ -14,6 +14,8 @@ private struct Request: Decodable {
   let band: Band?
   let sampleRateHz: Double?
   let frequenciesHz: [Double]?
+  let url: String?
+  let height: Double?
 }
 
 // Answers the page's messages and sends it events. Only pages served by goui reach it.
@@ -24,7 +26,9 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
   static let maxFrequencyCount = 1000
 
   weak var webView: WKWebView?
+  var onResize: ((Double) -> Void)?
   private let engine: Engine
+  private let storage = WebStorage()
   private var config: SavedConfig
 
   init(engine: Engine, config: SavedConfig) {
@@ -50,6 +54,8 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
   }
 
   private func answer(_ body: Any) throws -> Any? {
+    if let storageAnswer = try answerStorage(body) { return storageAnswer }
+
     let request = try JSONDecoder().decode(Request.self, from: JSONSerialization.data(withJSONObject: body))
     switch request.type {
     case "status":
@@ -79,6 +85,18 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
       }
 
       return try bandResponse(band, sampleRateHz: sampleRateHz, frequenciesHz: frequenciesHz)
+    case "open":
+      guard let text = request.url, let url = URL(string: text), url.scheme == "https" || url.scheme == "http" else {
+        throw BridgeError(description: "An open message needs a web address")
+      }
+
+      NSWorkspace.shared.open(url)
+      return nil
+    case "size":
+      guard let height = request.height, height.isFinite, height > 0 else { throw BridgeError(description: "A size message needs a height above 0") }
+
+      onResize?(height)
+      return nil
     case "restart":
       engine.restart(reason: "The page asked for a restart.")
       return nil
@@ -90,9 +108,30 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
     }
   }
 
+  // Storage items can hold any JSON, so these messages are read by hand. Returns nil for any other message.
+  private func answerStorage(_ body: Any) throws -> Any? {
+    guard let message = body as? [String: Any], let type = message["type"] as? String, type.hasPrefix("storage:") else { return nil }
+
+    let keys = message["keys"] as? [String]
+    switch type {
+    case "storage:get":
+      return storage.read(keys)
+    case "storage:set":
+      guard let items = message["items"] as? [String: Any] else { throw BridgeError(description: "A storage:set message needs items") }
+
+      try storage.write(items)
+    case "storage:remove":
+      storage.remove(keys ?? [])
+    default:
+      throw BridgeError(description: "goui has no message called \(type)")
+    }
+    return NSNull()
+  }
+
   private func describeStatus() -> [String: String] {
     switch engine.status {
     case .stopped: ["state": "stopped"]
+    case .starting: ["state": "starting"]
     case .running: ["state": "running"]
     case .waitingToRetry(let lastError): ["state": "waitingToRetry", "lastError": lastError]
     }

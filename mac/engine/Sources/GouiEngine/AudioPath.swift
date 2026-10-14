@@ -23,7 +23,7 @@ public struct MeterReading {
 }
 
 // Undoes each built step in reverse order. A failed step is printed and the rest still run.
-private struct Teardown {
+struct Teardown: @unchecked Sendable {
   private var steps: [(name: String, run: () -> OSStatus)] = []
 
   mutating func add(_ name: String, _ run: @escaping () -> OSStatus) {
@@ -39,24 +39,19 @@ private struct Teardown {
   }
 }
 
-// One run of the audio path: a muted tap of every other process, played to the default output.
-@MainActor
-final class AudioPath {
+// The tap, the aggregate device and the running callback, built away from the main thread.
+// The first build waits there until the person answers the permission prompt.
+struct BuiltAudioPath: @unchecked Sendable {
+  let outputID: AudioObjectID
+  let aggregateID: AudioObjectID
+  let render: OpaquePointer
   let summary: AudioPathSummary
-  private var render: OpaquePointer?
-  private var teardown = Teardown()
-  private var overloadListener: PropertyListener?
-  private var sampleRateListener: PropertyListener?
-  private var overloadCount = 0
-  private var lastCallbackCount: UInt64 = 0
-  private var lastMeterNanoseconds: UInt64
+  var teardown: Teardown
 
-  init(sound: RenderSound, onSampleRateChange: @escaping @MainActor () -> Void) throws {
+  static func build(sound: RenderSound) throws -> BuiltAudioPath {
     var teardown = Teardown()
-    let outputID: AudioObjectID
-    let aggregateID: AudioObjectID
     do {
-      outputID = try readProperty(of: systemObject, kAudioHardwarePropertyDefaultOutputDevice, as: AudioObjectID.self)
+      let outputID = try readProperty(of: systemObject, kAudioHardwarePropertyDefaultOutputDevice, as: AudioObjectID.self)
       let outputUID = try readString(of: outputID, kAudioDevicePropertyDeviceUID)
       let outputName = try readString(of: outputID, kAudioObjectPropertyName)
 
@@ -65,7 +60,7 @@ final class AudioPath {
       teardown.add("Destroying the tap") { AudioHardwareDestroyProcessTap(tapID) }
       let tapChannelCount = try readTapChannelCount(tapID)
 
-      aggregateID = try createAggregateDevice(outputUID: outputUID, tapUUID: tapUUID)
+      let aggregateID = try createAggregateDevice(outputUID: outputUID, tapUUID: tapUUID)
       teardown.add("Destroying the aggregate device") { AudioHardwareDestroyAggregateDevice(aggregateID) }
       let sampleRateHz = try readProperty(of: aggregateID, kAudioDevicePropertyNominalSampleRate, as: Float64.self)
       guard sampleRateHz > 0 else { throw AudioError("The output reports a sample rate of \(sampleRateHz) Hz") }
@@ -78,7 +73,6 @@ final class AudioPath {
         throw AudioError("Creating the render state failed. Memory ran out or atomic float is not lock-free here")
       }
       teardown.add("Freeing the render state") { renderStateDestroy(render); return noErr }
-      self.render = render
 
       var createdIOProcID: AudioDeviceIOProcID?
       try throwIfFailed(AudioDeviceCreateIOProcID(aggregateID, renderAudio, UnsafeMutableRawPointer(render), &createdIOProcID), step: "Creating the audio callback")
@@ -87,20 +81,39 @@ final class AudioPath {
       try throwIfFailed(AudioDeviceStart(aggregateID, ioProcID), step: "Starting the aggregate device")
       teardown.add("Stopping the aggregate device") { AudioDeviceStop(aggregateID, ioProcID) }
 
-      summary = try readSummary(aggregateID: aggregateID, outputName: outputName, sampleRateHz: sampleRateHz, tapChannelCount: tapChannelCount)
+      let summary = try readSummary(aggregateID: aggregateID, outputName: outputName, sampleRateHz: sampleRateHz, tapChannelCount: tapChannelCount)
+      return BuiltAudioPath(outputID: outputID, aggregateID: aggregateID, render: render, summary: summary, teardown: teardown)
     } catch {
       teardown.runAll()
       throw error
     }
-    self.teardown = teardown
+  }
+}
+
+// One run of the audio path: a muted tap of every other process, played to the default output.
+@MainActor
+final class AudioPath {
+  let summary: AudioPathSummary
+  private var render: OpaquePointer?
+  private var teardown: Teardown
+  private var overloadListener: PropertyListener?
+  private var sampleRateListener: PropertyListener?
+  private var overloadCount = 0
+  private var lastCallbackCount: UInt64 = 0
+  private var lastMeterNanoseconds: UInt64
+
+  init(built: BuiltAudioPath, onSampleRateChange: @escaping @MainActor () -> Void) throws {
+    summary = built.summary
+    render = built.render
+    teardown = built.teardown
     lastMeterNanoseconds = DispatchTime.now().uptimeNanoseconds
 
     do {
-      overloadListener = try PropertyListener(object: aggregateID, selector: kAudioDeviceProcessorOverload) { [weak self] in
+      overloadListener = try PropertyListener(object: built.aggregateID, selector: kAudioDeviceProcessorOverload) { [weak self] in
         self?.overloadCount += 1
       }
       // A call on a Bluetooth headphone changes its rate, and the filters were worked out for the old one.
-      sampleRateListener = try PropertyListener(object: outputID, selector: kAudioDevicePropertyNominalSampleRate, handler: onSampleRateChange)
+      sampleRateListener = try PropertyListener(object: built.outputID, selector: kAudioDevicePropertyNominalSampleRate, handler: onSampleRateChange)
     } catch {
       stop()
       throw error

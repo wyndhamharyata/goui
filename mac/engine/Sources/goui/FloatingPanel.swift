@@ -33,6 +33,16 @@ final class FloatingPanel: NSPanel {
     lastHiddenAt = Date()
   }
 
+  // Keeps the top edge where it is, and stays on the screen.
+  func resize(toHeight height: Double) {
+    let maxHeight = (screen.map { Double($0.visibleFrame.height) } ?? height) - (2 * Self.gapPx)
+    let newHeight = min(height, maxHeight)
+    var newFrame = frame
+    newFrame.origin.y = frame.maxY - newHeight
+    newFrame.size.height = newHeight
+    setFrame(newFrame, display: true)
+  }
+
   func show(below button: NSStatusBarButton) {
     guard let buttonWindow = button.window, let screen = buttonWindow.screen else { return }
 

@@ -52,7 +52,7 @@ So every way back is a hard kill and a fresh start, or a fresh engine inside the
    audio should play, it builds its session again.
 3. By hand from the menu. The right-click menu has **Restart engine**, which builds the engine
    again, and **Reload panel**, which loads the page again. Both work when the web view is broken.
-   The page around the panel also shows a status dot and a restart button.
+   The panel's status line shows when the engine waits to try again, with its error.
 4. By hand from a terminal. `goui restart` runs `launchctl kickstart -k` on the app.
 
 ### Between the page and Swift
@@ -67,11 +67,12 @@ it, so it needs no port, token or origin check.
 
 | Chrome API | In the app |
 | --- | --- |
-| `chrome.storage.local` and `session` | Messages to Swift, which keeps a JSON file |
-| `chrome.runtime.sendMessage` | Messages to Swift |
-| `chrome.runtime.onMessage` | Events from Swift, passed to the panel's listeners |
+| `chrome.storage.local` | Messages to Swift, which keeps `storage.json` |
+| `chrome.storage.session` | Kept in the page. `capture` is read from the engine's status each time |
+| `chrome.runtime.sendMessage` | `audio:config` becomes a sound, `capture:start` and `capture:stop` power on and off |
+| `chrome.runtime.onMessage` | The engine's status as `capture:state`, and its output peak as `audio:telemetry` |
 | `chrome.runtime.getURL` | A `goui://app` address |
-| `chrome.tabs.create` | A message to Swift, which opens the link in the default browser |
+| `chrome.tabs.create` | A web page opens in the default browser. A goui page opens the homepage, as the guide is for Chrome |
 
 - Before a config goes to Swift, `chrome.js` runs `toPlayedSound` from `src/shared/config.js`.
   The engine only ever takes `{ preampDb, bands }` and keeps the last one for the next login.
@@ -89,10 +90,14 @@ swaps to new filters without a lock and fades across about 20 ms, so a change do
 
 - The web view loads `src/panel.html` as it is, served under `goui://app` from the extension's own
   files. The app puts `chrome.js` in the page before the panel's code runs.
-- The panel opens in its popup mode. Its power button already sends `capture:start` and
-  `capture:stop`. `chrome.js` turns those into engine on and off.
-- `mac/web/shell.html` holds the panel in an iframe, with the Mac controls above it: the engine
-  status and its restart button now, the output device later.
+- The panel opens in its popup mode, as the popup of one stand-in tab. Its power button sends
+  `capture:start` and `capture:stop`, and `chrome.js` turns those into engine on and off. The popup
+  also asks to start as it opens. `chrome.js` takes a start only from a click, so opening the panel
+  does not turn goui back on.
+- The panel's status line shows the engine's status. The right-click menu holds the Mac's own
+  controls. The output device will need a place of its own when it comes.
+- The panel takes the height of its page, up to the height of the screen.
+- The panel has no console on the Mac, so `chrome.js` sends its errors to the app's log.
 - The web view is built when the panel first opens. If it holds too much memory with the panel
   closed, the app can drop it on close and build it again on open.
 - Words about the tab read oddly on a Mac for now. They wait for the branding pass, with the level
@@ -135,7 +140,7 @@ Each step starts only when it is asked for, and ends with a commit.
 1. Permission check. Done, see Settled.
 2. App. Done, see Settled. The callback watch from A stuck engine is still to come.
 3. Biquads in C. Done, see Settled.
-4. `chrome.js` and `shell.html`, so the existing panel drives the engine through the bridge.
+4. `chrome.js`. Done, see Settled.
 5. Install. A script that builds the tarball, `install.sh` with the plist, and the `goui`
    command.
 
@@ -168,6 +173,13 @@ Each step starts only when it is asked for, and ends with a commit.
   one's filter memory. `goui-render-check` changes the sound at a peak of a tone, and the largest
   step between two samples stays within the tone's own. With no fade, the steps reached 1.8 to 100
   times that. A change during a fade waits, and only the newest sound goes in.
+- The tap is built on its own queue. The first build of each new signature waits there for the
+  permission prompt, while the menu bar item and the panel keep working. The panel shows that goui
+  is starting. A stop or a newer start during the wait takes down the build when it ends.
+- The extension's panel runs in the app as it is, with `chrome.js`. The Bass, Vocals and Treble
+  sliders, the preamp with Auto, Level match with A/B, the AutoEQ search and its profiles, and the
+  links all work. The search box takes typing while music plays in another app. The panel was
+  not built inside `shell.html`, as an iframe would only add sizing and focus to handle.
 - **Restart engine** takes the tap down and builds it again, so the sound plays as it is for a
   moment, louder, then drops back. A new output device or rate does the same. Building the new tap
   before taking the old one down would play both at once. **Quit goui** brings the sound back at
@@ -178,10 +190,6 @@ Each step starts only when it is asked for, and ends with a commit.
 - How the Mac journeys run. Playwright cannot drive a `WKWebView`. One way is the panel and
   `chrome.js` in Chromium against a stand-in for the bridge, with the engine checked on its own
   by what it plays.
-- Whether the first start waits for the permission on the main thread, so the menu bar item
-  does not answer until the person presses Allow. If it does, the tap moves to its own queue.
-- How the floating panel and the web view handle keyboard focus. Typing in the AutoEQ search must
-  work while music plays in another app.
 
 ## Options set aside
 

@@ -5,7 +5,9 @@ import WebKit
 // Owns the engine, the menu bar item, the panel and its page.
 @MainActor
 final class AppController: NSObject, WKNavigationDelegate {
-  nonisolated static let shellPagePath = "mac/web/shell.html"
+  // The panel opens as the popup of one stand-in tab, so it shows its power button.
+  nonisolated static let panelPagePath = "src/panel.html?tab=1"
+  private static let chromePath = "mac/web/chrome.js"
   private static let panelSize = NSSize(width: 400, height: 600)
   // The click on the menu bar item that hides the panel would open it again straight away.
   private static let reopenDelaySeconds = 0.3
@@ -50,7 +52,7 @@ final class AppController: NSObject, WKNavigationDelegate {
     statusItem.button?.target = self
     statusItem.button?.action = #selector(clickMenuBarItem)
     statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
-    if pagePath != Self.shellPagePath { togglePanel() }
+    if pagePath != Self.panelPagePath { togglePanel() }
   }
 
   private func buildMenu() {
@@ -87,6 +89,7 @@ final class AppController: NSObject, WKNavigationDelegate {
   private func buildPanel() -> FloatingPanel {
     let webView = buildWebView()
     let panel = FloatingPanel(contentView: webView, size: Self.panelSize)
+    bridge?.onResize = { [weak panel] height in panel?.resize(toHeight: height) }
     self.webView = webView
     self.panel = panel
     return panel
@@ -98,9 +101,19 @@ final class AppController: NSObject, WKNavigationDelegate {
     configuration.setURLSchemeHandler(WebFileServer(rootURL: webRootURL), forURLScheme: WebFileServer.scheme)
     if let bridge { configuration.userContentController.addScriptMessageHandler(bridge, contentWorld: .page, name: Bridge.name) }
 
+    // The Chrome stand-in runs before the panel's own code, which reads chrome as it loads.
+    if let chromeSource = try? String(contentsOf: webRootURL.appending(path: Self.chromePath), encoding: .utf8) {
+      configuration.userContentController.addUserScript(WKUserScript(source: chromeSource, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+    } else {
+      print("\(Self.chromePath) is missing from the app, so the panel cannot reach goui.")
+    }
+
     let webView = WKWebView(frame: NSRect(origin: .zero, size: Self.panelSize), configuration: configuration)
     webView.navigationDelegate = self
     webView.isInspectable = true
+    // The panel's own background shows from the first frame, with no white flash before it loads.
+    webView.underPageBackgroundColor = .black
+    webView.setValue(false, forKey: "drawsBackground")
     bridge?.webView = webView
     loadPage(in: webView)
     return webView

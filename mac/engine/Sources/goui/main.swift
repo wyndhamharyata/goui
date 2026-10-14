@@ -9,8 +9,8 @@ let controller = AppController(pagePath: readPagePath(CommandLine.arguments))
 controller.start()
 app.run()
 
-// --page opens another page of mac/web, such as a check, in place of the shell.
+// --page opens another page, such as a check in mac/web/checks, in place of the panel.
 func readPagePath(_ arguments: [String]) -> String {
-  guard let flagIndex = arguments.firstIndex(of: "--page"), flagIndex + 1 < arguments.count else { return AppController.shellPagePath }
+  guard let flagIndex = arguments.firstIndex(of: "--page"), flagIndex + 1 < arguments.count else { return AppController.panelPagePath }
   return arguments[flagIndex + 1]
 }
