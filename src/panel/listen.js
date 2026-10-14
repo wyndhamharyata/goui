@@ -6,7 +6,7 @@ import { layerColor } from "../graph/colors.js";
 import { formatDb } from "../graph/format.js";
 import { byId, buildElement, sectionOf, setField, showTab } from "./dom.js";
 import { describeLayerName } from "./items.js";
-import { changeTarget } from "./headphones.js";
+import { changeTarget, clearHeadphoneLayer } from "./headphones.js";
 import { toggleLibraryAction } from "./library.js";
 import { onRefresh } from "./refresh.js";
 import { commit, removeEarLayer } from "./sound.js";
@@ -60,6 +60,7 @@ function buildLayerRow(role, layer) {
   parts.push(buildElement("button", { text: "Change", on: { click: () => openLibrarySection(role) } }));
 
   if (role === "ear") parts.push(buildElement("button", { text: "×", title: "Take the ear layer off", on: { click: removeEarLayer } }));
+  if (role === "headphone" && layer.bands.length > 0) parts.push(buildElement("button", { text: "×", title: "Clear the headphone layer to Flat", on: { click: clearHeadphoneLayer } }));
 
   return buildElement("div", { className: layer.on ? "layer" : "layer off" }, parts);
 }
@@ -158,11 +159,13 @@ export function wireListen() {
     chrome.storage.local.set({ isLevelMatched: state.isLevelMatched });
   });
   byId("autoPreamp").addEventListener("click", toggleAutoPreamp);
+  // A second press puts the text away, as each layer's Export does.
   byId("exportAll").addEventListener("click", () => {
     const whole = byId("wholeText");
 
-    whole.hidden = false;
+    whole.hidden = !whole.hidden;
     whole.value = toAutoEq({ preampDb: toPlayedSound(state.config).preampDb, bands: listExportBands(state.config) });
+    byId("exportAll").classList.toggle("on", !whole.hidden);
   });
 }
 

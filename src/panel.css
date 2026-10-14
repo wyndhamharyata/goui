@@ -302,6 +302,47 @@ textarea {
   }
 }
 
+/* Wider still, each layer takes a column of its own, so the whole panel is one row of four columns. */
+@media (min-width: 1300px) {
+  .panes {
+    grid-template-columns: 290px minmax(0, 1fr) 300px 300px;
+    /* The Library title, My ear, Whole sound and the credits. Whole sound's row takes any spare height. */
+    grid-template-rows: auto auto 1fr auto;
+  }
+
+  .pane[data-pane="listen"],
+  .pane[data-pane="tune"] {
+    grid-row: 1 / -1;
+  }
+
+  .pane[data-pane="library"] {
+    display: contents;
+  }
+
+  .pane[data-pane="library"] > .column-title {
+    grid-column: 3 / -1;
+  }
+
+  .pane[data-pane="library"] > [data-role="headphone"] {
+    grid-column: 3;
+    grid-row: 2 / 4;
+  }
+
+  .pane[data-pane="library"] > [data-role="ear"] {
+    grid-column: 4;
+    grid-row: 2;
+  }
+
+  .pane[data-pane="library"] > .card:not(.preset-section) {
+    grid-column: 4;
+    grid-row: 3;
+  }
+
+  .pane[data-pane="library"] > .credits {
+    grid-column: 3 / -1;
+  }
+}
+
 .sound {
   flex-direction: row;
   align-items: center;

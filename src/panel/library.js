@@ -46,7 +46,7 @@ export function renderEarList() {
   const turnOff = buildResultItem("No ear tuning", "Headphone only", removeEarLayer);
 
   list.replaceChildren();
-  appendSection(list, "Your ear state.presets", items);
+  appendSection(list, "Your ear presets", items);
   list.append(turnOff);
   renderPresetCards();
 }
@@ -155,7 +155,6 @@ const libraryActions = {
 
     commit();
     chrome.tabs.create({ url: "https://eqbyear.com" });
-    showHint("ear", "eqbyear is open in a new tab, with My ear off. Click the goui icon on that tab, run the test, then Paste the result here.");
   },
 };
 

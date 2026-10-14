@@ -257,7 +257,7 @@ journey("given a saved ear preset, it stays on a new headphone, No ear tuning dr
   await expect(sectionOf(panel, "ear").locator(".item[data-name='my ear']")).toHaveCount(0);
 });
 
-journey("given a headphone band and an ear band, each layer exports alone and the whole sound exports both", async (context, port) => {
+journey("given a headphone band and an ear band, each layer exports alone, the whole sound exports both, and a second press puts it away", async (context, port) => {
   const { panel } = await startGouiOnTone(context, port, 1000);
 
   await turnAutoPreampOff(panel);
@@ -273,6 +273,59 @@ journey("given a headphone band and an ear band, each layer exports alone and th
   await panel.click("#exportAll");
   await expect(panel.locator("#wholeText")).toHaveValue(/Filter 1: ON PK Fc 1000 Hz Gain 6\.0 dB/);
   await expect(panel.locator("#wholeText")).toHaveValue(/Filter 2: ON PK Fc 1000 Hz Gain -6\.0 dB/);
+
+  await panel.click("#exportAll");
+  await expect(panel.locator("#wholeText")).toBeHidden();
+});
+
+journey("given an AutoEQ peak, the × on the headphone row plays the 1 kHz tone flat again and names the layer Flat", async (context, port) => {
+  const { panel } = await startGouiOnTone(context, port, 1000);
+
+  await turnAutoPreampOff(panel);
+
+  const flat = await readSteadyLevel(panel);
+
+  await pasteInto(panel, "headphone", peakText);
+  expectChangeDb(await readSteadyLevel(panel), flat, 6);
+
+  const clear = layerRow(panel, "Headphone").locator("[title='Clear the headphone layer to Flat']");
+
+  await openTab(panel, "listen");
+  await clear.click();
+  expectChangeDb(await readSteadyLevel(panel), flat, 0);
+  await expect(layerRow(panel, "Headphone")).toContainText("Flat");
+  await expect(clear).toHaveCount(0);
+});
+
+/**
+ * @param {import("@playwright/test").Page} panel
+ * @param {string} selector
+ * @returns {Promise<{ x: number, y: number, width: number, height: number }>}
+ */
+function readBox(panel, selector) {
+  return panel.locator(selector).boundingBox();
+}
+
+journey("given a 1400 px panel, Listen, Tune, Headphone and My ear stand in one row, with Whole sound under My ear", async (context, port) => {
+  const { panel } = await startGouiOnTone(context, port, 1000);
+
+  await panel.setViewportSize({ width: 1400, height: 900 });
+
+  const listen = await readBox(panel, "[data-pane=listen]");
+  const tune = await readBox(panel, "[data-pane=tune]");
+  const headphone = await readBox(panel, "[data-role=headphone]");
+  const ear = await readBox(panel, "[data-role=ear]");
+  const whole = await readBox(panel, ".card:has(#exportAll)");
+  const columns = [listen, tune, headphone, ear];
+
+  for (const [index, column] of columns.entries()) {
+    expect(column.y).toBeLessThan(listen.y + 40);
+    if (index > 0) expect(column.x).toBeGreaterThan(columns[index - 1].x + columns[index - 1].width);
+  }
+
+  expect(ear.width).toBe(headphone.width);
+  expect(whole.x).toBe(ear.x);
+  expect(whole.y).toBeGreaterThan(ear.y + ear.height);
 });
 
 journey("given sounds and Level match saved by older builds, each sound shows in both lists and plays, and Level match stays on", async (context, port) => {
@@ -310,7 +363,6 @@ journey("given an ear layer, the eqbyear button turns it off and opens the test 
   await panel.click("#eqbyear");
   await expect.poll(() => layerSwitch(panel, "My ear").isChecked()).toBe(false);
   await expect.poll(() => context.pages().some((page) => page.url().startsWith("https://eqbyear.com"))).toBe(true);
-  await expect(sectionOf(panel, "ear").locator(".action-hint")).toContainText("Click the goui icon on that tab");
 });
 
 journey("given a ParametricEQ.txt file, Import plays its 1 kHz peak in the headphone layer", async (context, port) => {

@@ -9,9 +9,9 @@ final class AppController: NSObject, WKNavigationDelegate {
   nonisolated static let panelPagePath = "src/panel.html?tab=1"
   private static let chromePath = "mac/web/chrome.js"
   private static let panelSize = NSSize(width: FloatingPanel.narrowWidthPx, height: 600)
-  // At this width src/panel.css shows Listen, Tune and Library side by side, as in a wide side panel.
+  // At 900 px src/panel.css shows Listen, Tune and Library side by side. At 1300 px each layer has its own column too.
   private static let wideWidthPx = 900.0
-  private static let firstWideWidthPx = 1000.0
+  private static let firstWideWidthPx = 1400.0
   private static let widthKey = "panelWidth"
   private static let wideWidthKey = "panelWideWidth"
   // The click on the menu bar item that hides the panel would open it again straight away.

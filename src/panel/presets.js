@@ -109,7 +109,7 @@ export async function readPresets(stored) {
 
   // The old key goes only once the new lists are written, so a failed write loses nothing.
   await chrome.storage.local.set({ headphonePresets: state.presets.headphone, earPresets: state.presets.ear });
-  await chrome.storage.local.remove(["savedSounds", "state.presets"]);
+  await chrome.storage.local.remove(["savedSounds", "presets"]);
 }
 
 onRefresh(renderPresetCards);

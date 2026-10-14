@@ -104,10 +104,18 @@ async function findHeadphones(query, hint) {
  */
 function showHeadphoneList(list, sections) {
   list.replaceChildren();
-  appendSection(list, "Your headphone state.presets", sections.saved);
+  appendSection(list, "Your headphone presets", sections.saved);
   appendSection(list, "AutoEQ headphones", sections.autoEq);
   appendSection(list, "Starter sounds", sections.starter);
   renderPresetCards();
+}
+
+// The headphone layer cannot come off, so its × plays it flat again, as picking Flat does.
+/** @returns {void} */
+export function clearHeadphoneLayer() {
+  const [flat] = starterPresets;
+
+  replaceLayer({ name: flat.name, source: layerSources.starter, bands: flat.bands }, "headphone");
 }
 
 // An empty box lists your headphone presets and the starter sounds. Typing also searches AutoEQ.
