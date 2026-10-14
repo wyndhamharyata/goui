@@ -1,7 +1,6 @@
-// The stored sound and how it turns into what the chain plays. A Config holds the main switch, the
-// preamp, the three Listen sliders and the layers. makePlayedSound merges the bands of every layer
-// that is on with the sliders as fixed bands, and works out the auto preamp.
-import { autoEqBassShelfHz, autoPreampDb, butterworthQ, clamp, cleanBands, hasGain } from "./bands.js";
+// The stored config, and makePlayedSound, which merges the layers that are on with the sliders and preamp.
+import { autoEqBassShelfHz, autoPreampDb, butterworthQ, cleanBands, hasGain } from "./bands.js";
+import { clamp } from "./math.js";
 
 /** @typedef {import("./bands.js").Band} Band */
 
@@ -79,6 +78,7 @@ function cleanLayer(raw, fallbackName) {
   const autoEq = raw && raw.autoEq;
   const isAutoEq = Boolean(autoEq) && ["name", "path", "target"].every((key) => typeof autoEq[key] === "string");
   if (isAutoEq) layer.autoEq = { name: autoEq.name, path: autoEq.path, target: autoEq.target };
+
   return layer;
 }
 
@@ -96,8 +96,7 @@ export function sanitizeConfig(raw) {
    */
   const sliderDb = (value) => clamp(Number(value) || 0, ...sliderRangeDb);
 
-  // A config stored before the layers holds one flat list. That list becomes the headphone layer.
-  // A config stored before the rename uses profileName and profileKind.
+  // An older config holds one flat list, named by soundName or profileName. It becomes the headphone layer.
   const older = {
     headphone: {
       on: true,
@@ -131,8 +130,7 @@ export function listOnLayers(config) {
     .map((role) => ({ role, bands: config.layers[role].bands }));
 }
 
-// The three Listen sliders, as bands on top of the sound's own bands. They stay in the chain at
-// 0 dB, so a slider move never rebuilds the audio nodes.
+// The Listen sliders stay in the chain at 0 dB, so moving one never rebuilds the audio nodes.
 function sliderBands(sliders) {
   return [
     { on: true, type: "LSC", frequencyHz: autoEqBassShelfHz, gainDb: sliders.bassDb, q: butterworthQ },

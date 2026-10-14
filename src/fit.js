@@ -1,14 +1,6 @@
-// Fits a few bands to the difference between two target curves. AutoEQ's own file already tunes the
-// headphone to its default target, so these bands only move that sound to the target you pick.
-import {
-  autoEqBassShelfHz,
-  butterworthQ,
-  clamp,
-  logSweepHz,
-  responseDb,
-  roundGainDb,
-  sweepPointCount,
-} from "./shared/bands.js";
+// Fits a few bands that move AutoEQ's sound from its own target to the target you pick.
+import { autoEqBassShelfHz, butterworthQ, logSweepHz, responseDb, roundGainDb, sweepPointCount } from "./shared/bands.js";
+import { clamp, meanSquare, octavesToRatio } from "./shared/math.js";
 
 /** @typedef {import("./shared/bands.js").Band} Band */
 
@@ -48,9 +40,8 @@ function readTargetDb(target) {
  */
 function measureMissDbSquared(bands, curveDb) {
   const playedDb = responseDb(bands, sweepHz);
-  let total = 0;
-  for (let index = 0; index < fittedPoints; index += 1) total += (curveDb[index] - playedDb[index]) ** 2;
-  return total / fittedPoints;
+  const missesDb = curveDb.slice(0, fittedPoints).map((levelDb, index) => levelDb - playedDb[index]);
+  return meanSquare(missesDb);
 }
 
 /**
@@ -64,6 +55,7 @@ function makeKnobs(band) {
     knobs.push({ band, key: "q", min: 0.4, max: 4, step: 0.25, isLog: true });
   }
   if (band.type === "HSC") knobs.push({ band, key: "frequencyHz", min: 5000, max: fitTopHz, step: 0.25, isLog: true });
+
   return knobs;
 }
 
@@ -75,13 +67,11 @@ function makeKnobs(band) {
  * @returns {number}
  */
 function moveKnob(knob, value, direction) {
-  const moved = knob.isLog ? value * (2 ** (direction * knob.step)) : value + (direction * knob.step);
+  const moved = knob.isLog ? value * octavesToRatio(direction * knob.step) : value + (direction * knob.step);
   return clamp(moved, knob.min, knob.max);
 }
 
-// Each knob tries a step up and a step down. A step that helps stays. A knob that cannot help
-// halves its step, until every step is too small to matter. A step is in dB for a gain and in
-// octaves for a frequency or a Q.
+// Each knob tries a step each way and keeps one that helps, or halves its step. Steps are dB or octaves.
 /**
  * @param {Band[]} bands
  * @param {number[]} curveDb

@@ -1,5 +1,4 @@
-// Builds DEPENDENCIES.md from the packages npm installed. Every one is a development tool for lint,
-// test or build, so none of them travel in the extension zip.
+// Builds DEPENDENCIES.md from the installed packages. Each one is a tool for lint, test or build.
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -29,6 +28,7 @@ function installedPackages() {
       found.push({ name, version: manifest.version, license: readLicense(manifest) });
     }
   }
+
   return found.sort((left, right) => left.name.localeCompare(right.name));
 }
 

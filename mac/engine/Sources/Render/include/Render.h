@@ -17,8 +17,7 @@ typedef struct {
   float outputPeakLinear;
 } RenderMeters;
 
-// Returns NULL when memory runs out, when the channel count is outside 1 to maxTapChannelCount, or
-// when this machine has no lock-free atomic float.
+// NULL when memory runs out, the channel count is outside 1 to 16, or atomic float is not lock-free.
 RenderState *_Nullable renderStateCreate(double gainDb, double bassDb, double sampleRateHz,
                                          unsigned int tapChannelCount, unsigned int tapBufferIndex);
 void renderStateDestroy(RenderState *state);

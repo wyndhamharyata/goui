@@ -113,6 +113,9 @@ Never write a banner, an ALL-CAPS label, step narration such as `// Step 1`, a l
 JSDoc block holds types only (rule 10).
 If a line needs a comment to say what it does, rename it or split it.
 
+A comment is one line, never two. `npm run lint` checks it. A term a reader may not know, such as
+Butterworth, gets a link to its explanation on the same line.
+
 ## 4. A name is a full word.
 
 - Write full words. `errorCount`, never `nErr`. A long name is fine.
@@ -138,6 +141,8 @@ If a line needs a comment to say what it does, rename it or split it.
 - Check a value once, where it enters: a storage read, an AutoEQ file, a message from another
   Chrome context, a field the user typed in. Code past that point trusts the value.
 - A blank line groups a block. One idea per block, about five statements.
+- A function of more than three lines keeps a blank line above its last return. `npm run lint`
+  checks it.
 - Name a compound condition before you test it: `const canDrag = isCapturing && !isLocked`.
 - A ternary fits on one line. Never nest one.
 - Build a list with `if` and `push`. Never `[a && x, b && y].filter(Boolean)`.
@@ -157,6 +162,8 @@ If a line needs a comment to say what it does, rename it or split it.
 - Each Chrome context has its own entry file: `src/panel.js`, `src/offscreen.js`,
   `src/service-worker.js` and the how-to page (`src/intro.html`). A context can split its code into
   more files by concern, as the panel does with `src/graph.js`, `src/fit.js` and `src/autoeq.js`.
+- Each formula is a named function in `src/shared/math.js`, even when one place uses it, as `clamp`
+  is. `20 * Math.log10(x)` is `linearToDb(x)`.
 - Code that two contexts both need goes in `src/shared/`. `bands.js` holds one band and its Web
   Audio response. `config.js` holds the layers, the stored config and the played sound.
   `messages.js` names the messages between contexts. `src/base.css` holds the palette of both

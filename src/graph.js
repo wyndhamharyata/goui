@@ -1,10 +1,7 @@
 import {
-  clamp,
   frequencyRangeHz,
   hasGain,
-  octavesToQ,
   qStepRatio,
-  qToOctaves,
   responseDb,
   roundGainDb,
   setBandFrequency,
@@ -12,6 +9,7 @@ import {
   setBandQ,
   sweepPointCount,
 } from "./shared/bands.js";
+import { clamp, octavesToQ, qToOctaves } from "./shared/math.js";
 
 /** @typedef {import("./shared/bands.js").Band} Band */
 
@@ -61,8 +59,7 @@ const zooms = { all: frequencyRangeHz, lows: [20, 400], mids: [200, 5000], highs
 const backgroundColor = "#0e1013";
 const textColor = "#e6e9ef";
 const spectrumFill = `fill="rgba(150,165,200,0.13)"`;
-// The spectrum fill starts at the floor and runs up. A floor 100 dB below full scale puts a normal
-// song around the middle, with its peaks in the upper half.
+// A floor 100 dB below full scale puts a normal song around the middle of the spectrum fill.
 const spectrumFloorDb = -100;
 // The width of one character of the 9.5 px label text, to size the box around a label.
 const charWidthPx = 5.6;
@@ -110,8 +107,7 @@ export function formatDb(gainDb) {
   return `${gainDb > 0 ? "+" : ""}${gainDb.toFixed(1)}`;
 }
 
-// The offscreen document sends its points on logSweepHz, so the point for a frequency is found the
-// same way back.
+// The offscreen document sends its points on logSweepHz, so a frequency finds its point the same way.
 /**
  * @param {number[]} spectrumDb
  * @param {number} frequencyHz
@@ -132,8 +128,7 @@ function drawnGainDb(band) {
   return hasGain(band.type) ? band.gainDb : 0;
 }
 
-// The drawing below is plain functions of a view: the zoom, the tall or wide turn, and the size of
-// the plot. Only makeGraph holds state.
+// The drawing is plain functions of a view: the zoom, the turn and the plot size. Only makeGraph holds state.
 /** @typedef {{ zoom: string, isTall: boolean, size: PlotSize }} View */
 
 /** @typedef {{ index: number, x: number, y: number }} NodePoint */
@@ -171,8 +166,7 @@ function ratioToFrequency(view, ratio) {
   return clamp(lowHz * ((highHz / lowHz) ** ratio), ...frequencyRangeHz);
 }
 
-// The frequency runs along the plot and the gain across it. A wide graph has frequency on x. A tall
-// one has it on y.
+// Frequency runs along the plot and gain across it, so a wide graph has frequency on x and a tall one on y.
 /**
  * @param {View} view
  * @param {number} frequencyHz
@@ -184,6 +178,7 @@ function placePoint(view, frequencyHz, gainDb) {
   const along = frequencyToRatio(view, frequencyHz);
   const across = (clamp(gainDb, -maxShownGainDb, maxShownGainDb) + maxShownGainDb) / (2 * maxShownGainDb);
   if (view.isTall) return { x: size.left + (across * size.plotWidth), y: size.top + (along * size.plotHeight) };
+
   return { x: size.left + (along * size.plotWidth), y: size.top + ((1 - across) * size.plotHeight) };
 }
 
@@ -198,6 +193,7 @@ function readPoint(view, x, y) {
   const along = view.isTall ? (y - size.top) / size.plotHeight : (x - size.left) / size.plotWidth;
   const across = view.isTall ? (x - size.left) / size.plotWidth : 1 - ((y - size.top) / size.plotHeight);
   const gainDb = clamp((across * 2 * maxShownGainDb) - maxShownGainDb, -maxShownGainDb, maxShownGainDb);
+
   return { frequencyHz: ratioToFrequency(view, along), gainDb };
 }
 
@@ -263,6 +259,7 @@ function drawArea(view, frequencies, valuesDb, fill) {
   const start = placePoint(view, frequencies[0], 0);
   const end = placePoint(view, frequencies.at(-1), 0);
   const edge = tracePoints(view, frequencies, valuesDb);
+
   return `<polygon points="${start.x},${start.y} ${edge.join(" ")} ${end.x},${end.y}" ${fill}/>`;
 }
 
@@ -323,6 +320,7 @@ function drawFrequencyGrid(view) {
     const spot = view.isTall ? { x: 4, y: low.y + 3 } : { x: low.x, y: view.size.height - 4 };
     parts.push(makeText(spot, formatHz(frequencyHz), `text-anchor="${view.isTall ? "start" : "middle"}"`));
   }
+
   return parts.join("");
 }
 
@@ -340,6 +338,7 @@ function drawGainGrid(view) {
     const spot = view.isTall ? { x: from.x, y: 11 } : { x: 4, y: from.y + 3 };
     parts.push(makeText(spot, gainDb > 0 ? `+${gainDb}` : `${gainDb}`, `text-anchor="${view.isTall ? "middle" : "start"}"`));
   }
+
   return parts.join("");
 }
 
@@ -360,12 +359,11 @@ function drawSpectrum(view, frequencies, spectrumDb) {
     return `${placePoint(view, frequencyHz, 0).x},${size.top + (size.plotHeight * (1 - level))}`;
   });
   const floor = [`${size.left + size.plotWidth},${size.top + size.plotHeight}`, `${size.left},${size.top + size.plotHeight}`];
+
   return `<polygon points="${[...points, ...floor].join(" ")}" ${spectrumFill}/>`;
 }
 
-// The tall view stays even on both sides of the center line, with the 3 dB per octave slope that
-// stands the spectrum upright. That slope lifts the treble, so the span is 90 dB, not 100, and each
-// side takes up to 45% of the width.
+// The tall view mirrors the spectrum and tilts it 3 dB per octave upright, so it spans 90 dB, not 100.
 /**
  * @param {View} view
  * @param {Float32Array} frequencies
@@ -384,6 +382,7 @@ function drawMirroredSpectrum(view, frequencies, spectrumDb) {
     right.push(`${center.x + halfWidth},${center.y}`);
     left.unshift(`${center.x - halfWidth},${center.y}`);
   }
+
   return `<polygon points="${[...right, ...left].join(" ")}" ${spectrumFill}/>`;
 }
 
@@ -424,6 +423,7 @@ function drawSelectedBand(view, band, frequencies) {
     parts.push(`<rect x="${handle.x - 5}" y="${handle.y - 5}" width="10" height="10" rx="2" fill="${backgroundColor}" stroke="${typeColor.PK}" stroke-width="2"/>`);
     handles.push(handle);
   });
+
   return { svg: parts.join(""), handles };
 }
 
@@ -444,6 +444,7 @@ function drawNodes(view, entries, selectedIndex) {
     return `${earRing}${ring}<circle cx="${point.x}" cy="${point.y}" r="7" fill="${fill}" stroke="${typeColor[band.type]}" stroke-width="1.5"/>`
       + `<text x="${point.x}" y="${point.y + 3}" text-anchor="middle" font-size="9" font-weight="700" fill="${backgroundColor}">${index + 1}</text>`;
   }).join("");
+
   return { svg, nodes };
 }
 
@@ -502,8 +503,7 @@ function drawLayerCurves(view, frequencies, layers) {
   }).join("");
 }
 
-// A point moves from where it was grabbed, so it never jumps under the pointer. Shift moves it a
-// quarter as far, for fine steps on a narrow panel.
+// A point moves from where it was grabbed, so it never jumps. Shift moves it a quarter as far.
 /**
  * @param {View} view
  * @param {Band} band
@@ -576,9 +576,7 @@ export function makeGraph(host, options, hooks) {
     return drawHover(view, hover, hooks.listCurveBands());
   }
 
-  // A spectrum frame or a hover move redraws its own group alone. Replacing the whole SVG would
-  // remove the element under the pointer, and the browser then reads a press as cancelled and sends
-  // no click.
+  // Replacing the whole SVG would remove the element under the pointer, and the browser would send no click.
   /**
    * @param {string} name
    * @param {(view: View) => string} draw
@@ -688,8 +686,7 @@ export function makeGraph(host, options, hooks) {
   function endDrag() {
     const wasDragging = Boolean(drag);
     drag = null;
-    // A full redraw here would remove the point the press started on, and the browser would then
-    // send no click. Only the hover reading changes when a drag ends.
+    // A full redraw would remove the pressed point, and the browser would send no click, so only the hover redraws.
     if (wasDragging) renderHover();
   }
 

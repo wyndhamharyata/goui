@@ -1,5 +1,4 @@
-// The goui icon as rounded rectangles: one tile and four white bars. make-icons.mjs paints them
-// pixel by pixel. The README and store pictures draw them as SVG.
+// The goui icon as one tile and four white bars, for make-icons.mjs and the README and store pictures.
 
 /** @typedef {{ left: number, top: number, right: number, bottom: number, radius: number }} RoundedRect */
 
@@ -30,5 +29,6 @@ export function layOutIcon(x, y, size) {
     const left = firstBarX + (index * (barWidth + barGap));
     return { left, top: baseY - (height * artwork), right: left + barWidth, bottom: baseY, radius: barWidth / 2 };
   });
+
   return { tile, bars };
 }

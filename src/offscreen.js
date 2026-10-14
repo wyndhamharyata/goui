@@ -1,5 +1,6 @@
 import { biquadQ, hasGain, logSweepHz, makeBiquad } from "./shared/bands.js";
 import { makePlayedSound, sanitizeConfig } from "./shared/config.js";
+import { dbToLinear, linearToDb, rootMeanSquare } from "./shared/math.js";
 import { messageTypes, silenceDb, spectrumPointCount, trySendMessage } from "./shared/messages.js";
 
 /** @typedef {import("./shared/messages.js").AudioReply} AudioReply */
@@ -32,7 +33,7 @@ function buildChain() {
   analyserNode.fftSize = 8192;
   analyserNode.smoothingTimeConstant = 0;
   preampNode = audioContext.createGain();
-  preampNode.gain.value = 10 ** (playedSound.preampDb / 20);
+  preampNode.gain.value = dbToLinear(playedSound.preampDb);
 
   // With the EQ off, the tab plays straight into the analyser, so the level still reads.
   bandNodes = [];
@@ -55,7 +56,7 @@ function readChainLayout() {
 function updateBandNodes() {
   const now = audioContext.currentTime;
   const rampSeconds = 0.01;
-  preampNode.gain.setTargetAtTime(10 ** (playedSound.preampDb / 20), now, rampSeconds);
+  preampNode.gain.setTargetAtTime(dbToLinear(playedSound.preampDb), now, rampSeconds);
   listActiveBands().forEach((band, index) => {
     const bandNode = bandNodes[index];
     bandNode.frequency.setTargetAtTime(band.frequencyHz, now, rampSeconds);
@@ -77,10 +78,9 @@ function applyConfig(next) {
 
 function readLevelDb(buffer) {
   analyserNode.getFloatTimeDomainData(buffer);
-  let sum = 0;
-  for (const sample of buffer) sum += sample * sample;
-  const rms = Math.sqrt(sum / buffer.length);
-  return rms > 0 ? Math.max(20 * Math.log10(rms), silenceDb) : silenceDb;
+  const rms = rootMeanSquare(buffer);
+
+  return rms > 0 ? Math.max(linearToDb(rms), silenceDb) : silenceDb;
 }
 
 function readSpectrum(bins) {
@@ -91,6 +91,7 @@ function readSpectrum(bins) {
     const bin = Math.min(Math.round(frequencyHz / hzPerBin), bins.length - 1);
     points.push(Number.isFinite(bins[bin]) ? bins[bin] : silenceDb);
   }
+
   return points;
 }
 
@@ -114,6 +115,7 @@ async function start(streamId) {
   buildChain();
   const telemetryIntervalMs = 50;
   telemetryTimer = setInterval(sendTelemetry, telemetryIntervalMs);
+
   return { ok: true };
 }
 
@@ -130,6 +132,7 @@ async function stop() {
   preampNode = undefined;
   chainNodes = [];
   bandNodes = [];
+
   return { ok: true };
 }
 

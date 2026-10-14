@@ -135,8 +135,7 @@ static UInt32 describeOutput(AudioBufferList *output, OutputBuffer *buffers, UIn
   return bufferCount;
 }
 
-// Each output channel takes the tap channel with the same number, wrapping round, so a stereo tap
-// fills a device of any width. A mono output takes the first channel.
+// Output channels take tap channels by number, wrapping round, so a stereo tap fills any device.
 static void writeFrame(const OutputBuffer *buffers, UInt32 bufferCount, UInt32 frame, const float *processed,
                        UInt32 channelCount) {
   for (UInt32 index = 0; index < bufferCount; index += 1) {

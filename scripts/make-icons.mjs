@@ -11,6 +11,7 @@ function crc32(buffer) {
     crc ^= byte;
     for (let bit = 0; bit < 8; bit += 1) crc = crc & 1 ? (crc >>> 1) ^ 0xed_b8_83_20 : crc >>> 1;
   }
+
   return (crc ^ 0xff_ff_ff_ff) >>> 0;
 }
 
@@ -26,6 +27,7 @@ function makeChunk(type, data) {
   length.writeUInt32BE(data.length);
   const crc = Buffer.alloc(4);
   crc.writeUInt32BE(crc32(body));
+
   return Buffer.concat([length, body, crc]);
 }
 
@@ -65,6 +67,7 @@ function isInsideRoundedRect(x, y, rect) {
   const nearY = Math.min(Math.max(y, rect.top + rect.radius), rect.bottom - rect.radius);
   const distanceX = x - nearX;
   const distanceY = y - nearY;
+
   return (distanceX * distanceX) + (distanceY * distanceY) <= rect.radius * rect.radius;
 }
 
@@ -76,14 +79,14 @@ function readRgb(hex) {
   return [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16));
 }
 
-// The tile carries its own colour and the bars are white, so the icon reads on a light toolbar and
-// on a dark one. A dark tile would disappear on a dark toolbar.
+// A coloured tile with white bars reads on a light toolbar and on a dark one.
 function sampleColor(x, y, size) {
   const { tile, bars } = layOutIcon(0, 0, size);
   if (!isInsideRoundedRect(x, y, tile)) return [0, 0, 0, 0];
   if (bars.some((bar) => isInsideRoundedRect(x, y, bar))) return [255, 255, 255, 255];
   const tileColor = mixColor(readRgb(tileColors[0]), readRgb(tileColors[1]), (y - tile.top) / (tile.bottom - tile.top));
   // The tile keeps alpha 255. A three-value colour would write alpha 0 and the icon would be invisible.
+
   return [...tileColor, 255];
 }
 
@@ -100,6 +103,7 @@ function samplePixel(x, y, size) {
     }
   }
   const count = samplesPerAxis * samplesPerAxis;
+
   return total.map((sum) => Math.round(sum / count));
 }
 

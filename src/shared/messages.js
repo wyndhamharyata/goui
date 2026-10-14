@@ -21,8 +21,7 @@ export const messageTypes = {
   // To the offscreen document, from the service worker. Each one gets an AudioReply.
   audioStart: "audio:start",
   audioStop: "audio:stop",
-  // To the offscreen document, from the service worker and the panel. It holds a stored Config. The
-  // offscreen document turns it into a PlayedSound.
+  // To the offscreen document, from the service worker and the panel. The Config plays as a PlayedSound.
   audioConfig: "audio:config",
   // To the panel, from the offscreen document, 20 times a second. spectrumDb holds logSweepHz(spectrumPointCount).
   audioTelemetry: "audio:telemetry",
@@ -33,8 +32,7 @@ export const messageTypes = {
   captureStop: "capture:stop",
 };
 
-// A message rejects when no other context is open to read it. The panel is often closed, so the
-// error is dropped. A sender that needs the reply calls chrome.runtime.sendMessage itself.
+// A rejection means no context is open to read it, so it is dropped. A sender that needs a reply waits itself.
 /**
  * @param {Message} message
  * @returns {Promise<unknown>}

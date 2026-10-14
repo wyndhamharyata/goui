@@ -2,8 +2,7 @@
 import Foundation
 import PackageDescription
 
-// The prompt for system audio reads its text from an Info.plist. A command line tool has no bundle,
-// so the linker puts the plist inside the binary.
+// The permission prompt reads an Info.plist. A command line tool has no bundle, so it is linked in.
 let infoPlistPath = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Info.plist").path
 
 let package = Package(

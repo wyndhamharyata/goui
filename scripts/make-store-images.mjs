@@ -1,6 +1,4 @@
-// Builds the Chrome Web Store images into store/. The screenshots come from a real browser run of the
-// extension, at the 1280x800 the store asks for. The two promo tiles are drawn here and rendered with
-// rsvg-convert, the same way as the README pictures.
+// Builds the store images: 1280x800 screenshots of a real run, and two promo tiles drawn as SVG.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { extensionId, openBrowser, pasteInto, pressIcon, saveAs } from "../tests/helpers.js";
@@ -80,6 +78,7 @@ function gouiTile(x, y, size) {
    * @returns {string}
    */
   const draw = (box, fill) => `<rect x="${box.left}" y="${box.top}" width="${box.right - box.left}" height="${box.bottom - box.top}" rx="${box.radius}" fill="${fill}"/>`;
+
   return draw(tile, "url(#tile)") + bars.map((bar) => draw(bar, "#ffffff")).join("");
 }
 

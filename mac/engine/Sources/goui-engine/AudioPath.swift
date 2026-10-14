@@ -39,8 +39,7 @@ private struct Teardown {
   }
 }
 
-// One run of the audio path: a tap of every other process, muted, and a private aggregate device
-// that plays it to the default output.
+// One run of the audio path: a muted tap of every other process, played to the default output.
 @MainActor
 final class AudioPath {
   let summary: AudioPathSummary
@@ -97,8 +96,7 @@ final class AudioPath {
       overloadListener = try PropertyListener(object: aggregateID, selector: kAudioDeviceProcessorOverload) { [weak self] in
         self?.overloadCount += 1
       }
-      // The same device can change its rate, as a Bluetooth headphone does when a call opens its
-      // microphone. The bass shelf was worked out for the old rate.
+      // A call on a Bluetooth headphone changes its rate, and the bass shelf was worked out for the old one.
       sampleRateListener = try PropertyListener(object: outputID, selector: kAudioDevicePropertyNominalSampleRate, handler: onSampleRateChange)
     } catch {
       stop()
@@ -185,8 +183,7 @@ private func createAggregateDevice(outputUID: String, tapUUID: UUID) throws -> A
   return aggregateID
 }
 
-// The aggregate device lists the inputs of the output device first, such as a headset microphone,
-// and the tap after them.
+// The aggregate device lists the output device's own inputs first, such as a headset mic, then the tap.
 private func findTapBufferIndex(outputID: AudioObjectID, aggregateID: AudioObjectID, tapChannelCount: UInt32) throws -> UInt32 {
   let outputInputCount = try readInputChannelCounts(of: outputID).count
   let aggregateInputs = try readInputChannelCounts(of: aggregateID)

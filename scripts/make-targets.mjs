@@ -1,8 +1,7 @@
-// Builds src/targets.json from AutoEQ. The AutoEQ web app lists its targets, the measurements each
-// one suits and the bass boost it puts on top. A rig family then gains the other curves from the AutoEQ
-// targets folder that were made for the same rig. Those files hold their own bass.
+// Builds src/targets.json from the AutoEQ web app's target list and the matching curves in its targets folder.
 import { writeFileSync } from "node:fs";
-import { clamp, logSweepHz, sweepPointCount } from "../src/shared/bands.js";
+import { logSweepHz, sweepPointCount } from "../src/shared/bands.js";
+import { clamp, logPosition } from "../src/shared/math.js";
 
 const repo = "https://raw.githubusercontent.com/jaakkopasanen/AutoEq/master";
 
@@ -30,10 +29,11 @@ function resample(frequenciesHz, levelsDb) {
     if (upper === 0) upper = 1;
     if (upper < 0) upper = frequenciesHz.length - 1;
     const lower = upper - 1;
-    const share = Math.log(frequencyHz / frequenciesHz[lower]) / Math.log(frequenciesHz[upper] / frequenciesHz[lower]);
+    const share = logPosition(frequencyHz, frequenciesHz[lower], frequenciesHz[upper]);
     const levelDb = levelsDb[lower] + (clamp(share, 0, 1) * (levelsDb[upper] - levelsDb[lower]));
     curve.push(Math.round(levelDb * 100) / 100);
   }
+
   return curve;
 }
 
@@ -50,6 +50,7 @@ async function readTargetFile(label) {
     frequenciesHz.push(frequencyHz);
     levelsDb.push(levelDb);
   }
+
   return { frequenciesHz, levelsDb };
 }
 

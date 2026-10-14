@@ -1,8 +1,4 @@
-// Copies the files the homepage shares with the rest of the repo into public/, so the site always
-// shows the icons, the pictures and the panel mock of this commit. The copies stay out of git.
-//
-// The panel mock is design/ux-proposals.js with one change. Each design block there runs only when
-// its own markup is on the page, so the homepage can show design F alone.
+// Copies the icons, the pictures and the panel mock into public/. The mock shows design F alone.
 import { cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const repo = "..";
@@ -23,6 +19,7 @@ function runBlocksOnTheirOwnPage(source) {
     blockCount += 1;
     lines[index] = `if (byId("${found[1]}-head")) {`;
   }
+
   return { text: lines.join("\n"), blockCount };
 }
 

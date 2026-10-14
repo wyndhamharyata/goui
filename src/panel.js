@@ -1,8 +1,5 @@
-// The side panel, and the popup in a window with no side panel. The file runs top to bottom as:
-// constants, state, the band choice, the sound you hear, saving, the renderers, the Library, the
-// capture state, the event wiring, then startPanel.
+// The side panel, and the popup in a window with no side panel.
 import {
-  audioNodeType,
   autoPreampDb,
   bandTypes,
   butterworthQ,
@@ -11,12 +8,12 @@ import {
   maxBoostDb,
   newBand,
   qStepRatio,
-  qToOctaves,
   setBandFrequency,
   setBandGain,
   setBandQ,
-  typeLabels,
+  bandTypeDetails,
 } from "./shared/bands.js";
+import { qToOctaves } from "./shared/math.js";
 import {
   defaultConfig,
   flatSliders,
@@ -55,8 +52,7 @@ import { formatDb, formatHz, layerColor, makeGraph, typeColor } from "./graph.js
 
 /** @typedef {{ name: string, source: string, bands: Band[], preampDb?: number, autoEq?: AutoEqOrigin }} NewLayer */
 
-// The source line a layer shows under its name. A layer matches one of your presets only while its
-// source is `saved`.
+// The source line under a layer's name. A layer matches one of your presets only while its source is saved.
 const layerSources = {
   saved: "Saved",
   deleted: "Deleted preset",
@@ -109,8 +105,7 @@ const storedKeys = [
 ];
 
 let config = defaultConfig();
-// Each layer has its own list of presets. A preset holds bands only. The sliders and the preamp
-// stay as they are when you pick one.
+// Each layer has its own presets. A preset holds bands only, so the sliders and the preamp stay.
 const presets = { headphone: {}, ear: {} };
 /** @type {Band | null} */
 let selectedBand = null;
@@ -157,6 +152,7 @@ function makeElement(tag, options = {}) {
   if (className) element.className = className;
   if (text !== "") element.textContent = text;
   if (title) element.title = title;
+
   return element;
 }
 
@@ -189,9 +185,7 @@ function readBands(layer) {
   return layer ? layer.bands : [];
 }
 
-// Every band in the panel, in layer order, with the layer it belongs to. A layer that is off keeps
-// its bands, so they can still be edited while it is silent. The graph, the chips and the table
-// number the bands by their place in this list.
+// Every band in layer order, with its layer. The graph, the chips and the table number bands by this list.
 /** @returns {BandEntry[]} */
 function listBandEntries() {
   return layerOrder.flatMap((role) => readBands(config.layers[role]).map((band) => ({ role, band })));
@@ -325,8 +319,7 @@ function removeEarLayer() {
   commit();
 }
 
-// A headphone file's own preamp is kept, since a lone headphone file needs it. Auto preamp
-// overrides it either way.
+// A lone headphone file needs its own preamp, so it is kept. Auto preamp overrides it either way.
 /**
  * @param {NewLayer} sound
  * @param {LayerRole} role
@@ -419,6 +412,7 @@ function makeTargetChoice(autoEq) {
   select.value = autoEq.target;
   select.addEventListener("change", () => changeTarget(select.value));
   choice.append(select);
+
   return choice;
 }
 
@@ -456,6 +450,7 @@ function makeLayerRow(role, layer) {
     remove.addEventListener("click", removeEarLayer);
     row.append(remove);
   }
+
   return row;
 }
 
@@ -469,6 +464,7 @@ function makeAddEarButton() {
     openLibrarySection("ear");
     if (openActions.ear !== "paste") toggleLibraryAction("ear", "paste");
   });
+
   return add;
 }
 
@@ -543,7 +539,7 @@ function renderChips() {
  */
 function describeQ(band) {
   if (band.type === "PK") return `Q, ${qToOctaves(band.q).toFixed(1)} octaves wide`;
-  if (audioNodeType[band.type].endsWith("shelf")) return "Q, not used by a shelf yet";
+  if (bandTypeDetails[band.type].node.endsWith("shelf")) return "Q, not used by a shelf yet";
   return "Q";
 }
 
@@ -556,7 +552,7 @@ function renderInspector() {
   if (!isChosen) return;
 
   const title = byId("bandTitle");
-  title.textContent = `${layerLabels[readSelectedRole()]} · ${index + 1}. ${typeLabels[band.type]}`;
+  title.textContent = `${layerLabels[readSelectedRole()]} · ${index + 1}. ${bandTypeDetails[band.type].label}`;
   title.style.color = typeColor[band.type];
   setField("bandType", band.type);
   // The segment buttons hold the common types. The others are under More.
@@ -587,7 +583,7 @@ function renderTable() {
     const number = makeElement("span", { className: "number", text: index + 1 });
     number.style.color = typeColor[band.type];
     const typeCell = makeElement("td");
-    typeCell.append(number, typeLabels[band.type]);
+    typeCell.append(number, bandTypeDetails[band.type].label);
     row.append(typeCell);
 
     const gain = hasGain(band.type) ? formatDb(band.gainDb) : "";
@@ -696,6 +692,7 @@ async function loadHeadphone(item, hint, target) {
   }
   replaceLayer({ ...headphone, name: item.name, source: layerSources.autoEq }, "headphone");
   hint.textContent = "";
+
   return true;
 }
 
@@ -733,6 +730,7 @@ function makeResultItem(label, detail, onPick, onRemove) {
   remove.addEventListener("click", onRemove);
   const row = makeElement("div", { className: "result-row" });
   row.append(button, remove);
+
   return row;
 }
 
@@ -748,6 +746,7 @@ function makePresetItem(role, name, onPlaced) {
     replaceLayer({ name, source: layerSources.saved, bands }, role);
     onPlaced();
   };
+
   return makeResultItem(name, describeBandCount(bands), place, () => deletePreset(role, name));
 }
 
@@ -765,6 +764,7 @@ function makeMeasurementItem(item, hint) {
   if (item.isAutoEqPick) {
     row.firstChild.append(makeElement("em", { className: "pick", text: "AutoEQ's pick", title: "AutoEQ recommends this measurement of the headphone" }));
   }
+
   return row;
 }
 
@@ -787,6 +787,7 @@ async function findHeadphones(query, hint) {
   hint.textContent = "Searching AutoEQ...";
   const items = await loadAutoEqIndex().catch(() => null);
   hint.textContent = items ? "" : "The AutoEQ list did not load. Check the network.";
+
   return (items || []).filter((item) => item.name.toLowerCase().includes(query)).slice(0, maxResultCount);
 }
 
@@ -1153,8 +1154,7 @@ function wireLibrary() {
   partOf("headphone", "search").addEventListener("input", debounce(renderHeadphoneList, typingPauseMs));
 }
 
-// The service worker starts a new tab with the stored config, which has no A/B or Solo and can be
-// up to storageWaitMs old. An open panel then sends the sound it shows.
+// The service worker starts a tab with the stored config, so an open panel sends the A/B and Solo it shows.
 function wireMessages() {
   chrome.runtime.onMessage.addListener((message) => {
     if (message && message.type === messageTypes.captureState) {
@@ -1174,8 +1174,7 @@ async function readPresets(stored) {
   const olderSounds = stored.savedSounds || stored.presets;
   if (!olderSounds) return;
 
-  // A sound saved before the two lists holds both layers. It becomes a headphone preset. When it
-  // has ear bands, it also becomes an ear preset under the same name. A preset of that name wins.
+  // An older sound becomes a headphone preset, and an ear preset when it has ear bands. A preset of that name wins.
   for (const [name, sound] of Object.entries(olderSounds)) {
     const layers = sanitizeConfig(sound).layers;
     presets.headphone[name] ??= { bands: layers.headphone.bands };
@@ -1203,7 +1202,7 @@ function startPopup() {
 }
 
 async function startPanel() {
-  for (const type of bandTypes) byId("bandType").append(new Option(typeLabels[type], type));
+  for (const type of bandTypes) byId("bandType").append(new Option(bandTypeDetails[type].label, type));
   setSliderRanges();
 
   targetData = await loadTargets();

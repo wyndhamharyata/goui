@@ -5,8 +5,7 @@ import sonarjs from "eslint-plugin-sonarjs";
 import unicorn from "eslint-plugin-unicorn";
 
 export default [
-  // design/ holds throwaway HTML mocks, and dist/ holds the built release zip. The site folder has
-  // its own packages and SST output, and its public/ holds copies made by the site's npm run assets.
+  // design/ holds mocks, dist/ the release zip, and site/ its own packages, SST output and copied assets.
   {
     ignores: [
       "design/**",
@@ -36,8 +35,7 @@ export default [
       "max-params": ["error", 4],
       "no-else-return": ["error", { allowElseIf: false }],
       "no-lonely-if": "error",
-      // Rule 5 asks for brackets only where the order is not obvious. Arithmetic in a formula
-      // reads in the usual order, so only bitwise, comparison and logic mixes are flagged.
+      // Rule 5 asks for brackets only where the order is unclear, so only logic and comparison mixes are flagged.
       "no-mixed-operators": [
         "error",
         {
@@ -101,8 +99,7 @@ export default [
     },
   },
   {
-    // The journeys and the store script drive the extension in a browser, so their evaluate
-    // callbacks name chrome and document.
+    // The journeys and the store script name chrome and document inside their evaluate callbacks.
     files: ["tests/**/*.js", "scripts/make-store-images.mjs"],
     languageOptions: {
       globals: { ...globals.browser, ...globals.webextensions },

@@ -1,8 +1,7 @@
 import CoreAudio
 import Foundation
 
-// Keeps one audio path playing. It builds the path again when the output changes and tries again
-// after a failed start.
+// Keeps one audio path playing, building it again when the output changes or a start fails.
 @MainActor
 final class Engine {
   enum Status: Equatable {
@@ -12,8 +11,7 @@ final class Engine {
   }
 
   private static let retryDelaysSeconds = [0.3, 1, 3]
-  // Several changes can arrive at once, such as a new device and then its new rate, so a restart
-  // waits for them to settle.
+  // A new device and then its new rate can arrive together, so a restart waits for them to settle.
   private static let restartSettleSeconds = 0.3
 
   private let options: Options

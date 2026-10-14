@@ -80,6 +80,7 @@ function coefficients(band) {
     HP: () => [(1 + cosine) / 2, -(1 + cosine), (1 + cosine) / 2, 1 + alpha, -2 * cosine, 1 - alpha],
     LP: () => [(1 - cosine) / 2, 1 - cosine, (1 - cosine) / 2, 1 + alpha, -2 * cosine, 1 - alpha],
   };
+
   return formulas[band.type]();
 }
 
@@ -90,6 +91,7 @@ function bandDb(band, frequencyHz) {
   const imaginary = (c1, c2) => -(c1 * Math.sin(omega) + c2 * Math.sin(2 * omega));
   const top = Math.hypot(real(b0, b1, b2), imaginary(b1, b2));
   const bottom = Math.hypot(real(a0, a1, a2), imaginary(a1, a2));
+
   return 20 * Math.log10(top / bottom);
 }
 
@@ -108,6 +110,7 @@ function spectrumDb(frequencyHz) {
   const voice = 7 * Math.exp(-(Math.log2(frequencyHz / 1800) ** 2));
   const rolloff = frequencyHz > 16_000 ? -(frequencyHz - 16_000) / 200 : 0;
   const wobble = 3 * Math.sin(octave * 3.1 + tickCount * 0.7) + 2 * Math.sin(octave * 7.3 - tickCount * 1.3);
+
   return Math.max(tilt + kick + voice + rolloff + wobble, -90);
 }
 
@@ -120,6 +123,7 @@ function parseAutoEqText(text, layer) {
     const readAfter = (name) => Number(words[words.findIndex((word) => word.toLowerCase() === name) + 1]);
     bands.push({ on: words[2] === "ON", type: words[3], frequencyHz: readAfter("fc"), gainDb: readAfter("gain") || 0, q: readAfter("q") || 0.71, layer });
   }
+
   return bands;
 }
 
@@ -135,6 +139,7 @@ function makeModel(bands, profile) {
     listeners: [],
   };
   model.changed = () => model.listeners.forEach((listener) => listener());
+
   return model;
 }
 
@@ -147,6 +152,7 @@ function curveBands(model) {
   if (bass) list.push({ type: "LSC", frequencyHz: 105, gainDb: bass, q: 0.7 });
   if (vocals) list.push({ type: "PK", frequencyHz: 2500, gainDb: vocals, q: 0.9 });
   if (treble) list.push({ type: "HSC", frequencyHz: 8000, gainDb: treble, q: 0.7 });
+
   return list;
 }
 
@@ -252,8 +258,7 @@ function makeGraph(host, model, options) {
     return parts.join("");
   }
 
-  // Music falls about 3 dB per octave. Adding that back stands the spectrum upright, and the
-  // mirror around 0 dB keeps it even on both sides of the center line.
+  // Music falls about 3 dB per octave. Adding it back and mirroring at 0 dB stands the spectrum upright.
   function drawMirroredSpectrum(size) {
     const right = [];
     const left = [];
@@ -475,6 +480,7 @@ function makeGraph(host, model, options) {
   model.listeners.push(render);
   graphs.push(graph);
   render();
+
   return graph;
 }
 
@@ -845,6 +851,7 @@ function mountTabs(tabsId, model) {
     const button = event.target.closest("[data-tab]");
     if (button) showTab(button.dataset.tab);
   });
+
   return showTab;
 }
 

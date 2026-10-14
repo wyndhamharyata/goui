@@ -1,5 +1,4 @@
-// Draws the pictures in docs/images. Each one is written as an SVG and as a PNG, so the README shows
-// a PNG anywhere and a person can edit the SVG by hand.
+// Draws each picture in docs/images as an SVG to edit by hand and a PNG for the README.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { layOutIcon, tileColors } from "./icon-geometry.mjs";
@@ -52,8 +51,7 @@ function arrow(fromX, toX, y, color = palette.muted) {
     + `<path d="M${toX} ${y} l-6 -3.5 v7 z" fill="${color}"/>`;
 }
 
-// The goui icon, the same tile and bars as scripts/make-icons.mjs draws. The artwork is inset by the
-// same amount, so the pictures show the padding the store asks for.
+// The goui icon with the inset of the real icon, so the pictures show the padding the store asks for.
 function icon(x, y, size) {
   const { tile, bars } = layOutIcon(x, y, size);
   /**
@@ -62,6 +60,7 @@ function icon(x, y, size) {
    * @returns {string}
    */
   const draw = (box, fill) => rect({ x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top, radius: box.radius, fill });
+
   return draw(tile, "url(#tile)") + bars.map((bar) => draw(bar, "#ffffff")).join("");
 }
 
@@ -132,6 +131,7 @@ function browserChrome(x, y, width, { tabTitle = "Lofi radio", url = "radio.exam
   parts.push(circle({ cx: x + width - 22, cy: barY + 16, r: 9, fill: "#5f6368" }));
 
   if (cursorAt) parts.push(cursor(cursorAt.x, cursorAt.y));
+
   return { svg: parts.join(""), bottom: barY + barHeight };
 }
 
@@ -146,6 +146,7 @@ function extensionsMenu(x, y, { highlight = "" } = {}) {
   parts.push(rowRing + icon(x + 14, rowY + 5, 24));
   parts.push(text({ x: x + 48, y: rowY + 22, content: "goui", size: 13, fill: chromeText }));
   parts.push(pinGlyph(x + width - 30, rowY + 8, 16, highlight === "pin" ? palette.accent : "#9aa0a6"));
+
   return { svg: parts.join(""), width, height };
 }
 
@@ -158,6 +159,7 @@ function compactExtensionsMenu(x, y, { highlight = "" } = {}) {
   parts.push(rowRing + icon(x + 12, y + 11, 22));
   parts.push(text({ x: x + 44, y: y + 29, content: "goui", size: 12, fill: chromeText }));
   parts.push(pinGlyph(x + width - 26, y + 14, 15, highlight === "pin" ? palette.accent : "#9aa0a6"));
+
   return parts.join("");
 }
 
@@ -172,6 +174,7 @@ function stepCard(x, y, width, step) {
     text({ x: x + 50, y: y + 48, content: step.note, size: 12, fill: palette.muted }),
     step.picture(x + 18, y + 70, width - 36),
   ];
+
   return { svg: parts.join(""), height };
 }
 
@@ -189,6 +192,7 @@ function pictureLoadUnpacked(x, y, width) {
   parts.push(rect({ x: x + 12, y: y + 124, width: width - 24, height: 24, radius: 6, fill: palette.accent }));
   parts.push(text({ x: x + width / 2, y: y + 140, content: "Load unpacked", size: 11, weight: 700, fill: "#ffffff", anchor: "middle" }));
   parts.push(cursor(x + 70, y + 146));
+
   return parts.join("");
 }
 
@@ -208,6 +212,7 @@ function pictureDownload(x, y, width) {
   parts.push(text({ x: x + 14, y: y + 116, content: "Unzip it. Double clicking is enough.", size: 10, fill: palette.muted }));
   parts.push(folderGlyph(x + 14, y + 124, 16, palette.muted));
   parts.push(text({ x: x + 36, y: y + 138, content: "the goui folder", size: 10, fill: palette.muted }));
+
   return parts.join("");
 }
 
@@ -224,6 +229,7 @@ function picturePickFolder(x, y, width) {
   parts.push(text({ x: x + 34, y: y + 118, content: "icons", size: 11, fill: palette.muted, font: monoFont }));
   parts.push(rect({ x: x + width - 118, y: y + 116, width: 96, height: 22, radius: 6, fill: palette.accent }));
   parts.push(text({ x: x + width - 70, y: y + 131, content: "Open", size: 11, weight: 700, fill: "#ffffff", anchor: "middle" }));
+
   return parts.join("");
 }
 
@@ -261,6 +267,7 @@ function sidePanel(x, y, width) {
   parts.push(rect({ x: x + 12, y: y + 112, width: width - 24, height: 46, radius: 8, fill: palette.panelRaised }));
   parts.push(text({ x: x + 24, y: y + 132, content: "1  Headphone", size: 11 }));
   parts.push(text({ x: x + 24, y: y + 150, content: "2  My ear", size: 11, fill: palette.muted }));
+
   return parts.join("");
 }
 
@@ -296,6 +303,7 @@ function makeHowItWorks() {
     if (index < boxes.length - 1) parts.push(arrow(x + boxWidth + 8, x + boxWidth + gap - 8, boxY + (boxHeight / 2)));
   });
   parts.push(text({ x: 40, y: 214, content: "Headphone and My ear add up in dB, so the two layers merge with no loss.", size: 12, fill: palette.muted }));
+
   return frame(width, height, parts.join(""));
 }
 
@@ -319,6 +327,7 @@ function makeInstallFlow() {
     parts.push(stepCard(x, 96, cardWidth, step).svg);
     if (index < steps.length - 1) parts.push(arrow(x + cardWidth + 6, x + cardWidth + gap - 6, 220));
   });
+
   return frame(width, 366, parts.join(""));
 }
 
@@ -331,6 +340,7 @@ function makeLoadUnpacked() {
     text({ x: 32, y: 88, content: "Turn on Developer mode at the top right. The Load unpacked button then appears.", size: 13, fill: palette.muted }),
     pictureLoadUnpacked(32, 108, width - 64),
   ];
+
   return frame(width, height, parts.join(""));
 }
 
@@ -359,6 +369,7 @@ function makeDownload() {
   parts.push(text({ x: 566, y: 196, content: "goui", size: 15, weight: 700 }));
   parts.push(text({ x: 566, y: 216, content: "the unzipped folder", size: 11, fill: palette.muted }));
   parts.push(text({ x: 510, y: 240, content: "Keep it where it is.", size: 11, fill: palette.muted }));
+
   return frame(width, height, parts.join(""));
 }
 
@@ -371,6 +382,7 @@ function makePickFolder() {
     text({ x: 32, y: 88, content: "Keep the folder where it is. Chrome reads it every time it starts.", size: 13, fill: palette.muted }),
     picturePickFolder(32, 108, width - 64),
   ];
+
   return frame(width, height, parts.join(""));
 }
 
@@ -388,6 +400,7 @@ function makePin() {
   parts.push(text({ x: 48, y: chrome.bottom + 34, content: "radio.example.com", size: 12, fill: palette.muted, font: monoFont }));
   parts.push(text({ x: 48, y: chrome.bottom + 58, content: "A page keeps playing under the menu.", size: 12, fill: palette.muted }));
   parts.push(extensionsMenu(width - 300, chrome.bottom + 4, { highlight: "pin" }).svg);
+
   return frame(width, height, parts.join(""));
 }
 
@@ -402,6 +415,7 @@ function makeClickIcon() {
     browserChrome(32, 108, chromeWidth, { showGoui: true, showOnBadge: true, highlight: "goui", cursorAt: { x: chromeWidth - 46, y: 202 } }).svg,
     sidePanel(476, 108, 220),
   ];
+
   return frame(width, height, parts.join(""));
 }
 

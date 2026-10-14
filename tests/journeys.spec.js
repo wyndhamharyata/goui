@@ -103,8 +103,7 @@ journey("given eight HD 600 measurements, each result names its source, form, ri
   await expect(results.nth(6)).toContainText("Innerfidelity · Over-ear · HMS II.3 Harman over-ear 2018");
 });
 
-// AutoEQ's target files put Harman over-ear 2018 at +3.3 dB at 50 Hz and oratory1990's optimum hifi
-// curve at -1.6 dB. Both sit at 0 dB at 1 kHz.
+// At 50 Hz, AutoEQ puts Harman over-ear 2018 at +3.3 dB and optimum hifi at -1.6 dB. Both are 0 dB at 1 kHz.
 journey("given the HD 600 by oratory1990, the optimum hifi target plays a 50 Hz tone 4.9 dB quieter than Harman 2018 and keeps 1 kHz", async (context, port) => {
   await routeAutoEq(context);
   const { panel } = await startGouiOnTone(context, port, 50);
@@ -355,8 +354,7 @@ journey("given a press on a point that wobbles 3 px, the tone keeps its boost, a
   await openTab(panel, "tune");
   const withPeak = await readSteadyLevel(panel);
 
-  // The graph draws a new SVG on each render, so the position is read in the same step that finds the
-  // point. It is read until it holds still, since the graph redraws once the page scrollbar appears.
+  // Each render draws a new SVG, so the point is found and read in one step, until it holds still.
   /** @returns {Promise<{ centerX: number, centerY: number }>} */
   const readPoint = () => panel.locator("#tuneGraph circle[r='7']").first().evaluate((circle) => {
     const bounds = circle.getBoundingClientRect();

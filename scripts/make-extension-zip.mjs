@@ -1,5 +1,4 @@
-// Builds the two zips for a release. The Releases page offers the folder one, which a person unzips
-// to get a folder for Chrome. The store takes the flat one, which has manifest.json at its root.
+// Builds the release zip, with a goui folder inside, and the store zip, with manifest.json at its root.
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 
@@ -14,8 +13,7 @@ mkdirSync(staging, { recursive: true });
 // The licence and the notices travel with the extension, as the MIT licence asks.
 for (const path of contents) cpSync(path, `${staging}/${path}`, { recursive: true });
 
-// The store hands out the key on the first upload, so neither zip ships a key of its own. The repo
-// manifest keeps one, so the tests know the extension id before the browser starts.
+// The store hands out its own key. The repo manifest keeps one, so the tests know the extension id.
 const manifest = JSON.parse(readFileSync("manifest.json", "utf8"));
 delete manifest.key;
 writeFileSync(`${staging}/manifest.json`, `${JSON.stringify(manifest, null, 2)}\n`);

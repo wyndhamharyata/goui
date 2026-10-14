@@ -1,5 +1,4 @@
-// What every journey needs: a browser with goui loaded, a page that plays a tone, a way to press the
-// toolbar icon, the steps a person takes in the panel, and the checks on the level they hear.
+// The browser, the tone page, the icon press, the panel steps and the level checks of every journey.
 import { chromium, expect, test } from "@playwright/test";
 import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync } from "node:fs";
@@ -76,6 +75,7 @@ export async function openBrowser(viewport) {
       "--disable-audio-output",
     ],
   });
+
   return { context, server, port: server.address().port };
 }
 
@@ -120,6 +120,7 @@ export async function openTone(context, port, toneHz) {
   const tone = await context.newPage();
   await tone.goto(toneUrl(port, toneHz));
   await playTone(tone);
+
   return tone;
 }
 
@@ -141,8 +142,7 @@ function findTone(context, toneHz) {
   return context.pages().find((page) => page.url().includes(`?hz=${toneHz}`));
 }
 
-// goui has no tabs permission, so the service worker sees a tab with no url or title. The page is
-// brought to the front, and the step runs on the active tab with the page's own url and title.
+// goui has no tabs permission, so the step runs on the active tab with the page's url and title added.
 /**
  * @param {BrowserContext} context
  * @param {Page} page
@@ -161,8 +161,7 @@ async function runOnActiveTab(context, page, step) {
   }, { tabDetails: details, stepName: step });
 }
 
-// Playwright cannot press the toolbar icon. The journey fires the icon's own click event with the
-// page's tab, so the same code runs as for a real click.
+// Playwright cannot press the toolbar icon, so this fires the icon's own click event with the page's tab.
 /**
  * @param {BrowserContext} context
  * @param {Page} page
@@ -180,8 +179,7 @@ export async function readBadge(context, page) {
   return runOnActiveTab(context, page, "readBadge");
 }
 
-// An installed app has no side panel, and Playwright cannot install one. A popup window has no side
-// panel either, so it stands in for the app.
+// Playwright cannot install an app. A popup window has no side panel either, so it stands in for one.
 /**
  * @param {BrowserContext} context
  * @param {number} port
@@ -195,11 +193,11 @@ export async function openToneInApp(context, port, toneHz) {
   const tone = findTone(context, toneHz);
   await tone.waitForLoadState();
   await playTone(tone);
+
   return { tone, tabId };
 }
 
-// Playwright cannot press the icon in a window with no toolbar. The journey opens the page the icon
-// would show as its popup instead.
+// Playwright cannot press the icon in a window with no toolbar, so a journey opens the popup page itself.
 /**
  * @param {BrowserContext} context
  * @param {number} tabId
@@ -233,6 +231,7 @@ export async function startGouiOnTone(context, port, toneHz) {
   await expect(panel.locator("#status")).toContainText("Click the goui icon");
   await pressIcon(context, tone);
   await expect(panel.locator("#status")).toHaveText(playingToneTitle);
+
   return { panel, tone };
 }
 
@@ -282,8 +281,7 @@ export async function nudgeSlider(panel, selector, pressCount) {
   for (let press = 0; press < pressCount; press += 1) await panel.keyboard.press("ArrowRight");
 }
 
-// The wait comes first, so a reading taken before the engine reacts to the last step never counts.
-// A reading counts once two in a row agree.
+// The wait comes first, so a reading from before the last step never counts. Two readings must agree.
 /**
  * @param {Page} page
  * @returns {Promise<number>}
@@ -345,8 +343,7 @@ export function sectionOf(panel, role) {
   return panel.locator(`.preset-section[data-role=${role}]`);
 }
 
-// Paste AutoEQ text into one layer's section, the way a person copies it from autoeq.app or
-// eqbyear. A second press on Paste closes the box, so the button is pressed only while it is closed.
+// Pastes AutoEQ text into one layer. A second press on Paste closes the box, so it is pressed only when closed.
 /**
  * @param {Page} panel
  * @param {string} role
@@ -405,8 +402,7 @@ export async function setLayer(panel, label, isOn) {
   await expect.poll(() => input.isChecked()).toBe(isOn);
 }
 
-// Stands in for the AutoEQ repository on GitHub, with real AutoEQ files. Other Phone is in the
-// index, but its file answers 404, so a journey sees a failed download.
+// Stands in for AutoEQ on GitHub with real files. Other Phone is in the index, but its file answers 404.
 /** @param {BrowserContext} context */
 export async function routeAutoEq(context) {
   const fixturesByPath = {

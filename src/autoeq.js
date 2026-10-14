@@ -1,5 +1,4 @@
-// Everything goui reads from AutoEQ: the search index, a headphone's ParametricEQ.txt, the target
-// curves in targets.json, and the AutoEQ text format itself.
+// Everything goui reads from AutoEQ: the index, a headphone's file, the target curves and the text format.
 import { bandTypes, butterworthQ, hasGain } from "./shared/bands.js";
 import { fitTargetChange } from "./fit.js";
 
@@ -24,8 +23,7 @@ let targetData = null;
 const forms = ["over-ear", "in-ear", "earbud"];
 const formLabels = { "over-ear": "Over-ear", "in-ear": "In-ear", earbud: "Earbud" };
 
-// A path reads "source/folder/name". The folder holds the form, after the rig when the source names
-// one, as in "GRAS 43AG-7 over-ear".
+// A path reads "source/folder/name". The folder is the rig, if named, then the form: "GRAS 43AG-7 over-ear".
 /**
  * @param {string} name
  * @param {string} path
@@ -56,6 +54,7 @@ export function findFamily(families, item) {
    * @returns {boolean}
    */
   const suits = (each) => each.source === item.source && each.form === item.form && (!each.rig || each.rig === item.rig);
+
   return families.find((family) => family.measurements.some(suits));
 }
 
@@ -68,8 +67,7 @@ function readAutoEqTarget(family) {
   return family.labels[0];
 }
 
-// Eight measurements of one headphone read the same by name. The source, form, rig and target tell
-// them apart.
+// The source, form, rig and target tell apart the measurements of one headphone name.
 /**
  * @param {AutoEqItem} item
  * @param {RigFamily | undefined} family
@@ -80,6 +78,7 @@ export function describeMeasurement(item, family) {
   if (item.form) parts.push(formLabels[item.form]);
   if (item.rig) parts.push(item.rig.replace("Bruel & Kjaer", "B&K"));
   if (family) parts.push(readAutoEqTarget(family));
+
   return parts.join(" · ");
 }
 
@@ -91,8 +90,7 @@ function readIndex(text) {
   const items = [];
   const countByName = new Map();
   for (const line of text.split("\n")) {
-    // A line reads "- [Name](./path) by source". The path can hold brackets of its own, such as
-    // "(ANC Off)", so it runs to the last ") by ".
+    // A line reads "- [Name](./path) by source". A path can hold brackets, so it runs to the last ") by ".
     const nameStart = "- [".length;
     const nameEnd = line.indexOf("](./");
     const pathEnd = line.lastIndexOf(") by ");
@@ -102,9 +100,9 @@ function readIndex(text) {
     items.push(makeAutoEqItem(name, line.slice(nameEnd + "](./".length, pathEnd), !countByName.has(name)));
     countByName.set(name, (countByName.get(name) || 0) + 1);
   }
-  // The index lists the measurements of one headphone in AutoEQ's order. The first one is the one
-  // AutoEQ recommends. A name with one measurement has nothing to choose between.
+  // The first measurement of a name is the one AutoEQ recommends. A name with one measurement has no pick.
   for (const item of items) item.isAutoEqPick &&= countByName.get(item.name) > 1;
+
   return items;
 }
 
@@ -121,11 +119,11 @@ export async function loadAutoEqIndex() {
     await chrome.storage.local.set({ autoEqIndex: text, autoEqIndexAt: Date.now() });
   }
   autoEqItems = readIndex(text);
+
   return autoEqItems;
 }
 
-// AutoEQ's file tunes the headphone to the first target of its family. Another target also plays
-// the bands that move the sound from that one to it. A failed download gives null.
+// AutoEQ's file plays as it is. Another target plays fitted bands on top. A failed download gives null.
 /**
  * @param {AutoEqItem} item
  * @param {TargetData} targets
@@ -148,6 +146,7 @@ export async function fetchHeadphone(item, targets, target) {
    */
   const curveOf = (label) => targets.targets.find((curve) => curve.label === label);
   const moveBands = chosen === autoEqTarget ? [] : fitTargetChange(curveOf(autoEqTarget), curveOf(chosen));
+
   return { bands: [...parsed.bands, ...moveBands], preampDb: parsed.preampDb, autoEq: { name: item.name, path: item.path, target: chosen } };
 }
 
@@ -188,6 +187,7 @@ export function parseAutoEq(text) {
 
     bands.push({ on: words[2].toUpperCase() === "ON", type, frequencyHz, gainDb: readAfter("gain") ?? 0, q: readAfter("q") ?? butterworthQ });
   }
+
   return { bands, preampDb };
 }
 
@@ -202,5 +202,6 @@ export function toAutoEq(file) {
     const gain = hasGain(band.type) ? ` Gain ${band.gainDb.toFixed(1)} dB` : "";
     lines.push(`Filter ${index + 1}: ${on} ${band.type} Fc ${Math.round(band.frequencyHz)} Hz${gain} Q ${band.q.toFixed(2)}`);
   });
+
   return lines.join("\n");
 }
