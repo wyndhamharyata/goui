@@ -133,9 +133,7 @@ waits until goui has users.
 Each step starts only when it is asked for, and ends with a commit.
 
 1. Permission check. Done, see Settled.
-2. App. The menu bar icon, the floating panel, the web view, the bridge, the engine inside the
-   app, the config file, and the right-click menu with **Restart engine**, **Reload panel** and
-   **Quit**.
+2. App. Done, see Settled. The callback watch from A stuck engine is still to come.
 3. Biquads in C for every band type, the swap without a click, and the check against WebKit.
 4. `chrome.js` and `shell.html`, so the existing panel drives the engine through the bridge.
 5. Install. A script that builds the tarball, `install.sh` with the plist, and the `goui`
@@ -157,12 +155,20 @@ Each step starts only when it is asked for, and ends with a commit.
   overload. After `kill -9`, launchd started it again within 10 seconds, with no new prompt.
   **Quit goui** in its menu exits with 0, so launchd does not start it again, and the sound comes back at
   full level.
+- The app holds the engine, the menu bar item, the floating panel and its web view.
+  `mac/web/checks/bridge.html` sends every bridge message. A preamp of -6, -12 and -40 played the
+  sound 6, 12 and 24 dB lower, as the preamp stops at -24. The EQ switch off played it as it is.
+  Power off and on sent a status event each time. An unknown message and a sound with no data were
+  refused with the reason. After `kill -9`, the app came back at the -6 dB that `config.json` kept.
+- A new build asks for the permission again, as the ad hoc signature changes.
 
 ## Open questions
 
 - How the Mac journeys run. Playwright cannot drive a `WKWebView`. One way is the panel and
   `chrome.js` in Chromium against a stand-in for the bridge, with the engine checked on its own
   by what it plays.
+- Whether the first start waits for the permission on the main thread, so the menu bar item
+  does not answer until the person presses Allow. If it does, the tap moves to its own queue.
 - How the floating panel and the web view handle keyboard focus. Typing in the AutoEQ search must
   work while music plays in another app.
 

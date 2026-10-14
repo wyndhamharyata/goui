@@ -5,9 +5,10 @@ import sonarjs from "eslint-plugin-sonarjs";
 import unicorn from "eslint-plugin-unicorn";
 
 export default [
-  // design/ holds mocks, dist/ the release zip, and site/ its own packages, SST output and copied assets.
+  // design/ holds mocks, dist/ the release zip, .build the Mac app, and site/ its own output.
   {
     ignores: [
+      "**/.build/**",
       "design/**",
       "dist/**",
       "node_modules/**",
@@ -91,9 +92,9 @@ export default [
     },
   },
   {
-    // Everything outside src/ runs in Node. The extension code must not reach for process or Buffer.
+    // Everything outside src/ and mac/web/ runs in Node. The pages must not reach for process or Buffer.
     files: ["**/*.{js,mjs}"],
-    ignores: ["src/**"],
+    ignores: ["src/**", "mac/web/**"],
     languageOptions: {
       globals: { ...globals.node },
     },
@@ -103,6 +104,13 @@ export default [
     files: ["tests/**/*.js", "scripts/make-store-images.mjs"],
     languageOptions: {
       globals: { ...globals.browser, ...globals.webextensions },
+    },
+  },
+  {
+    // The Mac app's own pages run in its web view.
+    files: ["mac/web/**/*.js"],
+    languageOptions: {
+      globals: { ...globals.browser },
     },
   },
   {

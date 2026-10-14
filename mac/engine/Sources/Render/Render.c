@@ -24,7 +24,7 @@ typedef struct {
 } BiquadState;
 
 struct RenderState {
-  double gainLinear;
+  _Atomic float gainLinear;
   bool hasBass;
   BiquadRow bass;
   BiquadState bassStates[maxTapChannelCount];
@@ -83,7 +83,7 @@ RenderState *renderStateCreate(double gainDb, double bassDb, double sampleRateHz
     return NULL;
   }
 
-  state->gainLinear = pow(10, gainDb / 20);
+  atomic_init(&state->gainLinear, (float)pow(10, gainDb / 20));
   state->hasBass = bassDb != 0;
   state->bass = makeLowShelf(bassFrequencyHz, bassDb, sampleRateHz);
   state->tapChannelCount = tapChannelCount;
@@ -92,6 +92,10 @@ RenderState *renderStateCreate(double gainDb, double bassDb, double sampleRateHz
 }
 
 void renderStateDestroy(RenderState *state) { free(state); }
+
+void renderSetGain(RenderState *state, double gainDb) {
+  atomic_store_explicit(&state->gainLinear, (float)pow(10, gainDb / 20), memory_order_relaxed);
+}
 
 void renderReadMeters(RenderState *state, RenderMeters *meters) {
   meters->callbackCount = atomic_load_explicit(&state->callbackCount, memory_order_relaxed);
@@ -172,6 +176,7 @@ OSStatus renderAudio(AudioObjectID device, const AudioTimeStamp *now, const Audi
   UInt32 outputBufferCount = describeOutput(output, outputBuffers, &frameCount);
   UInt32 channelCount = tapChannelCount < state->tapChannelCount ? tapChannelCount : state->tapChannelCount;
   const float *samples = tap->mData;
+  float gainLinear = atomic_load_explicit(&state->gainLinear, memory_order_relaxed);
   float inputPeakLinear = 0;
   float outputPeakLinear = 0;
   unsigned long long clippedSampleCount = 0;
@@ -179,7 +184,7 @@ OSStatus renderAudio(AudioObjectID device, const AudioTimeStamp *now, const Audi
     float processed[maxTapChannelCount];
     for (UInt32 channel = 0; channel < channelCount; channel += 1) {
       float sample = samples[(frame * tapChannelCount) + channel];
-      double result = sample * state->gainLinear;
+      double result = sample * gainLinear;
       if (state->hasBass) result = runBiquad(&state->bass, &state->bassStates[channel], result);
       processed[channel] = (float)result;
       float outputLevel = fabsf(processed[channel]);

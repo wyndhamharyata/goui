@@ -1,5 +1,5 @@
 #!/bin/sh
-# Starts goui.app as a LaunchAgent, or stops it and removes the agent.
+# Starts goui.app as a LaunchAgent, or stops it and removes the agent. Flags after start go to the app.
 # A crash starts it again. Quit from the menu stays quit.
 set -eu
 cd "$(dirname "$0")/.."
@@ -8,9 +8,17 @@ plist="$HOME/Library/LaunchAgents/$label.plist"
 log="$HOME/Library/Logs/goui.log"
 domain="gui/$(id -u)"
 
-case "${1:-}" in
+command="${1:-}"
+[ $# -gt 0 ] && shift
+arguments=""
+for argument in "$@"; do arguments="$arguments
+    <string>$argument</string>"; done
+
+case "$command" in
 start)
   launchctl bootout "$domain/$label" 2>/dev/null || true
+  # bootout returns before the old app has gone, and bootstrap fails while it is still there.
+  while launchctl print "$domain/$label" >/dev/null 2>&1; do sleep 0.2; done
   cat > "$plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -20,7 +28,7 @@ start)
   <string>$label</string>
   <key>ProgramArguments</key>
   <array>
-    <string>$(pwd)/.build/goui.app/Contents/MacOS/goui</string>
+    <string>$(pwd)/.build/goui.app/Contents/MacOS/goui</string>$arguments
   </array>
   <key>LimitLoadToSessionType</key>
   <string>Aqua</string>
@@ -47,7 +55,7 @@ stop)
   echo "Stopped and removed the agent."
   ;;
 *)
-  echo "Usage: App/agent.sh start|stop" >&2
+  echo "Usage: App/agent.sh start [--page mac/web/checks/bridge.html] | stop" >&2
   exit 2
   ;;
 esac

@@ -14,8 +14,11 @@ public final class Engine {
   // A new device and then its new rate can arrive together, so a restart waits for them to settle.
   private static let restartSettleSeconds = 0.3
 
-  private let options: Options
-  public private(set) var status = Status.stopped
+  private var options: Options
+  public var onStatusChange: ((Status) -> Void)?
+  public private(set) var status = Status.stopped {
+    didSet { if status != oldValue { onStatusChange?(status) } }
+  }
   private var path: AudioPath?
   private var defaultOutputListener: PropertyListener?
   private var pendingStart: DispatchWorkItem?
@@ -54,13 +57,18 @@ public final class Engine {
     status = .stopped
   }
 
-  func restart(reason: String) {
+  public func restart(reason: String) {
     guard status != .stopped else { return }
     scheduleStart(afterSeconds: Self.restartSettleSeconds) { [weak self] in
       self?.stopPath()
       print("\(reason) Starting again.")
       self?.start()
     }
+  }
+
+  public func setGainDb(_ gainDb: Double) {
+    options.gainDb = gainDb
+    path?.setGainDb(gainDb)
   }
 
   public func readMeters() -> MeterReading? {

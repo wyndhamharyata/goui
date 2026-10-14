@@ -22,6 +22,9 @@ RenderState *_Nullable renderStateCreate(double gainDb, double bassDb, double sa
                                          unsigned int tapChannelCount, unsigned int tapBufferIndex);
 void renderStateDestroy(RenderState *state);
 
+// Safe while the audio plays. The audio thread reads the new gain at its next callback.
+void renderSetGain(RenderState *state, double gainDb);
+
 // Reads the meters and starts the peaks again from silence.
 void renderReadMeters(RenderState *state, RenderMeters *meters);
 

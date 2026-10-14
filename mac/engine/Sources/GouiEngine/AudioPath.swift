@@ -13,13 +13,13 @@ struct AudioPathSummary {
 }
 
 public struct MeterReading {
-  let callbacksPerSecond: Double
-  let inputPeakLinear: Float
-  let outputPeakLinear: Float
-  let inputBufferCount: UInt32
-  let tapChannelCount: UInt32
-  let clippedSampleCount: UInt64
-  let overloadCount: Int
+  public let callbacksPerSecond: Double
+  public let inputPeakLinear: Float
+  public let outputPeakLinear: Float
+  public let inputBufferCount: UInt32
+  public let tapChannelCount: UInt32
+  public let clippedSampleCount: UInt64
+  public let overloadCount: Int
 }
 
 // Undoes each built step in reverse order. A failed step is printed and the rest still run.
@@ -109,6 +109,11 @@ final class AudioPath {
     sampleRateListener?.cancel()
     teardown.runAll()
     render = nil
+  }
+
+  func setGainDb(_ gainDb: Double) {
+    guard let render else { return }
+    renderSetGain(render, gainDb)
   }
 
   // Returns nil once the path has stopped.

@@ -12,7 +12,12 @@ must never wait.
 | File | What it does |
 | --- | --- |
 | `goui-engine/main.swift` | Reads the flags, starts the engine, prints the meters and stops on a signal |
-| `goui/main.swift` | Shows the menu bar icon with **Quit goui**, and plays every sound 6 dB quieter |
+| `goui/main.swift` | Starts the app. `--page` opens another page of `mac/web/`, such as a check |
+| `goui/AppController.swift` | Owns the engine, the menu bar item with its right-click menu, and the panel |
+| `goui/FloatingPanel.swift` | The panel under the menu bar item, which hides on a click elsewhere |
+| `goui/WebFileServer.swift` | Serves `goui://app/` from the web files inside the app |
+| `goui/Bridge.swift` | Answers the page's messages: status, meters, sound, power, restart, print |
+| `goui/SavedConfig.swift` | The power switch and the last sound, in `~/Library/Application Support/goui/config.json` |
 | `GouiEngine/Engine.swift` | Keeps one audio path playing. It builds the path again when the output changes and tries again after a failed start. |
 | `GouiEngine/AudioPath.swift` | Builds the tap, the aggregate device and the callback, and takes them down in reverse |
 | `GouiEngine/PropertyListener.swift` | Listens to one Core Audio property on the main queue |
@@ -41,8 +46,10 @@ App/make-app.sh
 App/agent.sh start
 ```
 
-`make-app.sh` builds `.build/goui.app` and signs it ad hoc. `agent.sh start` writes
-`~/Library/LaunchAgents/com.goui.app.plist` and starts it. The prompt names goui. launchd starts
+`make-app.sh` builds `.build/goui.app` with `src/` and `mac/web/` inside it, and signs it ad hoc.
+`agent.sh start` writes `~/Library/LaunchAgents/com.goui.app.plist` and starts it.
+`agent.sh start --page mac/web/checks/bridge.html` runs the bridge check, which prints each reply to
+the log. The prompt names goui. launchd starts
 the app again after a crash, and after **Quit goui** it stays quit. The meters go to
 `~/Library/Logs/goui.log`. `agent.sh stop` stops the app and removes the agent.
 
