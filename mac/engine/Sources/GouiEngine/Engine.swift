@@ -1,7 +1,7 @@
 import CoreAudio
 import Foundation
 
-// Keeps one audio path playing, building it again when the output changes or a start fails.
+// Keeps one audio path playing, building it again when the output changes, a start fails or the callbacks stop.
 @MainActor
 public final class Engine {
   public enum Status: Equatable {
@@ -17,6 +17,8 @@ public final class Engine {
   private static let fadeWaitSeconds = 0.005
   // A new device and then its new rate can arrive together, so a restart waits for them to settle.
   private static let restartSettleSeconds = 0.3
+  // The callbacks run about 90 times a second, even in silence. None for this long means the path hangs.
+  private static let callbackWatchSeconds = 2.0
 
   private var sound = RenderSound(preampDb: 0, bands: [])
   public var onStatusChange: ((Status) -> Void)?
@@ -28,6 +30,8 @@ public final class Engine {
   private var pendingStart: DispatchWorkItem?
   private var failedStartCount = 0
   private var pendingSound: DispatchWorkItem?
+  private var pendingWatch: DispatchWorkItem?
+  private var watchedCallbackCount: UInt64 = 0
   // Each start has a number. A build that finishes after a newer start or a stop is taken down.
   private var startNumber = 0
   private let buildQueue = DispatchQueue(label: "goui.engine.build", qos: .userInitiated)
@@ -98,6 +102,8 @@ public final class Engine {
       printSummary(path.summary)
       // The sound can change while the path builds.
       sendSoundToPath()
+      watchedCallbackCount = 0
+      watchCallbacks()
     } catch {
       let delaySeconds = Self.retryDelaysSeconds[min(failedStartCount, Self.retryDelaysSeconds.count - 1)]
       failedStartCount += 1
@@ -117,7 +123,26 @@ public final class Engine {
     DispatchQueue.main.asyncAfter(deadline: .now() + Self.fadeWaitSeconds, execute: workItem)
   }
 
+  private func watchCallbacks() {
+    let workItem = DispatchWorkItem { [weak self] in MainActor.assumeIsolated { self?.checkCallbacks() } }
+    pendingWatch = workItem
+    DispatchQueue.main.asyncAfter(deadline: .now() + Self.callbackWatchSeconds, execute: workItem)
+  }
+
+  private func checkCallbacks() {
+    guard let count = path?.readCallbackCount() else { return }
+    guard count != watchedCallbackCount else {
+      restart(reason: "The audio callbacks stopped.")
+      return
+    }
+
+    watchedCallbackCount = count
+    watchCallbacks()
+  }
+
   private func stopPath() {
+    pendingWatch?.cancel()
+    pendingWatch = nil
     path?.stop()
     path = nil
   }

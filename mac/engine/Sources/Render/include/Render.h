@@ -48,6 +48,9 @@ void renderStateDestroy(RenderState *state);
 // Fades to the new sound over 20 ms. False while the last change still fades, so the caller tries again.
 bool renderTrySetSound(RenderState *state, double preampDb, const RenderBand *_Nullable bands, unsigned int bandCount);
 
+// The number of callbacks so far. It leaves the peaks alone.
+unsigned long long renderReadCallbackCount(RenderState *state);
+
 // Reads the meters and starts the peaks again from silence.
 void renderReadMeters(RenderState *state, RenderMeters *meters);
 

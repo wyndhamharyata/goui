@@ -137,7 +137,7 @@ waits until goui has users.
 Each step starts only when it is asked for, and ends with a commit.
 
 1. Permission check. Done, see Settled.
-2. App. Done, see Settled. The callback watch from A stuck engine is still to come.
+2. App. Done, see Settled.
 3. Biquads in C. Done, see Settled.
 4. `chrome.js`. Done, see Settled.
 5. Install. A script that builds the tarball, `install.sh` with the plist, and the `goui`
@@ -186,12 +186,17 @@ Each step starts only when it is asked for, and ends with a commit.
 - The level and spectrum show in the Mac panel. The audio callback keeps the last 8192 frames it
   played, mixed to mono, and `mac/web/spectrum.js` reads them as the extension's `AnalyserNode`
   does, 20 times a second. On the same samples it matches Chromium's spectrum to 0.0001 dB.
+- The engine reads its callback count every 2 s, and builds the path again when it has not moved.
+  A build whose callbacks stopped after 5 s was built again each time, and a healthy engine ran on
+  with no restart.
+- The Mac app has no journeys for now. Playwright cannot drive a `WKWebView`, and the panel's own
+  journeys run in the extension. The Mac is checked by hand, with `goui-render-check` for the
+  filters and the pages in `mac/web/checks/` for the bridge. If journeys come, they can run the
+  panel and `chrome.js` in Chromium against a stand-in for the bridge.
 
 ## Open questions
 
-- How the Mac journeys run. Playwright cannot drive a `WKWebView`. One way is the panel and
-  `chrome.js` in Chromium against a stand-in for the bridge, with the engine checked on its own
-  by what it plays.
+- None for now.
 
 ## Options set aside
 

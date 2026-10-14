@@ -28,7 +28,7 @@ during a fade waits for it to end, and then only the newest sound goes in.
 | `Render/Render.c` | The audio callback: the two chains, the fade and the meters |
 | `GouiEngine/Sound.swift` | The preamp and bands, as `toPlayedSound` makes them, checked and turned into C bands |
 | `goui-render-check/main.swift` | Plays test tones through the render code and checks each gain and each fade |
-| `GouiEngine/Engine.swift` | Keeps one audio path playing. It builds the path again when the output changes and tries again after a failed start. |
+| `GouiEngine/Engine.swift` | Keeps one audio path playing. It builds the path again when the output changes or the callbacks stop, and tries again after a failed start. |
 | `GouiEngine/AudioPath.swift` | Builds the tap, the aggregate device and the callback, and takes them down in reverse |
 | `GouiEngine/PropertyListener.swift` | Listens to one Core Audio property on the main queue |
 | `GouiEngine/CoreAudioProperty.swift` | Reads Core Audio properties and names their errors |

@@ -143,6 +143,12 @@ final class AudioPath {
   }
 
   // Returns nil once the path has stopped.
+  func readCallbackCount() -> UInt64? {
+    guard let render else { return nil }
+    return renderReadCallbackCount(render)
+  }
+
+  // Returns nil once the path has stopped.
   func readMeters() -> MeterReading? {
     guard let render else { return nil }
     var meters = RenderMeters()

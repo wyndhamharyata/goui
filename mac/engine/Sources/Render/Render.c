@@ -101,6 +101,10 @@ bool renderTrySetSound(RenderState *state, double preampDb, const RenderBand *ba
   return true;
 }
 
+unsigned long long renderReadCallbackCount(RenderState *state) {
+  return atomic_load_explicit(&state->callbackCount, memory_order_relaxed);
+}
+
 void renderReadMeters(RenderState *state, RenderMeters *meters) {
   meters->callbackCount = atomic_load_explicit(&state->callbackCount, memory_order_relaxed);
   meters->clippedSampleCount = atomic_load_explicit(&state->clippedSampleCount, memory_order_relaxed);
