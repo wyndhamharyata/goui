@@ -22,72 +22,79 @@ goui uses Core Audio taps. `engine/` proves the path works. Its README lists wha
 ## Rules for this app
 
 - As much as possible runs in JavaScript. Swift is for what only native code can do: the tap, the
-  devices, the socket, the menu bar icon, the panel window and launchd.
+  devices, the menu bar icon, the panel window, the bridge to the page and launchd.
 - The extension's panel runs as it is. A Mac feature goes in a page around the panel or in the
   `chrome` stand-in, never in `src/`.
 
-## Two processes
+## One process
 
-| | Server, `goui-engine` | Tray, `goui.app` |
+`goui.app` is one process. It runs from login as a LaunchAgent and holds both halves.
+
+| | Engine | Panel |
 | --- | --- | --- |
-| Runs | All the time, from login, as a LaunchAgent | When you want the panel, also from login |
 | Owns | The tap, the output device, the biquads, the saved config | The menu bar icon, the floating panel, the web view |
-| Swift | The engine from `engine/`, a socket server, the config file | `NSStatusItem`, `NSPanel`, `WKWebView`, a right-click menu |
+| Swift | The engine from `engine/` and the config file | `NSStatusItem`, `NSPanel`, `WKWebView`, the bridge, a right-click menu |
 | JavaScript | None | The panel, the `chrome` stand-in, the page around the panel |
 
-The server plays with the tray closed or crashed. At login it reads the last config and plays it
-before any window opens.
+At login the app reads the last config and plays it before any window opens. The sound plays with
+the panel closed.
 
-### A stuck server
+The page runs in WebKit's own process, so a broken page cannot stop the sound. The audio runs on
+Core Audio's own thread, so a stuck main thread does not stop it either.
 
-A killed server is always safe. macOS removes its muted tap and the Mac plays the normal way again.
-So every way back is a hard kill and a fresh start.
+### A stuck engine
 
-1. A crash. launchd starts it again, with `KeepAlive` in its plist.
-2. A hang or silence. The server watches its own callback count. When the callbacks stop while
+A killed app is always safe. macOS removes its muted tap and the Mac plays the normal way again.
+So every way back is a hard kill and a fresh start, or a fresh engine inside the app.
+
+1. A crash. launchd starts the app again, with `KeepAlive` in its plist.
+2. A hang or silence. The engine watches its own callback count. When the callbacks stop while
    audio should play, it builds its session again.
-3. By hand from the tray. The right-click menu has **Restart engine**, which runs
-   `launchctl kickstart -k`. It works even when the web view is broken. The page around the panel
-   also shows a status dot and a restart button when the server stops answering.
-4. By hand from a terminal. `goui restart` does the same.
+3. By hand from the menu. The right-click menu has **Restart engine**, which builds the engine
+   again, and **Reload panel**, which loads the page again. Both work when the web view is broken.
+   The page around the panel also shows a status dot and a restart button.
+4. By hand from a terminal. `goui restart` runs `launchctl kickstart -k` on the app.
 
-### Between the page and the server
+### Between the page and Swift
 
-The web view talks to the server itself, so the tray needs very little Swift.
+The page talks to Swift through WebKit's own message channel. Nothing outside the app can reach
+it, so it needs no port, token or origin check.
 
-- The server listens with a WebSocket on `127.0.0.1`. It takes a connection only from the
-  `goui://app` origin with a random token. The tray hands the token to the page. A website cannot
-  read the token.
+- The page sends with `window.webkit.messageHandlers.goui.postMessage`, and a reply comes back as
+  the result of that call.
+- Swift sends events to the page with `callAsyncJavaScript`.
 - `mac/web/chrome.js` stands in for the Chrome APIs the panel calls.
 
 | Chrome API | In the app |
 | --- | --- |
-| `chrome.storage.local` and `session` | Messages to the server, which keeps a JSON file |
-| `chrome.runtime.sendMessage` | Messages to the server |
-| `chrome.runtime.onMessage` | Events from the server, passed to the panel's listeners |
+| `chrome.storage.local` and `session` | Messages to Swift, which keeps a JSON file |
+| `chrome.runtime.sendMessage` | Messages to Swift |
+| `chrome.runtime.onMessage` | Events from Swift, passed to the panel's listeners |
 | `chrome.runtime.getURL` | A `goui://app` address |
-| `chrome.tabs.create` | A message to the tray, which opens the link in the default browser |
+| `chrome.tabs.create` | A message to Swift, which opens the link in the default browser |
 
-- Before a config goes to the server, `chrome.js` runs `toPlayedSound` from `src/shared/config.js`.
-  The server only ever takes `{ preampDb, bands }` and keeps the last one for the next login.
+- Before a config goes to Swift, `chrome.js` runs `toPlayedSound` from `src/shared/config.js`.
+  The engine only ever takes `{ preampDb, bands }` and keeps the last one for the next login.
 
 ### Bands to sound
 
 The biquad formulas are the one piece of math outside JavaScript. When the sample rate changes with
-the panel closed, as it does when a call starts on a Bluetooth headphone, the server must work out
+the panel closed, as it does when a call starts on a Bluetooth headphone, the engine must work out
 the filters again on its own. The formulas come from the Web Audio spec, so the shelves take no Q
 and LP and HP read Q in dB. They live in C next to the render code, about 60 lines. A check in the
-page compares the C response with WebKit's `getFrequencyResponse` for the same bands. The server
+page compares the C response with WebKit's `getFrequencyResponse` for the same bands. The engine
 swaps to new filters without a lock and fades across about 20 ms, so a change does not click.
 
-### The existing panel in the tray
+### The existing panel in the app
 
 - The web view loads `src/panel.html` as it is, served under `goui://app` from the extension's own
-  files. The tray puts `chrome.js` in the page before the panel's code runs.
+  files. The app puts `chrome.js` in the page before the panel's code runs.
 - The panel opens in its popup mode. Its power button already sends `capture:start` and
   `capture:stop`. `chrome.js` turns those into engine on and off.
-- `mac/web/shell.html` holds the panel in an iframe, with the Mac controls above it: the server
+- `mac/web/shell.html` holds the panel in an iframe, with the Mac controls above it: the engine
   status and its restart button now, the output device later.
+- The web view is built when the panel first opens. If it holds too much memory with the panel
+  closed, the app can drop it on close and build it again on open.
 - Words about the tab read oddly on a Mac for now. They wait for the branding pass, with the level
   and spectrum meters.
 
@@ -97,11 +104,11 @@ A curl line installs goui. npm, a DMG and a PKG come later.
 
 - `install.sh` downloads one tarball from GitHub Releases and unpacks it to
   `~/Applications/goui.app`. No admin password.
-- The tarball holds the tray, the server inside its `Contents/`, the files of `src/` and `mac/web/`,
-  and the `goui` command.
-- The script writes two plists to `~/Library/LaunchAgents`, one for the server and one for the
-  tray, and starts them with `launchctl bootstrap`. Running the curl line again updates goui.
-- `curl` sets no quarantine flag, so Gatekeeper does not stop the binaries.
+- The tarball holds the app, the files of `src/` and `mac/web/` inside its `Contents/`, and the
+  `goui` command.
+- The script writes one plist to `~/Library/LaunchAgents` and starts it with
+  `launchctl bootstrap`. Running the curl line again updates goui.
+- `curl` sets no quarantine flag, so Gatekeeper does not stop the binary.
 - npm can come later as a thin wrapper, `npx goui install`, around the same tarball. Many setups
   block `postinstall`, so the install runs only when you ask for it.
 
@@ -109,10 +116,10 @@ The `goui` command is a shell script.
 
 | Command | What it does |
 | --- | --- |
-| `goui restart` | `launchctl kickstart -k` on the server |
-| `goui stop`, `goui start` | Stops or starts the server |
-| `goui logs` | Shows the server log |
-| `goui uninstall` | Removes both agents and the app |
+| `goui restart` | `launchctl kickstart -k` on the app |
+| `goui stop`, `goui start` | Stops or starts the app |
+| `goui logs` | Shows the app log |
+| `goui uninstall` | Removes the agent and the app |
 
 ### Signing
 
@@ -125,29 +132,32 @@ waits until goui has users.
 
 Each step starts only when it is asked for, and ends with a commit.
 
-1. Server. The WebSocket with its origin and token checks, the config file, and commands for
-   bands, on and off, and status.
-2. Biquads in C for every band type, the swap without a click, and the check against WebKit.
-3. Tray. The icon, the floating panel, the web view, and the right-click menu with
-   **Restart engine** and **Quit**.
-4. `chrome.js` and `shell.html`, so the existing panel drives the server.
-5. Install. A script that builds the tarball, `install.sh` with the two plists, and the `goui`
+1. Permission check. One app that is also a menu bar icon, started by launchd, asks for System
+   Audio Recording and plays the test tone, as the windowless agent did.
+2. App. The menu bar icon, the floating panel, the web view, the bridge, the engine inside the
+   app, the config file, and the right-click menu with **Restart engine**, **Reload panel** and
+   **Quit**.
+3. Biquads in C for every band type, the swap without a click, and the check against WebKit.
+4. `chrome.js` and `shell.html`, so the existing panel drives the engine through the bridge.
+5. Install. A script that builds the tarball, `install.sh` with the plist, and the `goui`
    command.
 
 ## Settled
 
 - A LaunchAgent with no window can ask for System Audio Recording. macOS names the agent's own
-  binary in the prompt, not the terminal or the tray. Until the person presses Allow, the engine
-  waits at the request and builds no tap. So the server reports a status that says it waits for
-  the permission. Once allowed, the agent played a test tone at -40.2 dBFS out at -46.2 with -6 dB
-  of gain, on a Bluetooth headphone at 44.1 kHz.
+  binary in the prompt, not the terminal. Until the person presses Allow, the engine waits at the
+  request and builds no tap. So the app reports a status that says it waits for the permission.
+  Once allowed, the agent played a test tone at -40.2 dBFS out at -46.2 with -6 dB of gain, on a
+  Bluetooth headphone at 44.1 kHz.
 - The permission follows the ad hoc signature, which changes with each build. A new build asks
   again.
+- goui is one process, not a server and a tray. See Options set aside.
 
 ## Open questions
 
-- How the Mac journeys run. Playwright cannot drive a `WKWebView`. One way is the panel in Chromium
-  against the real server, with the server writing what it plays to a file the journey reads.
+- How the Mac journeys run. Playwright cannot drive a `WKWebView`. One way is the panel and
+  `chrome.js` in Chromium against a stand-in for the bridge, with the engine checked on its own
+  by what it plays.
 - How the floating panel and the web view handle keyboard focus. Typing in the AutoEQ search must
   work while music plays in another app.
 
@@ -160,7 +170,8 @@ Each step starts only when it is asked for, and ends with a commit.
 | Tauri | It uses the same `WKWebView` on the Mac, with Rust in between. |
 | Wails v3 | Go is pleasant, but v3 is still beta. It saves about 215 lines of Swift and costs about 350 lines of Go. The panel focus and position code would live in Wails, out of reach. |
 | Electrobun | Bun in the main process, but beta, and the panel position is left to the app. |
-| SMAppService | It suits an app in `/Applications`. A curl install writes its own LaunchAgent plists. |
+| SMAppService | It suits an app in `/Applications`. A curl install writes its own LaunchAgent plist. |
+| A server and a tray | A `goui-engine` LaunchAgent with a WebSocket on `127.0.0.1`, and a tray app whose page talks to it. Any local process and any website can reach that port, so it needs a token, an origin check and a port choice. It also means two binaries, two plists and a message protocol to keep in step. One process plays from login, keeps playing through a broken page and restarts after a crash just as well. What it gives up: the tests cannot run the panel in Chromium against the real engine, and other apps cannot drive goui. A socket can come back when one of those is needed. |
 
 ## Troubleshooting text for the README
 
