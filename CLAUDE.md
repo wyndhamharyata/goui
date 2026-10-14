@@ -40,7 +40,38 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 | Preset | A saved band list for one layer. Each layer has its own list. |
 | Config | The stored sound: the main switch, the preamp, the three Listen sliders and the layers. |
 | Played sound | What the audio chain plays. `toPlayedSound` merges the bands of every layer that is on with the three sliders as fixed bands, and works out the auto preamp. Bands sum in dB, so the layers merge exactly. |
-| A/B | Held down, it plays the sound with the EQ off. Level match keeps the preamp while it is held. |
+| A/B | Held down, it plays the sound with the EQ off. In code, `isComparing`. |
+| Level match | Keeps the preamp while A/B is held, so both sides play at the same level. In code, `isLevelMatched`. |
+| Solo | Plays one band alone. The panel holds it as the band itself, `soloBand`. |
+| Chosen band | The band the Tune tab edits, `selectedBand`. Its Q handles are the two squares half its width out. |
+| Heard config | The config with A/B and Solo applied. The engine plays it and the graph draws it. |
+| Measurement | One AutoEQ result for a headphone: a source, a form such as over-ear, and a rig when the source names one. |
+| Target | The curve AutoEQ tunes a headphone toward, such as Harman over-ear 2018. |
+| Target set | The targets that suit a group of measurements, with AutoEQ's own target first. `TargetSet` in `src/autoeq.js`. |
+| AutoEQ's pick | The measurement AutoEQ recommends when a headphone has more than one. |
+| Tall view | The graph turned so frequency runs down the panel. In code, `isTall`. |
+| Frequency lines, gain lines | The grid behind the curve. Strong lines mark 100 Hz, 1 kHz and 10 kHz. |
+
+## Function verbs
+
+A function name starts with a verb, and each verb has one meaning.
+
+| Verb | Means | Examples |
+| --- | --- | --- |
+| `build` | Makes an element or a picture that is not on the page yet. | `buildElement`, `buildSvg`, `buildLayerRow` |
+| `render` | Puts something on the page, or redraws it there. | `renderLayers`, `renderChips` |
+| `draw` | Builds one named part of the graph from a view. | `drawRegions`, `drawBandPoints` |
+| `new` | Makes a data object. | `newBand`, `newLayer`, `newAutoEqItem` |
+| `create` | Makes a Web Audio node, after the API's own `createBiquadFilter`. | `createBiquad`, `createTone` |
+| `to` | Converts one value into another and reads nothing else. | `toPlayedSound`, `toAutoEq` |
+| `read` | Reads a value from state, storage, text or the page. | `readHeardConfig`, `readSelectedIndex` |
+| `list` | Returns a list worked out from state. | `listBandEntries`, `listPlayedBands` |
+| `find` | Looks up one item that may be missing. | `findTargetSet`, `findTarget` |
+| `load`, `fetch` | Gets data over the network or from the extension files. | `loadTargets`, `fetchHeadphone` |
+| `apply` | Takes in a message or text and changes the panel to match. | `applyCaptureState`, `applyAutoEqText` |
+| `set` | Changes one value, inside its limits. | `setBandGain`, `setTall` |
+| `wire` | Hooks up the event listeners of one part of the page. | `wireTune`, `wireLibrary` |
+| `is`, `has` | Answers yes or no. | `isEqOff`, `hasGain` |
 
 ## From a click to the sound
 
@@ -179,9 +210,7 @@ Butterworth, gets a link to its explanation on the same line.
 - Markup is built with `buildElement` in the panel and `buildSvg` in the graph, never from HTML or SVG
   text. A style is an object of camelCase properties. A look the graph draws with is a named
   style in `src/graph/styles.js`, and a colour is a named constant in `src/graph/colors.js`.
-- A function name's verb says what it does. `build` makes an element or a picture that is not on
-  the page yet, and `render` puts one on the page. `new` makes a data object, and `create` makes a
-  Web Audio node. `to` converts one value into another, and `read` reads from state.
+- A function name's verb says what it does, as the Function verbs table lists.
 - Each formula is a named function in `src/shared/math.js`, even when one place uses it, as `clamp`
   is. `20 * Math.log10(x)` is `linearToDb(x)`.
 - Code that two contexts both need goes in `src/shared/`. `bands.js` holds one band and its Web
