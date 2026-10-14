@@ -15,7 +15,7 @@ export const layoutMessages = {
   longComment: "comment runs over one line",
   crowdedReturn: "no blank line above the last return",
   crowdedExit: "no blank line after an early exit",
-  crowdedControl: "no blank line around a control statement",
+  crowdedControl: "no blank line around a control statement of more than one line",
   crowdedUse: "no blank line between a run of declarations and the statements around it",
   nestedJsdoc: "JSDoc on a function inside a function",
   lonelyJsdoc: "JSDoc on a function with one caller in its own file",
@@ -103,8 +103,8 @@ function findCrowdedReturn(body, lines) {
  * @param {object} node
  * @returns {boolean}
  */
-function isControl(node) {
-  return controlTypes.has(node.type);
+function isBlockControl(node) {
+  return controlTypes.has(node.type) && node.loc.start.line !== node.loc.end.line;
 }
 
 /**
@@ -128,7 +128,7 @@ function isApart(above, below, lines) {
   return below.loc.start.line - above.loc.end.line > 1 && lines[above.loc.end.line].trim() === "";
 }
 
-// Rule 6. Control statements, runs of exits or one-line ifs, and runs of declarations are each their own block.
+// Rule 6. A control statement of more than one line, a run of early exits and a run of declarations each stand apart.
 /**
  * @param {object[]} statements
  * @param {string[]} lines
@@ -150,7 +150,7 @@ function findCrowdedStatements(statements, lines) {
     const line = statement.loc.end.line;
 
     if (isEarlyExit(statement)) pieces.push({ text: "", kind: "crowdedExit", line });
-    else if (isControl(statement) || isControl(next)) pieces.push({ text: "", kind: "crowdedControl", line });
+    else if (isBlockControl(statement) || isBlockControl(next)) pieces.push({ text: "", kind: "crowdedControl", line });
     else if (isDeclaration(statement) !== isDeclaration(next) && next.type !== "ReturnStatement") pieces.push({ text: "", kind: "crowdedUse", line });
   });
 

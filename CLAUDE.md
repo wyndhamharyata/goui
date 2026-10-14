@@ -115,6 +115,7 @@ Never write a banner, an ALL-CAPS label, step narration such as `// Step 1`, a l
 `// Main logic`, prose inside a JSDoc block, commented-out code, or a TODO with no named task. A
 JSDoc block holds types only (rule 10).
 If a line needs a comment to say what it does, rename it or split it.
+A comment explains the code as it is now. It never sends the reader to a version or a past change.
 
 A comment is one line, never two. `npm run lint` checks it. A term a reader may not know, such as
 Butterworth, gets a link to its explanation on the same line.
@@ -145,9 +146,9 @@ Butterworth, gets a link to its explanation on the same line.
   Chrome context, a field the user typed in. Code past that point trusts the value.
 - A blank line groups a block. One idea per block, about five statements. Setup, such as the state
   a drag starts with, is its own block, apart from the calls that act on it.
-- Control flow is its own block. An `if`, a loop, a `switch` or a `try` has a blank line above and
-  below it, unless it opens or closes its block. A run of early exits, or of one-line `if`s, stays
-  together. `npm run lint` checks it.
+- Control flow is its own block. An `if`, a loop, a `switch` or a `try` of more than one line has a
+  blank line above and below it, unless it opens or closes its block. A one-line one needs none. A
+  run of early exits, or of one-line `if`s, stays together. `npm run lint` checks it.
 - Declare, then use. A run of declarations has a blank line between it and the statements that
   use it, and between it and the statements before it. `npm run lint` checks it.
 - Inside a run of declarations, the inputs come first, then the values worked out from them, then

@@ -14,7 +14,7 @@ import { commit, sendAudio, setComparing } from "./sound.js";
 import { isPopup, state } from "./state.js";
 import { wireTune } from "./tune.js";
 
-// The keys startPanel reads. savedSounds, presets and keepsPreampInCompare come from older builds.
+// The keys startPanel reads. savedSounds, presets and keepsPreampInCompare are older names it still loads.
 const storedKeys = [
   "config", "headphonePresets", "earPresets", "view", "tab", "hasCaptured", "isLevelMatched",
   "savedSounds", "presets", "keepsPreampInCompare",
@@ -50,14 +50,13 @@ async function startPanel() {
   const stored = await chrome.storage.local.get(storedKeys);
 
   byId("app").dataset.started = stored.hasCaptured ? "yes" : "no";
-  // goui 0.1.4 stored Level match as keepsPreampInCompare and the tall view as "vertical".
+  // Older settings name Level match keepsPreampInCompare and the tall view "vertical", so both names still load.
   state.isLevelMatched = (stored.isLevelMatched ?? stored.keepsPreampInCompare) === true;
   byId("levelMatch").checked = state.isLevelMatched;
 
   if (stored.config) state.config = sanitizeConfig(stored.config);
 
   await readPresets(stored);
-
   for (const graph of graphs) graph.setTall(stored.view === "tall" || stored.view === "vertical");
 
   showTab(stored.tab || "listen");
