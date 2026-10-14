@@ -8,13 +8,19 @@ final class AppController: NSObject, WKNavigationDelegate {
   // The panel opens as the popup of one stand-in tab, so it shows its power button.
   nonisolated static let panelPagePath = "src/panel.html?tab=1"
   private static let chromePath = "mac/web/chrome.js"
-  private static let panelSize = NSSize(width: 400, height: 600)
+  private static let panelSize = NSSize(width: FloatingPanel.narrowWidthPx, height: 600)
+  // At this width src/panel.css shows Listen, Tune and Library side by side, as in a wide side panel.
+  private static let wideWidthPx = 900.0
+  private static let firstWideWidthPx = 1000.0
+  private static let widthKey = "panelWidth"
+  private static let wideWidthKey = "panelWideWidth"
   // The click on the menu bar item that hides the panel would open it again straight away.
   private static let reopenDelaySeconds = 0.3
 
   private let pagePath: String
   private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
   private let menu = NSMenu()
+  private let wideItem = NSMenuItem(title: "Wide panel", action: #selector(toggleWide), keyEquivalent: "")
   private var engine: Engine?
   private var bridge: Bridge?
   private var webView: WKWebView?
@@ -58,6 +64,9 @@ final class AppController: NSObject, WKNavigationDelegate {
   private func buildMenu() {
     menu.addItem(withTitle: "Restart engine", action: #selector(restartEngine), keyEquivalent: "").target = self
     menu.addItem(withTitle: "Reload panel", action: #selector(reloadPanel), keyEquivalent: "").target = self
+    wideItem.target = self
+    wideItem.state = UserDefaults.standard.double(forKey: Self.widthKey) >= Self.wideWidthPx ? .on : .off
+    menu.addItem(wideItem)
     menu.addItem(.separator())
     menu.addItem(withTitle: "Quit goui", action: #selector(quit), keyEquivalent: "q").target = self
   }
@@ -88,8 +97,11 @@ final class AppController: NSObject, WKNavigationDelegate {
 
   private func buildPanel() -> FloatingPanel {
     let webView = buildWebView()
-    let panel = FloatingPanel(contentView: webView, size: Self.panelSize)
+    let savedWidth = UserDefaults.standard.double(forKey: Self.widthKey)
+    let size = NSSize(width: max(savedWidth, FloatingPanel.narrowWidthPx), height: Self.panelSize.height)
+    let panel = FloatingPanel(contentView: webView, size: size)
     bridge?.onResize = { [weak panel] height in panel?.resize(toHeight: height) }
+    panel.onWidthChange = { [weak self] width in self?.keepWidth(width) }
     self.webView = webView
     self.panel = panel
     return panel
@@ -139,6 +151,23 @@ final class AppController: NSObject, WKNavigationDelegate {
   func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
     print("The panel's page stopped. Loading it again.")
     loadPage(in: webView)
+  }
+
+  private func keepWidth(_ width: Double) {
+    let isWide = width >= Self.wideWidthPx
+    UserDefaults.standard.set(width, forKey: Self.widthKey)
+    if isWide { UserDefaults.standard.set(width, forKey: Self.wideWidthKey) }
+    wideItem.state = isWide ? .on : .off
+  }
+
+  @objc private func toggleWide() {
+    guard let button = statusItem.button else { return }
+
+    let panel = panel ?? buildPanel()
+    let lastWideWidth = UserDefaults.standard.double(forKey: Self.wideWidthKey)
+    let isWide = panel.frame.width >= Self.wideWidthPx
+    panel.setWidth(isWide ? FloatingPanel.narrowWidthPx : (lastWideWidth >= Self.wideWidthPx ? lastWideWidth : Self.firstWideWidthPx))
+    if !panel.isVisible { panel.show(below: button) }
   }
 
   @objc private func restartEngine() {

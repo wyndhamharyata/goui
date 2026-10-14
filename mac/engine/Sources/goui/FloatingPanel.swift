@@ -1,14 +1,19 @@
 import AppKit
 
 // Floats under the menu bar item, takes typing without bringing goui to the front, and hides on a click elsewhere.
-final class FloatingPanel: NSPanel {
+final class FloatingPanel: NSPanel, NSWindowDelegate {
+  // The popup width the extension's panel is made for.
+  static let narrowWidthPx = 400.0
   private static let gapPx = 6.0
   private static let cornerRadiusPx = 12.0
 
+  var onWidthChange: ((Double) -> Void)?
   private(set) var lastHiddenAt = Date.distantPast
 
   init(contentView: NSView, size: NSSize) {
-    super.init(contentRect: NSRect(origin: .zero, size: size), styleMask: [.nonactivatingPanel, .borderless], backing: .buffered, defer: false)
+    super.init(contentRect: NSRect(origin: .zero, size: size), styleMask: [.nonactivatingPanel, .borderless, .resizable], backing: .buffered, defer: false)
+    delegate = self
+    minSize = NSSize(width: Self.narrowWidthPx, height: 1)
     isFloatingPanel = true
     level = .statusBar
     collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
@@ -31,6 +36,27 @@ final class FloatingPanel: NSPanel {
     super.resignKey()
     orderOut(nil)
     lastHiddenAt = Date()
+  }
+
+  // A drag on an edge changes only the width. The height follows the page.
+  func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
+    NSSize(width: frameSize.width, height: frame.height)
+  }
+
+  func windowDidResize(_ notification: Notification) {
+    onWidthChange?(Double(frame.width))
+  }
+
+  // Keeps the middle and the top edge where they are, and stays on the screen.
+  func setWidth(_ width: Double) {
+    let visibleFrame = screen?.visibleFrame ?? frame
+    let leftmostX = Double(visibleFrame.minX) + Self.gapPx
+    let newWidth = min(max(width, Self.narrowWidthPx), Double(visibleFrame.width) - (2 * Self.gapPx))
+    let rightmostX = Double(visibleFrame.maxX) - newWidth - Self.gapPx
+    var newFrame = frame
+    newFrame.origin.x = min(max(Double(frame.midX) - (newWidth / 2), leftmostX), rightmostX)
+    newFrame.size.width = newWidth
+    setFrame(newFrame, display: true)
   }
 
   // Keeps the top edge where it is, and stays on the screen.

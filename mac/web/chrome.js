@@ -113,6 +113,14 @@ async function sendLevel() {
   deliverToPanel({ type: messageTypes.audioTelemetry, levelDb: meters?.outputPeakDb ?? silenceDb, spectrumDb: [] });
 }
 
+// The popup style holds the page at 400 px. Here the page takes the panel's width, so a wide panel shows three columns.
+document.addEventListener("DOMContentLoaded", () => {
+  const style = document.createElement("style");
+
+  style.textContent = ".popup body { width: auto; }";
+  document.head.append(style);
+});
+
 // The panel has no console on the Mac, so its errors go to the app's log.
 window.addEventListener("error", (event) => sendToMac({ type: "print", text: `Error: ${event.message} at ${event.filename}:${event.lineno}` }));
 window.addEventListener("unhandledrejection", (event) => sendToMac({ type: "print", text: `Rejected: ${event.reason?.stack ?? event.reason}` }));
