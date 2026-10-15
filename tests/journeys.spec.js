@@ -454,8 +454,8 @@ journey("given a 1 kHz peak under auto preamp, A/B plays a 5 kHz tone 6 dB loude
   expectChangeDb(await readSteadyLevel(reopened), withEq, 0);
 });
 
-journey("given Vocals at +6 dB, a 2.5 kHz tone plays 6 dB louder and stays so on a new headphone", async (context, port) => {
-  const { panel } = await startGouiOnTone(context, port, 2500);
+journey("given Vocals at +6 dB, a 1.5 kHz tone plays 6 dB louder and stays so on a new headphone", async (context, port) => {
+  const { panel } = await startGouiOnTone(context, port, 1500);
 
   await turnAutoPreampOff(panel);
 

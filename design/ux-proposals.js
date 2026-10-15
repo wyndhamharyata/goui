@@ -150,8 +150,8 @@ function curveBands(model) {
   const list = model.bands.filter((band) => band.on && isLayerOn(band));
   const { bass, vocals, treble } = model.macros;
   if (bass) list.push({ type: "LSC", frequencyHz: 105, gainDb: bass, q: 0.7 });
-  if (vocals) list.push({ type: "PK", frequencyHz: 2500, gainDb: vocals, q: 0.9 });
-  if (treble) list.push({ type: "HSC", frequencyHz: 8000, gainDb: treble, q: 0.7 });
+  if (vocals) list.push({ type: "PK", frequencyHz: 1500, gainDb: vocals, q: 0.7 });
+  if (treble) list.push({ type: "HSC", frequencyHz: 3500, gainDb: treble, q: 0.7 });
 
   return list;
 }
@@ -576,7 +576,7 @@ function mountLibrary(host, model, onPick) {
 }
 
 function mountMacros(host, model, showSafety) {
-  const rows = [["bass", "Bass", "Below 120 Hz"], ["vocals", "Vocals", "Around 2.5 kHz"], ["treble", "Treble", "Above 8 kHz"]];
+  const rows = [["bass", "Bass", "Below 120 Hz"], ["vocals", "Vocals", "Around 1.5 kHz"], ["treble", "Treble", "Above 3.5 kHz"]];
   const sliders = rows.map(([key, label, hint]) => `<label class="macro">
       <span>${label}<small>${hint}</small></span>
       <input type="range" min="-6" max="6" step="0.5" value="0" data-key="${key}" />

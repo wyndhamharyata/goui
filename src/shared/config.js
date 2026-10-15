@@ -140,8 +140,8 @@ export function listOnLayers(config) {
 function sliderBands(sliders) {
   return [
     { on: true, type: "LSC", frequencyHz: autoEqBassShelfHz, gainDb: sliders.bassDb, q: butterworthQ },
-    { on: true, type: "PK", frequencyHz: 2500, gainDb: sliders.vocalsDb, q: 0.9 },
-    { on: true, type: "HSC", frequencyHz: 8000, gainDb: sliders.trebleDb, q: butterworthQ },
+    { on: true, type: "PK", frequencyHz: 1500, gainDb: sliders.vocalsDb, q: 0.7 },
+    { on: true, type: "HSC", frequencyHz: 3500, gainDb: sliders.trebleDb, q: butterworthQ },
   ];
 }
 
