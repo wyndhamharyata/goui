@@ -22,6 +22,13 @@ final class WebStorage {
     return items.filter { keys.contains($0.key) }
   }
 
+  // The panel keeps its Sets under sets, by name, in the same order as its own list.
+  func listSetNames() -> [String] {
+    let sets = items["sets"] as? [String: Any] ?? [:]
+
+    return sets.keys.sorted { $0.localizedCompare($1) == .orderedAscending }
+  }
+
   func write(_ newItems: [String: Any]) throws {
     guard JSONSerialization.isValidJSONObject(newItems) else { throw GouiError("Storage takes only values JSON can hold") }
 

@@ -142,12 +142,13 @@ final class UpdateMenu: NSObject {
 
     if alert.runModal() == .alertFirstButtonReturn { applyUpdate() }
   }
+}
 
-  private func showMessage(_ message: String) {
-    let alert = NSAlert()
-    alert.messageText = message
-    alert.addButton(withTitle: "OK")
-    NSApp.activate()
-    _ = alert.runModal()
-  }
+@MainActor
+func showMessage(_ message: String) {
+  let alert = NSAlert()
+  alert.messageText = message
+  alert.addButton(withTitle: "OK")
+  NSApp.activate()
+  _ = alert.runModal()
 }

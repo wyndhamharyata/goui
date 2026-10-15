@@ -4,7 +4,7 @@ import WebKit
 
 // Owns the engine, the menu bar item, the panel and its page.
 @MainActor
-final class AppController: NSObject, WKNavigationDelegate {
+final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
   // The panel opens as the popup of one stand-in tab, so it shows its power button.
   nonisolated static let panelPagePath = "src/panel.html?tab=1"
   private static let chromePath = "mac/web/chrome.js"
@@ -24,11 +24,16 @@ final class AppController: NSObject, WKNavigationDelegate {
   private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
   private let menu = NSMenu()
   private let wideItem = NSMenuItem(title: "Wide panel", action: #selector(toggleWide), keyEquivalent: "")
+  private let setsSeparator = NSMenuItem.separator()
+  private let setsItem = NSMenuItem(title: "Sets", action: nil, keyEquivalent: "")
   private let engine: Engine
   private let bridge: Bridge
   private var panel: FloatingPanel?
   private var isOpeningAfterInstall = false
+  // The last answer from the page, so the tick shows at once while the page answers again.
+  private var playingSetName = ""
   private lazy var updateMenu = UpdateMenu { [weak self] in self?.rebuildPanelAfterUpdate() }
+  private lazy var setCommand = SetCommand { [weak self] name in self?.applySet(named: name) }
 
   init(pagePath: String) {
     try? FileManager.default.createDirectory(at: supportFolderURL, withIntermediateDirectories: true)
@@ -60,6 +65,7 @@ final class AppController: NSObject, WKNavigationDelegate {
   func start() {
     buildMenu()
     configureStatusItem()
+    setCommand.start()
     isOpeningAfterInstall = takeInstalledMarker()
     if pagePath != Self.panelPagePath { togglePanel() }
     openPanelOnceStarted(engine.status)
@@ -99,10 +105,71 @@ final class AppController: NSObject, WKNavigationDelegate {
     wideItem.target = self
     wideItem.state = UserDefaults.standard.double(forKey: Self.widthKey) >= Self.wideWidthPx ? .on : .off
     menu.addItem(wideItem)
+    menu.addItem(setsSeparator)
+    setsItem.submenu = NSMenu()
+    menu.addItem(setsItem)
     menu.addItem(.separator())
     updateMenu.install(in: menu)
     menu.addItem(.separator())
     menu.addItem(withTitle: "Quit goui", action: #selector(quit), keyEquivalent: "q").target = self
+    menu.delegate = self
+  }
+
+  // The panel saves and deletes Sets, so the submenu is built again each time the menu opens.
+  func menuNeedsUpdate(_ menu: NSMenu) {
+    let names = bridge.storage.listSetNames()
+    setsItem.isHidden = names.isEmpty
+    setsSeparator.isHidden = names.isEmpty
+    setsItem.submenu?.items = names.map(buildSetItem)
+    guard !names.isEmpty else { return }
+
+    renderSetTicks()
+    // Only the page can tell which Set plays, so it loads now if it has not, and the tick follows its answer.
+    if panel == nil { _ = buildPanel() }
+    Task { await readPlayingSet() }
+  }
+
+  private func buildSetItem(named name: String) -> NSMenuItem {
+    let item = NSMenuItem(title: name, action: #selector(pickSet), keyEquivalent: "")
+    item.target = self
+    item.representedObject = name
+    return item
+  }
+
+  private func renderSetTicks() {
+    for item in setsItem.submenu?.items ?? [] {
+      item.state = item.representedObject as? String == playingSetName ? .on : .off
+    }
+  }
+
+  private func readPlayingSet() async {
+    guard let name = await bridge.readPlayingSetName() else { return }
+
+    playingSetName = name
+    renderSetTicks()
+  }
+
+  @objc private func pickSet(_ item: NSMenuItem) {
+    guard let name = item.representedObject as? String else { return }
+
+    applySet(named: name)
+  }
+
+  // The menu and goui set both apply through the page, which loads first if the panel was never opened.
+  private func applySet(named name: String) {
+    if panel == nil { _ = buildPanel() }
+
+    Task {
+      switch await bridge.applySet(named: name) {
+      case .applied:
+        playingSetName = name
+        print("goui plays the Set \(name).")
+      case .unknown:
+        showMessage("goui has no Set called \(name). Pick one from the Sets menu, or save it in the panel first.")
+      case .notReady:
+        showMessage("The panel did not load, so the Set \(name) did not play. Pick Reload panel and try again.")
+      }
+    }
   }
 
   @objc private func clickMenuBarItem() {

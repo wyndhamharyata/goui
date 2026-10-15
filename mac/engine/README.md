@@ -20,13 +20,14 @@ during a fade waits for it to end, and then only the newest sound goes in.
 | --- | --- |
 | `goui-engine/main.swift` | Reads the flags, starts the engine, prints the meters and stops on a signal |
 | `goui/main.swift` | Starts the app. `--page` opens another page, such as a check, in place of the panel |
-| `goui/AppController.swift` | Owns the engine, the menu bar item with its right-click menu, and the panel |
+| `goui/AppController.swift` | Owns the engine, the menu bar item with its right-click menu and Sets submenu, and the panel |
+| `goui/SetCommand.swift` | Watches the support folder for the name `goui set` writes, and hands it to the app |
 | `goui/UpdateMenu.swift` | The update items in the menu and the twice-a-day check: the web files alone when the engine is the same, one click for a new engine |
 | `goui/ReleaseDownload.swift` | Reads the Latest release on GitHub, checks its sha256 and unpacks it |
 | `goui/Install.swift` | Puts a newer app or newer web files in place, and knows which version is in use |
 | `goui/FloatingPanel.swift` | The panel under the menu bar item, which hides on a click elsewhere |
 | `goui/WebFileServer.swift` | Serves `goui://app/` from the updated web folder first, then the web files inside the app |
-| `goui/Bridge.swift` | Answers the page's messages: status, meters, sound, power, storage, open, size, response, restart, print |
+| `goui/Bridge.swift` | Answers the page's messages: status, meters, sound, power, storage, open, size, response, restart, print. It applies a Set through the page |
 | `goui/WebStorage.swift` | `chrome.storage.local` for the panel, in `~/Library/Application Support/goui/storage.json` |
 | `goui/SavedConfig.swift` | The power switch and the last sound, in `~/Library/Application Support/goui/config.json` |
 | `Render/Biquad.c` | The Web Audio spec's formulas for the eight filters, and each band's response |

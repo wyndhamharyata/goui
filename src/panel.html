@@ -103,6 +103,18 @@
       <div class="pn-panes">
         <section class="pn-pane" data-pane="listen">
           <div class="ui-section-header ui-section-header--column pn-column-title"><span class="ui-section-header__text"><span class="ui-section-header__title">Listen</span></span></div>
+          <div class="ui-stack-row has-bar tone-accent pn-set-picker">
+            <span class="ui-stack-row__body">
+              <span class="ui-stack-row__caption">Set</span>
+              <span class="ui-stack-row__name">
+                <label class="ui-field ui-field--select" title="Play one of your Sets">
+                  <select class="ui-field__control" id="setSelect" aria-label="Set"></select>
+                  <svg class="ui-icon" aria-hidden="true"><use href="#icon-chevron" /></svg>
+                </label>
+              </span>
+            </span>
+            <span class="ui-stack-row__trail"><button id="saveSet" class="ui-button ui-button--small" title="Keep the three layers and the sliders as one Set">Save as Set</button></span>
+          </div>
           <div class="ui-section-header ui-section-header--eyebrow">
             <span>Your sound</span><span class="ui-section-header__count" id="layerCount"></span><span class="ui-section-header__rule"></span>
           </div>
@@ -227,6 +239,7 @@
             <button class="ui-tabs__item" role="tab" data-role="headphone">Headphone</button>
             <button class="ui-tabs__item" role="tab" data-role="ear">My ear</button>
             <button class="ui-tabs__item" role="tab" data-role="taste">Taste</button>
+            <button class="ui-tabs__item" role="tab" data-role="sets">Sets</button>
           </div>
           <div class="pn-library" id="library" data-showing="headphone">
             <div class="pn-section preset-section ui-stack" data-role="headphone">
@@ -336,6 +349,31 @@
                 <button data-action="apply" class="ui-button ui-button--primary ui-button--small pn-drawer-apply apply">Apply</button>
               </div>
               <input type="file" class="import-file" accept=".txt,text/plain" hidden />
+              <p class="ui-text-hint action-hint"></p>
+              <div class="pn-results results"></div>
+            </div>
+
+            <div class="pn-section preset-section ui-stack" data-role="sets">
+              <div class="ui-section-header ui-section-header--section tone-accent">
+                <span class="ui-badge ui-badge--step tone-accent">S</span>
+                <span class="ui-section-header__text">
+                  <span class="ui-section-header__title">Sets</span>
+                  <span class="ui-section-header__caption">Your headphone, your ear and your taste in one press. A Set names three presets, with the sliders, so an edit to a preset reaches every Set that names it.</span>
+                </span>
+              </div>
+              <div class="ui-stack-row has-bar tone-accent current">
+                <span class="ui-stack-row__body"><span class="ui-stack-row__caption current-caption"></span><span class="ui-stack-row__name current-name"></span></span>
+                <span class="ui-stack-row__trail">
+                  <button class="ui-button ui-button--primary ui-button--small save-set" title="Keep the three layers and the sliders as one Set">Save as Set</button>
+                </span>
+              </div>
+              <div class="ui-expander ui-expander--drawer save-row" hidden>
+                <div class="ui-cluster ui-cluster--fill">
+                  <label class="ui-field"><input type="text" class="ui-field__control save-name" placeholder="Name for this Set" /></label>
+                  <button class="ui-button ui-button--primary ui-button--small confirm-save">Save</button>
+                </div>
+                <p class="ui-text-hint set-note"></p>
+              </div>
               <p class="ui-text-hint action-hint"></p>
               <div class="pn-results results"></div>
             </div>

@@ -125,6 +125,7 @@ The `goui` command is a shell script.
 | --- | --- |
 | `goui restart` | `launchctl kickstart -k` on the app |
 | `goui stop`, `goui start` | Stops or starts the app |
+| `goui set "name"` | Plays one of your Sets. The app takes the name from a file in its support folder |
 | `goui logs` | Shows the app log |
 | `goui uninstall` | Removes the agent and the app |
 

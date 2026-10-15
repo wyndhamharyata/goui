@@ -20,11 +20,19 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
   static let name = "goui"
   static let maxPreampDb = 24.0
   static let maxFrequencyCount = 1000
+  // The page reads its Sets as it starts. The app asks again every quarter second, for up to 15 seconds.
+  private static let setRetryDelaySeconds = 0.25
+  private static let setTryCount = 60
+
+  // What the page did with a Set's name.
+  enum SetAnswer: String {
+    case applied, unknown, notReady
+  }
 
   weak var webView: WKWebView?
   var onResize: ((Double) -> Void)?
+  let storage = WebStorage()
   private let engine: Engine
-  private let storage = WebStorage()
   private var config: SavedConfig
 
   init(engine: Engine, config: SavedConfig) {
@@ -47,6 +55,32 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
 
   func sendStatus() {
     webView?.callAsyncJavaScript("window.dispatchEvent(new CustomEvent(\"goui\", { detail }))", arguments: ["detail": ["type": "status", "status": describeStatus()]], in: nil, in: .page)
+  }
+
+  // The panel owns the sound math, so a Set plays through the page's own applySet in src/panel/sets.js.
+  func applySet(named name: String) async -> SetAnswer {
+    let reply = await askSets("return gouiSets.applySet(name) ? \"applied\" : \"unknown\"", arguments: ["name": name])
+
+    return reply.flatMap(SetAnswer.init) ?? .notReady
+  }
+
+  // nil when the page never got ready, since only the page can tell which Set plays.
+  func readPlayingSetName() async -> String? {
+    await askSets("return gouiSets.readPlayingSetName()", arguments: [:])
+  }
+
+  // A page that is still loading has no gouiSets yet, or throws while it navigates, so the app asks again.
+  private func askSets(_ script: String, arguments: [String: Any]) async -> String? {
+    let readyScript = "if (!window.gouiSets) return null\n\(script)"
+
+    for _ in 0..<Self.setTryCount {
+      let reply = try? await webView?.callAsyncJavaScript(readyScript, arguments: arguments, in: nil, contentWorld: .page)
+      if let reply = reply as? String { return reply }
+
+      try? await Task.sleep(for: .seconds(Self.setRetryDelaySeconds))
+    }
+
+    return nil
   }
 
   private func answer(_ body: Any) throws -> Any? {

@@ -1,6 +1,6 @@
 // The side panel, and the popup in a window with no side panel. This file wires the page and starts it.
 import { bandTypeDetails, bandTypes } from "../shared/bands.js";
-import { layerOrder, sanitizeConfig } from "../shared/config.js";
+import { layerOrder, sanitizeConfig, sanitizeSets } from "../shared/config.js";
 import { loadTargets } from "../autoeq.js";
 import { applyCaptureState, startPopup, wireMessages } from "./capture.js";
 import { byId, buildElement, showTab, wireTabs } from "./dom.js";
@@ -10,15 +10,18 @@ import { renderLayerLists, wireLibrary } from "./library.js";
 import { setSliderRanges, wireListen } from "./listen.js";
 import { readPresets } from "./presets.js";
 import { refresh } from "./refresh.js";
+import { wireMacSets, wireSets } from "./sets.js";
 import { commit, sendAudio, setComparing } from "./sound.js";
 import { isPopup, state } from "./state.js";
 import { wireTune } from "./tune.js";
 
 // The keys startPanel reads. savedSounds, presets and keepsPreampInCompare are older names it still loads.
 const storedKeys = [
-  "config", "headphonePresets", "earPresets", "tastePresets", "view", "tab", "libraryRole", "hasCaptured", "isLevelMatched",
+  "config", "headphonePresets", "earPresets", "tastePresets", "sets", "view", "tab", "libraryRole", "hasCaptured", "isLevelMatched",
   "savedSounds", "presets", "keepsPreampInCompare",
 ];
+
+const libraryTabs = [...layerOrder, "sets"];
 
 function wireHeader() {
   for (const id of ["help", "guide", "credits"]) {
@@ -54,11 +57,13 @@ async function startPanel() {
 
   if (stored.config) state.config = sanitizeConfig(stored.config);
 
+  state.sets = sanitizeSets(stored.sets);
+
   await readPresets(stored);
   for (const graph of graphs) graph.setTall(stored.view === "tall" || stored.view === "vertical");
 
   showTab("tab", stored.tab || "listen");
-  showTab("role", layerOrder.includes(stored.libraryRole) ? stored.libraryRole : "headphone");
+  showTab("role", libraryTabs.includes(stored.libraryRole) ? stored.libraryRole : "headphone");
   renderPills();
   sendAudio();
   refresh();
@@ -68,6 +73,7 @@ async function startPanel() {
   const session = await chrome.storage.session.get("capture");
 
   applyCaptureState(session.capture || { isCapturing: false });
+  wireMacSets();
 
   if (isPopup) startPopup();
 }
@@ -78,5 +84,6 @@ wireListen();
 wireGraphButtons();
 wireTune();
 wireLibrary();
+wireSets();
 wireMessages();
 startPanel();

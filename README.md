@@ -141,6 +141,8 @@ you and keeps none of it.
   install line again if you want to.
 - goui asks GitHub for the newest version twice a day. It sends nothing about you.
 - The `goui` command in Terminal takes `start`, `stop`, `restart`, `logs`, `rollback` and `uninstall`.
+- `goui set "name"` plays one of your Sets, as a pick from the Sets menu does. The menu bar item's
+  right-click menu lists your Sets and ticks the one that plays.
 
 [goui.mwyndham.dev/mac](https://goui.mwyndham.dev/mac) has more, with troubleshooting.
 

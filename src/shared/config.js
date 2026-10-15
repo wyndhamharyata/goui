@@ -29,6 +29,9 @@ import { clamp } from "./math.js";
  * @property {{ headphone: Layer, ear?: Layer, taste?: Layer }} layers
  */
 
+// A Set names one preset per layer, by name. A null slot plays Flat for the headphone and no layer for the others.
+/** @typedef {{ headphone: string | null, ear: string | null, taste: string | null, sliders: Sliders }} SoundSet */
+
 /** @typedef {{ enabled: boolean, preampDb: number, bands: Band[] }} PlayedSound */
 
 /** @typedef {{ role: LayerRole, bands: Band[] }} LayerBands */
@@ -91,6 +94,15 @@ function cleanSliderDb(value) {
   return clamp(Number(value) || 0, ...sliderRangeDb);
 }
 
+/**
+ * @param {unknown} raw
+ * @returns {Sliders}
+ */
+function cleanSliders(raw) {
+  const sliders = raw || {};
+  return { bassDb: cleanSliderDb(sliders.bassDb), vocalsDb: cleanSliderDb(sliders.vocalsDb), trebleDb: cleanSliderDb(sliders.trebleDb) };
+}
+
 // Used on a stored config and on an imported saved sound, so a bad file cannot reach the audio chain.
 /**
  * @param {unknown} raw
@@ -99,7 +111,7 @@ function cleanSliderDb(value) {
 export function sanitizeConfig(raw) {
   if (!raw || typeof raw !== "object") return defaultConfig();
 
-  const sliders = raw.sliders || raw.macros || {};
+  const sliders = raw.sliders || raw.macros;
 
   // An older config holds one flat list, named by soundName or profileName. It becomes the headphone layer.
   const older = {
@@ -121,9 +133,36 @@ export function sanitizeConfig(raw) {
     enabled: raw.enabled !== false,
     preampDb: clamp(Number(raw.preampDb) || 0, ...preampRangeDb),
     autoPreamp: raw.autoPreamp !== false,
-    sliders: { bassDb: cleanSliderDb(sliders.bassDb), vocalsDb: cleanSliderDb(sliders.vocalsDb), trebleDb: cleanSliderDb(sliders.trebleDb) },
+    sliders: cleanSliders(sliders),
     layers,
   };
+}
+
+/**
+ * @param {unknown} name
+ * @returns {string | null}
+ */
+function cleanSlot(name) {
+  return typeof name === "string" && name !== "" ? name : null;
+}
+
+// Used on the stored Sets, so a bad stored value cannot reach the audio chain.
+/**
+ * @param {unknown} raw
+ * @returns {Record<string, SoundSet>}
+ */
+export function sanitizeSets(raw) {
+  const sets = {};
+
+  if (!raw || typeof raw !== "object") return sets;
+
+  for (const [name, set] of Object.entries(raw)) {
+    if (!set || typeof set !== "object") continue;
+
+    sets[name] = { headphone: cleanSlot(set.headphone), ear: cleanSlot(set.ear), taste: cleanSlot(set.taste), sliders: cleanSliders(set.sliders) };
+  }
+
+  return sets;
 }
 
 // Every layer that is on, in a fixed order. The engine plays these, and the panel draws them.

@@ -71,6 +71,10 @@ body {
   display: none;
 }
 
+.ui-text-hint.tone-danger {
+  color: var(--danger);
+}
+
 .ui-text-fine {
   margin: 0;
   color: var(--text-3);
@@ -397,6 +401,10 @@ button.ui-list-row__main {
   letter-spacing: -0.01em;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.ui-stack-row__name .ui-field {
+  margin-top: var(--space-1);
 }
 
 .ui-stack-row__trail {
@@ -1285,6 +1293,11 @@ button.ui-chip:hover {
   .pn-column-title {
     display: flex;
   }
+
+  /* The Sets tab is in view beside Listen, so the picker would be a second place to switch. */
+  .pn-set-picker {
+    display: none;
+  }
 }
 
 .pn-target {
@@ -1318,7 +1331,8 @@ button.ui-chip:hover {
 
 .pn-library[data-showing="headphone"] .pn-section:not([data-role="headphone"]),
 .pn-library[data-showing="ear"] .pn-section:not([data-role="ear"]),
-.pn-library[data-showing="taste"] .pn-section:not([data-role="taste"]) {
+.pn-library[data-showing="taste"] .pn-section:not([data-role="taste"]),
+.pn-library[data-showing="sets"] .pn-section:not([data-role="sets"]) {
   display: none;
 }
 

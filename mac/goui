@@ -7,6 +7,11 @@ log="$HOME/Library/Logs/goui.log"
 app="$HOME/Applications/goui.app"
 link="$HOME/.local/bin/goui"
 domain="gui/$(id -u)"
+support="$HOME/Library/Application Support/goui"
+# The app watches its support folder for this file and takes it away once it has the name.
+set_request="$support/set-request"
+# The app takes a request at once. Three seconds with no answer means it is not running.
+set_wait_tries=15
 
 is_loaded() {
   launchctl print "$domain/$label" >/dev/null 2>&1
@@ -16,6 +21,46 @@ stop_agent() {
   launchctl bootout "$domain/$label" 2>/dev/null || true
   # bootout returns before the app has gone, and a bootstrap fails while it is still there.
   while is_loaded; do sleep 0.2; done
+}
+
+# The panel keeps its Sets in storage.json under sets. One name per line, in the order the panel lists them.
+list_set_names() {
+  osascript -l JavaScript -e '
+    function run(argv) {
+      const text = $.NSString.stringWithContentsOfFileEncodingError(argv[0], $.NSUTF8StringEncoding, null);
+      if (text.isNil()) return "";
+      const sets = JSON.parse(text.js).sets || {};
+      return Object.keys(sets).sort((first, second) => first.localeCompare(second)).join("\n");
+    }' "$support/storage.json" 2>/dev/null || true
+}
+
+apply_set() {
+  name="$1"
+  names=$(list_set_names)
+  if [ -z "$names" ]; then
+    echo "goui has no Sets yet. Save one in the panel, under Library and then Sets." >&2
+    exit 1
+  fi
+  if ! printf '%s\n' "$names" | grep -Fxq -- "$name"; then
+    echo "goui has no Set called \"$name\". Your Sets are:" >&2
+    printf '%s\n' "$names" | sed 's/^/  /' >&2
+    exit 1
+  fi
+
+  # A move puts the whole name in place at once, so the app never reads half of it.
+  printf '%s' "$name" >"$set_request.part"
+  mv -f "$set_request.part" "$set_request"
+  tries=0
+  while [ -e "$set_request" ] && [ "$tries" -lt "$set_wait_tries" ]; do
+    sleep 0.2
+    tries=$((tries + 1))
+  done
+  if [ -e "$set_request" ]; then
+    rm -f "$set_request"
+    echo "goui is not running, so the Set did not change. Run goui start, then try again." >&2
+    exit 1
+  fi
+  echo "goui is switching to the Set \"$name\"."
 }
 
 case "${1:-}" in
@@ -48,7 +93,6 @@ rollback)
   stop_agent
   rm -rf "$app"
   mv "$previous" "$app"
-  support="$HOME/Library/Application Support/goui"
   if [ -d "$support/web.previous" ]; then
     rm -rf "$support/web"
     mv "$support/web.previous" "$support/web"
@@ -56,6 +100,13 @@ rollback)
   rm -f "$support/web-version"
   launchctl bootstrap "$domain" "$plist"
   echo "goui went back to the earlier app. Pick Reload panel if the panel is open."
+  ;;
+set)
+  if [ -z "${2:-}" ]; then
+    echo 'Usage: goui set "name of a Set"' >&2
+    exit 2
+  fi
+  apply_set "$2"
   ;;
 logs)
   tail -n 40 -f "$log"
@@ -67,7 +118,7 @@ uninstall)
   echo "goui is removed. Your settings stay in ~/Library/Application Support/goui, and its log in $log."
   ;;
 *)
-  echo "Usage: goui start | stop | restart | logs | rollback | uninstall" >&2
+  echo 'Usage: goui start | stop | restart | set "name" | logs | rollback | uninstall' >&2
   exit 2
   ;;
 esac

@@ -9,6 +9,9 @@ export const state = {
   config: defaultConfig(),
   // Each layer has its own presets. A preset holds bands only, so the sliders and the preamp stay.
   presets: { headphone: {}, ear: {}, taste: {} },
+  // A Set names its presets, so an edit to a preset reaches every Set that names it.
+  /** @type {Record<string, import("../shared/config.js").SoundSet>} */
+  sets: {},
   /** @type {Band | null} */
   selectedBand: null,
   /** @type {Band | null} */

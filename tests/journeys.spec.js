@@ -774,3 +774,48 @@ journey("given a peak turned into a low shelf, then a low cut, the inspector tur
   await expect(panel.locator("#qInput")).toBeEnabled();
   for (const button of await readStepButtons(panel, "q").all()) await expect(button).toBeEnabled();
 });
+
+journey("given a Set of a saved headphone peak and Vocals at +2 dB, picking it after other changes plays the 1 kHz tone at the Set's level again, and a deleted preset plays as Flat", async (context, port) => {
+  const { panel } = await startGouiOnTone(context, port, 1000);
+  const sets = sectionOf(panel, "sets");
+
+  await turnAutoPreampOff(panel);
+  await pasteInto(panel, "headphone", peakText);
+  await openTab(panel, "listen");
+  await panel.click("#saveSet");
+  await expect(sets.locator(".action-hint")).toHaveText("Save Headphone as a preset first. A Set names its presets, so each layer with bands needs one.");
+
+  await saveAs(panel, "headphone", "voice");
+  await openTab(panel, "listen");
+  await nudgeSlider(panel, "#vocals", 4);
+  await expect(panel.locator("#vocalsValue")).toHaveText("+2.0 dB");
+
+  const withSet = await readSteadyLevel(panel);
+
+  await panel.click("#saveSet");
+  await sets.locator(".save-name").fill("home");
+  await sets.locator(".confirm-save").click();
+  await expect(sets.locator(".action-hint")).toHaveText("Saved home.");
+  await expect(sets.locator(".item[data-name='home']")).toContainText("voice · no ear · no taste");
+
+  await pick(panel, "headphone", "Flat");
+  await pasteInto(panel, "ear", earCutText);
+  await openTab(panel, "listen");
+  await nudgeSlider(panel, "#vocals", 4);
+  await expect(panel.locator("#setSelect")).toHaveValue("");
+  expect(Math.abs((await readSteadyLevel(panel)) - withSet)).toBeGreaterThan(6);
+
+  await panel.locator("#setSelect").selectOption("home");
+  await expect(panel.locator("#vocalsValue")).toHaveText("+2.0 dB");
+  await expect(layerRow(panel, "Headphone")).toContainText("voice");
+  await expect(layerRow(panel, "My ear")).toHaveCount(0);
+  expectChangeDb(await readSteadyLevel(panel), withSet, 0);
+
+  // With its headphone preset deleted, the Set still applies and plays Flat in that slot.
+  await (await openLibrarySection(panel, "headphone")).locator("[title='Delete voice']").click();
+  await openLibrarySection(panel, "sets");
+  await expect(sets.locator(".item[data-name='home']")).toContainText("voice, missing · no ear · no taste");
+  await sets.locator(".item[data-name='home']").click();
+  await expect(layerRow(panel, "Headphone")).toContainText("Flat");
+  expectChangeDb(await readSteadyLevel(panel), withSet, -6);
+});

@@ -17,7 +17,8 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 - `src/panel/` holds the panel, one file per tab or concern. `state.js` holds the one state object
   every file shares, and `refresh.js` lets each view register its redraw.
 - The side panel has three tabs: Listen, Tune and Library. From 900 px wide they show as three
-  columns. `design/ux-proposals.html` holds the mock the panel follows.
+  columns. The Library holds a tab for each layer and one for the Sets. `design/ux-proposals.html`
+  holds the mock the panel follows.
 - `src/graph/` draws the curve as SVG. `EqGraph` in `graph.js` holds the state and the pointer
   events. Each other file draws one part from a view. The graph uses the same Web Audio filters the
   engine plays, so the picture matches the sound.
@@ -38,6 +39,7 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 | Band | One biquad: type, frequency, gain, Q, and an on switch. |
 | Layer | A list of bands with its own switch, name and source. The `headphone` layer is always there. The `ear` and `taste` layers are optional. |
 | Preset | A saved band list for one layer. Each layer has its own list. |
+| Set | A named headphone preset, ear preset and taste preset, plus the three Listen sliders, applied in one press. It points at the presets by name, so an edit to a preset reaches every Set that uses it. |
 | Config | The stored sound: the main switch, the preamp, the three Listen sliders and the layers. |
 | Played sound | What the audio chain plays. `toPlayedSound` merges the bands of every layer that is on with the three sliders as fixed bands, and works out the auto preamp. Bands sum in dB, so the layers merge exactly. |
 | A/B | Held down, it plays the sound with the EQ off. In code, `isComparing`. |
