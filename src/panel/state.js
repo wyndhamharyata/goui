@@ -7,15 +7,16 @@ import { defaultConfig } from "../shared/config.js";
 
 export const state = {
   config: defaultConfig(),
-  // Each layer has its own presets. A preset holds bands only, so the sliders and the preamp stay.
-  presets: { headphone: {}, ear: {}, taste: {} },
-  // A Set names its presets, so an edit to a preset reaches every Set that names it.
+  // Each layer has its own presets of bands only. A list has no prototype, so a name such as constructor stays plain.
+  presets: { headphone: Object.create(null), ear: Object.create(null), taste: Object.create(null) },
+  // A Set names its presets, so an edit to a preset reaches every Set that names it. It has no prototype either.
   /** @type {Record<string, import("../shared/config.js").SoundSet>} */
-  sets: {},
+  sets: Object.create(null),
   /** @type {Band | null} */
   selectedBand: null,
   /** @type {Band | null} */
   soloBand: null,
+  isCapturing: false,
   isComparing: false,
   isLevelMatched: false,
   isPopupTabHeard: false,
@@ -26,17 +27,6 @@ export const state = {
   // Loaded before the first draw, so the Listen row can show the target choice at once.
   /** @type {TargetData | null} */
   targetData: null,
-};
-
-// The source line under a layer's name. A layer matches one of your presets only while its source is saved.
-export const layerSources = {
-  saved: "Saved",
-  deleted: "Deleted preset",
-  autoEq: "AutoEQ",
-  starter: "Starter sound",
-  pasted: "Pasted",
-  file: "From a file",
-  yourBands: "Your bands",
 };
 
 // A window with no side panel, such as an installed app, opens this page as the popup of one tab.

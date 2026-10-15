@@ -4,8 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#07080a" />
-    <meta name="description" content="What the goui extension reads, keeps and sends." />
+    <meta name="description" content="What the goui extension and goui for the Mac read, keep and send." />
     <link rel="icon" href="/icons/icon48.png" />
     <link rel="stylesheet" href="/panel.css" />
     <link rel="stylesheet" href="/styles.css" />
@@ -27,9 +26,13 @@
         <h1>Privacy</h1>
         <p class="lead">
           goui collects no personal data. It has no account, no analytics and no ads. Nothing it reads
-          goes out of your browser, apart from the AutoEQ downloads named below.
+          goes out of your browser or your Mac, apart from the AutoEQ downloads named below.
         </p>
-        <p class="fine">Last updated 13 October 2026. This policy covers the goui extension, version 0.1.3 and later.</p>
+        <p class="fine">
+          Last updated 15 October 2026. This policy covers the goui extension, version 0.1.3 and later.
+          goui for the Mac follows the same rules. The <a href="/mac#privacy">privacy note on the Mac page</a>
+          covers what differs.
+        </p>
 
         <h2>What goui reads</h2>
         <ul>
@@ -46,8 +49,10 @@
         <h2>What goui keeps</h2>
         <p>Everything goui keeps stays in your browser's extension storage, on your device.</p>
         <ul>
-          <li>Your EQ settings, your headphone and ear presets, and the slider values.</li>
-          <li>The last tab and graph view you used in the panel, and whether goui has heard a tab yet.</li>
+          <li>Your EQ settings and the slider values.</li>
+          <li>Your headphone, ear and taste presets.</li>
+          <li>Your Sets, under the <code>sets</code> key. Each Set holds the names of three presets and the slider values.</li>
+          <li>The last tab and graph view you used in the panel. It also notes whether goui has heard a tab yet.</li>
           <li>A copy of the AutoEQ headphone list, kept for a week so a search is fast.</li>
           <li>The title of the tab goui hears, until you close the browser.</li>
         </ul>
@@ -60,12 +65,20 @@
           (<code>raw.githubusercontent.com</code>). Like any web request, GitHub sees your IP address
           and the file asked for. The
           <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub privacy statement</a>
-          covers those requests. goui sends nothing else, and it sends no settings, titles or audio.
+          covers those requests. goui sends nothing else. It sends no settings, presets, Sets, titles or audio.
         </p>
         <p>
           The <b>Measure my ear with EQByEar</b> button opens eqbyear.com in a normal tab. That visit is
           between you and EQByEar, under their own policy. goui only reads the result you paste back by
           hand.
+        </p>
+
+        <h2>goui for the Mac</h2>
+        <p>
+          goui for the Mac reads the audio your Mac plays instead of one tab. It keeps the same settings,
+          presets and Sets in <code>~/Library/Application Support/goui</code>, on your Mac. Twice a day it
+          asks GitHub for the newest release. That request carries nothing about you.
+          <a href="/mac#privacy">The Mac page</a> has the details.
         </p>
 
         <h2>What goui shares</h2>
@@ -80,7 +93,7 @@
         <h2>Questions</h2>
         <p>
           Open an issue on <a href="https://github.com/wyndhamharyata/goui/issues">GitHub</a>. A change to
-          this policy shows up here with a new date, and in the
+          this policy shows up here with a new date. It also shows in the
           <a href="https://github.com/wyndhamharyata/goui/commits/main/site/public/privacy.html">history of this page</a>.
         </p>
       </section>
@@ -93,5 +106,6 @@
         <a href="https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md">Notices</a>
       </footer>
     </main>
+    <script src="/site.js"></script>
   </body>
 </html>

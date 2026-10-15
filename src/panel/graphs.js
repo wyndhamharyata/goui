@@ -1,4 +1,5 @@
 // The Listen graph and the Tune graph, and the zoom and tall buttons they share.
+import { storageKeys } from "../shared/storage.js";
 import { byId, markCurrent } from "./dom.js";
 import { EqGraph } from "../graph/graph.js";
 import { onRefresh } from "./refresh.js";
@@ -47,7 +48,7 @@ export function wireGraphButtons() {
 
     for (const graph of graphs) graph.setTall(isTall);
 
-    chrome.storage.local.set({ view: isTall ? "tall" : "wide" });
+    chrome.storage.local.set({ [storageKeys.view]: isTall ? "tall" : "wide" });
     renderPills();
   });
 }

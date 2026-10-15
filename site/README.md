@@ -5,13 +5,16 @@ deployed with SST. It has its own `package.json`, so its tools stay apart from t
 
 ## Shared files
 
-The site shows the icons, two README pictures and the live panel mock from `design/`. `npm run
-assets` copies them into `public/`, and every dev and deploy command runs it first. The copies stay
-out of git, so the site always matches the repo.
+The site shows the icons, four pictures from `docs/images` and the live panel mock from `design/`.
+`npm run assets` copies them into `public/`. It also writes `public/sprite.svg`, the icon sprite of
+`design/ux-proposals.html`. Every dev and deploy command runs it first. The copies stay out of git,
+so the site always matches the repo.
 
 The panel mock is `design/ux-proposals.js` as it is. It mounts each part only where that part's
-markup is on the page, so the homepage builds the panel from `#site-panel` and nothing else. The
-homepage asks for the narrow panel with no Sets, since Sets is not built yet.
+markup is on the page. On the site it mounts nothing by itself. `public/site.js` mounts the hero
+copy into `#site-hero` and the narrow panel into `#site-panel`, with the Set picker on. It passes the
+panel what its **?**, **Credits** and **Measure my ear** buttons do on this page. It also loads the
+sprite and sets the theme colour from `--ink-0`, on every page.
 
 ## Develop
 
@@ -37,7 +40,9 @@ The production stage is kept. Every other stage is removed on `sst remove`.
 
 ## Files
 
-- `public/index.html`, `public/404.html` and `public/styles.css` are the pages.
+- `public/index.html`, `public/mac.html`, `public/privacy.html`, `public/404.html` and
+  `public/styles.css` are the pages.
+- `public/site.js` is the script every page loads.
 - `scripts/copy-assets.mjs` copies the shared files.
 - `src/worker/index.ts` is the worker: a health check and the asset fallback.
 - `sst.config.ts` names the worker, the domain and the local dev command.

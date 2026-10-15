@@ -1,13 +1,15 @@
 // Small helpers for the panel's page, and the primitives of design/ux-proposals.html that the panel builds.
 import { buildSvg } from "../graph/svg.js";
-
-/** @typedef {import("../shared/config.js").LayerRole} LayerRole */
+import { storageKeys } from "../shared/storage.js";
 
 /** @typedef {{ variant?: "plain" | "primary" | "quiet" | "danger", isSmall?: boolean, icon?: string, label?: string, title?: string, onClick: (event: Event) => void }} ButtonParts */
 
 /** @typedef {{ tone?: string, lead?: Node, caption: string, name: string, extra?: Node[], trail?: Node[], isOff?: boolean, isEmpty?: boolean, hook?: string }} StackRowParts */
 
-/** @typedef {{ name: string, detail: string, badge?: Node, onPick: () => void, onRemove?: () => void }} ListRowParts */
+/** @typedef {{ name: string, detail: string, badge?: Node, isPlaying?: () => boolean, onPick: () => void, onRemove?: () => void }} ListRowParts */
+
+// A Library section is a layer role or "sets".
+/** @typedef {string} SectionName */
 
 /**
  * @param {string} id
@@ -15,19 +17,19 @@ import { buildSvg } from "../graph/svg.js";
  */
 export const byId = (id) => document.getElementById(id);
 
-// The Library has one section per layer. Both sections use the same class names inside.
+// The Library has one section per layer and one for the Sets. Each section uses the same class names inside.
 /**
- * @param {LayerRole} role
+ * @param {SectionName} section
  * @returns {HTMLElement}
  */
-export const sectionOf = (role) => document.querySelector(`.preset-section[data-role="${role}"]`);
+export const sectionOf = (section) => document.querySelector(`.preset-section[data-role="${section}"]`);
 
 /**
- * @param {LayerRole} role
+ * @param {SectionName} section
  * @param {string} name
  * @returns {HTMLElement}
  */
-export const partOf = (role, name) => sectionOf(role).querySelector(`.${name}`);
+export const partOf = (section, name) => sectionOf(section).querySelector(`.${name}`);
 
 // The panel's one way to build an element, as buildSvg is the graph's. Other keys are element properties.
 /**
@@ -106,12 +108,15 @@ export function buildStackRow({ tone = "", lead, caption, name, extra = [], trai
   return buildElement("div", { className: classNames.join(" ") }, children);
 }
 
+// Each list row that can play keeps its own test, so a redraw marks the rows in place.
+const playingTests = new WeakMap();
+
 // The row of a Library list. The press plays it, and the × in its trail deletes it.
 /**
  * @param {ListRowParts} parts
  * @returns {HTMLElement}
  */
-export function buildListRow({ name, detail, badge, onPick, onRemove }) {
+export function buildListRow({ name, detail, badge, isPlaying, onPick, onRemove }) {
   const nameParts = [buildElement("span", { text: name })];
 
   if (badge) nameParts.push(badge);
@@ -129,7 +134,56 @@ export function buildListRow({ name, detail, badge, onPick, onRemove }) {
     children.push(buildElement("span", { className: "ui-list-row__trail" }, [remove]));
   }
 
-  return buildElement("div", { className: "ui-list-row" }, children);
+  const row = buildElement("div", { className: "ui-list-row" }, children);
+
+  if (isPlaying) playingTests.set(row, isPlaying);
+
+  return row;
+}
+
+// The row of the sound that plays is marked, for the eye and for a screen reader.
+/** @param {HTMLElement} list */
+export function renderPlayingRows(list) {
+  for (const row of list.querySelectorAll(".ui-list-row")) {
+    const isPlaying = playingTests.has(row) && playingTests.get(row)();
+
+    row.classList.toggle("is-selected", isPlaying);
+    row.firstElementChild.setAttribute("aria-current", String(isPlaying));
+  }
+}
+
+function readFocusPath(container) {
+  const path = [];
+
+  if (!container.contains(document.activeElement)) return path;
+
+  for (let element = document.activeElement; element !== container; element = element.parentElement) {
+    path.unshift([...element.parentElement.children].indexOf(element));
+  }
+
+  return path;
+}
+
+const drawnKeys = new WeakMap();
+
+// A redraw with the same data keeps the elements. A real redraw gives the focus to the element in the same place.
+/**
+ * @param {HTMLElement} container
+ * @param {string} drawnKey
+ * @param {() => Node[]} buildChildren
+ */
+export function renderChildren(container, drawnKey, buildChildren) {
+  if (drawnKeys.get(container) === drawnKey) return;
+
+  const focusPath = readFocusPath(container);
+  let focused = container;
+
+  drawnKeys.set(container, drawnKey);
+  container.replaceChildren(...buildChildren());
+
+  for (const index of focusPath) focused = focused && focused.children[index];
+
+  if (focused && focused !== container) focused.focus();
 }
 
 // The eyebrow that names a group, with its count and a hairline.
@@ -176,12 +230,65 @@ export function debounce(run, waitMs) {
   };
 }
 
+// An alert, such as a missing name, shows in the danger colour.
 /**
- * @param {LayerRole} role
+ * @param {SectionName} section
  * @param {string} text
+ * @param {boolean} [isAlert]
  */
-export function showHint(role, text) {
-  partOf(role, "action-hint").textContent = text;
+export function showHint(section, text, isAlert = false) {
+  const hint = partOf(section, "action-hint");
+
+  hint.textContent = text;
+  hint.classList.toggle("tone-danger", isAlert);
+}
+
+/**
+ * @param {SectionName} section
+ * @returns {string}
+ */
+export function readSaveName(section) {
+  return partOf(section, "save-name").value.trim();
+}
+
+// The button reads Replace while the typed name is already in the list.
+/**
+ * @param {SectionName} section
+ * @param {(name: string) => boolean} hasName
+ */
+export function renderSaveLabel(section, hasName) {
+  partOf(section, "confirm-save").textContent = hasName(readSaveName(section)) ? "Replace" : "Save";
+}
+
+/** @typedef {{ hasName: (name: string) => boolean, save: (name: string) => void, emptyHint: string, onInput?: () => void }} SaveRowParts */
+
+/**
+ * @param {SectionName} section
+ * @param {SaveRowParts} parts
+ */
+function confirmSave(section, { save, emptyHint }) {
+  const name = readSaveName(section);
+
+  if (name) save(name);
+  else showHint(section, emptyHint, true);
+}
+
+// The name field and button of a save row. Enter saves too, and an empty name gets an alert.
+/**
+ * @param {SectionName} section
+ * @param {SaveRowParts} parts
+ */
+export function wireSaveRow(section, parts) {
+  const { hasName, onInput = () => {} } = parts;
+
+  partOf(section, "confirm-save").addEventListener("click", () => confirmSave(section, parts));
+  partOf(section, "save-name").addEventListener("input", () => {
+    renderSaveLabel(section, hasName);
+    onInput();
+  });
+  partOf(section, "save-name").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") confirmSave(section, parts);
+  });
 }
 
 // An export box is as tall as its text, so every line shows. The box must be on the page to measure.
@@ -216,8 +323,8 @@ export function setField(id, value) {
 
 // The panel tabs and the Library tabs. Each set shows one pane through its host's data-showing, and the panel opens on it next time.
 const tabSets = {
-  tab: { tabsId: "tabs", hostId: "app", storageKey: "tab" },
-  role: { tabsId: "libraryTabs", hostId: "library", storageKey: "libraryRole" },
+  tab: { tabsId: "tabs", hostId: "app", storageKey: storageKeys.tab },
+  role: { tabsId: "libraryTabs", hostId: "library", storageKey: storageKeys.libraryRole },
 };
 
 /**
@@ -241,4 +348,12 @@ export function wireTabs() {
       if (tab) showTab(key, tab.dataset[key]);
     });
   }
+}
+
+// Change on Listen, Add and Save as Set open one section of the Library.
+/** @param {SectionName} section */
+export function openLibrarySection(section) {
+  showTab("tab", "library");
+  showTab("role", section);
+  sectionOf(section).scrollIntoView({ block: "start" });
 }

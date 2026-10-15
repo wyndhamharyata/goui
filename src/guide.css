@@ -1,66 +1,25 @@
+/* The layout of the guide steps and their pictures. Every look inside them comes from the primitives in panel.css. */
 .guide-steps {
   display: grid;
   gap: var(--space-5);
   margin: 0;
   padding: 0;
   list-style: none;
-  counter-reset: step;
 }
 
 .guide-step {
-  --tone: var(--accent);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  counter-increment: step;
 }
 
-.guide-step.optional {
-  --tone: var(--layer-ear);
-}
-
-/* The text follows its picture in the markup, and shows above it, as a Section header does. */
-.guide-text {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  order: -1;
-  margin: 0;
-}
-
-.guide-text::before {
-  content: counter(step);
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--tone);
-  color: var(--ink-0);
-  font: 700 var(--size-small) / 1 var(--font-number);
-}
-
-.guide-text b {
-  display: block;
-  color: var(--tone);
-  font-size: var(--size-name);
-  letter-spacing: -0.01em;
-  line-height: 20px;
-}
-
-.guide-text span {
-  color: var(--text-2);
-  font-size: var(--size-small);
-  line-height: 1.45;
-}
-
-/* The pictures below are drawn in HTML. They stand in for the browser's own toolbar and menus. */
-.shot {
+/* A picture of the browser's own toolbar and menus, indented under the text of its step. */
+.guide-shot {
   position: relative;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
   min-height: 74px;
   margin-left: 28px;
   padding: var(--space-3);
@@ -69,202 +28,48 @@
   background: var(--ink-2);
 }
 
-.mock-toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-1) var(--space-3);
-}
-
-.mock-url {
+.guide-shot .ui-field--readonly {
   flex: 1;
   min-width: 0;
-  padding: 3px var(--space-3);
-  border: 1px solid var(--line-1);
+  height: var(--control-height-small);
   border-radius: var(--radius-pill);
-  color: var(--text-1);
-  font-size: var(--size-small);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
 }
 
-.mock-icon {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  fill: var(--text-2);
-}
-
-.mock-avatar {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--ink-4);
-}
-
-.mock-goui {
+.guide-shot__goui {
   position: relative;
-  display: grid;
-  flex: none;
+  display: inline-flex;
+  padding: var(--space-2);
+  border-radius: var(--radius-1);
 }
 
-.mock-goui img {
-  width: 18px;
-  height: 18px;
-}
-
-.mock-badge {
+.guide-shot__goui .ui-badge {
   position: absolute;
-  right: -7px;
-  bottom: -5px;
+  right: -10px;
+  bottom: -7px;
+  height: 13px;
   padding: 0 3px;
-  border-radius: 3px;
   background: var(--good);
   color: var(--ink-0);
-  font: 800 8px / 11px var(--font-number);
+  font-size: 8px;
 }
 
-.mock-menu {
-  padding: var(--space-2) var(--space-3);
+.guide-shot__menu {
+  width: 100%;
+  padding: var(--space-1);
   border: 1px solid var(--line-2);
   border-radius: var(--radius-2);
   background: var(--ink-1);
 }
 
-.mock-menu small {
-  color: var(--text-3);
-  font: 700 var(--size-micro) / 1 var(--font-number);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.mock-menu-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-  color: var(--text-1);
-  font-size: var(--size-body);
-  font-weight: 600;
-}
-
-.mock-menu-row img {
-  width: 14px;
-  height: 14px;
+.guide-shot__menu img {
   border-radius: 3px;
 }
 
-.mock-menu-row span {
-  flex: 1;
-}
-
-.mock-tabs {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.mock-tab {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  height: 24px;
-  padding: 0 var(--space-3);
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-  color: var(--text-2);
-  font-size: var(--size-small);
-  font-weight: 600;
-}
-
-.mock-tab.on {
-  border-color: var(--line-2);
-  background: var(--ink-4);
-  color: var(--text-1);
-}
-
-.mock-tab .mock-icon {
-  width: 13px;
-  height: 13px;
-  fill: currentColor;
-}
-
-.mock-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.mock-input,
-.mock-row,
-.mock-button {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--line-1);
-  border-radius: var(--radius-2);
-  background: var(--ink-0);
-  color: var(--text-1);
-  font-size: var(--size-small);
-}
-
-.mock-row {
-  display: flex;
-  justify-content: space-between;
-}
-
-.mock-row small {
-  color: var(--text-3);
-  font-family: var(--font-number);
-}
-
-.mock-button {
-  align-self: flex-start;
-  border-color: transparent;
-  background: var(--ink-3);
-  font-weight: 600;
-}
-
-.mock-button.focus {
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.mock-flow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  margin: auto 0;
-  color: var(--text-3);
-}
-
-.mock-graph {
-  width: 100%;
-  height: 64px;
-}
-
-.mock-graph-zero {
-  stroke: var(--line-2);
-}
-
-.mock-graph-curve {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 2;
-}
-
-.mock-graph-point {
-  fill: var(--type-peak);
-}
-
-.mock-graph-arrows {
-  fill: none;
-  stroke: var(--text-3);
-  stroke-width: 1.5;
-}
-
-.mock-cursor {
+/* The pointer rests on the goui icon, the third item from the right of the toolbar. */
+.guide-shot__cursor {
   position: absolute;
+  top: 30px;
+  right: 50px;
   width: 16px;
   height: 16px;
   fill: var(--text-1);
@@ -273,16 +78,10 @@
 }
 
 /* The thing to press, ringed in the accent colour. */
-.focus {
+.guide-press {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: var(--radius-1);
   animation: pulse 1.6s ease-in-out infinite;
-}
-
-.mock-icon.focus {
-  fill: var(--accent);
-  background: var(--accent-soft);
 }
 
 @keyframes pulse {
@@ -292,7 +91,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .focus {
+  .guide-press {
     animation: none;
   }
 }

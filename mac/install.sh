@@ -19,14 +19,14 @@ if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
   esc=$(printf '\033')
   bold="$esc[1m" dim="$esc[2m" red="$esc[31m" green="$esc[32m" yellow="$esc[33m"
   blue="$esc[34m" magenta="$esc[35m" cyan="$esc[36m" reset="$esc[0m"
-  # The goui blue, #5b8cff, and a lighter one for the shimmer. A terminal without 24-bit colour takes the nearest of its 256.
+  # A blue from the icon's tile, #5b8cff, for the letters, and a lighter one for the shimmer. A terminal without 24-bit colour takes the nearest of its 256.
   case "${COLORTERM:-}" in
-  truecolor | 24bit) colour_mode=24 goui_blue="$esc[1;38;2;91;140;255m" shimmer="$esc[1;38;2;190;212;255m" ;;
-  *) colour_mode=256 goui_blue="$esc[1;38;5;69m" shimmer="$esc[1;38;5;153m" ;;
+  truecolor | 24bit) colour_mode=24 icon_blue="$esc[1;38;2;91;140;255m" shimmer="$esc[1;38;2;190;212;255m" ;;
+  *) colour_mode=256 icon_blue="$esc[1;38;5;69m" shimmer="$esc[1;38;5;153m" ;;
   esac
 else
   colour_mode=none
-  bold="" dim="" red="" green="" yellow="" blue="" magenta="" cyan="" reset="" goui_blue="" shimmer=""
+  bold="" dim="" red="" green="" yellow="" blue="" magenta="" cyan="" reset="" icon_blue="" shimmer=""
 fi
 
 # The icon's tile fades from #4a7ae0 to #8f52d8, as scripts/icon-geometry.mjs draws it. One colour per pixel row.
@@ -171,7 +171,7 @@ draw_logo() {
       elif [ "$index" = "$shimmer_index" ]; then
         printf '%s%s%s ' "$shimmer" "$part" "$reset"
       else
-        printf '%s%s%s ' "$goui_blue" "$part" "$reset"
+        printf '%s%s%s ' "$icon_blue" "$part" "$reset"
       fi
     done
     printf '\n'
@@ -181,7 +181,7 @@ draw_logo() {
 # The letters come in one by one, then a light runs across them twice. A pipe or NO_COLOR gets the still logo.
 show_logo() {
   printf '\n'
-  if [ ! -t 1 ] || [ -z "$goui_blue" ]; then
+  if [ ! -t 1 ] || [ -z "$icon_blue" ]; then
     set_icon_bars
     draw_logo 4 0
     return
@@ -268,7 +268,7 @@ if [ "$warning_count" -gt 0 ] && ! ask "Carry on with $([ "$warning_count" = 1 ]
 fi
 
 unpacked=$(mktemp -d)
-trap 'rm -rf "$unpacked"; [ -t 1 ] && [ -n "$goui_blue" ] && printf "%s[?25h" "$esc"' EXIT
+trap 'rm -rf "$unpacked"; [ -t 1 ] && [ -n "$icon_blue" ] && printf "%s[?25h" "$esc"' EXIT
 
 heading "Getting goui"
 if [ -n "${GOUI_TARBALL:-}" ]; then
@@ -361,7 +361,7 @@ printf '\n  1. The goui panel opens under its menu bar item. Press the power but
 printf '  2. When macOS asks to record the audio of this Mac, press %sAllow%s.\n' "$bold" "$reset"
 printf '  3. Play something.\n'
 printf '\n  %sRead more:%s %s%s%s\n' "$bold" "$reset" "$cyan" "$guide" "$reset"
-printf '\n  %sgoui start · stop · restart · logs · uninstall%s\n' "$dim" "$reset"
+printf '\n  %sgoui set "name" · start · stop · restart · logs · rollback · uninstall%s\n' "$dim" "$reset"
 case ":$PATH:" in
 *":$bin:"*) ;;
 *) printf '  %s!%s The goui command is in %s, which is not on your PATH. Add it, or run %s/goui.\n' "$yellow" "$reset" "$bin" "$bin" ;;

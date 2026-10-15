@@ -37,54 +37,106 @@ struct BuiltAudioPath: @unchecked Sendable {
   let summary: AudioPathSummary
   var teardown: Teardown
 
+  // Each step puts its own undo on the teardown, so a failed step takes down only what was built.
   static func build(sound: RenderSound) throws -> BuiltAudioPath {
     var teardown = Teardown()
+
     do {
-      let outputID = try readProperty(of: systemObject, kAudioHardwarePropertyDefaultOutputDevice, as: AudioObjectID.self)
-      let outputUID = try readString(of: outputID, kAudioDevicePropertyDeviceUID)
-      let outputName = try readString(of: outputID, kAudioObjectPropertyName)
+      let output = try readDefaultOutput()
+      let tap = try buildTap(teardown: &teardown)
+      let aggregate = try buildAggregate(output: output, tap: tap, teardown: &teardown)
+      let render = try startRender(sound: sound, aggregate: aggregate, tap: tap, teardown: &teardown)
+      let summary = try readSummary(output: output, aggregate: aggregate, tap: tap)
 
-      let tapUUID = UUID()
-      let tapID = try createTap(uuid: tapUUID)
-      teardown.add("Destroying the tap") { AudioHardwareDestroyProcessTap(tapID) }
-      let tapChannelCount = try readTapChannelCount(tapID)
-
-      let aggregateID = try createAggregateDevice(outputUID: outputUID, tapUUID: tapUUID)
-      teardown.add("Destroying the aggregate device") { AudioHardwareDestroyAggregateDevice(aggregateID) }
-      let sampleRateHz = try readProperty(of: aggregateID, kAudioDevicePropertyNominalSampleRate, as: Float64.self)
-      guard sampleRateHz > 0 else { throw GouiError("The output reports a sample rate of \(sampleRateHz) Hz") }
-      let tapBufferIndex = try findTapBufferIndex(outputID: outputID, aggregateID: aggregateID, tapChannelCount: tapChannelCount)
-
-      let createdRender = sound.bands.withUnsafeBufferPointer { bands in
-        renderStateCreate(sound.preampDb, bands.baseAddress, UInt32(bands.count), sampleRateHz, tapChannelCount, tapBufferIndex)
-      }
-      guard let render = createdRender else {
-        throw GouiError("Creating the render state failed. Memory ran out or atomic float is not lock-free here")
-      }
-      teardown.add("Freeing the render state") { renderStateDestroy(render); return noErr }
-
-      var createdIOProcID: AudioDeviceIOProcID?
-      try throwIfFailed(AudioDeviceCreateIOProcID(aggregateID, renderAudio, UnsafeMutableRawPointer(render), &createdIOProcID), step: "Creating the audio callback")
-      guard let ioProcID = createdIOProcID else { throw GouiError("Creating the audio callback returned no callback") }
-      teardown.add("Destroying the audio callback") { AudioDeviceDestroyIOProcID(aggregateID, ioProcID) }
-      try throwIfFailed(AudioDeviceStart(aggregateID, ioProcID), step: "Starting the aggregate device")
-      teardown.add("Stopping the aggregate device") { AudioDeviceStop(aggregateID, ioProcID) }
-
-      // The device latency is there with or without goui. The engine's own share is its buffer.
-      let latencyFrames = try readProperty(of: aggregateID, kAudioDevicePropertyLatency, scope: kAudioObjectPropertyScopeOutput, as: UInt32.self)
-      let safetyFrames = try readProperty(of: aggregateID, kAudioDevicePropertySafetyOffset, scope: kAudioObjectPropertyScopeOutput, as: UInt32.self)
-      let bufferFrames = try readProperty(of: aggregateID, kAudioDevicePropertyBufferFrameSize, as: UInt32.self)
-      let summary = AudioPathSummary(
-        outputName: outputName, sampleRateHz: sampleRateHz, tapChannelCount: tapChannelCount,
-        totalDelayMs: Double(latencyFrames + safetyFrames + bufferFrames) / sampleRateHz * 1000, bufferDelayMs: Double(bufferFrames) / sampleRateHz * 1000
-      )
-
-      return BuiltAudioPath(outputID: outputID, aggregateID: aggregateID, render: render, summary: summary, teardown: teardown)
+      return BuiltAudioPath(outputID: output.id, aggregateID: aggregate.id, render: render, summary: summary, teardown: teardown)
     } catch {
       teardown.runAll()
       throw error
     }
   }
+}
+
+private struct OutputDevice {
+  let id: AudioObjectID
+  let uid: String
+  let name: String
+}
+
+private struct BuiltTap {
+  let uuid: UUID
+  let channelCount: UInt32
+}
+
+private struct BuiltAggregate {
+  let id: AudioObjectID
+  let sampleRateHz: Double
+  // The aggregate's input buffer that holds the tap.
+  let tapBufferIndex: UInt32
+}
+
+private func readDefaultOutput() throws -> OutputDevice {
+  let outputID = try readProperty(of: systemObject, kAudioHardwarePropertyDefaultOutputDevice, as: AudioObjectID.self)
+
+  return OutputDevice(id: outputID, uid: try readString(of: outputID, kAudioDevicePropertyDeviceUID), name: try readString(of: outputID, kAudioObjectPropertyName))
+}
+
+private func buildTap(teardown: inout Teardown) throws -> BuiltTap {
+  let tapUUID = UUID()
+  let tapID = try createTap(uuid: tapUUID)
+
+  teardown.add("Destroying the tap") { AudioHardwareDestroyProcessTap(tapID) }
+
+  return BuiltTap(uuid: tapUUID, channelCount: try readTapChannelCount(tapID))
+}
+
+private func buildAggregate(output: OutputDevice, tap: BuiltTap, teardown: inout Teardown) throws -> BuiltAggregate {
+  let aggregateID = try createAggregateDevice(outputUID: output.uid, tapUUID: tap.uuid)
+
+  teardown.add("Destroying the aggregate device") { AudioHardwareDestroyAggregateDevice(aggregateID) }
+
+  let sampleRateHz = try readProperty(of: aggregateID, kAudioDevicePropertyNominalSampleRate, as: Float64.self)
+  guard sampleRateHz > 0 else { throw GouiError("The output reports a sample rate of \(sampleRateHz) Hz") }
+
+  let tapBufferIndex = try findTapBufferIndex(outputID: output.id, aggregateID: aggregateID, tapChannelCount: tap.channelCount)
+
+  return BuiltAggregate(id: aggregateID, sampleRateHz: sampleRateHz, tapBufferIndex: tapBufferIndex)
+}
+
+// The render state, and the callback that plays it on the aggregate device, started.
+private func startRender(sound: RenderSound, aggregate: BuiltAggregate, tap: BuiltTap, teardown: inout Teardown) throws -> OpaquePointer {
+  let createdRender = sound.bands.withUnsafeBufferPointer { bands in
+    renderStateCreate(sound.preampDb, bands.baseAddress, UInt32(bands.count), aggregate.sampleRateHz, tap.channelCount, aggregate.tapBufferIndex)
+  }
+  guard let render = createdRender else {
+    throw GouiError("Creating the render state failed. Memory ran out or atomic float is not lock-free here")
+  }
+
+  teardown.add("Freeing the render state") { renderStateDestroy(render); return noErr }
+
+  let aggregateID = aggregate.id
+  var createdIOProcID: AudioDeviceIOProcID?
+
+  try throwIfFailed(AudioDeviceCreateIOProcID(aggregateID, renderAudio, UnsafeMutableRawPointer(render), &createdIOProcID), step: "Creating the audio callback")
+  guard let ioProcID = createdIOProcID else { throw GouiError("Creating the audio callback returned no callback") }
+
+  teardown.add("Destroying the audio callback") { AudioDeviceDestroyIOProcID(aggregateID, ioProcID) }
+  try throwIfFailed(AudioDeviceStart(aggregateID, ioProcID), step: "Starting the aggregate device")
+  teardown.add("Stopping the aggregate device") { AudioDeviceStop(aggregateID, ioProcID) }
+
+  return render
+}
+
+// The device latency is there with or without goui. The engine's own share is its buffer.
+private func readSummary(output: OutputDevice, aggregate: BuiltAggregate, tap: BuiltTap) throws -> AudioPathSummary {
+  let millisecondsPerSecond = 1000.0
+  let latencyFrames = try readProperty(of: aggregate.id, kAudioDevicePropertyLatency, scope: kAudioObjectPropertyScopeOutput, as: UInt32.self)
+  let safetyFrames = try readProperty(of: aggregate.id, kAudioDevicePropertySafetyOffset, scope: kAudioObjectPropertyScopeOutput, as: UInt32.self)
+  let bufferFrames = try readProperty(of: aggregate.id, kAudioDevicePropertyBufferFrameSize, as: UInt32.self)
+
+  let totalDelayMs = Double(latencyFrames + safetyFrames + bufferFrames) / aggregate.sampleRateHz * millisecondsPerSecond
+  let bufferDelayMs = Double(bufferFrames) / aggregate.sampleRateHz * millisecondsPerSecond
+
+  return AudioPathSummary(outputName: output.name, sampleRateHz: aggregate.sampleRateHz, tapChannelCount: tap.channelCount, totalDelayMs: totalDelayMs, bufferDelayMs: bufferDelayMs)
 }
 
 private func findOwnProcess() throws -> AudioObjectID {
@@ -111,6 +163,7 @@ private func createTap(uuid: UUID) throws -> AudioObjectID {
   tapDescription.muteBehavior = .muted
   var tapID = AudioObjectID(kAudioObjectUnknown)
   try throwIfFailed(AudioHardwareCreateProcessTap(tapDescription, &tapID), step: "Creating the tap")
+
   return tapID
 }
 
@@ -126,6 +179,7 @@ private func readTapChannelCount(_ tapID: AudioObjectID) throws -> UInt32 {
   guard (1...UInt32(maxTapChannelCount)).contains(format.mChannelsPerFrame) else {
     throw GouiError("The tap has \(format.mChannelsPerFrame) channels. The engine takes 1 to \(maxTapChannelCount)")
   }
+
   return format.mChannelsPerFrame
 }
 
@@ -142,6 +196,7 @@ private func createAggregateDevice(outputUID: String, tapUUID: UUID) throws -> A
   ]
   var aggregateID = AudioObjectID(kAudioObjectUnknown)
   try throwIfFailed(AudioHardwareCreateAggregateDevice(aggregateDescription as CFDictionary, &aggregateID), step: "Creating the aggregate device")
+
   return aggregateID
 }
 
@@ -154,6 +209,7 @@ private func findTapBufferIndex(outputID: AudioObjectID, aggregateID: AudioObjec
   guard isTapAtIndex else {
     throw GouiError("The tap is not the input buffer after the output's own inputs. The aggregate inputs have \(aggregateInputChannelCounts) channels")
   }
+
   return UInt32(tapIndex)
 }
 
@@ -166,10 +222,12 @@ private func readInputChannelCounts(of device: AudioObjectID) throws -> [UInt32]
 
   // A device with no inputs still answers with the count of its list, never smaller than one buffer.
   let allocatedByteCount = max(Int(byteCount), MemoryLayout<AudioBufferList>.size)
+
   return try withUnsafeTemporaryAllocation(byteCount: allocatedByteCount, alignment: MemoryLayout<AudioBufferList>.alignment) { buffer in
     buffer.initializeMemory(as: UInt8.self, repeating: 0)
     try throwIfFailed(AudioObjectGetPropertyData(device, &address, 0, nil, &byteCount, buffer.baseAddress!), step: step)
     let bufferList = UnsafeMutableAudioBufferListPointer(buffer.baseAddress!.assumingMemoryBound(to: AudioBufferList.self))
+
     return bufferList.map { $0.mNumberChannels }
   }
 }

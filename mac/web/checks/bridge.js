@@ -1,5 +1,5 @@
 // Sends each bridge message and prints the reply to the app's log. The app opens it with --page.
-import { onEvent, send } from "../bridge.js";
+import { macMessageTypes, onEvent, send } from "../bridge.js";
 
 const settleMs = 3000;
 
@@ -16,7 +16,7 @@ function wait(ms) {
  * @returns {Promise<any>}
  */
 function print(text) {
-  return send({ type: "print", text });
+  return send({ type: macMessageTypes.print, text });
 }
 
 /**
@@ -25,7 +25,7 @@ function print(text) {
  * @returns {object}
  */
 function playSound(preampDb, enabled = true) {
-  return { type: "sound", sound: { enabled, preampDb, bands: [] } };
+  return { type: macMessageTypes.sound, sound: { enabled, preampDb, bands: [] } };
 }
 
 /**
@@ -48,25 +48,27 @@ async function report(label, message) {
  */
 async function reportLevels(label, message) {
   await report(label, message);
-  await send({ type: "meters" });
+  await send({ type: macMessageTypes.meters });
   await wait(settleMs);
-  await report("  meters", { type: "meters" });
+  await report("  meters", { type: macMessageTypes.meters });
 }
 
 onEvent((event) => print(`event: ${JSON.stringify(event)}`));
-await report("status", { type: "status" });
+await report("status", { type: macMessageTypes.status });
 await reportLevels("preamp -6", playSound(-6));
 await reportLevels("preamp -12", playSound(-12));
 await reportLevels("EQ off", playSound(-12, false));
-await reportLevels("preamp -40, held to -24", playSound(-40));
-await report("power off", { type: "power", isOn: false });
-await report("status", { type: "status" });
-await report("power on", { type: "power", isOn: true });
+await report("preamp -40, refused as below -24", playSound(-40));
+await report("preamp +13, refused as above +12", playSound(13));
+await report("power off", { type: macMessageTypes.power, isOn: false });
+await report("status", { type: macMessageTypes.status });
+await report("power on", { type: macMessageTypes.power, isOn: true });
 await wait(settleMs);
-await report("status", { type: "status" });
+await report("status", { type: macMessageTypes.status });
 await report("an unknown message", { type: "nothing" });
-await report("a sound with no sound", { type: "sound" });
-await report("an unknown band type", { type: "sound", sound: { enabled: true, preampDb: 0, bands: [{ on: true, type: "XX", frequencyHz: 1000, gainDb: 6, q: 1 }] } });
-await reportLevels("a peak at 1 kHz, +6 dB", { type: "sound", sound: { enabled: true, preampDb: -6, bands: [{ on: true, type: "PK", frequencyHz: 1000, gainDb: 6, q: 1 }] } });
-await reportLevels("preamp -6 to keep", playSound(-6));
+await report("a sound with no sound", { type: macMessageTypes.sound });
+await report("an unknown band type", { type: macMessageTypes.sound, sound: { enabled: true, preampDb: 0, bands: [{ on: true, type: "XX", frequencyHz: 1000, gainDb: 6, q: 1 }] } });
+await reportLevels("a peak at 1 kHz, +6 dB", { type: macMessageTypes.sound, sound: { enabled: true, preampDb: -6, bands: [{ on: true, type: "PK", frequencyHz: 1000, gainDb: 6, q: 1 }] } });
+await reportLevels("preamp -6", playSound(-6));
+await report("keep preamp -6 for the next launch", { ...playSound(-6), type: macMessageTypes.keepSound });
 await print("Check done.");

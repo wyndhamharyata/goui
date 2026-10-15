@@ -1,10 +1,11 @@
 // The band choice, the sound you hear with A/B and Solo, and every change to the layers.
 import { cleanBands, newBand } from "../shared/bands.js";
-import { flatSliders, layerOrder, listOnLayers, listPlayedBands, newLayer, toPlayedSound } from "../shared/config.js";
-import { messageTypes, trySendMessage } from "../shared/messages.js";
+import { flatSliders, layerOrder, layerSources, listOnLayers, listPlayedBands, newLayer, toPlayedSound } from "../shared/config.js";
+import { storageKeys } from "../shared/storage.js";
+import { messageTypes } from "../shared/messages.js";
 import { debounce } from "./dom.js";
 import { refresh } from "./refresh.js";
-import { layerSources, state } from "./state.js";
+import { state } from "./state.js";
 
 /** @typedef {import("../shared/bands.js").Band} Band */
 
@@ -115,19 +116,23 @@ export function listCurveLayers() {
   return isEqOff() || state.soloBand ? [] : listOnLayers(state.config);
 }
 
-/** @returns {void} */
+// A rejection means no context took the sound, such as an engine that refused it.
+/** @returns {Promise<boolean>} */
 export function sendAudio() {
-  trySendMessage({ type: messageTypes.audioConfig, config: readHeardConfig() });
+  return chrome.runtime.sendMessage({ type: messageTypes.audioConfig, config: readHeardConfig() }).then(() => true, () => false);
 }
 
-const storeConfig = debounce(() => chrome.storage.local.set({ config: state.config }), storageWaitMs);
+const storeConfig = debounce(() => chrome.storage.local.set({ [storageKeys.config]: state.config }), storageWaitMs);
 
 // The sound follows every edit at once. Only the storage write waits for the edits to pause.
-/** @returns {void} */
+/** @returns {Promise<boolean>} */
 export function commit() {
-  sendAudio();
+  const isTaken = sendAudio();
+
   storeConfig();
   refresh();
+
+  return isTaken;
 }
 
 // A layer whose bands changed shows "edited", so you can tell it from the preset you picked.
@@ -182,15 +187,23 @@ export function removeLayer(role) {
 
 // A lone headphone file needs its own preamp, so it is kept. Auto preamp overrides it either way.
 /**
- * @param {NewLayer} sound
  * @param {LayerRole} role
+ * @param {NewLayer} sound
  */
-export function replaceLayer(sound, role) {
+export function setLayer(role, sound) {
   state.config.layers[role] = newLayer(sound.name, sound.source, cleanBands(sound.bands));
 
   if (sound.autoEq) state.config.layers[role].autoEq = sound.autoEq;
   if (role === "headphone" && sound.preampDb !== undefined) state.config.preampDb = sound.preampDb;
+}
 
+// The new layer holds new band objects, so the band choice goes before the sound plays.
+/**
+ * @param {LayerRole} role
+ * @param {NewLayer} sound
+ */
+export function replaceLayer(role, sound) {
+  setLayer(role, sound);
   dropBandChoice();
   commit();
 }

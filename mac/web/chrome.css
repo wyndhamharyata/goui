@@ -1,0 +1,10 @@
+/* The page takes the panel's width, so a wide panel shows three columns. */
+.popup body {
+  width: auto;
+}
+
+/* The page's edge does not bounce. */
+html,
+body {
+  overscroll-behavior: none;
+}

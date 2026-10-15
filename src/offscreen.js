@@ -12,7 +12,7 @@ let chainNodes = [];
 let analyserNode;
 let preampNode;
 let bandNodes = [];
-let telemetryTimer;
+let levelTimer;
 // The document stays open until the browser closes, so the last sound carries over to the next tab.
 /** @type {import("./shared/config.js").PlayedSound} */
 let playedSound = { enabled: true, preampDb: 0, bands: [] };
@@ -97,11 +97,11 @@ function readSpectrum(bins) {
   return toSpectrumDb(bins, audioContext.sampleRate / analyserNode.fftSize);
 }
 
-function sendTelemetry() {
+function sendLevel() {
   const levelDb = readLevelDb(new Float32Array(analyserNode.fftSize));
   const spectrumDb = readSpectrum(new Float32Array(analyserNode.frequencyBinCount));
 
-  trySendMessage({ type: messageTypes.audioTelemetry, levelDb, spectrumDb });
+  trySendMessage({ type: messageTypes.audioLevel, levelDb, spectrumDb });
 }
 
 async function start(streamId) {
@@ -113,18 +113,18 @@ async function start(streamId) {
   sourceNode = audioContext.createMediaStreamSource(mediaStream);
   buildChain();
 
-  const telemetryIntervalMs = 50;
+  const levelIntervalMs = 50;
 
-  telemetryTimer = setInterval(sendTelemetry, telemetryIntervalMs);
+  levelTimer = setInterval(sendLevel, levelIntervalMs);
 
   return { ok: true };
 }
 
 /** @returns {Promise<AudioReply>} */
 async function stop() {
-  if (telemetryTimer) clearInterval(telemetryTimer);
+  if (levelTimer) clearInterval(levelTimer);
 
-  telemetryTimer = undefined;
+  levelTimer = undefined;
 
   if (mediaStream) for (const track of mediaStream.getTracks()) track.stop();
 

@@ -1,11 +1,11 @@
 // The Listen tab: the layer rows, the sliders, the preamp and Level match.
-import { maxBoostDb } from "../shared/bands.js";
 import { layerLabels, layerOrder, listExportBands, toPlayedSound, preampRangeDb, sliderRangeDb } from "../shared/config.js";
 import { findTargetSet, newAutoEqItem, toAutoEq } from "../autoeq.js";
 import { layerTone } from "../graph/colors.js";
 import { formatDb } from "../graph/format.js";
 import { linearPosition } from "../shared/math.js";
-import { byId, buildButton, buildElement, buildIcon, buildStackRow, sectionOf, setField, showAllLines, showTab } from "./dom.js";
+import { storageKeys } from "../shared/storage.js";
+import { byId, buildButton, buildElement, buildIcon, buildStackRow, openLibrarySection, renderChildren, setField, showAllLines } from "./dom.js";
 import { describeLayerName } from "./items.js";
 import { changeTarget, clearHeadphoneLayer } from "./headphones.js";
 import { toggleLibraryAction } from "./library.js";
@@ -18,13 +18,6 @@ import { state } from "./state.js";
 /** @typedef {import("../shared/config.js").LayerRole} LayerRole */
 
 /** @typedef {import("../shared/config.js").AutoEqOrigin} AutoEqOrigin */
-
-/** @param {LayerRole} role */
-function openLibrarySection(role) {
-  showTab("tab", "library");
-  showTab("role", role);
-  sectionOf(role).scrollIntoView({ block: "start" });
-}
 
 // The targets a headphone from AutoEQ can take. A target set of one shows its name only.
 function buildTargetChoice(autoEq) {
@@ -42,9 +35,10 @@ function buildTargetChoice(autoEq) {
   return buildElement("label", choice, [field]);
 }
 
+// The row can outlive its layer object, so the switch looks the layer up when it is pressed.
 function buildLayerRow(role, layer) {
   const switchLayer = (event) => {
-    layer.on = event.target.checked;
+    state.config.layers[role].on = event.target.checked;
     commit();
   };
   const toggle = buildElement("label", { className: "ui-switch switch", title: `Turn the ${layerLabels[role]} layer on or off` }, [
@@ -97,46 +91,47 @@ function buildEmptyLayerRow(role) {
   return buildStackRow({ tone: layerTone[role], caption: layerLabels[role], name: "Not added", trail: [add], isEmpty: true });
 }
 
+// What a layer row shows. The rows are built again only when one of these changes.
+function readRowFacts(layer) {
+  if (!layer) return [];
+
+  return [layer.on, layer.source, layer.name, layer.isEdited, layer.bands.length > 0, layer.autoEq];
+}
+
 // The stack on Listen. One row per layer, each with its own switch, its source and its name.
 function renderLayers() {
   const layers = state.config.layers;
-  const rows = layerOrder.map((role) => (layers[role] ? buildLayerRow(role, layers[role]) : buildEmptyLayerRow(role)));
+  const buildRows = () => layerOrder.map((role) => (layers[role] ? buildLayerRow(role, layers[role]) : buildEmptyLayerRow(role)));
   const onCount = layerOrder.filter((role) => layers[role] && layers[role].on).length;
 
-  byId("layers").replaceChildren(...rows);
+  renderChildren(byId("layers"), JSON.stringify(layerOrder.map((role) => readRowFacts(layers[role]))), buildRows);
   byId("layerCount").textContent = `${onCount} of 3 on`;
 }
 
-function renderSound() {
-  const played = toPlayedSound(state.config);
-
+function renderHeader() {
   byId("enabled").checked = state.config.enabled;
   byId("compare").classList.toggle("is-held", state.isComparing);
   byId("hearingCaption").textContent = state.isComparing ? "Holding A/B, the EQ is off" : "Hearing";
+}
 
+function renderSliders() {
   for (const sliderName of ["bass", "vocals", "treble"]) {
-    setField(sliderName, state.config.sliders[`${sliderName}Db`]);
-    renderSliderFill(sliderName, state.config.sliders[`${sliderName}Db`]);
-    byId(`${sliderName}Value`).textContent = `${formatDb(state.config.sliders[`${sliderName}Db`])} dB`;
-  }
+    const valueDb = state.config.sliders[`${sliderName}Db`];
 
-  setField("preamp", played.preampDb.toFixed(1));
-  renderSliderFill("preamp", played.preampDb);
-  byId("preampValue").textContent = `${formatDb(played.preampDb)} dB`;
+    setField(sliderName, valueDb);
+    renderSliderFill(sliderName, valueDb);
+    byId(`${sliderName}Value`).textContent = `${formatDb(valueDb)} dB`;
+  }
+}
+
+function renderPreamp() {
+  const { preampDb } = toPlayedSound(state.config);
+
+  setField("preamp", preampDb.toFixed(1));
+  renderSliderFill("preamp", preampDb);
+  byId("preampValue").textContent = `${formatDb(preampDb)} dB`;
   byId("autoPreamp").classList.toggle("is-on", state.config.autoPreamp);
   byId("preampNote").textContent = state.config.autoPreamp ? "Auto" : "Manual";
-
-  // A rounding margin, so a boost that auto preamp offsets exactly never shows red.
-  const clipMarginDb = 0.05;
-  const headroomDb = maxBoostDb(played.bands) + played.preampDb;
-  const isClipping = state.config.enabled && headroomDb > clipMarginDb;
-  const meter = byId("meter");
-
-  meter.classList.toggle("tone-danger", isClipping);
-  meter.classList.toggle("tone-good", !isClipping);
-  meter.title = isClipping
-    ? `The EQ can clip by ${headroomDb.toFixed(1)} dB. Turn the preamp down or press Auto.`
-    : "Output level. No clipping.";
 }
 
 // A dB slider fills from 0 dB to its value, so a cut and a boost read apart at a glance.
@@ -188,7 +183,7 @@ export function wireListen() {
   });
   byId("levelMatch").addEventListener("change", (event) => {
     state.isLevelMatched = event.target.checked;
-    chrome.storage.local.set({ isLevelMatched: state.isLevelMatched });
+    chrome.storage.local.set({ [storageKeys.isLevelMatched]: state.isLevelMatched });
   });
   byId("autoPreamp").addEventListener("click", toggleAutoPreamp);
   // A second press puts the text away, as each layer's Export does.
@@ -202,4 +197,6 @@ export function wireListen() {
 }
 
 onRefresh(renderLayers);
-onRefresh(renderSound);
+onRefresh(renderHeader);
+onRefresh(renderSliders);
+onRefresh(renderPreamp);

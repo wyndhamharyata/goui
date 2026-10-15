@@ -4,14 +4,22 @@ body {
   line-height: 1.5;
 }
 
-/* One content width for the header, the paragraphs, the diagram and every grid. */
+html {
+  scroll-behavior: smooth;
+}
+
+/* The header runs across the page. Below it, the page list stays on the left and the sections read on the right. */
 .doc {
-  max-width: 880px;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 56px var(--space-7);
+  max-width: 980px;
   margin: 0 auto;
   padding: var(--space-7) var(--space-6) 56px;
 }
 
 .intro-head {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -45,10 +53,6 @@ h1 {
   letter-spacing: 0.04em;
 }
 
-h2 {
-  margin: 56px 0 var(--space-4);
-}
-
 .pitch {
   max-width: 680px;
   margin: 0;
@@ -61,6 +65,46 @@ h2 {
   color: var(--text-1);
 }
 
+.intro-nav {
+  position: sticky;
+  top: var(--space-5);
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.intro-nav .ui-section-header {
+  margin-bottom: var(--space-2);
+}
+
+.intro-nav .ui-list-row__main,
+.links .ui-list-row__main {
+  color: inherit;
+  text-decoration: none;
+}
+
+.intro-nav .ui-list-row:hover,
+.links .ui-list-row:hover {
+  background: var(--ink-3);
+}
+
+.intro-body {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  min-width: 0;
+  max-width: 680px;
+}
+
+.intro-body section {
+  scroll-margin-top: var(--space-5);
+}
+
+h2 {
+  margin: 0 0 var(--space-4);
+}
+
 .flow .ui-icon {
   width: 18px;
   height: 18px;
@@ -68,28 +112,61 @@ h2 {
 }
 
 .lead {
-  max-width: 680px;
   margin: var(--space-5) 0 0;
   color: var(--text-2);
   line-height: 1.6;
 }
 
-.guide-steps.grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+h2 + .lead {
+  margin: 0 0 var(--space-5);
+}
+
+.ui-section-header__caption a,
+.intro-facts a,
+.fine a {
+  color: var(--accent);
+}
+
+.intro-steps {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-6) var(--space-5);
 }
 
 /* A step left alone in the last row fills that row, so both edges stay straight. */
-.guide-steps.grid > .guide-step:last-child:nth-child(3n + 1) {
+.intro-steps > .guide-step:last-child:nth-child(odd) {
   grid-column: 1 / -1;
 }
 
-.links .ui-list-row__main {
-  text-decoration: none;
+/* A picture with rows in it stacks them, as the panel does. */
+.guide-shot--column {
+  flex-direction: column;
+  align-items: stretch;
 }
 
-.links .ui-list-row:hover {
-  background: var(--ink-3);
+.guide-shot--column > .ui-button {
+  align-self: flex-start;
+}
+
+.intro-next {
+  color: var(--text-3);
+}
+
+.intro-facts {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.intro-facts li {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--line-1);
+  color: var(--text-2);
+}
+
+.intro-facts .ui-badge {
+  margin-right: var(--space-3);
 }
 
 .store {
@@ -134,36 +211,24 @@ h2 {
   font-size: var(--size-body);
 }
 
-.fine a {
-  color: var(--accent);
-}
-
 .close {
-  margin-top: var(--space-7);
+  align-self: flex-start;
 }
 
-@media (max-width: 719px) {
-  .guide-steps.grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 819px) {
+  .doc {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-7);
   }
 
-  /* With two columns the odd step of four is the one left alone. */
-  .guide-steps.grid > .guide-step:last-child:nth-child(3n + 1) {
-    grid-column: auto;
-  }
-
-  .guide-steps.grid > .guide-step:last-child:nth-child(2n + 1) {
-    grid-column: 1 / -1;
+  .intro-nav {
+    position: static;
   }
 }
 
 @media (max-width: 559px) {
-  .guide-steps.grid {
-    grid-template-columns: 1fr;
-  }
-
-  .guide-steps.grid > .guide-step:last-child {
-    grid-column: auto;
+  .intro-steps {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .store {

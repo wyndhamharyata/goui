@@ -4,7 +4,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#07080a" />
     <meta name="description" content="goui for the Mac: the same EQ, for every sound your Mac plays." />
     <link rel="icon" href="/icons/icon48.png" />
     <link rel="stylesheet" href="/panel.css" />
@@ -30,28 +29,28 @@
           opens the panel you know from the browser: Listen, Tune and Library, AutoEQ for your
           headphone and EQByEar for your ear.
         </p>
-        <p>Install it with one line in Terminal. It needs no admin password, and it asks before it installs.</p>
+        <p>Install it with one line in Terminal. It needs no admin password. It asks before it installs.</p>
         <pre class="install-line"><code>curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh</code></pre>
 
         <h2 id="before">Before you install</h2>
         <ul>
           <li>goui needs a Mac with Apple silicon and macOS 26 or newer.</li>
           <li>
-            goui EQs every sound the Mac plays. It follows the Mac's default output, and one EQ covers
-            every app. Another system EQ, such as eqMac or SoundSource, stacks its curve on goui's, so
-            run one at a time.
+            goui changes every sound the Mac plays. It follows the Mac's default output. One EQ covers
+            every app. Another system EQ, such as eqMac or SoundSource, stacks its curve on goui's. Run
+            one at a time.
           </li>
           <li>
             Spatial Audio and head tracking on AirPods and Beats drop out while goui plays, as the
             troubleshooting below explains.
           </li>
           <li>
-            macOS asks to let goui record the audio of this Mac. goui EQs the sound on its way to you
-            and keeps none of it.
+            macOS asks to let goui record the audio of this Mac. goui changes the sound on its way to
+            you and keeps none of it.
           </li>
           <li>
-            goui is not signed by Apple yet, so a full update asks for that permission again. Your
-            settings stay in <code>~/Library/Application Support/goui</code> through updates.
+            goui is not signed by Apple yet. An update of the engine asks for that permission again.
+            Your settings stay in <code>~/Library/Application Support/goui</code> through updates.
           </li>
         </ul>
 
@@ -60,7 +59,7 @@
           <li><b>Turn goui on.</b> Click goui in the menu bar, then press the power button at the top of the panel.</li>
           <li>
             <b>Allow the audio.</b> The first time, macOS asks to let goui record the audio of this Mac.
-            Press Allow. goui EQs the sound on its way to you and keeps none of it.
+            Press Allow. goui changes the sound on its way to you and keeps none of it.
           </li>
           <li><b>Play something.</b> Any app works. Music, a video, a call.</li>
         </ol>
@@ -73,19 +72,24 @@
         <ul>
           <li><b>Click</b> opens and closes the panel.</li>
           <li><b>Right-click</b> opens the menu.</li>
+          <li><b>About goui</b> shows the version of goui.</li>
           <li>
             <b>Wide panel</b> widens the panel, with Listen, Tune and Library side by side. You can
             also drag the panel's edge.
           </li>
           <li><b>Restart engine</b> builds the audio path again. The sound plays a moment without the EQ.</li>
           <li><b>Reload panel</b> loads the panel again. The sound carries on.</li>
+          <li>
+            <b>Sets</b> lists the Sets you saved in the panel and ticks the one that plays. A pick plays
+            it with the panel closed. The submenu shows once you have saved a Set.
+          </li>
           <li><b>Check for Updates…</b> asks GitHub for the newest release.</li>
           <li>
             <b>Update to …</b> shows when a release changes the engine. One click installs it and
             starts goui again.
           </li>
           <li><b>Automatic updates</b> keeps the check on, twice a day.</li>
-          <li><b>Quit goui</b> stops it until the next login, and the Mac plays the normal way.</li>
+          <li><b>Quit goui</b> stops it until the next login. The Mac then plays the normal way.</li>
         </ul>
         <p>
           goui keeps itself up to date. A release that changes only the panel goes in by itself. The
@@ -98,11 +102,25 @@
           the audio path again by itself.
         </p>
 
+        <h2>From Terminal</h2>
+        <p>The installer puts a <code>goui</code> command in Terminal.</p>
+        <ul>
+          <li><code>goui set "name"</code> plays one of your Sets, as a pick from the Sets menu does.</li>
+          <li><code>goui start</code>, <code>goui stop</code> and <code>goui restart</code> run the app.</li>
+          <li><code>goui logs</code> shows the log as it grows.</li>
+          <li><code>goui rollback</code> goes back to the app before the last update.</li>
+          <li>
+            <code>goui uninstall</code> removes the app. Your settings stay in
+            <code>~/Library/Application Support/goui</code>.
+          </li>
+        </ul>
+
         <h2>Measure your ear</h2>
         <p>
-          <b>Measure my ear with EQByEar</b> opens eqbyear.com in your browser and turns My ear off, so
-          the test hears your headphone with only its AutoEQ profile. Run the test, copy the result,
-          and press <b>Paste</b> in the My ear section.
+          <b>Measure my ear with EQByEar</b> opens eqbyear.com in your browser. It turns My ear off, so
+          the test hears your headphone with only its AutoEQ profile. goui already hears the browser,
+          so run the test right away. Copy the result. Press <b>Paste</b> in the My ear tab, paste the
+          result in the box, then press <b>Apply</b> and <b>Save</b>.
         </p>
 
         <h2>Troubleshooting</h2>
@@ -119,10 +137,10 @@
           Recording. Then choose <b>Restart engine</b> in the menu.
         </p>
 
-        <h2>Privacy</h2>
+        <h2 id="privacy">Privacy</h2>
         <p>
           goui reads the audio your Mac plays, runs it through the EQ on your Mac and plays it back. It
-          never records it, keeps it or sends it anywhere. Your settings and presets stay in
+          never records it, keeps it or sends it anywhere. Your settings, presets and Sets stay in
           <code>~/Library/Application Support/goui</code>. AutoEQ downloads work as they do in the
           extension, as the <a href="/privacy">privacy policy</a> describes. Twice a day goui asks
           GitHub for the newest release. That request carries nothing about you.
@@ -137,5 +155,6 @@
         <a href="https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md">Notices</a>
       </footer>
     </main>
+    <script src="/site.js"></script>
   </body>
 </html>

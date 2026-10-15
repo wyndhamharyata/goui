@@ -9,6 +9,7 @@ enum ReleaseDownload {
   private static let feedOverrideKey = "GOUI_UPDATE_FEED"
   private static let tarballName = "goui-mac.tar.gz"
   private static let githubAccept = "application/vnd.github+json"
+  private static let requestTimeoutSeconds = 20.0
 
   struct Release {
     let version: String
@@ -30,7 +31,7 @@ enum ReleaseDownload {
   }
 
   // Downloads the release, compares it with its published hash and unpacks the app. release.mjs already checked its version.
-  static func bring(_ release: Release) async throws -> URL {
+  static func fetch(_ release: Release) async throws -> URL {
     let workURL = FileManager.default.temporaryDirectory.appending(path: "goui-update-\(release.version)-\(UUID().uuidString)")
     try FileManager.default.createDirectory(at: workURL, withIntermediateDirectories: true)
 
@@ -49,7 +50,7 @@ enum ReleaseDownload {
   private static func verify(_ tarballURL: URL, with checksumsURL: URL) async throws {
     let text = String(decoding: try await read(checksumsURL), as: UTF8.self)
 
-    guard let expected = hash(of: tarballName, in: text) else {
+    guard let expected = findHash(of: tarballName, in: text) else {
       throw GouiError("The checksums file names no \(tarballName).")
     }
     guard try fileHash(tarballURL) == expected else {
@@ -59,15 +60,7 @@ enum ReleaseDownload {
 
   // The app is packed with tar, so tar unpacks it.
   private static func unpack(_ tarballURL: URL, to folderURL: URL) throws {
-    let tar = Process()
-    tar.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
-    tar.arguments = ["-xzf", tarballURL.path, "-C", folderURL.path]
-    try tar.run()
-    tar.waitUntilExit()
-
-    guard tar.terminationStatus == 0 else {
-      throw GouiError("The download could not be unpacked.")
-    }
+    try run("/usr/bin/tar", ["-xzf", tarballURL.path, "-C", folderURL.path], failure: "The download could not be unpacked.")
   }
 
   // A release can ask for a newer macOS than this Mac runs.
@@ -93,7 +86,7 @@ enum ReleaseDownload {
     if url.isFileURL { return try Data(contentsOf: url) }
 
     var request = URLRequest(url: url)
-    request.timeoutInterval = 20
+    request.timeoutInterval = requestTimeoutSeconds
     if url.host == "api.github.com" { request.setValue(githubAccept, forHTTPHeaderField: "Accept") }
 
     let (data, response) = try await URLSession.shared.data(for: request)
@@ -105,7 +98,7 @@ enum ReleaseDownload {
   }
 
   // shasum writes a hash, two spaces, then the file name.
-  private static func hash(of name: String, in checksums: String) -> String? {
+  private static func findHash(of name: String, in checksums: String) -> String? {
     for line in checksums.split(separator: "\n") {
       let fields = line.split(separator: " ", omittingEmptySubsequences: true)
       if fields.count == 2, fields[1] == name { return String(fields[0]) }
@@ -140,5 +133,9 @@ enum ReleaseDownload {
 
 // The sha256 of a file, in the same form the release's checksums file holds it.
 func fileHash(_ url: URL) throws -> String {
-  SHA256.hash(data: try Data(contentsOf: url)).map { String(format: "%02x", $0) }.joined()
+  dataHash(try Data(contentsOf: url))
+}
+
+func dataHash(_ data: Data) -> String {
+  SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
 }

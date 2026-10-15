@@ -1,5 +1,8 @@
 // Everything goui reads from AutoEQ: the index, a headphone's file, the target curves and the text format.
 import { bandTypes, butterworthQ, hasGain } from "./shared/bands.js";
+import { preampRangeDb } from "./shared/config.js";
+import { clamp } from "./shared/math.js";
+import { storageKeys } from "./shared/storage.js";
 import { fitTargetChange } from "./fit.js";
 
 /** @typedef {import("./shared/bands.js").Band} Band */
@@ -110,14 +113,19 @@ function readIndex(text) {
 export async function loadAutoEqIndex() {
   if (autoEqItems) return autoEqItems;
 
-  const cached = await chrome.storage.local.get(["autoEqIndex", "autoEqIndexAt"]);
+  const cached = await chrome.storage.local.get([storageKeys.autoEqIndex, storageKeys.autoEqIndexAt]);
   const indexLifetimeMs = 7 * 24 * 60 * 60 * 1000;
   const isFresh = cached.autoEqIndexAt && Date.now() - cached.autoEqIndexAt < indexLifetimeMs;
   let text = isFresh ? cached.autoEqIndex : null;
 
   if (!text) {
-    text = await (await fetch(`${autoEqBase}INDEX.md`)).text();
-    await chrome.storage.local.set({ autoEqIndex: text, autoEqIndexAt: Date.now() });
+    const response = await fetch(`${autoEqBase}INDEX.md`);
+
+    // An error page is not the list, so it is never kept.
+    if (!response.ok) throw new Error(`The AutoEQ list answered ${response.status}.`);
+
+    text = await response.text();
+    await chrome.storage.local.set({ [storageKeys.autoEqIndex]: text, [storageKeys.autoEqIndexAt]: Date.now() });
   }
 
   autoEqItems = readIndex(text);
@@ -189,7 +197,7 @@ export function parseAutoEq(text) {
     const label = (words[0] || "").toLowerCase();
 
     if (label === "preamp:") {
-      preampDb = Number(words[1]);
+      preampDb = clamp(Number(words[1]) || 0, ...preampRangeDb);
       continue;
     }
     if (label !== "filter") continue;

@@ -16,14 +16,18 @@ public struct Band: Codable, Equatable, Sendable {
   }
 }
 
-// The preamp and the bands the engine plays, as toPlayedSound in src/shared/config.js makes them.
-public struct Sound: Equatable, Sendable {
-  public static let flat = Sound(preampDb: 0, bands: [])
+// The EQ switch, the preamp and the bands, as toPlayedSound in src/shared/config.js makes them. The engine plays it, and config.json keeps it.
+public struct Sound: Codable, Equatable, Sendable {
+  // As preampRangeDb in src/shared/config.js. toPlayedSound keeps the preamp inside it, so a value outside is refused, not clamped.
+  public static let preampRangeDb = -24.0...12.0
+  public static let flat = Sound(enabled: true, preampDb: 0, bands: [])
 
+  public var enabled: Bool
   public var preampDb: Double
   public var bands: [Band]
 
-  public init(preampDb: Double, bands: [Band]) {
+  public init(enabled: Bool, preampDb: Double, bands: [Band]) {
+    self.enabled = enabled
     self.preampDb = preampDb
     self.bands = bands
   }
@@ -53,13 +57,19 @@ extension Band {
 }
 
 extension Sound {
+  // Every value is checked even with the EQ switch off, so a bad sound is refused before it is kept.
   func toRenderSound() throws -> RenderSound {
-    guard preampDb.isFinite else { throw GouiError("The preamp must be a finite number") }
+    let range = Self.preampRangeDb
+    guard range.contains(preampDb) else {
+      throw GouiError("The preamp must be from \(range.lowerBound) to \(range.upperBound) dB, not \(preampDb)")
+    }
 
-    let bands = try bands.filter(\.on).map { try $0.toRenderBand() }
-    guard bands.count <= Int(maxBandCount) else { throw GouiError("goui plays up to \(maxBandCount) bands at once") }
+    let renderBands = try bands.filter(\.on).map { try $0.toRenderBand() }
 
-    return RenderSound(preampDb: preampDb, bands: bands)
+    guard renderBands.count <= Int(maxBandCount) else { throw GouiError("goui plays up to \(maxBandCount) bands at once") }
+    guard enabled else { return RenderSound(preampDb: 0, bands: []) }
+
+    return RenderSound(preampDb: preampDb, bands: renderBands)
   }
 }
 
@@ -70,5 +80,6 @@ public func bandResponse(_ band: Band, sampleRateHz: Double, frequenciesHz: [Dou
   let renderBand = try band.toRenderBand()
   var magnitudes = [Double](repeating: 0, count: frequenciesHz.count)
   renderBandResponse(renderBand, sampleRateHz, frequenciesHz, &magnitudes, UInt32(frequenciesHz.count))
+
   return magnitudes
 }

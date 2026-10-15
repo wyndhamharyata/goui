@@ -21,18 +21,19 @@ during a fade waits for it to end, and then only the newest sound goes in.
 | `goui-engine/main.swift` | Reads the flags, starts the engine, prints the meters and stops on a signal |
 | `goui/main.swift` | Starts the app. `--page` opens another page, such as a check, in place of the panel |
 | `goui/AppController.swift` | Owns the engine, the menu bar item with its right-click menu and Sets submenu, and the panel |
-| `goui/SetCommand.swift` | Watches the support folder for the name `goui set` writes, and hands it to the app |
+| `goui/SetCommand.swift` | Watches `set-requests` for the name `goui set` writes, hands it to the app and writes the answer the command waits for |
+| `goui/Places.swift` | Each file in the support folder, the agent label and the guide address |
 | `goui/UpdateMenu.swift` | The update items in the menu and the twice-a-day check: the web files alone when the engine is the same, one click for a new engine |
 | `goui/ReleaseDownload.swift` | Reads the Latest release on GitHub, checks its sha256 and unpacks it |
-| `goui/Install.swift` | Puts a newer app or newer web files in place, and knows which version is in use |
+| `goui/Install.swift` | Tells a web-only release from a full one, puts a newer app or newer web files in place, and knows which version is in use |
 | `goui/FloatingPanel.swift` | The panel under the menu bar item, which hides on a click elsewhere |
 | `goui/WebFileServer.swift` | Serves `goui://app/` from the updated web folder first, then the web files inside the app |
-| `goui/Bridge.swift` | Answers the page's messages: status, meters, sound, power, storage, open, size, response, restart, print. It applies a Set through the page |
+| `goui/Bridge.swift` | Answers the page's messages, which `mac/web/bridge.js` names. It waits for the page once per load, and lists and applies Sets through it |
 | `goui/WebStorage.swift` | `chrome.storage.local` for the panel, in `~/Library/Application Support/goui/storage.json` |
-| `goui/SavedConfig.swift` | The power switch and the last sound, in `~/Library/Application Support/goui/config.json` |
+| `goui/SavedConfig.swift` | The power switch and the sound of the stored config, in `~/Library/Application Support/goui/config.json` |
 | `Render/Biquad.c` | The Web Audio spec's formulas for the eight filters, and each band's response |
 | `Render/Render.c` | The audio callback: the two chains, the fade and the meters |
-| `GouiEngine/Sound.swift` | The preamp and bands, as `toPlayedSound` makes them, checked and turned into C bands |
+| `GouiEngine/Sound.swift` | The EQ switch, the preamp and the bands, as `toPlayedSound` makes them, checked and turned into C bands |
 | `goui-render-check/main.swift` | Plays test tones through the render code and checks each gain and each fade |
 | `GouiEngine/Engine.swift` | Keeps one audio path playing and reads its meters and its scope. It builds the path again when the output changes or the callbacks stop, and tries again after a failed start. |
 | `GouiEngine/AudioSetup.swift` | Builds the tap, the aggregate device and the callback, and takes them down in reverse |
@@ -49,7 +50,7 @@ swift build
 
 `--seconds 10` stops it on its own. Control-C stops it too. Every 2 seconds it prints the callback
 rate, the peak level in and out, the count of samples above full scale, and the overload count.
-`--gain-db` and `--bass-db` take -24 to 24. A wrong flag prints the usage and exits with 2.
+`--gain-db` takes -24 to 12, the preamp's range. `--bass-db` takes -24 to 24. A wrong flag prints the usage and exits with 2.
 
 macOS asks for System Audio Recording the first time. Run from a terminal, the prompt names the
 terminal app.
@@ -86,15 +87,17 @@ change on this Mac is one command away. Each new build asks again to record the 
 
 The app checks `https://api.github.com/repos/wyndhamharyata/goui/releases/latest` a minute after it
 starts, then twice a day. It downloads `goui-mac.tar.gz`, checks the sha256 in the `-sha256.txt` file
-beside it, and unpacks it. A tarball whose `goui.app/Contents/MacOS/goui` is byte for byte the running
-one changes only the web files. The app copies them to `~/Library/Application Support/goui/web` and
+beside it, and unpacks it. A tarball that matches the running app in every file outside
+`Contents/Resources/web` changes only the web files. The signature is left out, the executable is
+compared with its signature taken off, and `Info.plist` without its version. The app copies them to `~/Library/Application Support/goui/web` and
 reads them before the copies inside the app. Any other release shows **Update to ...** in the menu,
 which moves the app into place and starts it again.
 
 `GOUI_UPDATE_FEED` points the check at a made-up release. It takes a path or a URL that serves the
 same JSON as the GitHub API, with asset URLs that can point at a local tarball. A test release can
 come from this checkout. Build the app, copy it, raise the version in the copy with `plutil -replace
-CFBundleShortVersionString`, and pack it again. A copy with the same binary is a web-only release.
+CFBundleShortVersionString`, and pack it again. A copy that changes only files under
+`Contents/Resources/web` is a web-only release.
 
 ```sh
 launchctl setenv GOUI_UPDATE_FEED /tmp/release.json
@@ -149,3 +152,43 @@ On a MacBook Pro with macOS 27.0.1, through its speakers at 48 kHz:
 5. Press the volume keys. The volume of the real device changes.
 6. Stop it with `kill -9`. Sound comes back on its own.
 7. Leave it on through an hour of music and listen for clicks.
+
+## Checks by hand in the app
+
+Playwright cannot drive the app, so a person runs these after `npm run mac`. Keep `goui logs`
+open in a second terminal.
+
+1. **Level and spectrum.** Open the panel and play music. The level moves and the spectrum draws.
+2. **Get started.** Delete `hasCaptured` from `storage.json`, then pick Reload panel. Five steps
+   show, each with a picture in the panel's own look: the power button, the Allow dialog, two
+   apps, the menu and the `goui set` line. Nothing shows unstyled.
+3. **The page at launch.** Run `goui restart` and wait 5 seconds without a click. The log shows
+   no error. Right-click the item. Sets lists your Sets at once, with the playing one ticked.
+4. **The menu.** It reads About goui, then Restart engine, Reload panel and Wide panel, then Sets,
+   then Check for updates… and Automatic updates, then Quit goui. Wide panel carries no tick.
+   Wide panel opens the panel wide, and a second pick takes it back to 400 px.
+5. **No Sets.** Delete every Set in the panel. The Sets submenu shows one grey line that says to
+   save one in the panel.
+6. **Too many bands.** Load three layers of about 10 bands each, save each as a preset and save a
+   Set. Pick it from the menu. An alert says it holds more bands than goui plays, and no tick
+   moves. The panel's Sets tab says why. `goui set` on it exits with 1 and says the same.
+7. **goui set.** `goui set "a Set"; echo $?` prints that it plays and 0, and the sound changes.
+   A wrong name prints your Sets and 1. With `goui stop` first, it says goui is not running
+   after 3 seconds, with 1. No alert shows for any of them. The log names each answer.
+8. **Order at launch.** `goui restart; goui set "A" & goui set "B"`. Only B plays. A prints that
+   another Set came first, with 1.
+9. **Stale request.** `goui stop`, then write `1\nA` to
+   `~/Library/Application Support/goui/set-requests/set-request`, wait 6 seconds and run
+   `goui start`. Set A does not play, and the log says the request was old.
+10. **No write on each step.** Run `ls -l config.json` in the support folder while you drag a
+    band. The time changes once, after the drag stops.
+11. **A/B through a crash.** Hold A/B and run `kill -9` on goui from another terminal. When launchd
+    starts it again, the EQ plays, not the A/B sound.
+12. **Preamp.** `agent.sh start --page mac/web/checks/bridge.html`. The log shows -40 and +13
+    refused with the range, and every other message as before.
+13. **Width.** Open the panel and let its height change, such as by opening a Library tab.
+    `defaults read com.goui.app panelWidth` changes only after a drag on an edge.
+14. **Updates.** Build a test release that changes only a file under `Contents/Resources/web`.
+    Check for updates… puts it in with no restart. Build one that changes only
+    `Contents/Resources/goui`. The menu shows Update to … and installs it with a restart. Run
+    both twice in a row. `goui rollback` puts back the release before.

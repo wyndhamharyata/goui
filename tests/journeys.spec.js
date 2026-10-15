@@ -42,7 +42,9 @@ journey("given auto preamp off, an AutoEQ peak in the headphone layer plays a 1 
   await turnAutoPreampOff(panel);
   await pasteInto(panel, "headphone", "Not an AutoEQ file");
   await expect(sectionOf(panel, "headphone").locator(".action-hint")).toHaveText("No AutoEQ filters found in that text.");
-  await pasteInto(panel, "headphone", peakText);
+  // A Preamp line that is not a number plays as 0 dB.
+  await pasteInto(panel, "headphone", peakText.replace("Preamp: 0 dB", "Preamp: abc dB"));
+  await expect(panel.locator("#preampValue")).toHaveText("0.0 dB");
 
   await openTab(panel, "tune");
   await chooseBand(panel, 0);
@@ -115,6 +117,15 @@ journey("given eight HD 600 measurements, each result names its source, form, ri
   await expect(results.nth(1)).not.toContainText("AutoEQ's pick");
   await expect(results.nth(5)).toContainText("Rtings · Over-ear · B&K 5128 · HMS II.3 Harman over-ear 2018");
   await expect(results.nth(6)).toContainText("Innerfidelity · Over-ear · HMS II.3 Harman over-ear 2018");
+
+  // Eight results share the name, so only the measurement that plays is marked.
+  await results.nth(0).click();
+  await expect(layerRow(panel, "Headphone")).toContainText("Sennheiser HD 600");
+  await openTab(panel, "library");
+  await headphone.locator(".search").fill("HD 600");
+  await expect(results).toHaveCount(8);
+  await expect(headphone.locator("[aria-current=true]")).toHaveCount(1);
+  await expect(results.nth(0)).toHaveAttribute("aria-current", "true");
 });
 
 // At 50 Hz, AutoEQ puts Harman over-ear 2018 at +3.3 dB and optimum hifi at -1.6 dB. Both are 0 dB at 1 kHz.
@@ -171,6 +182,11 @@ journey("given an AutoEQ pick, Save keeps it under its headphone name, and picki
 
   const headphone = sectionOf(panel, "headphone");
 
+  // GitHub can answer with an error page. The search says so, and the next search loads the real list.
+  await context.route("**/INDEX.md", (route) => route.fulfill({ status: 503, body: "Service Unavailable" }), { times: 1 });
+  await headphone.locator(".search").fill("phone");
+  await expect(headphone.locator(".search-hint")).toHaveText("The AutoEQ list did not load. Check the network.");
+  await headphone.locator(".search").fill("");
   await headphone.locator(".search").fill("phone");
   await expect(headphone.locator(".item[data-name='Fixture Phone (ANC On)']")).toContainText("Filk · Over-ear · Harman over-ear 2018");
   await expect(headphone.locator(".item[data-name='Fixture Phone (ANC On)']")).not.toContainText("AutoEQ's pick");
@@ -186,7 +202,7 @@ journey("given an AutoEQ pick, Save keeps it under its headphone name, and picki
   await expect(headphone.locator(".current")).toContainText("AutoEQ, not saved yet");
   await headphone.locator("[data-action=save]").click();
   await expect(headphone.locator(".save-name")).toHaveValue("Fixture Phone (ANC On)");
-  await headphone.locator("[data-action=confirmSave]").click();
+  await headphone.locator(".confirm-save").click();
   await expect(headphone.locator(".current")).toContainText("Your preset");
 
   await pick(panel, "headphone", "Flat");
@@ -221,11 +237,20 @@ journey("given an edited headphone preset, Save changes writes over it and Save 
   await openTab(panel, "tune");
   // Band 1 stays chosen from the edit above, so a second press on its chip would unselect it.
   await panel.fill("#gainInput", "6");
-  await saveAs(panel, "headphone", "voice boosted");
+
+  // A name that every object has, such as constructor, is still a new name.
+  await openTab(panel, "library");
+  await headphone.locator("[data-action=saveAs]").click();
+  await headphone.locator(".save-name").fill("voice");
+  await expect(headphone.locator(".confirm-save")).toHaveText("Replace");
+  await headphone.locator(".save-name").fill("constructor");
+  await expect(headphone.locator(".confirm-save")).toHaveText("Save");
+  await headphone.locator(".save-name").press("Enter");
+  await expect(headphone.locator(".action-hint")).toHaveText("Saved constructor.");
 
   await pick(panel, "headphone", "voice");
   expectChangeDb(await readSteadyLevel(panel), flat, 0);
-  await pick(panel, "headphone", "voice boosted");
+  await pick(panel, "headphone", "constructor");
   expectChangeDb(await readSteadyLevel(panel), flat, 6);
 });
 
@@ -369,9 +394,13 @@ journey("given sounds and Level match saved by older builds, each sound shows in
     },
   };
 
-  await panel.evaluate((sound) => chrome.storage.local.set({ savedSounds: { old: sound }, keepsPreampInCompare: true }), older);
+  // A tab name goui does not know opens Listen alone.
+  await panel.evaluate((sound) => chrome.storage.local.set({ savedSounds: { old: sound }, keepsPreampInCompare: true, tab: "mixer" }), older);
   await panel.reload();
   await expect(panel.locator("#levelMatch")).toBeChecked();
+  await expect(panel.locator("[data-pane=listen]")).toBeVisible();
+  await expect(panel.locator("[data-pane=tune]")).toBeHidden();
+  await expect(panel.locator("[data-pane=library]")).toBeHidden();
 
   await pick(panel, "headphone", "old");
   expectChangeDb(await readSteadyLevel(panel), flat, 6);
@@ -447,6 +476,30 @@ journey("given a 6 dB peak, holding A/B or turning the EQ off plays the 1 kHz to
 
   await turnEqOff(panel);
   expectChangeDb(await readSteadyLevel(panel), flat, 0);
+});
+
+journey("given a 6 dB peak, A/B held with Space plays the 1 kHz tone flat until the key comes up, and a held A/B lets go when the panel loses focus", async (context, port) => {
+  const { panel } = await startGouiOnTone(context, port, 1000);
+
+  await turnAutoPreampOff(panel);
+
+  const flat = await readSteadyLevel(panel);
+
+  await pasteInto(panel, "headphone", peakText);
+  expectChangeDb(await readSteadyLevel(panel), flat, 6);
+
+  await panel.locator("#compare").focus();
+  await panel.keyboard.down("Space");
+  expectChangeDb(await readSteadyLevel(panel), flat, 0);
+  await panel.keyboard.up("Space");
+  expectChangeDb(await readSteadyLevel(panel), flat, 6);
+
+  // A headless window never loses focus, so this fires the blur a switch to another window sends.
+  await holdCompare(panel);
+  expectChangeDb(await readSteadyLevel(panel), flat, 0);
+  await panel.evaluate(() => window.dispatchEvent(new FocusEvent("blur")));
+  expectChangeDb(await readSteadyLevel(panel), flat, 6);
+  await releaseCompare(panel);
 });
 
 journey("given a 1 kHz peak under auto preamp, A/B plays a 5 kHz tone 6 dB louder, and Level match holds it at the EQ level", async (context, port) => {
@@ -547,7 +600,7 @@ journey("given the Add band chip under My ear, a new 6 dB band at 1 kHz plays in
   expectChangeDb(await readSteadyLevel(panel), flat, 6);
 });
 
-journey("given goui hears a tab, a click on its icon turns goui off, and a second click brings the 6 dB peak back", async (context, port) => {
+journey("given goui hears a tab, a click on its icon turns goui off and blanks the level, and a second click brings the 6 dB peak back", async (context, port) => {
   const { panel, tone } = await startGouiOnTone(context, port, 1000);
 
   await turnAutoPreampOff(panel);
@@ -561,6 +614,8 @@ journey("given goui hears a tab, a click on its icon turns goui off, and a secon
   await pressIcon(context, tone);
   await expect(panel.locator("#status")).toContainText("Click the goui icon");
   await expect.poll(() => readBadge(context, tone)).toBe("");
+  await expect(panel.locator("#level")).toHaveText("--");
+  await expect(panel.locator("#meter")).toHaveAttribute("title", "Output level. goui hears nothing now.");
 
   await pressIcon(context, tone);
   await expect(panel.locator("#status")).toHaveText(playingToneTitle);
@@ -597,6 +652,15 @@ journey("given goui hears a 1 kHz tab, a click on the icon of a 5 kHz tab moves 
   await holdCompare(panel);
   expectChangeDb(withPeak, await readSteadyLevel(panel), 6);
   await releaseCompare(panel);
+
+  // A page that is not on the web cannot be heard. goui stays on the 1 kHz tab with its peak.
+  const blank = await context.newPage();
+
+  await pressIcon(context, blank);
+  await expect(panel.locator("#status")).toHaveText("Open a web page with audio, then click the goui icon.");
+  await expect.poll(() => readBadge(context, low)).toBe("ON");
+  expectChangeDb(await readSteadyLevel(panel), withPeak, 0);
+  await blank.close();
 
   // The 1 kHz peak barely touches a 5 kHz tone, so the EQ on and off read the same there.
   const high = await openTone(context, port, 5000);
@@ -796,7 +860,7 @@ journey("given a Set of a saved headphone peak and Vocals at +2 dB, picking it a
   await sets.locator(".save-name").fill("home");
   await sets.locator(".confirm-save").click();
   await expect(sets.locator(".action-hint")).toHaveText("Saved home.");
-  await expect(sets.locator(".item[data-name='home']")).toContainText("voice · no ear · no taste");
+  await expect(sets.locator(".item[data-name='home']")).toContainText("voice · No ear tuning · No taste");
 
   await pick(panel, "headphone", "Flat");
   await pasteInto(panel, "ear", earCutText);
@@ -808,13 +872,19 @@ journey("given a Set of a saved headphone peak and Vocals at +2 dB, picking it a
   await panel.locator("#setSelect").selectOption("home");
   await expect(panel.locator("#vocalsValue")).toHaveText("+2.0 dB");
   await expect(layerRow(panel, "Headphone")).toContainText("voice");
-  await expect(layerRow(panel, "My ear")).toHaveCount(0);
   expectChangeDb(await readSteadyLevel(panel), withSet, 0);
+
+  // The empty ear slot turns My ear off. The pasted ear cut is kept, and its switch brings it back.
+  await expect(layerRow(panel, "My ear")).toContainText("Pasted ear tuning");
+  await expect(layerSwitch(panel, "My ear")).not.toBeChecked();
+  await setLayer(panel, "My ear", true);
+  expectChangeDb(await readSteadyLevel(panel), withSet, -6);
+  await expect(panel.locator("#setSelect")).toHaveValue("");
 
   // With its headphone preset deleted, the Set still applies and plays Flat in that slot.
   await (await openLibrarySection(panel, "headphone")).locator("[title='Delete voice']").click();
   await openLibrarySection(panel, "sets");
-  await expect(sets.locator(".item[data-name='home']")).toContainText("voice, missing · no ear · no taste");
+  await expect(sets.locator(".item[data-name='home']")).toContainText("voice, missing · No ear tuning · No taste");
   await sets.locator(".item[data-name='home']").click();
   await expect(layerRow(panel, "Headphone")).toContainText("Flat");
   expectChangeDb(await readSteadyLevel(panel), withSet, -6);

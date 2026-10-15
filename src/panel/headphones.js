@@ -1,17 +1,18 @@
 // The headphone section of the Library: your presets, the starter sounds and the AutoEQ search.
 import { butterworthQ } from "../shared/bands.js";
+import { emptyLayerNames, layerSources } from "../shared/config.js";
 import { describeMeasurement, fetchHeadphone, findTargetSet, loadAutoEqIndex, newAutoEqItem } from "../autoeq.js";
 import { buildElement, buildListRow, partOf, showTab } from "./dom.js";
 import { appendSection, describeBandCount } from "./items.js";
 import { buildPresetItem, renderPresetCards } from "./presets.js";
 import { onPresetsChange } from "./refresh.js";
 import { replaceLayer } from "./sound.js";
-import { layerSources, state } from "./state.js";
+import { state } from "./state.js";
 
 /** @typedef {import("../autoeq.js").AutoEqItem} AutoEqItem */
 
 const starterPresets = [
-  { name: "Flat", bands: [] },
+  { name: emptyLayerNames.headphone, bands: [] },
   {
     name: "Warm",
     bands: [
@@ -48,7 +49,7 @@ async function loadHeadphone(item, hint, target) {
     return false;
   }
 
-  replaceLayer({ ...headphone, name: item.name, source: layerSources.autoEq }, "headphone");
+  replaceLayer("headphone", { ...headphone, name: item.name, source: layerSources.autoEq });
   hint.textContent = "";
 
   return true;
@@ -73,6 +74,12 @@ function endHeadphoneSearch() {
   showTab("tab", "listen");
 }
 
+// Many measurements share a headphone name, so the path tells which one plays.
+function isAutoEqInLayer(item) {
+  const { source, autoEq } = state.config.layers.headphone;
+  return source === layerSources.autoEq && Boolean(autoEq) && autoEq.path === item.path;
+}
+
 function buildMeasurementItem(item, hint) {
   const detail = describeMeasurement(item, findTargetSet(state.targetData.targetSets, item));
   const pickMark = buildElement("span", { className: "ui-badge ui-badge--pill tone-good", text: "AutoEQ's pick", title: "AutoEQ recommends this measurement of the headphone" });
@@ -80,7 +87,7 @@ function buildMeasurementItem(item, hint) {
     if (await loadHeadphone(item, hint)) endHeadphoneSearch();
   };
 
-  return buildListRow({ name: item.name, detail, badge: item.isAutoEqPick ? pickMark : undefined, onPick: loadPicked });
+  return buildListRow({ name: item.name, detail, badge: item.isAutoEqPick ? pickMark : undefined, isPlaying: () => isAutoEqInLayer(item), onPick: loadPicked });
 }
 
 async function findHeadphones(query, hint) {
@@ -105,12 +112,22 @@ function showHeadphoneList(list, sections) {
   renderPresetCards();
 }
 
+/** @typedef {{ name: string, bands: import("../shared/bands.js").Band[] }} StarterPreset */
+
+/** @param {StarterPreset} preset */
+function placeStarterPreset(preset) {
+  replaceLayer("headphone", { name: preset.name, source: layerSources.starter, bands: preset.bands });
+}
+
+function isStarterInLayer(preset) {
+  const { source, name } = state.config.layers.headphone;
+  return source === layerSources.starter && name === preset.name;
+}
+
 // The headphone layer cannot come off, so its × plays it flat again, as picking Flat does.
 /** @returns {void} */
 export function clearHeadphoneLayer() {
-  const [flat] = starterPresets;
-
-  replaceLayer({ name: flat.name, source: layerSources.starter, bands: flat.bands }, "headphone");
+  placeStarterPreset(starterPresets[0]);
 }
 
 // An empty box lists your headphone presets and the starter sounds. Typing also searches AutoEQ.
@@ -140,11 +157,11 @@ export async function renderHeadphoneList() {
 
   const starter = starterPresets.filter((preset) => matchesQuery(preset.name, query)).map((preset) => {
     const place = () => {
-      replaceLayer({ name: preset.name, source: layerSources.starter, bands: preset.bands }, "headphone");
+      placeStarterPreset(preset);
       endHeadphoneSearch();
     };
 
-    return buildListRow({ name: preset.name, detail: describeBandCount(preset.bands), onPick: place });
+    return buildListRow({ name: preset.name, detail: describeBandCount(preset.bands), isPlaying: () => isStarterInLayer(preset), onPick: place });
   });
 
   // Your presets and the starter sounds show at once. The AutoEQ list joins once it loads.
@@ -159,7 +176,8 @@ export async function renderHeadphoneList() {
 
   showHeadphoneList(list, { saved, autoEq: headphones.map((item) => buildMeasurementItem(item, hint)), starter });
 
-  if (list.children.length === 0) hint.textContent = "No sound by that name.";
+  // A failed download has already said so in the hint.
+  if (list.children.length === 0 && hint.textContent === "") hint.textContent = "No sound by that name.";
 }
 
 onPresetsChange("headphone", renderHeadphoneList);

@@ -190,7 +190,7 @@
         <div class="pn-frame pn-frame--wide" id="panel-wide"></div>
         <p class="doc-caption">The same regions as the narrow panel, in a grid. The tabs go, and a column Section header names each column. The wide Listen column has no Set picker, since the Sets tab is in view beside it.</p>
 
-        <div class="doc-sub"><h3>Sets, two more compositions</h3><p>Proposed. One picker row on Listen and one more Library tab, made of the same primitives.</p></div>
+        <div class="doc-sub"><h3>Sets, two more compositions</h3><p>Built. One picker row on Listen and one more Library tab, made of the same primitives.</p></div>
         <div class="doc-split">
           <div class="ui-stack ui-stack--loose">
             <div><p class="pn-frame-label">On Listen</p><div class="pn-frame" id="sets-picker"></div></div>
@@ -205,7 +205,7 @@
             </ul>
             <h4>Made of</h4>
             <ul>
-              <li><b>Listen.</b> One Stack row in the accent, with a Field select and a Badge. It names the Set that plays, or says none does.</li>
+              <li><b>Listen.</b> One Stack row in the accent, with a Field select and a Button for Save as Set. It names the Set that plays, or says none does. Save as Set opens the Sets tab with the name field.</li>
               <li><b>Library.</b> The Sets tab is the same regions as a layer tab: a Section header with a step, a Stack row with Save as Set, an Expander with a Field, and List rows naming the three parts.</li>
             </ul>
             <h4>Saving</h4>
@@ -244,8 +244,8 @@
           <div class="pn-frame pn-frame--menu" id="screen-menu"></div>
           <div class="doc-notes">
             <ul>
-              <li><b>Wide panel, Restart engine, Reload panel and Quit goui,</b> as today, with Update to the newest version when a release changes the engine.</li>
-              <li><b>Sets</b> is the proposed submenu. The Set that plays carries a tick. A pick applies it with the panel closed.</li>
+              <li><b>About goui, Restart engine, Reload panel, Wide panel and Quit goui,</b> with Update to the newest version when a release changes the engine.</li>
+              <li><b>Sets</b> is the submenu. The Set that plays carries a tick. A pick applies it with the panel closed. It shows once a Set is saved.</li>
               <li><b>Made of</b> dense List rows in a layout helper. The real menu is native AppKit, so this is a picture of it. The tokens do not reach the real one.</li>
               <li><b>Terminal.</b> <code>goui set "name"</code> switches the same way, for a keyboard shortcut or a login item.</li>
             </ul>
@@ -424,6 +424,10 @@
             <h3>Later, not in this release</h3>
             <ul>
               <li><b>Device rule.</b> A Set remembers an output device and applies when the Mac switches to it. Unsaved edits at that moment need a rule of their own.</li>
+            </ul>
+            <h3>Changed after the proposal</h3>
+            <ul>
+              <li><b>Save as Set on Listen.</b> The picker row ends in a Save as Set button, not a Badge. The button opens the Sets tab with the name field ready. The picker already names the Set that plays, so the Badge said nothing new.</li>
             </ul>
             <h3>Open for you</h3>
             <ol>

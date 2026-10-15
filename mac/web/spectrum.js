@@ -68,7 +68,7 @@ function toBinsDb(samples) {
  * @param {{ samples: string, sampleRateHz: number }} scope
  * @returns {{ levelDb: number, spectrumDb: number[] }}
  */
-export function toTelemetry(scope) {
+export function toLevel(scope) {
   const samples = toSamples(scope.samples);
   const rms = rootMeanSquare(samples);
 

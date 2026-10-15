@@ -13,18 +13,27 @@ export function describeBandCount(bands) {
   return bands.length === 1 ? "1 band" : `${bands.length} bands`;
 }
 
-// A group counts its rows. A hint in their place, such as "Nothing saved yet", does not count.
+// A group counts its rows. A hint in their place, such as "Nothing saved yet", does not count. No items build no group.
+/**
+ * @param {string} title
+ * @param {HTMLElement[]} items
+ * @returns {HTMLElement[]}
+ */
+export function buildListGroup(title, items) {
+  if (items.length === 0) return [];
+
+  const count = items.filter((item) => item.classList.contains("ui-list-row")).length;
+
+  return [buildElement("div", { className: "ui-stack ui-stack--tight" }, [buildSectionHeader({ label: title, count }), ...items])];
+}
+
 /**
  * @param {HTMLElement} list
  * @param {string} title
  * @param {HTMLElement[]} items
  */
 export function appendSection(list, title, items) {
-  if (items.length === 0) return;
-
-  const count = items.filter((item) => item.classList.contains("ui-list-row")).length;
-
-  list.append(buildElement("div", { className: "ui-stack ui-stack--tight" }, [buildSectionHeader({ label: title, count }), ...items]));
+  list.append(...buildListGroup(title, items));
 }
 
 /**

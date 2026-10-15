@@ -1,13 +1,13 @@
 // Sets: the picker on Listen and the Sets tab of the Library. A Set names one preset per layer, with the sliders.
-import { cleanBands } from "../shared/bands.js";
-import { layerLabels, layerOrder, newLayer } from "../shared/config.js";
+import { emptyLayerNames, hasTooManyBands, layerLabels, layerOrder, layerSources, maxPlayedBandCount, newFlatHeadphone } from "../shared/config.js";
+import { storageKeys } from "../shared/storage.js";
 import { formatDb } from "../graph/format.js";
-import { byId, buildElement, buildListRow, partOf, sectionOf, showTab } from "./dom.js";
-import { appendSection } from "./items.js";
-import { isSavedPreset } from "./presets.js";
-import { onPresetsChange, onRefresh } from "./refresh.js";
-import { commit, dropBandChoice } from "./sound.js";
-import { layerSources, state } from "./state.js";
+import { byId, buildElement, buildListRow, openLibrarySection, partOf, renderChildren, renderPlayingRows, renderSaveLabel, showHint, wireSaveRow } from "./dom.js";
+import { buildListGroup } from "./items.js";
+import { isPresetInLayer, isSavedPreset } from "./presets.js";
+import { onPresetsChange, onRefresh, refresh } from "./refresh.js";
+import { commit, dropBandChoice, setLayer } from "./sound.js";
+import { state } from "./state.js";
 
 /** @typedef {import("../shared/bands.js").Band} Band */
 
@@ -17,7 +17,8 @@ import { layerSources, state } from "./state.js";
 
 /** @typedef {import("../shared/config.js").SoundSet} SoundSet */
 
-const emptySlotNames = { headphone: "Flat", ear: "no ear", taste: "no taste" };
+// What applying a Set did. Bridge.swift reads these words as they are.
+const setAnswers = { applied: "applied", unknown: "unknown", tooManyBands: "tooManyBands", refused: "refused" };
 
 // A layer that is off or has no bands plays nothing, so a Set holds it as an empty slot.
 /**
@@ -52,60 +53,92 @@ function describeSet(set) {
   return layerOrder.map((role) => {
     const presetName = set[role];
 
-    if (presetName === null) return emptySlotNames[role];
+    if (presetName === null) return emptyLayerNames[role];
 
     return findPreset(role, presetName) ? presetName : `${presetName}, missing`;
   }).join(" · ");
 }
 
-// A slot plays when its layer holds that preset unedited. An empty or missing slot plays when its layer is silent.
+// A slot plays when its layer holds that preset on and unedited. An empty or missing slot plays when its layer is silent.
 function isSlotPlaying(role, presetName) {
   const layer = state.config.layers[role];
 
   if (!findPreset(role, presetName)) return isLayerSilent(layer);
 
-  return Boolean(layer) && layer.on && layer.source === layerSources.saved && layer.name === presetName && !layer.isEdited;
+  return isPresetInLayer(role, presetName) && layer.on && !layer.isEdited;
+}
+
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
+function isSetPlaying(name) {
+  const set = state.sets[name];
+  const { sliders } = state.config;
+  const areLayersPlaying = layerOrder.every((role) => isSlotPlaying(role, set[role]));
+  const areSlidersPlaying = Object.keys(sliders).every((key) => set.sliders[key] === sliders[key]);
+
+  return areLayersPlaying && areSlidersPlaying;
 }
 
 /** @returns {string} */
 function findPlayingSetName() {
-  const { sliders } = state.config;
-  const isPlaying = (name) => {
-    const set = state.sets[name];
-    return layerOrder.every((role) => isSlotPlaying(role, set[role])) && Object.keys(sliders).every((key) => set.sliders[key] === sliders[key]);
-  };
-
-  return listSetNames().find(isPlaying) ?? "";
+  return listSetNames().find(isSetPlaying) ?? "";
 }
 
-// A missing preset plays as an empty slot, so applying still works.
+// A missing preset plays as an empty slot. An empty ear or taste slot turns its layer off and keeps its bands.
 function placeSlot(role, presetName) {
   const preset = findPreset(role, presetName);
+  const layer = state.config.layers[role];
 
-  if (preset) state.config.layers[role] = newLayer(presetName, layerSources.saved, cleanBands(preset.bands));
-  else if (role === "headphone") state.config.layers.headphone = newLayer("Flat", layerSources.starter);
-  else delete state.config.layers[role];
+  if (preset) setLayer(role, { name: presetName, source: layerSources.saved, bands: preset.bands });
+  else if (role === "headphone") state.config.layers.headphone = newFlatHeadphone();
+  else if (layer) state.config.layers[role] = { ...layer, on: false };
 }
 
-// The layers and the sliders change before one commit, so the engine gets one sound and the graph draws once.
-/** @param {string} name */
-function applySet(name) {
+// The Set goes into a copy of the config, so a Set with more bands than goui plays keeps the sound as it was.
+function placeSet(name) {
   const set = state.sets[name];
+  const before = state.config;
+
+  state.config = { ...before, layers: { ...before.layers }, sliders: { ...set.sliders } };
 
   for (const role of layerOrder) placeSlot(role, set[role]);
 
-  state.config.sliders = { ...set.sliders };
-  dropBandChoice();
-  commit();
+  if (!hasTooManyBands(state.config)) return true;
+
+  state.config = before;
+  showHint("sets", `${name} holds more bands than goui plays at once. goui plays up to ${maxPlayedBandCount}, with the three sliders. Save the Set again with fewer bands.`, true);
+
+  return false;
 }
 
-// A name from the Mac menu or from goui set may not be a Set, so the app hears whether it played.
-function applyKnownSet(name) {
-  if (!Object.hasOwn(state.sets, name)) return false;
+// The layers and the sliders change before one commit, so the engine gets one sound and the graph draws once.
+/**
+ * @param {string} name
+ * @returns {Promise<string>}
+ */
+async function applySet(name) {
+  if (!placeSet(name)) {
+    refresh();
+    return setAnswers.tooManyBands;
+  }
 
-  applySet(name);
+  dropBandChoice();
 
-  return true;
+  return (await commit()) ? setAnswers.applied : setAnswers.refused;
+}
+
+// A name from the Mac menu or from goui set may not be a Set, so the app hears what happened.
+async function applyNamedSet(name) {
+  if (!hasSet(name)) return setAnswers.unknown;
+
+  return applySet(name);
+}
+
+// A Set the engine cannot play keeps the sound, and the Sets tab shows why.
+async function pickSet(name) {
+  if (await applySet(name) === setAnswers.tooManyBands) openLibrarySection("sets");
 }
 
 /** @returns {SoundSet} */
@@ -118,6 +151,7 @@ function readCurrentSet() {
 }
 
 // A Set names its presets, so each layer with bands must be a saved preset with no edits.
+/** @returns {LayerRole[]} */
 function listUnsavedRoles() {
   return layerOrder.filter((role) => {
     const layer = state.config.layers[role];
@@ -127,15 +161,9 @@ function listUnsavedRoles() {
   });
 }
 
-/**
- * @param {string} text
- * @param {boolean} [isAlert]
- */
-function showSetHint(text, isAlert = false) {
-  const hint = partOf("sets", "action-hint");
-
-  hint.textContent = text;
-  hint.classList.toggle("tone-danger", isAlert);
+/** @returns {boolean} */
+function isReadyToSave() {
+  return listUnsavedRoles().length === 0;
 }
 
 /** @param {boolean} isOpen */
@@ -144,33 +172,33 @@ function setSaveRowOpen(isOpen) {
   partOf("sets", "save-set").classList.toggle("is-on", isOpen);
 }
 
-/** @returns {string} */
-function readSetName() {
-  return partOf("sets", "save-name").value.trim();
-}
-
-// The alert names each layer that still has unsaved bands, and the save stops there.
-/** @returns {boolean} */
-function isReadyToSave() {
-  const unsaved = listUnsavedRoles();
-
-  if (unsaved.length === 0) return true;
-
-  const names = unsaved.map((role) => layerLabels[role]).join(" and ");
+// The alert names each layer that still has unsaved bands, and the save row closes.
+/** @returns {void} */
+function showUnsavedAlert() {
+  const names = listUnsavedRoles().map((role) => layerLabels[role]).join(" and ");
 
   setSaveRowOpen(false);
-  showSetHint(`Save ${names} as a preset first. A Set names its presets, so each layer with bands needs one.`, true);
+  showHint("sets", `Save ${names} as a preset first. A Set names its presets, so each layer with bands needs one.`, true);
+}
 
-  return false;
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
+function hasSet(name) {
+  return Object.hasOwn(state.sets, name);
 }
 
 function openSaveRow() {
-  if (!isReadyToSave()) return;
+  if (!isReadyToSave()) {
+    showUnsavedAlert();
+    return;
+  }
 
   const name = partOf("sets", "save-name");
 
   setSaveRowOpen(true);
-  showSetHint("");
+  showHint("sets", "");
   name.value = "";
   renderSaveRow();
   name.focus();
@@ -183,33 +211,27 @@ function toggleSaveRow() {
 
 // Save as Set on Listen opens the Sets tab, where the name goes and the alert shows.
 function openSaveFromListen() {
-  showTab("tab", "library");
-  showTab("role", "sets");
-  sectionOf("sets").scrollIntoView({ block: "start" });
+  openLibrarySection("sets");
   openSaveRow();
 }
 
 function storeSets() {
-  chrome.storage.local.set({ sets: state.sets });
+  chrome.storage.local.set({ [storageKeys.sets]: state.sets });
   renderSets();
 }
 
-function confirmSaveSet() {
-  const name = readSetName();
-
-  if (!name) {
-    showSetHint("Give the Set a name first.", true);
+function saveSet(name) {
+  if (!isReadyToSave()) {
+    showUnsavedAlert();
     return;
   }
 
-  if (!isReadyToSave()) return;
-
-  const isUpdate = Object.hasOwn(state.sets, name);
+  const isUpdate = hasSet(name);
 
   state.sets[name] = readCurrentSet();
   setSaveRowOpen(false);
   storeSets();
-  showSetHint(`${isUpdate ? "Updated" : "Saved"} ${name}.`);
+  showHint("sets", `${isUpdate ? "Updated" : "Saved"} ${name}.`);
 }
 
 function deleteSet(name) {
@@ -222,17 +244,23 @@ function renderSaveRow() {
   const { sliders } = state.config;
   const sliderWords = `Bass ${formatDb(sliders.bassDb)}, Vocals ${formatDb(sliders.vocalsDb)} and Treble ${formatDb(sliders.trebleDb)} dB`;
 
-  partOf("sets", "confirm-save").textContent = Object.hasOwn(state.sets, readSetName()) ? "Replace" : "Save";
+  renderSaveLabel("sets", hasSet);
   partOf("sets", "set-note").textContent = `It names ${describeSet(readCurrentSet())}, with ${sliderWords}.`;
 }
 
+// The picker is drawn again only when a name or the playing Set changes, so an open picker stays open.
 function renderSetPicker(playing) {
+  const names = listSetNames();
   const select = byId("setSelect");
-  const options = listSetNames().map((name) => new Option(name, name));
+  const buildOptions = () => {
+    const options = names.map((name) => new Option(name, name));
 
-  if (!playing) options.unshift(buildElement("option", { value: "", text: "No Set plays now", disabled: true }));
+    if (!playing) options.unshift(buildElement("option", { value: "", text: "No Set plays now", disabled: true }));
 
-  select.replaceChildren(...options);
+    return options;
+  };
+
+  renderChildren(select, JSON.stringify([names, playing]), buildOptions);
   select.value = playing;
 }
 
@@ -246,20 +274,26 @@ function renderSetCard(playing) {
   partOf("sets", "current-name").textContent = name;
 }
 
-function renderSetList(playing) {
+function renderSetList() {
   const list = partOf("sets", "results");
-  const rows = listSetNames().map((name) => {
-    const row = buildListRow({ name, detail: describeSet(state.sets[name]), onPick: () => applySet(name), onRemove: () => deleteSet(name) });
+  const names = listSetNames();
+  const details = names.map((name) => describeSet(state.sets[name]));
+  const buildRows = () => {
+    const rows = names.map((name, index) => buildListRow({
+      name,
+      detail: details[index],
+      isPlaying: () => isSetPlaying(name),
+      onPick: () => applySet(name),
+      onRemove: () => deleteSet(name),
+    }));
 
-    row.classList.toggle("is-selected", name === playing);
+    if (rows.length === 0) rows.push(buildElement("p", { className: "ui-text-hint", text: "Nothing saved yet. Set up the three layers, then press Save as Set." }));
 
-    return row;
-  });
+    return buildListGroup("Your Sets", rows);
+  };
 
-  if (rows.length === 0) rows.push(buildElement("p", { className: "ui-text-hint", text: "Nothing saved yet. Set up the three layers, then press Save as Set." }));
-
-  list.replaceChildren();
-  appendSection(list, "Your Sets", rows);
+  renderChildren(list, JSON.stringify([names, details]), buildRows);
+  renderPlayingRows(list);
 }
 
 function renderSets() {
@@ -267,27 +301,23 @@ function renderSets() {
 
   renderSetPicker(playing);
   renderSetCard(playing);
-  renderSetList(playing);
+  renderSetList();
   renderSaveRow();
 }
 
 /** @returns {void} */
 export function wireSets() {
-  byId("setSelect").addEventListener("change", (event) => applySet(event.target.value));
+  byId("setSelect").addEventListener("change", (event) => pickSet(event.target.value));
   byId("saveSet").addEventListener("click", openSaveFromListen);
   partOf("sets", "save-set").addEventListener("click", toggleSaveRow);
-  partOf("sets", "confirm-save").addEventListener("click", confirmSaveSet);
-  partOf("sets", "save-name").addEventListener("input", renderSaveRow);
-  partOf("sets", "save-name").addEventListener("keydown", (event) => {
-    if (event.key === "Enter") confirmSaveSet();
-  });
+  wireSaveRow("sets", { hasName: hasSet, save: saveSet, emptyHint: "Give the Set a name first.", onInput: renderSaveRow });
 }
 
-// The Mac app applies a Set from its menu through the page, which owns the sound math. Called once the stored Sets are read.
+// The Mac app plays a Set from its menu and from goui set through the page, which owns the sound math. Bridge.swift checks the version, so a renamed member fails loudly.
 /** @returns {void} */
-export function wireMacSets() {
-  /** @type {{ applySet: (name: string) => boolean, readPlayingSetName: () => string }} */
-  globalThis.gouiSets = { applySet: applyKnownSet, readPlayingSetName: findPlayingSetName };
+export function setMacSets() {
+  /** @type {{ version: number, applySet: (name: string) => Promise<string>, listSetNames: () => string[], readPlayingSetName: () => string }} */
+  globalThis.gouiSets = { version: 1, applySet: applyNamedSet, listSetNames, readPlayingSetName: findPlayingSetName };
 }
 
 onRefresh(renderSets);

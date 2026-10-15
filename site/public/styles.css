@@ -1,7 +1,7 @@
 /* The site's own layout. panel.css holds the tokens, the primitives and the mock panel. */
 
 body {
-  font-size: 15px;
+  font-size: var(--size-name);
   line-height: 1.65;
 }
 
@@ -15,12 +15,12 @@ a:hover {
 }
 
 code {
-  padding: 1px 5px;
+  padding: var(--space-1) var(--space-2);
   border: 1px solid var(--line-1);
   border-radius: var(--radius-1);
   background: var(--ink-2);
   color: var(--text-1);
-  font-size: 13px;
+  font-size: var(--size-body);
 }
 
 .site-head {
@@ -31,11 +31,12 @@ code {
 }
 
 .site-head img {
-  border-radius: 10px;
+  border-radius: var(--radius-2);
 }
 
 /* As tall as the icon's bars, so the name and the icon read as one mark. */
 .site-head .name {
+  margin: 0;
   font-size: var(--size-display);
   font-weight: 800;
   line-height: 1;
@@ -50,10 +51,9 @@ a.name {
 .site-head nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 18px;
+  gap: var(--space-2) var(--space-5);
   white-space: nowrap;
   margin-left: auto;
-  font-size: 14px;
 }
 
 .site-head nav a {
@@ -91,50 +91,10 @@ a.name {
   min-width: 0;
 }
 
-.eyebrow {
-  margin: 0;
-  line-height: 1.4;
-}
-
-.hero h1 {
-  margin: 0;
-}
-
-.mantra {
-  margin: calc(-1 * var(--space-3)) 0 0;
-  color: var(--accent);
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-}
-
 /* panel.css also styles .pitch for its record, with a token that is set only inside the record. */
 .pitch {
   margin: 0;
   color: var(--text-2);
-}
-
-.buttons {
-  gap: var(--space-4);
-}
-
-.hero-install {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.hero-install-label {
-  color: var(--text-1);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-#mac-curl {
-  flex: 1 1 0;
-  overflow-x: auto;
-  white-space: pre;
 }
 
 /* Google allows a resize of the store badge and nothing else, so the glow and the lift go on the link. */
@@ -148,20 +108,21 @@ a.name {
   position: relative;
   isolation: isolate;
   display: inline-block;
-  border-radius: 6px;
+  border-radius: var(--radius-2);
   line-height: 0;
   box-shadow: 0 10px 30px -8px var(--accent-line);
   transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
 
+/* The glow turns in the accent alone. The audio colours keep their meaning. */
 .store-badge::before {
   content: "";
   position: absolute;
   inset: -3px;
   z-index: -1;
-  border-radius: 9px;
-  background: conic-gradient(from var(--spin), var(--accent), var(--type-peak), var(--type-shelf), var(--accent));
-  filter: blur(8px);
+  border-radius: calc(var(--radius-2) + 3px);
+  background: conic-gradient(from var(--spin), var(--accent), var(--accent-soft), var(--accent-line), var(--accent));
+  filter: blur(var(--space-3));
   opacity: 0.6;
   animation: spin 6s linear infinite;
 }
@@ -196,7 +157,7 @@ a.name {
 .fine {
   margin: var(--space-5) 0 0;
   color: var(--text-3);
-  font-size: 13px;
+  font-size: var(--size-body);
 }
 
 .hero .fine {
@@ -221,12 +182,12 @@ a.name {
   max-width: 360px;
   margin: 0;
   color: var(--text-3);
-  font-size: 12px;
+  font-size: var(--size-body);
   text-align: center;
 }
 
 .block {
-  margin-top: 88px;
+  margin-top: calc(2 * var(--space-7));
   padding-top: var(--space-6);
   border-top: 1px solid var(--line-1);
 }
@@ -259,12 +220,12 @@ a.name {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 36px;
+  gap: var(--space-7);
 }
 
 .two-col > * {
   flex: 1;
-  min-width: 300px;
+  min-width: min(300px, 100%);
 }
 
 .two-col img {
@@ -299,7 +260,7 @@ a.name {
 
 .steps {
   margin: 0;
-  padding-left: 20px;
+  padding-left: var(--space-6);
   color: var(--text-2);
 }
 
@@ -320,7 +281,7 @@ a.name {
 
 .credits {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: var(--space-2);
 }
 
@@ -343,13 +304,13 @@ a.name {
 
 .credit span {
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--size-body);
 }
 
 /* The privacy page and the Mac page: one column of text at a readable width. */
 .policy {
   max-width: 720px;
-  margin-top: 56px;
+  margin-top: calc(var(--space-7) + var(--space-5));
   padding-top: 0;
   border-top: 0;
   color: var(--text-2);
@@ -358,14 +319,14 @@ a.name {
 .policy h1 {
   margin: 0;
   color: var(--text-1);
-  font-size: 40px;
+  font-size: var(--size-display);
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: -0.035em;
 }
 
 .policy h2 {
-  margin: 40px 0 0;
+  margin: var(--space-7) 0 0;
   color: var(--text-1);
   font-size: var(--size-title);
   letter-spacing: -0.02em;
@@ -383,7 +344,7 @@ a.name {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-  padding-top: 120px;
+  padding-top: calc(2 * var(--space-7));
 }
 
 .not-found h1 {
@@ -393,12 +354,12 @@ a.name {
 footer {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3) 20px;
-  margin-top: 88px;
-  padding-top: 20px;
+  gap: var(--space-3) var(--space-5);
+  margin-top: calc(2 * var(--space-7));
+  padding-top: var(--space-5);
   border-top: 1px solid var(--line-1);
   color: var(--text-3);
-  font-size: 13px;
+  font-size: var(--size-body);
 }
 
 footer a {
@@ -410,7 +371,7 @@ footer a {
     padding: var(--space-6) var(--space-4);
   }
 
-  .hero h1 {
-    font-size: 44px;
+  .hero .pn-hero__title {
+    font-size: var(--size-display);
   }
 }

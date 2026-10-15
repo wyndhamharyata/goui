@@ -85,7 +85,7 @@ A function name starts with a verb, and each verb has one meaning.
    panel answers `capture:state` with its own `audio:config`, which holds A/B and Solo.
 4. Each edit in the panel sends `audio:config`. The offscreen document moves the nodes it has, or
    builds new ones when a band changes type or switch.
-5. The offscreen document sends `audio:telemetry` 20 times a second. The panel shows the level and
+5. The offscreen document sends `audio:level` 20 times a second. The panel shows the level and
    draws the spectrum.
 
 `src/shared/messages.js` names each message and the context that reads it.
@@ -217,8 +217,9 @@ Butterworth, gets a link to its explanation on the same line.
   is. `20 * Math.log10(x)` is `linearToDb(x)`.
 - Code that two contexts both need goes in `src/shared/`. `bands.js` holds one band and its Web
   Audio response. `config.js` holds the layers, the stored config and the played sound.
-  `messages.js` names the messages between contexts. `src/base.css` holds the palette of both
-  pages. `src/guide.css` draws the pictures of the browser toolbar for both the guide and the panel.
+  `messages.js` names the messages between contexts. `storage.js` names every key goui stores.
+  `src/base.css` holds the palette of both pages. `src/guide.css` draws the pictures of the
+  browser toolbar for both the guide and the panel.
 
 ## 8. Tests are user journeys.
 
@@ -283,3 +284,8 @@ Each one names the rule it breaks and the reason.
   press on a band chip. What they check has no sound of its own.
 - Each word list at the top of `scripts/check-rules.mjs` has one reader, against rule 7.
   The lists are data. A person edits them there, next to each other, when rule 2 changes.
+- Two joins between the panel and the Mac app live in `src/`, against `mac/PLAN.md`, which keeps
+  a Mac feature out of `src/`. `gouiSets` in `src/panel/sets.js` lets the Mac menu and `goui set`
+  list, read and apply Sets through the panel, which owns the sound math. `gouiWords` in
+  `src/panel/capture.js` lets the Mac name what goui hears. Each one is a small object the panel
+  hands out or reads. Nothing in the extension reads them.

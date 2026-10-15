@@ -437,7 +437,7 @@ export async function saveAs(panel, role, name) {
 
   await section.locator("[data-action=saveAs]").click();
   await section.locator(".save-name").fill(name);
-  await section.locator("[data-action=confirmSave]").click();
+  await section.locator(".confirm-save").click();
 }
 
 /**

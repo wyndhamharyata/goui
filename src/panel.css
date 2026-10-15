@@ -201,7 +201,7 @@ body {
 
 .ui-button--wide {
   width: 100%;
-  height: 34px;
+  height: var(--control-height-wide);
 }
 
 .ui-button:disabled {
@@ -343,12 +343,34 @@ button.ui-list-row__main {
   bottom: 6px;
   left: 0;
   width: 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-bar);
   background: var(--accent);
 }
 
 .ui-list-row.is-muted {
   opacity: 0.45;
+}
+
+.ui-list-row--dense .ui-list-row__main {
+  padding: 3px var(--space-3) 3px var(--space-2);
+  gap: var(--space-2);
+}
+
+.ui-list-row--dense .ui-list-row__name {
+  font-weight: 500;
+}
+
+.ui-list-row--dense.is-selected {
+  background: transparent;
+}
+
+.ui-list-row--dense.is-selected::before {
+  display: none;
+}
+
+.ui-list-row--dense:has(button.ui-list-row__main):hover {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* 04 Stack row */
@@ -375,7 +397,7 @@ button.ui-list-row__main {
   bottom: 7px;
   left: 0;
   width: 3px;
-  border-radius: 0 2px 2px 0;
+  border-radius: 0 var(--radius-bar) var(--radius-bar) 0;
   background: var(--tone);
 }
 
@@ -521,7 +543,7 @@ button.ui-list-row__main {
 }
 
 .ui-section-header--title .ui-section-header__title {
-  font-size: 26px;
+  font-size: var(--size-headline);
   line-height: 1.05;
   font-weight: 800;
   letter-spacing: -0.035em;
@@ -571,7 +593,7 @@ button.ui-list-row__main {
   bottom: 0;
   left: 0;
   height: 2px;
-  border-radius: 2px;
+  border-radius: var(--radius-bar);
   background: var(--accent);
 }
 
@@ -587,7 +609,7 @@ button.ui-list-row__main {
 /* 07 Segmented */
 .ui-segmented {
   display: inline-flex;
-  padding: 2px;
+  padding: var(--space-1);
   border: 1px solid var(--line-1);
   border-radius: var(--radius-pill);
   background: var(--ink-2);
@@ -618,13 +640,13 @@ button.ui-list-row__main {
 .ui-segmented--grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2px;
+  gap: var(--space-1);
   border-radius: var(--radius-2);
 }
 
 .ui-segmented--grid .ui-segmented__item {
   height: 26px;
-  border-radius: 6px;
+  border-radius: calc(var(--radius-2) - var(--space-1));
 }
 
 /* 08 Slider row */
@@ -633,7 +655,7 @@ button.ui-list-row__main {
   grid-template-columns: 76px minmax(0, 1fr) 58px;
   align-items: center;
   gap: var(--space-3);
-  min-height: 34px;
+  min-height: var(--control-height-wide);
 }
 
 .ui-slider-row--trail {
@@ -672,7 +694,7 @@ button.ui-list-row__main {
 
 .ui-slider-row__range::-webkit-slider-runnable-track {
   height: 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-bar);
   background: linear-gradient(to right, var(--ink-4) var(--low), var(--accent) var(--low), var(--accent) var(--high), var(--ink-4) var(--high));
 }
 
@@ -701,7 +723,7 @@ button.ui-list-row__main {
   flex: none;
   align-items: center;
   gap: 5px;
-  height: 24px;
+  height: var(--control-height-small);
   padding: 0 var(--space-3) 0 3px;
   border: 1px solid transparent;
   border-radius: var(--radius-pill);
@@ -854,11 +876,11 @@ button.ui-chip:hover {
   flex-direction: column;
   align-items: center;
   min-width: 0;
-  padding: 4px 0;
+  padding: var(--space-2) 0;
 }
 
 .ui-field--stepper .ui-field__control {
-  font: 700 13px / 1.2 var(--font-number);
+  font: 700 var(--size-label) / 1.2 var(--font-number);
   text-align: center;
 }
 
@@ -866,7 +888,7 @@ button.ui-chip:hover {
   overflow: hidden;
   max-width: 100%;
   color: var(--text-3);
-  font-size: 9px;
+  font-size: var(--size-tiny);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -879,7 +901,7 @@ button.ui-chip:hover {
   min-height: 80px;
   padding: var(--space-3);
   color: var(--text-1);
-  font: 11px / 1.55 var(--font-number);
+  font: var(--size-small) / 1.55 var(--font-number);
   white-space: pre;
   resize: vertical;
   outline: none;
@@ -1028,7 +1050,7 @@ button.ui-chip:hover {
 .ui-badge--key .ui-badge__mark {
   width: 14px;
   height: 8px;
-  border-radius: 2px;
+  border-radius: var(--radius-bar);
 }
 
 .ui-badge--key-line .ui-badge__mark {
@@ -1068,36 +1090,36 @@ button.ui-chip:hover {
 }
 
 .plot-region.is-alternate {
-  fill: rgb(255 255 255 / 0.022);
+  fill: var(--plot-region);
 }
 
 .plot-label {
   fill: var(--text-3);
-  font: 9px var(--font-number);
+  font: var(--size-tiny) var(--font-number);
 }
 
 .plot-grid {
-  stroke: rgb(255 255 255 / 0.05);
+  stroke: var(--plot-grid);
 }
 
 .plot-grid.is-major {
-  stroke: rgb(255 255 255 / 0.12);
+  stroke: var(--plot-grid-major);
 }
 
 .plot-grid.is-zero {
-  stroke: rgb(255 255 255 / 0.24);
+  stroke: var(--plot-grid-zero);
 }
 
 .plot-spectrum {
-  fill: var(--spectrum);
+  fill: color-mix(in srgb, var(--spectrum) 14%, transparent);
 }
 
 .plot-louder {
-  fill: var(--level-louder);
+  fill: color-mix(in srgb, var(--level-louder) 24%, transparent);
 }
 
 .plot-quieter {
-  fill: var(--level-quieter);
+  fill: color-mix(in srgb, var(--level-quieter) 18%, transparent);
 }
 
 .plot-layer {
@@ -1162,7 +1184,7 @@ button.ui-chip:hover {
 
 .plot-number {
   fill: var(--ink-0);
-  font: 800 9px var(--font-number);
+  font: 800 var(--size-tiny) var(--font-number);
   pointer-events: none;
 }
 
@@ -1173,11 +1195,11 @@ button.ui-chip:hover {
 
 .plot-pill-text {
   fill: var(--text-1);
-  font: 600 9.5px var(--font-number);
+  font: 600 var(--size-tiny) var(--font-number);
 }
 
 .plot-hover {
-  stroke: rgb(255 255 255 / 0.25);
+  stroke: var(--plot-hover);
 }
 
 .plot-hover-dot {
@@ -1185,7 +1207,7 @@ button.ui-chip:hover {
 }
 
 .plot-readout {
-  fill: rgb(7 8 10 / 0.9);
+  fill: var(--plot-readout);
 }
 
 /* The panel's own layout. Blocks put primitives in place and add no control of their own. */
@@ -1202,7 +1224,7 @@ button.ui-chip:hover {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: 17px;
+  font-size: var(--size-title);
   font-weight: 800;
   letter-spacing: -0.04em;
 }
@@ -1226,7 +1248,7 @@ button.ui-chip:hover {
 
 .pn-hearing b {
   overflow: hidden;
-  font-size: 13px;
+  font-size: var(--size-label);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -1306,7 +1328,7 @@ button.ui-chip:hover {
 }
 
 .pn-target .ui-field {
-  height: 24px;
+  height: var(--control-height-small);
   background: var(--ink-1);
 }
 
@@ -1421,42 +1443,9 @@ button.ui-chip:hover {
   display: none;
 }
 
-/* The steps keep the pictures of src/guide.css, which the Mac app swaps for its own. */
+/* The steps come from src/guide.js, so the panel only clears the card look the guide gives them. */
 .pn-start .guide-step {
   padding: 0;
   border: none;
   background: none;
-}
-
-.pn-start .guide-text {
-  order: -1;
-}
-
-.pn-start .guide-text::before {
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.pn-start .shot {
-  border: 1px solid var(--line-1);
-  border-radius: var(--radius-2);
-  background: var(--ink-2);
-}
-
-/* The Mac's Get started picture draws the power button with this class. */
-.shot .power {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 2px var(--space-3) 2px 6px;
-  border-radius: var(--radius-2);
-  background: var(--ink-3);
-  color: var(--text-2);
-  font: 600 var(--size-small) / 1.4 var(--font-ui);
-}
-
-.shot .power svg {
-  width: 13px;
-  height: 13px;
-  fill: currentColor;
 }

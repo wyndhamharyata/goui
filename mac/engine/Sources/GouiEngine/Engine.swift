@@ -101,6 +101,7 @@ public final class Engine {
 
   public func restart(reason: String) {
     guard status != .stopped else { return }
+
     scheduleStart(afterSeconds: Self.restartSettleSeconds) { [weak self] in
       self?.stopPath()
       print("\(reason) Starting again.")
@@ -138,6 +139,7 @@ public final class Engine {
 
     var samples = [Float](repeating: 0, count: Int(scopeFrameCount))
     samples.withUnsafeMutableBufferPointer { renderReadScope(built.render, $0.baseAddress!) }
+
     return ScopeReading(samples: samples, sampleRateHz: built.summary.sampleRateHz)
   }
 
@@ -190,6 +192,7 @@ public final class Engine {
     let isTaken = sound.bands.withUnsafeBufferPointer { bands in
       renderTrySetSound(render, sound.preampDb, bands.baseAddress, UInt32(bands.count))
     }
+
     if !isTaken {
       pendingSound = schedule(afterSeconds: Self.fadeWaitSeconds) { [weak self] in self?.sendSoundToPath() }
     }

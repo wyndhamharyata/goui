@@ -2,15 +2,19 @@ import AppKit
 
 // Floats under the menu bar item, takes typing without bringing goui to the front, and hides on a click elsewhere.
 final class FloatingPanel: NSPanel, NSWindowDelegate {
-  // The popup width the extension's panel is made for.
+  // The popup width the extension's panel is made for, as .popup body in src/panel.css.
   static let narrowWidthPx = 400.0
   private static let gapPx = 6.0
-  private static let cornerRadiusPx = 12.0
+  // As --radius-3 in src/base.css, the radius of the panel's largest cards.
+  private static let cornerRadiusPx = 14.0
 
+  // Called only when the width changes, not on each change of height the page asks for.
   var onWidthChange: ((Double) -> Void)?
   private(set) var lastHiddenAt = Date.distantPast
+  private var reportedWidthPx: Double
 
   init(contentView: NSView, size: NSSize) {
+    reportedWidthPx = Double(size.width)
     super.init(contentRect: NSRect(origin: .zero, size: size), styleMask: [.nonactivatingPanel, .borderless, .resizable], backing: .buffered, defer: false)
     delegate = self
     minSize = NSSize(width: Self.narrowWidthPx, height: 1)
@@ -42,16 +46,27 @@ final class FloatingPanel: NSPanel, NSWindowDelegate {
   }
 
   func windowDidResize(_ notification: Notification) {
-    onWidthChange?(Double(frame.width))
+    let widthPx = Double(frame.width)
+    guard widthPx != reportedWidthPx else { return }
+
+    reportedWidthPx = widthPx
+    onWidthChange?(widthPx)
+  }
+
+  // The width the panel takes for this one, kept on the screen.
+  func toFittedWidth(_ widthPx: Double) -> Double {
+    let visibleFrame = screen?.visibleFrame ?? frame
+
+    return min(max(widthPx, Self.narrowWidthPx), Double(visibleFrame.width) - (2 * Self.gapPx))
   }
 
   // Keeps the middle and the top edge where they are, and stays on the screen.
-  func setWidth(_ width: Double) {
-    let visibleFrame = screen?.visibleFrame ?? frame
-    let newWidth = min(max(width, Self.narrowWidthPx), Double(visibleFrame.width) - (2 * Self.gapPx))
+  func setWidth(_ widthPx: Double) {
+    let newWidthPx = toFittedWidth(widthPx)
     var newFrame = frame
-    newFrame.origin.x = centredX(on: Double(frame.midX), width: newWidth, in: screen)
-    newFrame.size.width = newWidth
+
+    newFrame.origin.x = centredX(on: Double(frame.midX), width: newWidthPx, in: screen)
+    newFrame.size.width = newWidthPx
     setFrame(newFrame, display: true)
   }
 
@@ -69,6 +84,7 @@ final class FloatingPanel: NSPanel, NSWindowDelegate {
     let maxHeight = (screen.map { Double($0.visibleFrame.height) } ?? height) - (2 * Self.gapPx)
     let newHeight = min(height, maxHeight)
     var newFrame = frame
+
     newFrame.origin.y = frame.maxY - newHeight
     newFrame.size.height = newHeight
     setFrame(newFrame, display: true)

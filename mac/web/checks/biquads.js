@@ -1,7 +1,7 @@
 // Compares the C filters the app plays with WebKit's own, for every band type at three sample rates.
 import { bandTypes, createBiquad, logSweepHz } from "../../../src/shared/bands.js";
 import { linearToDb } from "../../../src/shared/math.js";
-import { send } from "../bridge.js";
+import { macMessageTypes, send } from "../bridge.js";
 
 const sampleRatesHz = [16_000, 44_100, 48_000];
 const toleranceDb = 0.01;
@@ -21,7 +21,7 @@ const bands = bandTypes.flatMap((type) =>
  * @returns {Promise<any>}
  */
 function print(text) {
-  return send({ type: "print", text });
+  return send({ type: macMessageTypes.print, text });
 }
 
 /**
@@ -41,7 +41,7 @@ async function compareAtRate(sampleRateHz) {
   let worst = { differenceDb: 0, band: undefined, atHz: 0 };
 
   for (const band of bands) {
-    const cMagnitudes = await send({ type: "response", band, sampleRateHz, frequenciesHz: [...pointsHz] });
+    const cMagnitudes = await send({ type: macMessageTypes.response, band, sampleRateHz, frequenciesHz: [...pointsHz] });
 
     createBiquad(context, band).getFrequencyResponse(pointsHz, magnitudes, phases);
 

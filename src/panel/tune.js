@@ -4,7 +4,7 @@ import { layerLabels, layerOrder } from "../shared/config.js";
 import { qToOctaves, semitonesToRatio } from "../shared/math.js";
 import { layerTone, typeTone } from "../graph/colors.js";
 import { formatDb, formatHz } from "../graph/format.js";
-import { byId, buildElement, buildIcon, buildSectionHeader, markCurrent, setField } from "./dom.js";
+import { byId, buildElement, buildIcon, buildSectionHeader, markCurrent, renderChildren, setField } from "./dom.js";
 import { onRefresh } from "./refresh.js";
 import { addBandToLayer, commit, commitBandEdit, deleteSelectedBand, listBandEntries, readSelectedIndex, readSelectedRole, selectBand } from "./sound.js";
 import { state } from "./state.js";
@@ -25,10 +25,19 @@ function buildChip(entry, index) {
   return buildElement("button", { type: "button", className: classNames.join(" "), title, dataset: { index } }, [number, buildElement("span", { text: formatHz(entry.band.frequencyHz) })]);
 }
 
+// What the chips and the table show of each band. They are built again only when one of these changes.
+/**
+ * @param {import("../graph/graph.js").BandEntry[]} entries
+ * @returns {string}
+ */
+function readBandsKey(entries) {
+  return JSON.stringify(entries.map(({ role, band }) => [role, band.type, band.frequencyHz, band.gainDb, band.q, band.on, band === state.selectedBand]));
+}
+
 // One row per layer, each with its own label and its own Add band chip.
 function renderChips() {
   const entries = listBandEntries();
-  const rows = layerOrder.map((role) => {
+  const buildRows = () => layerOrder.map((role) => {
     const chips = entries.flatMap((entry, index) => (entry.role === role ? [buildChip(entry, index)] : []));
     const add = buildElement("button", { type: "button", className: "ui-chip ui-chip--add", title: `Make a new band in ${layerLabels[role]}`, dataset: { add: role } }, [
       buildIcon("plus"),
@@ -39,7 +48,7 @@ function renderChips() {
     return buildElement("div", { className: "pn-chip-row" }, [head, buildElement("div", { className: "ui-cluster" }, [...chips, add])]);
   });
 
-  byId("chips").replaceChildren(...rows);
+  renderChildren(byId("chips"), readBandsKey(entries), buildRows);
 }
 
 function describeQ(band) {
@@ -135,7 +144,7 @@ function renderTable() {
   const entries = listBandEntries();
   const head = buildElement("tr", {}, ["Band", "Hz", "dB", "Q"].map((label) => buildElement("th", { text: label })));
 
-  byId("table").replaceChildren(head, ...entries.map(buildTableRow));
+  renderChildren(byId("table"), readBandsKey(entries), () => [head, ...entries.map(buildTableRow)]);
   byId("tableCount").textContent = String(entries.length);
 }
 

@@ -8,7 +8,7 @@ final class UpdateMenu: NSObject {
   private static let intervalSeconds = 12 * 60 * 60.0
   private static let firstDelaySeconds = 60.0
 
-  private let checkItem = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
+  private let checkItem = NSMenuItem(title: "Check for updates…", action: #selector(checkForUpdates), keyEquivalent: "")
   private let updateItem = NSMenuItem(title: "Update…", action: #selector(applyUpdate), keyEquivalent: "")
   private let automaticItem = NSMenuItem(title: "Automatic updates", action: #selector(toggleAutomatic), keyEquivalent: "")
   private var timer: Timer?
@@ -26,10 +26,10 @@ final class UpdateMenu: NSObject {
     automaticItem.state = isAutomaticOn ? .on : .off
   }
 
-  // The items take their place in the menu, and the timer starts with them.
+  // The items take their place in the menu, and the timer starts with them. Update comes first, as in the mock in design/ux-proposals.html.
   func install(in menu: NSMenu) {
-    menu.addItem(checkItem)
     menu.addItem(updateItem)
+    menu.addItem(checkItem)
     menu.addItem(automaticItem)
     startTimer()
   }
@@ -52,6 +52,7 @@ final class UpdateMenu: NSObject {
 
   @objc private func toggleAutomatic() {
     let isOn = automaticItem.state != .on
+
     UserDefaults.standard.set(isOn, forKey: Self.automaticKey)
     automaticItem.state = isOn ? .on : .off
     startTimer()
@@ -83,6 +84,7 @@ final class UpdateMenu: NSObject {
     }
 
     let release: ReleaseDownload.Release
+
     do {
       release = try await ReleaseDownload.readLatest()
     } catch {
@@ -96,8 +98,9 @@ final class UpdateMenu: NSObject {
     }
 
     do {
-      let newerAppURL = try await ReleaseDownload.bring(release)
-      if try isWebOnlyChange(to: newerAppURL) {
+      let newerAppURL = try await ReleaseDownload.fetch(release)
+
+      if try isWebOnlyChange(from: Bundle.main.bundleURL, to: newerAppURL) {
         try WebFolder.apply(from: newerAppURL, version: release.version)
         rebuildPanel()
         report(log: "goui updated the web files to \(release.version).", message: "goui updated the panel to \(release.version).", isManual: isManual)
@@ -108,17 +111,11 @@ final class UpdateMenu: NSObject {
       updateItem.title = "Update to \(release.version)…"
       updateItem.isHidden = false
       print("goui \(release.version) is ready. The menu installs it.")
+
       if isManual { askToInstall(release.version) }
     } catch {
       reportFailure(error.localizedDescription, isManual: isManual)
     }
-  }
-
-  // Two releases that share an engine differ only in their web files, which the running app reads without a restart.
-  private func isWebOnlyChange(to appURL: URL) throws -> Bool {
-    guard let runningURL = Bundle.main.executableURL else { return false }
-
-    return try fileHash(appURL.appending(path: "Contents/MacOS/goui")) == fileHash(runningURL)
   }
 
   // The automatic check never speaks. The menu shows what it found.

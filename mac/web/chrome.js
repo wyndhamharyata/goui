@@ -3,19 +3,40 @@
 const macAppUrl = "goui://app/";
 // The panel opens as the popup of this one stand-in tab, so its power button shows.
 const macTabId = 1;
-// The guide pages are written for Chrome, so the Mac opens its own page on the homepage.
-const macGuideUrl = "https://goui.mwyndham.dev/mac";
 // As often as the extension's offscreen document sends the level and spectrum.
-const macTelemetryEveryMs = 50;
+const macLevelEveryMs = 50;
 const macListeners = [];
 const macSession = {};
 
+// A path in a user script resolves against the script, not the page, so each import names the app.
 /**
- * @param {object} message
+ * @param {string} path
  * @returns {Promise<any>}
  */
-function sendToMac(message) {
-  return window.webkit.messageHandlers.goui.postMessage(message);
+function importFromApp(path) {
+  return import(macAppUrl + path);
+}
+
+// The type is a key of macMessageTypes in mac/web/bridge.js. A key missing from that list throws, so a typo shows at once.
+/**
+ * @param {string} type
+ * @param {object} [fields]
+ * @returns {Promise<any>}
+ */
+async function sendToMac(type, fields = {}) {
+  const { macMessageTypes, send } = await importFromApp("mac/web/bridge.js");
+
+  if (!Object.hasOwn(macMessageTypes, type)) throw new Error(`The bridge has no message called ${type}`);
+
+  return send({ type: macMessageTypes[type], ...fields });
+}
+
+// A failed report must not raise another error, or the error handlers below would feed each other.
+/**
+ * @param {string} text
+ */
+function printToLog(text) {
+  sendToMac("print", { text }).catch(() => {});
 }
 
 /**
@@ -62,17 +83,8 @@ function toCaptureState(status) {
 }
 
 async function readCaptureState() {
-  macSession.capture = toCaptureState(await sendToMac({ type: "status" }));
+  macSession.capture = toCaptureState(await sendToMac("status"));
   return macSession.capture;
-}
-
-// A path in a user script resolves against the script, not the page, so each import names the app.
-/**
- * @param {string} path
- * @returns {Promise<any>}
- */
-function importFromApp(path) {
-  return import(macAppUrl + path);
 }
 
 async function answerMessage(message) {
@@ -82,11 +94,11 @@ async function answerMessage(message) {
 
   if (message?.type === messageTypes.audioConfig) {
     const { toPlayedSound } = await importFromApp("src/shared/config.js");
-    return sendToMac({ type: "sound", sound: toPlayedSound(message.config) });
+    return sendToMac("sound", { sound: toPlayedSound(message.config) });
   }
 
-  if (message?.type === messageTypes.captureStart && isPress) return sendToMac({ type: "power", isOn: true });
-  if (message?.type === messageTypes.captureStop) return sendToMac({ type: "power", isOn: false });
+  if (message?.type === messageTypes.captureStart && isPress) return sendToMac("power", { isOn: true });
+  if (message?.type === messageTypes.captureStop) return sendToMac("power", { isOn: false });
 
   return undefined;
 }
@@ -100,20 +112,33 @@ async function sendMessage(message) {
   try {
     return await answerMessage(message);
   } catch (error) {
-    sendToMac({ type: "print", text: `Sending ${message?.type} failed: ${error}\n${error.stack}` });
+    printToLog(`Sending ${message?.type} failed: ${error}\n${error.stack}`);
     throw error;
   }
 }
 
-async function sendTelemetry() {
+// The app plays the stored config from login, not the heard one, so an A/B or Solo held at a crash does not come back.
+async function storeItems(items) {
+  const { storageKeys } = await importFromApp("src/shared/storage.js");
+
+  await sendToMac("storageSet", { items });
+
+  if (!items[storageKeys.config]) return;
+
+  const { toPlayedSound } = await importFromApp("src/shared/config.js");
+
+  await sendToMac("keepSound", { sound: toPlayedSound(items[storageKeys.config]) });
+}
+
+async function sendLevel() {
   if (document.visibilityState !== "visible" || macListeners.length === 0) return;
 
   const { messageTypes, silenceDb } = await importFromApp("src/shared/messages.js");
-  const { toTelemetry } = await importFromApp("mac/web/spectrum.js");
-  const meters = await sendToMac({ type: "meters" });
-  const telemetry = meters?.scope ? toTelemetry(meters.scope) : { levelDb: silenceDb, spectrumDb: [] };
+  const { toLevel } = await importFromApp("mac/web/spectrum.js");
+  const meters = await sendToMac("meters");
+  const level = meters?.scope ? toLevel(meters.scope) : { levelDb: silenceDb, spectrumDb: [] };
 
-  deliverToPanel({ type: messageTypes.audioTelemetry, ...telemetry });
+  deliverToPanel({ type: messageTypes.audioLevel, ...level });
 }
 
 // The panel's words for what goui hears, told for the whole Mac and not one tab.
@@ -123,25 +148,23 @@ window.gouiWords = {
   powerOnTitle: "Turn goui on for every sound on this Mac",
 };
 
-// The page takes the panel's width, so a wide panel shows three columns. It also stops the page's edge from bouncing.
 document.addEventListener("DOMContentLoaded", async () => {
-  const style = document.createElement("style");
-
-  style.textContent = ".popup body { width: auto; } html, body { overscroll-behavior: none; }";
-  document.head.append(style);
-  document.getElementById("eqbyear").title = "Open eqbyear.com in your browser, with My ear off, to measure your ear";
-
+  const { buildElement } = await importFromApp("src/panel/dom.js");
   const { renderMacGuide } = await importFromApp("mac/web/guide.js");
 
+  document.head.append(buildElement("link", { rel: "stylesheet", href: `${macAppUrl}mac/web/chrome.css` }));
+  document.getElementById("eqbyear").title = "Open eqbyear.com in your browser, with My ear off, to measure your ear";
   renderMacGuide();
 });
 
 // The panel has no console on the Mac, so its errors go to the app's log.
-window.addEventListener("error", (event) => sendToMac({ type: "print", text: `Error: ${event.message} at ${event.filename}:${event.lineno}` }));
-window.addEventListener("unhandledrejection", (event) => sendToMac({ type: "print", text: `Rejected: ${event.reason?.stack ?? event.reason}` }));
+window.addEventListener("error", (event) => printToLog(`Error: ${event.message} at ${event.filename}:${event.lineno}`));
+window.addEventListener("unhandledrejection", (event) => printToLog(`Rejected: ${event.reason?.stack ?? event.reason}`));
 
 window.addEventListener("goui", async (event) => {
-  if (event.detail.type !== "status") return;
+  const { macEventTypes } = await importFromApp("mac/web/bridge.js");
+
+  if (event.detail.type !== macEventTypes.status) return;
 
   const { messageTypes } = await importFromApp("src/shared/messages.js");
 
@@ -157,9 +180,9 @@ window.chrome = {
   },
   storage: {
     local: {
-      get: async (keys) => withDefaults(keys, await sendToMac({ type: "storage:get", keys: toKeyList(keys) })),
-      set: (items) => sendToMac({ type: "storage:set", items }),
-      remove: (keys) => sendToMac({ type: "storage:remove", keys: toKeyList(keys) }),
+      get: async (keys) => withDefaults(keys, await sendToMac("storageGet", { keys: toKeyList(keys) })),
+      set: storeItems,
+      remove: (keys) => sendToMac("storageRemove", { keys: toKeyList(keys) }),
     },
     session: {
       get: async (keys) => {
@@ -175,11 +198,12 @@ window.chrome = {
       },
     },
   },
+  // The guide pages are written for Chrome, so a goui page opens the Mac's own guide on the homepage.
   tabs: {
-    create: ({ url }) => sendToMac({ type: "open", url: url.startsWith(macAppUrl) ? macGuideUrl : url }),
+    create: ({ url }) => (url.startsWith(macAppUrl) ? sendToMac("openGuide") : sendToMac("open", { url })),
   },
 };
 
-setInterval(sendTelemetry, macTelemetryEveryMs);
+setInterval(sendLevel, macLevelEveryMs);
 // The page's own height. Its scrollHeight never drops below the window, so the panel could only grow.
-new ResizeObserver(() => sendToMac({ type: "size", height: Math.ceil(document.documentElement.getBoundingClientRect().height) })).observe(document.documentElement);
+new ResizeObserver(() => sendToMac("size", { height: Math.ceil(document.documentElement.getBoundingClientRect().height) })).observe(document.documentElement);

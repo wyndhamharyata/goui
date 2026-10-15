@@ -1,13 +1,25 @@
 // Your presets: the card at the top of each Library section, deleting a preset, and reading them.
 import { cleanBands } from "../shared/bands.js";
-import { layerOrder, sanitizeConfig } from "../shared/config.js";
-import { buildListRow, partOf, sectionOf } from "./dom.js";
+import { emptyLayerNames, layerOrder, layerSources, sanitizeConfig } from "../shared/config.js";
+import { storageKeys } from "../shared/storage.js";
+import { buildListRow, partOf, renderPlayingRows, sectionOf } from "./dom.js";
 import { describeBandCount, describeLayerName } from "./items.js";
 import { onRefresh, renderPresetList } from "./refresh.js";
 import { commit, replaceLayer } from "./sound.js";
-import { layerSources, state } from "./state.js";
+import { state } from "./state.js";
 
 /** @typedef {import("../shared/config.js").LayerRole} LayerRole */
+
+// The one rule for "this layer plays that preset". An edit or a switched-off layer still counts.
+/**
+ * @param {LayerRole} role
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function isPresetInLayer(role, name) {
+  const layer = state.config.layers[role];
+  return Boolean(layer) && layer.source === layerSources.saved && layer.name === name && Object.hasOwn(state.presets[role], name);
+}
 
 /**
  * @param {LayerRole} role
@@ -15,10 +27,8 @@ import { layerSources, state } from "./state.js";
  */
 export function isSavedPreset(role) {
   const layer = state.config.layers[role];
-  return Boolean(layer) && layer.source === layerSources.saved && Boolean(state.presets[role][layer.name]);
+  return Boolean(layer) && isPresetInLayer(role, layer.name);
 }
-
-const emptyLayerNames = { ear: "No ear tuning", taste: "No taste" };
 
 // Each Library section shows what plays in its layer now, and whether that is one of your presets.
 function renderPresetCard(role) {
@@ -37,13 +47,7 @@ function renderPresetCard(role) {
   save.textContent = isSaved ? "Save changes" : "Save";
   save.disabled = !layer || hasNothingNew;
   partOf(role, "save-as").disabled = !layer;
-
-  // The row of the sound that plays is marked. With no ear or taste layer, its "No ear tuning" or "No taste" row is.
-  const playingName = layer ? layer.name : emptyLayerNames[role];
-
-  for (const item of sectionOf(role).querySelectorAll(".item[data-name]")) {
-    item.closest(".ui-list-row").classList.toggle("is-selected", item.dataset.name === playingName);
-  }
+  renderPlayingRows(sectionOf(role));
 }
 
 /** @returns {void} */
@@ -53,18 +57,17 @@ export function renderPresetCards() {
 
 /** @param {LayerRole} role */
 export function storePresets(role) {
-  chrome.storage.local.set({ [`${role}Presets`]: state.presets[role] });
+  chrome.storage.local.set({ [storageKeys.presets[role]]: state.presets[role] });
   renderPresetList(role);
 }
 
+// The layer keeps its bands. It is no longer a saved preset, so Save asks for a name again.
 function deletePreset(role, name) {
+  const isPlaying = isPresetInLayer(role, name);
+
   delete state.presets[role][name];
 
-  // The layer keeps its bands. It is no longer a saved preset, so Save asks for a name again.
-  const layer = state.config.layers[role];
-  const isPlaying = Boolean(layer) && layer.source === layerSources.saved && layer.name === name;
-
-  if (isPlaying) layer.source = layerSources.deleted;
+  if (isPlaying) state.config.layers[role].source = layerSources.deleted;
 
   commit();
   storePresets(role);
@@ -79,11 +82,17 @@ function deletePreset(role, name) {
 export function buildPresetItem(role, name, onPlaced) {
   const { bands } = state.presets[role][name];
   const place = () => {
-    replaceLayer({ name, source: layerSources.saved, bands }, role);
+    replaceLayer(role, { name, source: layerSources.saved, bands });
     onPlaced();
   };
 
-  return buildListRow({ name, detail: describeBandCount(bands), onPick: place, onRemove: () => deletePreset(role, name) });
+  return buildListRow({
+    name,
+    detail: describeBandCount(bands),
+    isPlaying: () => isPresetInLayer(role, name),
+    onPick: place,
+    onRemove: () => deletePreset(role, name),
+  });
 }
 
 /**
@@ -92,12 +101,13 @@ export function buildPresetItem(role, name, onPlaced) {
  */
 export async function readPresets(stored) {
   for (const role of layerOrder) {
-    const storedPresets = stored[`${role}Presets`] || {};
+    const storedPresets = stored[storageKeys.presets[role]] || {};
 
     for (const [name, preset] of Object.entries(storedPresets)) state.presets[role][name] = { bands: cleanBands(preset && preset.bands) };
   }
 
-  const olderSounds = stored.savedSounds || stored.presets;
+  const [savedSoundsKey, presetsKey] = storageKeys.olderSounds;
+  const olderSounds = stored[savedSoundsKey] || stored[presetsKey];
 
   if (!olderSounds) return;
 
@@ -113,8 +123,8 @@ export async function readPresets(stored) {
   }
 
   // The old key goes only once the new lists are written, so a failed write loses nothing.
-  await chrome.storage.local.set({ headphonePresets: state.presets.headphone, earPresets: state.presets.ear });
-  await chrome.storage.local.remove(["savedSounds", "presets"]);
+  await chrome.storage.local.set({ [storageKeys.presets.headphone]: state.presets.headphone, [storageKeys.presets.ear]: state.presets.ear });
+  await chrome.storage.local.remove(storageKeys.olderSounds);
 }
 
 onRefresh(renderPresetCards);

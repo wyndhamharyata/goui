@@ -29,7 +29,7 @@ import { clamp } from "./math.js";
  * @property {{ headphone: Layer, ear?: Layer, taste?: Layer }} layers
  */
 
-// A Set names one preset per layer, by name. A null slot plays Flat for the headphone and no layer for the others.
+// A Set names one preset per layer, by name. A null slot plays Flat for the headphone and turns the other layers off.
 /** @typedef {{ headphone: string | null, ear: string | null, taste: string | null, sliders: Sliders }} SoundSet */
 
 /** @typedef {{ enabled: boolean, preampDb: number, bands: Band[] }} PlayedSound */
@@ -38,9 +38,24 @@ import { clamp } from "./math.js";
 
 export const sliderRangeDb = [-6, 6];
 export const preampRangeDb = [-24, 12];
+// The Mac engine plays up to this many bands that are on, as maxBandCount in mac/engine/Sources/Render/include/Render.h.
+export const maxPlayedBandCount = 32;
 
 export const layerOrder = ["headphone", "ear", "taste"];
 export const layerLabels = { headphone: "Headphone", ear: "My ear", taste: "Taste" };
+// What a layer with nothing in it reads as. The headphone layer plays Flat, and the others are off.
+export const emptyLayerNames = { headphone: "Flat", ear: "No ear tuning", taste: "No taste" };
+
+// The source line under a layer's name. A layer matches one of your presets only while its source is saved.
+export const layerSources = {
+  saved: "Saved",
+  deleted: "Deleted preset",
+  autoEq: "AutoEQ",
+  starter: "Starter sound",
+  pasted: "Pasted",
+  file: "From a file",
+  yourBands: "Your bands",
+};
 
 /**
  * @param {string} name
@@ -52,6 +67,11 @@ export function newLayer(name, source, bands = []) {
   return { on: true, source, name, isEdited: false, bands };
 }
 
+/** @returns {Layer} */
+export function newFlatHeadphone() {
+  return newLayer(emptyLayerNames.headphone, layerSources.starter);
+}
+
 export const flatSliders = { bassDb: 0, vocalsDb: 0, trebleDb: 0 };
 
 /** @returns {Config} */
@@ -61,7 +81,7 @@ export function defaultConfig() {
     preampDb: 0,
     autoPreamp: true,
     sliders: { ...flatSliders },
-    layers: { headphone: newLayer("Flat", "Starter sound") },
+    layers: { headphone: newFlatHeadphone() },
   };
 }
 
@@ -124,7 +144,7 @@ export function sanitizeConfig(raw) {
     },
   };
   const storedLayers = raw.layers || older;
-  const layers = { headphone: cleanLayer(storedLayers.headphone, "Flat") };
+  const layers = { headphone: cleanLayer(storedLayers.headphone, emptyLayerNames.headphone) };
 
   if (storedLayers.ear) layers.ear = cleanLayer(storedLayers.ear, "Ear tuning");
   if (storedLayers.taste) layers.taste = cleanLayer(storedLayers.taste, "Taste");
@@ -146,13 +166,13 @@ function cleanSlot(name) {
   return typeof name === "string" && name !== "" ? name : null;
 }
 
-// Used on the stored Sets, so a bad stored value cannot reach the audio chain.
+// Used on the stored Sets, so a bad stored value cannot reach the audio chain. A name such as __proto__ stays a plain name.
 /**
  * @param {unknown} raw
  * @returns {Record<string, SoundSet>}
  */
 export function sanitizeSets(raw) {
-  const sets = {};
+  const sets = Object.create(null);
 
   if (!raw || typeof raw !== "object") return sets;
 
@@ -194,15 +214,25 @@ export function listPlayedBands(config) {
   return [...listOnLayers(config).flatMap((layer) => layer.bands), ...sliderBands(config.sliders)];
 }
 
-// What the audio chain plays, the played bands and the preamp.
+// What the audio chain plays, the played bands and the preamp. The preamp stays in its range here, so no engine has to clamp it.
 /**
  * @param {Config} config
  * @returns {PlayedSound}
  */
 export function toPlayedSound(config) {
   const bands = listPlayedBands(config);
-  const preampDb = config.autoPreamp ? autoPreampDb(bands) : config.preampDb;
+  const preampDb = clamp(config.autoPreamp ? autoPreampDb(bands) : config.preampDb, ...preampRangeDb);
+
   return { enabled: config.enabled, preampDb, bands };
+}
+
+// A band that is off plays nothing, so only the bands that are on count against the limit.
+/**
+ * @param {Config} config
+ * @returns {boolean}
+ */
+export function hasTooManyBands(config) {
+  return listPlayedBands(config).filter((band) => band.on).length > maxPlayedBandCount;
 }
 
 // Export writes one flat file, so another app can read the merged sound.

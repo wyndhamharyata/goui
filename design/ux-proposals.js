@@ -1702,6 +1702,7 @@ const viewForms = {
   menu: () => buildRegions(["menu"]),
   tile: () => `<div class="pn-tile">${buildRegions(["tile-copy", "tile-plot"])}</div>`,
   hero: () => `<div class="pn-hero">${buildRegions(["hero-copy"])}<div class="pn-hero__demo">${buildRegions(["layers", "hero-plot"])}</div></div>`,
+  heroCopy: () => buildRegions(["hero-copy"]),
 };
 
 function mountView(host, form, settings = {}) {
@@ -1721,7 +1722,6 @@ function mountView(host, form, settings = {}) {
     isWholeOpen: false,
     isTableOpen: false,
     hasSetPicker: false,
-    hasSets: true,
     ...settings,
   };
 
@@ -2064,6 +2064,7 @@ function buildStart() {
 }
 
 const menuWords = {
+  about: "About goui shows the version, with a link to the Mac page.",
   wide: "Wide panel opens the panel at 1100 px, in three columns. The wide form above is that panel.",
   restart: "The engine restarts. The sound pauses for a moment.",
   reload: "The panel reloads. The sound keeps playing.",
@@ -2075,9 +2076,9 @@ function buildMenu(view) {
   const playing = findPlayingSet();
   const item = (name, key, extra = {}) => ui.listRow({ variant: "dense", name, act: "menu", value: key, lead: '<span class="pn-menu__tick"></span>', ...extra });
   const sets = sound.sets.map((set) => ui.listRow({ variant: "dense", name: set.name, act: "apply-set", value: set.name, isSelected: set.name === playing, lead: `<span class="pn-menu__tick">${set.name === playing ? iconHtml("check") : ""}</span>` }));
-  const setsRow = ui.listRow({ variant: "dense", name: "Sets", lead: '<span class="pn-menu__tick"></span>', badge: ui.badge({ label: "Proposed", tone: "accent" }), trail: iconHtml("next"), isSelected: true });
+  const setsRow = ui.listRow({ variant: "dense", name: "Sets", lead: '<span class="pn-menu__tick"></span>', trail: iconHtml("next"), isSelected: true });
   const update = item("Update to 0.1.8", "update", { badge: ui.badge({ label: "New", tone: "good" }) });
-  const main = `<div class="pn-menu">${item("Wide panel", "wide")}${item("Restart engine", "restart")}${item("Reload panel", "reload")}<hr class="pn-menu__rule" />${setsRow}<hr class="pn-menu__rule" />${update}<hr class="pn-menu__rule" />${item("Quit goui", "quit")}</div>`;
+  const main = `<div class="pn-menu">${item("About goui", "about")}<hr class="pn-menu__rule" />${item("Restart engine", "restart")}${item("Reload panel", "reload")}${item("Wide panel", "wide")}<hr class="pn-menu__rule" />${setsRow}<hr class="pn-menu__rule" />${update}<hr class="pn-menu__rule" />${item("Quit goui", "quit")}</div>`;
   const sub = `<div class="pn-menu pn-menu--sub">${sets.join("")}</div>`;
   const command = ui.field({ kind: "code", amount: `goui set "${playing || sound.sets[0].name}"`, title: "The same switch from Terminal" });
   const hint = view.hints.menu ? `<p class="ui-text-hint">${escapeHtml(view.hints.menu)}</p>` : "";
@@ -2100,7 +2101,7 @@ function buildHeroCopy(view) {
     ui.button({ label: "goui for the Mac", href: "https://goui.mwyndham.dev/mac" }),
   ];
 
-  return `<div class="ui-stack ui-stack--loose">${ui.sectionHeader({ label: "An EQ for your headphone, your ear and your taste" })}<h3 class="pn-hero__title">Different ear, different head, different sound.</h3><p class="pn-hero__lede">goui runs one browser tab through a parametric EQ. goui for the Mac runs every sound the Mac plays through the same one. AutoEQ makes your headphone neutral, EQByEar tunes it to your ear, and your taste goes on top.</p><div class="ui-cluster">${links.join("")}</div><div class="ui-cluster ui-cluster--fill">${ui.field({ kind: "code", amount: install, title: "The Mac install line" })}${copy}</div><div class="ui-cluster">${facts.join("")}</div></div>`;
+  return `<div class="ui-stack ui-stack--loose">${ui.sectionHeader({ label: "An EQ for your headphone, your ear and your taste" })}<h3 class="pn-hero__title">Different ear, different head, different sound.</h3><p class="pn-hero__lede">goui runs one browser tab through a parametric EQ. goui for the Mac runs every sound the Mac plays through the same one. AutoEQ makes your headphone neutral. EQByEar tunes it to your ear. Your taste goes on top.</p><div class="ui-cluster">${links.join("")}</div><div class="ui-cluster ui-cluster--fill">${ui.field({ kind: "code", amount: install, title: "The Mac install line" })}${copy}</div><div class="ui-cluster">${facts.join("")}</div></div>`;
 }
 
 const legendKeys = [
@@ -2126,7 +2127,9 @@ const regionBuilders = {
     const options = [...(playing ? [] : [["", "No Set plays now", true]]), ...sound.sets.map((set) => [set.name, set.name])];
     const picker = ui.field({ kind: "select", amount: playing, options, act: "set-pick", title: "Play a Set: one headphone, one ear and one taste preset, and the sliders" });
 
-    return ui.stackRow({ tone: "accent", caption: "Set", name: picker, trail: ui.badge({ label: "Proposed", tone: "accent" }) });
+    const save = ui.button({ size: "small", label: "Save as Set", act: "save-set-listen", title: "Keep the three layers and the sliders as one Set" });
+
+    return ui.stackRow({ tone: "accent", caption: "Set", name: picker, trail: save });
   },
   "layers-head": () => ui.sectionHeader({ label: "Your sound", count: `${roles.filter((role) => sound.layers[role] && sound.layers[role].on).length} of 3 on` }),
   layers: (view) => `<div class="ui-stack ui-stack--chain">${roles.map((role) => buildLayerRow(role, view)).join("")}</div>`,
@@ -2152,7 +2155,7 @@ const regionBuilders = {
   },
   inspector: buildInspector,
   table: buildTable,
-  "library-tabs": (view) => ui.tabs({ items: view.hasSets ? libraryTabItems : libraryTabItems.slice(0, -1), current: view.libraryTab, act: "library-tab", size: "small" }),
+  "library-tabs": (view) => ui.tabs({ items: libraryTabItems, current: view.libraryTab, act: "library-tab", size: "small" }),
   "library-head": (view) => {
     const role = readLibraryRole(view);
 
@@ -2212,7 +2215,7 @@ const regionBuilders = {
     const text = ui.field({ kind: "area", amount: readWholeText(), isReadOnly: true, rows: 6 });
     return `<div class="ui-stack">${ui.sectionHeader({ label: "Whole sound" })}<p class="ui-text-hint">All three layers and the sliders in one AutoEQ file, for other apps.</p>${button}${ui.expander({ isOpen: view.isWholeOpen, body: text })}</div>`;
   },
-  credits: () => `<p class="ui-text-fine">Headphone profiles from AutoEQ by Jaakko Pasanen. Ear test from EQByEar. Icon art from Google Material Icons. goui is under the MIT licence. ${ui.button({ variant: "quiet", size: "small", label: "Credits", act: "help", title: "Open the credits in the guide" })}</p>`,
+  credits: () => `<p class="ui-text-fine">Headphone profiles from AutoEQ by Jaakko Pasanen. Ear test from EQByEar. Icon art from Google Material Icons. goui is under the MIT licence. ${ui.button({ variant: "quiet", size: "small", label: "Credits", act: "credits", title: "Open the credits in the guide" })}</p>`,
   start: buildStart,
   menu: buildMenu,
   "tile-copy": buildTileCopy,
@@ -2290,7 +2293,8 @@ const clickActions = {
   tab: (value, view) => { view.tab = value; paintView(view); },
   enabled: () => { sound.isEnabled = !sound.isEnabled; commit(); },
   "popup-power": () => { sound.isPopupOn = !sound.isPopupOn; commit(); },
-  help: () => scrollToScreen("screen-guide"),
+  help: (value, view) => (view.onHelp ? view.onHelp() : scrollToScreen("screen-guide")),
+  credits: (value, view) => (view.onCredits ? view.onCredits() : scrollToScreen("screen-guide")),
   "layer-on": (role) => { sound.layers[role].on = !sound.layers[role].on; commit(); },
   change: (role, view) => { showLibrary(view, role); paintView(view); },
   "add-layer": (role, view) => {
@@ -2378,6 +2382,7 @@ const clickActions = {
     if (sound.layers.ear) sound.layers.ear.on = false;
     view.hints.ear = { text: "My ear is off, so the test hears the headphone alone. EQByEar opens in a new tab." };
     commit();
+    if (view.onMeasure) view.onMeasure();
   },
   "pick-preset": (value) => {
     const [role, name] = splitPair(value);
@@ -2431,6 +2436,10 @@ const clickActions = {
     view.open.sets = "";
     view.hints.sets = { text: `Saved ${name}. It is in the Mac menu bar too.` };
     commit();
+  },
+  "save-set-listen": (value, view) => {
+    showLibrary(view, "sets");
+    clickActions["save-set"](value, view);
   },
   "apply-set": (name) => playSet(name),
   "delete-set": (name) => { sound.sets = sound.sets.filter((set) => set.name !== name); commit(); },
@@ -3064,8 +3073,8 @@ const primitiveCards = [
   {
     name: "Badge",
     note: "A mark of state that you read, never press. A pill, a dot with a value, a step number, and a legend key.",
-    usedBy: "AutoEQ's pick, Proposed, the level and clip light, the Library steps, band numbers, the graph legend",
-    demo: () => `<div class="ui-cluster">${ui.badge({ label: "AutoEQ's pick", tone: "good" })}${ui.badge({ label: "Proposed", tone: "accent" })}${ui.badge({ label: "Edited" })}${ui.badge({ label: "Can clip", tone: "danger" })}</div>
+    usedBy: "AutoEQ's pick, the Popup and Mac notes of the guide, the level and clip light, the Library steps, band numbers, the graph legend",
+    demo: () => `<div class="ui-cluster">${ui.badge({ label: "AutoEQ's pick", tone: "good" })}${ui.badge({ label: "Mac", tone: "accent" })}${ui.badge({ label: "Edited" })}${ui.badge({ label: "Can clip", tone: "danger" })}</div>
       <div class="ui-cluster">${ui.badge({ kind: "dot", tone: "good", label: "-14.2 dB" })}${ui.badge({ kind: "dot", tone: "danger", label: "-2.1 dB" })}${ui.badge({ kind: "step", label: 1, tone: "headphone" })}${ui.badge({ kind: "step", label: 2, tone: "ear" })}${ui.badge({ kind: "step", label: 3, tone: "taste" })}</div>
       <div class="ui-cluster ui-cluster--legend">${legendKeys.slice(0, 5).map(([key, tone, label]) => ui.badge({ kind: "key", key, tone, label })).join("")}</div>`,
   },
@@ -3385,7 +3394,7 @@ if (byId("token-palette")) {
   wireGuide();
 }
 
-// The last host is the site's demo, with no Sets while Sets is not built.
+// The site mounts its demo and its hero itself, with mountView, so it can pass handlers such as onHelp.
 const viewHosts = [
   ["panel-narrow", "narrow", { hasSetPicker: true }],
   ["panel-start", "start", { isHearing: false }],
@@ -3398,7 +3407,6 @@ const viewHosts = [
   ["screen-menu", "menu"],
   ["screen-tile", "tile"],
   ["screen-site", "hero", { heard: "Every sound on this Mac" }],
-  ["site-panel", "narrow", { hasSets: false }],
 ];
 
 for (const [id, form, settings] of viewHosts) {

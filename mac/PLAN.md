@@ -67,15 +67,21 @@ it, so it needs no port, token or origin check.
 
 | Chrome API | In the app |
 | --- | --- |
-| `chrome.storage.local` | Messages to Swift, which keeps `storage.json` |
+| `chrome.storage.local` | Messages to Swift, which keeps `storage.json`. A stored config also goes as `keepSound`, the sound for the next login |
 | `chrome.storage.session` | Kept in the page. `capture` is read from the engine's status each time |
 | `chrome.runtime.sendMessage` | `audio:config` becomes a sound, `capture:start` and `capture:stop` power on and off |
-| `chrome.runtime.onMessage` | The engine's status as `capture:state`, and its output peak as `audio:telemetry` |
+| `chrome.runtime.onMessage` | The engine's status as `capture:state`, and its level and spectrum as `audio:level` |
 | `chrome.runtime.getURL` | A `goui://app` address |
-| `chrome.tabs.create` | A web page opens in the default browser. A goui page opens the homepage, as the guide is for Chrome |
+| `chrome.tabs.create` | A web page opens in the default browser. A goui page sends `openGuide`, and Swift opens the Mac guide, as the guide is for Chrome |
 
 - Before a config goes to Swift, `chrome.js` runs `toPlayedSound` from `src/shared/config.js`.
-  The engine only ever takes `{ preampDb, bands }` and keeps the last one for the next login.
+  The engine only ever takes `{ enabled, preampDb, bands }`, one `Sound` in Swift.
+  `toPlayedSound` keeps the preamp from -24 to +12 dB, and the engine refuses a value outside it.
+- `sound` plays the heard config, with A/B and Solo. `config.json` keeps the stored config, which
+  the panel writes once its edits pause. So a crash with A/B held does not come back held, and a
+  drag does not write the file on each step.
+- `mac/web/bridge.js` names every message and event between the page and Swift. `Bridge.swift`
+  names the same ones.
 
 ### Bands to sound
 
@@ -98,12 +104,32 @@ swaps to new filters without a lock and fades across about 20 ms, so a change do
   controls. The output device will need a place of its own when it comes.
 - The panel takes the height of its page, up to the height of the screen.
 - The panel has no console on the Mac, so `chrome.js` sends its errors to the app's log.
-- The web view is built when the panel first opens, and stays. See Settled for why it is not
-  dropped on close.
+- The web view is built just after launch, and stays. The menu and `goui set` play Sets through
+  the page, so it must be there. See Settled for why it is not dropped on close.
 - The panel's words and its Get started steps speak of the Mac, not a tab. `chrome.js` sets
   `window.gouiWords`, which `src/panel/capture.js` reads for the status line and the power button,
-  and `mac/web/guide.js` puts the Mac's own steps in place of the extension's. The guide and help
+  and `mac/web/guide.js` puts the Mac's own steps in place of the extension's. They teach the
+  power button, the permission, the right-click menu, Sets and `goui set`. The guide and help
   links open goui.mwyndham.dev/mac.
+
+### Sets from the menu and from Terminal
+
+The page owns the Set list and the sound math, so the app asks it. `src/panel/sets.js` hands out
+`window.gouiSets` with a `version`, `applySet`, `listSetNames` and `readPlayingSetName`.
+
+- The app waits for `gouiSets` once per page load, and every caller shares that wait. A
+  `version` the app does not speak is refused, with a line in the log.
+- One Set waits to play at a time. A newer pick takes its place, so picks made while the page
+  loads cannot play out of order.
+- `applySet` answers `applied` only once the engine took the sound. It answers `unknown`,
+  `tooManyBands` or `refused` otherwise. The panel refuses a Set that holds more than 32 bands
+  that are on, with the three sliders, and says why on the Sets tab.
+- The menu asks for the names and the playing Set in one call, one read at a time. With no Sets,
+  the submenu says where to save one.
+- `goui set` writes its id and the name to `set-requests/set-request`. The app takes the file at
+  once and ignores one older than 5 seconds. It writes `set-result-<id>` with `applied`,
+  `unknown`, `tooManyBands`, `refused`, `notReady` or `replaced`, then the Set names. The command
+  exits with 0 only on `applied`. A request from the command goes to the log, never to an alert.
 
 ## Install
 
@@ -125,8 +151,9 @@ The `goui` command is a shell script.
 | --- | --- |
 | `goui restart` | `launchctl kickstart -k` on the app |
 | `goui stop`, `goui start` | Stops or starts the app |
-| `goui set "name"` | Plays one of your Sets. The app takes the name from a file in its support folder |
+| `goui set "name"` | Plays one of your Sets, and exits with 0 once it plays. The app takes the name from a file in its support folder |
 | `goui logs` | Shows the app log |
+| `goui rollback` | Puts back the app and the web files from before the last update |
 | `goui uninstall` | Removes the agent and the app |
 
 ### Signing
@@ -163,8 +190,8 @@ Each step starts only when it is asked for, and ends with a commit.
   **Quit goui** in its menu exits with 0, so launchd does not start it again, and the sound comes back at
   full level.
 - The app holds the engine, the menu bar item, the floating panel and its web view.
-  `mac/web/checks/bridge.html` sends every bridge message. A preamp of -6, -12 and -40 played the
-  sound 6, 12 and 24 dB lower, as the preamp stops at -24. The EQ switch off played it as it is.
+  `mac/web/checks/bridge.html` sends every bridge message. A preamp of -6 and -12 played the
+  sound 6 and 12 dB lower. The EQ switch off played it as it is.
   Power off and on sent a status event each time. An unknown message and a sound with no data were
   refused with the reason. After `kill -9`, the app came back at the -6 dB that `config.json` kept.
 - A new build asks for the permission again, as the ad hoc signature changes.
@@ -210,6 +237,13 @@ Each step starts only when it is asked for, and ends with a commit.
   when another system EQ runs or the sound goes to AirPods or Beats. It names the version change,
   lists the limits with a link to goui.mwyndham.dev/mac#before, and asks before it installs. With
   no terminal it takes the defaults, and `GOUI_YES=1` answers yes.
+- A release counts as web-only when every file outside `Contents/Resources/web` matches the
+  running app. The signature is left out, since it seals the web files too. The executable is
+  compared with its signature taken off. `Info.plist` is compared without its two version keys.
+  The signed executable alone cannot tell. Its signature changes with any web file.
+- Two updates in a row with the fixed backup names `goui.app.previous` and `web.previous` both
+  work. The second replaces the first backup. A script checked it from the temp folder into a
+  folder under the home folder, for both.
 - After an install or an update, goui opens its panel once, so the menu bar item is easy to find.
   `install.sh` writes `just-installed` in the settings folder, and the app deletes it at launch. It
   waits for the tap to be built: building it gives the focus back to the app in front, which hid a

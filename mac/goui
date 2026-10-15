@@ -8,10 +8,14 @@ app="$HOME/Applications/goui.app"
 link="$HOME/.local/bin/goui"
 domain="gui/$(id -u)"
 support="$HOME/Library/Application Support/goui"
-# The app watches its support folder for this file and takes it away once it has the name.
-set_request="$support/set-request"
-# The app takes a request at once. Three seconds with no answer means it is not running.
-set_wait_tries=15
+# The app watches this folder for the request and takes it away once it has the name. SupportFile in Places.swift names the same files.
+set_requests="$support/set-requests"
+set_request="$set_requests/set-request"
+poll_seconds=0.2
+# The app takes a request at once, so 3 seconds with no pickup means it is not running.
+pickup_wait_seconds=3
+# The page can take 15 seconds to load just after launch, so the answer gets a little longer.
+answer_wait_seconds=20
 
 is_loaded() {
   launchctl print "$domain/$label" >/dev/null 2>&1
@@ -23,44 +27,81 @@ stop_agent() {
   while is_loaded; do sleep 0.2; done
 }
 
-# The panel keeps its Sets in storage.json under sets. One name per line, in the order the panel lists them.
-list_set_names() {
-  osascript -l JavaScript -e '
-    function run(argv) {
-      const text = $.NSString.stringWithContentsOfFileEncodingError(argv[0], $.NSUTF8StringEncoding, null);
-      if (text.isNil()) return "";
-      const sets = JSON.parse(text.js).sets || {};
-      return Object.keys(sets).sort((first, second) => first.localeCompare(second)).join("\n");
-    }' "$support/storage.json" 2>/dev/null || true
+# Waits while the test holds, up to a number of seconds. Fails once the time is up.
+wait_while() {
+  wait_seconds=$1
+  shift
+  tries=$(awk -v total="$wait_seconds" -v step="$poll_seconds" 'BEGIN { print int(total / step) }')
+  while "$@"; do
+    [ "$tries" -gt 0 ] || return 1
+    sleep "$poll_seconds"
+    tries=$((tries - 1))
+  done
 }
 
+is_request_waiting() {
+  [ -e "$set_request" ]
+}
+
+is_answer_missing() {
+  [ ! -e "$set_result" ]
+}
+
+# The app owns the Set list, as the panel does, so the answer comes from the app. It exits with 0 only once the Set plays.
 apply_set() {
   name="$1"
-  names=$(list_set_names)
-  if [ -z "$names" ]; then
-    echo "goui has no Sets yet. Save one in the panel, under Library and then Sets." >&2
-    exit 1
-  fi
-  if ! printf '%s\n' "$names" | grep -Fxq -- "$name"; then
-    echo "goui has no Set called \"$name\". Your Sets are:" >&2
-    printf '%s\n' "$names" | sed 's/^/  /' >&2
-    exit 1
-  fi
+  id="$$-$(date +%s)"
+  set_result="$support/set-result-$id"
+  mkdir -p "$set_requests"
 
-  # A move puts the whole name in place at once, so the app never reads half of it.
-  printf '%s' "$name" >"$set_request.part"
-  mv -f "$set_request.part" "$set_request"
-  tries=0
-  while [ -e "$set_request" ] && [ "$tries" -lt "$set_wait_tries" ]; do
-    sleep 0.2
-    tries=$((tries + 1))
-  done
-  if [ -e "$set_request" ]; then
+  # The request is written beside the folder and moved in, so the app never reads half of it and its watch wakes once.
+  printf '%s\n%s' "$id" "$name" >"$support/set-request.part"
+  mv -f "$support/set-request.part" "$set_request"
+
+  if ! wait_while "$pickup_wait_seconds" is_request_waiting; then
     rm -f "$set_request"
     echo "goui is not running, so the Set did not change. Run goui start, then try again." >&2
     exit 1
   fi
-  echo "goui is switching to the Set \"$name\"."
+  if ! wait_while "$answer_wait_seconds" is_answer_missing; then
+    echo "goui heard the request but did not answer. goui logs says more." >&2
+    exit 1
+  fi
+
+  answer=$(head -n 1 "$set_result")
+  names=$(tail -n +2 "$set_result")
+  rm -f "$set_result"
+
+  case "$answer" in
+  applied)
+    echo "goui plays the Set \"$name\"."
+    ;;
+  unknown)
+    if [ -z "$names" ]; then
+      echo "goui has no Sets yet. Save one in the panel, under Library, then Sets." >&2
+    else
+      echo "goui has no Set called \"$name\". Your Sets are:" >&2
+      printf '%s\n' "$names" | sed 's/^/  /' >&2
+    fi
+    exit 1
+    ;;
+  tooManyBands)
+    echo "The Set \"$name\" holds more bands than goui plays at once, so the sound did not change." >&2
+    exit 1
+    ;;
+  refused)
+    echo "The engine refused the sound of the Set \"$name\". goui logs says why." >&2
+    exit 1
+    ;;
+  replaced)
+    echo "Another Set was asked for before goui was ready, so \"$name\" did not play." >&2
+    exit 1
+    ;;
+  *)
+    echo "The panel did not load, so the Set \"$name\" did not play. Pick Reload panel in the menu and try again." >&2
+    exit 1
+    ;;
+  esac
 }
 
 case "${1:-}" in

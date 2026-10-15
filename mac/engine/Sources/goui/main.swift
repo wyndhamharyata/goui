@@ -33,5 +33,6 @@ func buildEditMenu() -> NSMenu {
   let menu = NSMenu()
   menu.addItem(NSMenuItem(title: "goui", action: nil, keyEquivalent: ""))
   menu.addItem(editItem)
+
   return menu
 }

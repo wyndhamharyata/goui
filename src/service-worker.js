@@ -1,4 +1,5 @@
 import { messageTypes, trySendMessage } from "./shared/messages.js";
+import { storageKeys } from "./shared/storage.js";
 
 /** @typedef {import("./shared/messages.js").CaptureState} CaptureState */
 
@@ -25,7 +26,7 @@ async function openOffscreenDocument() {
 // The badge shows on the icon of the captured tab only, so each tab shows whether goui hears it.
 /** @param {CaptureState} state */
 async function publishCapture(state) {
-  const { capture: previous } = await chrome.storage.session.get("capture");
+  const previous = await readCapture();
 
   if (previous && previous.tabId) chrome.action.setBadgeText({ tabId: previous.tabId, text: "" }).catch(() => {});
 
@@ -34,8 +35,22 @@ async function publishCapture(state) {
     chrome.action.setBadgeText({ tabId: state.tabId, text: "ON" }).catch(() => {});
   }
 
-  await chrome.storage.session.set({ capture: state });
+  await chrome.storage.session.set({ [storageKeys.capture]: state });
   trySendMessage({ type: messageTypes.captureState, state });
+}
+
+/** @returns {Promise<CaptureState | undefined>} */
+async function readCapture() {
+  const stored = await chrome.storage.session.get(storageKeys.capture);
+  return stored[storageKeys.capture];
+}
+
+// A start that fails before the audio moves keeps the tab goui hears. Only the panel hears the error.
+/** @param {string} error */
+async function publishCaptureError(error) {
+  const previous = (await readCapture()) || { isCapturing: false };
+
+  trySendMessage({ type: messageTypes.captureState, state: { ...previous, error } });
 }
 
 /**
@@ -43,7 +58,7 @@ async function publishCapture(state) {
  * @returns {Promise<boolean>}
  */
 async function isHeardTab(tabId) {
-  const { capture } = await chrome.storage.session.get("capture");
+  const capture = await readCapture();
   return Boolean(capture && capture.isCapturing) && capture.tabId === tabId;
 }
 
@@ -67,9 +82,10 @@ async function startCaptureForTab(target) {
     return state;
   }
 
-  const stored = await chrome.storage.local.get("config");
+  const stored = await chrome.storage.local.get(storageKeys.config);
+  const config = stored[storageKeys.config];
 
-  if (stored.config) await chrome.runtime.sendMessage({ type: messageTypes.audioConfig, config: stored.config });
+  if (config) await chrome.runtime.sendMessage({ type: messageTypes.audioConfig, config });
 
   const state = { isCapturing: true, tabId: target.id, title: target.title || "Capturing" };
 
@@ -153,11 +169,11 @@ chrome.action.onClicked.addListener(async (tab) => {
   const isWebPage = url.startsWith("http://") || url.startsWith("https://");
 
   if (!tab.id || !isWebPage) {
-    publishCapture({ isCapturing: false, error: "Open a web page with audio, then click the goui icon." });
+    publishCaptureError("Open a web page with audio, then click the goui icon.");
     return;
   }
 
-  startCaptureForTab(tab).catch((error) => publishCapture({ isCapturing: false, error: error.message }));
+  startCaptureForTab(tab).catch((error) => publishCaptureError(error.message));
 });
 
 async function startCaptureFromPopup(tabId) {
@@ -172,10 +188,17 @@ async function startCaptureFromPopup(tabId) {
 chrome.runtime.onMessage.addListener((message) => {
   const isStart = message && message.type === messageTypes.captureStart && Number.isInteger(message.tabId);
 
-  if (isStart) startCaptureFromPopup(message.tabId).catch((error) => publishCapture({ isCapturing: false, error: error.message }));
+  if (isStart) startCaptureFromPopup(message.tabId).catch((error) => publishCaptureError(error.message));
   if (message && message.type === messageTypes.captureStop) stopCapture();
 
   return false;
+});
+
+// A player changes the title of its page on each new track, so the header follows the heard tab.
+chrome.tabs.onUpdated.addListener(async (tabId, change) => {
+  if (change.title === undefined || !(await isHeardTab(tabId))) return;
+
+  publishCapture({ ...(await readCapture()), title: change.title });
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {
