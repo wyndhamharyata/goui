@@ -1,6 +1,6 @@
 import Foundation
 
-// Where install.sh puts the app. Only that copy updates itself, so a build from a checkout leaves an install alone.
+// Where install.sh puts the app. Only that copy updates itself, so a build from a checkout does not touch an install.
 let installedAppURL = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Applications/goui.app")
 
 var isRunningInstalledApp: Bool {
@@ -69,7 +69,7 @@ enum WebFolder {
     isRunningInstalledApp && newerVersion != nil
   }
 
-  // The version file goes first, so a failure part way through leaves the app's own files in use.
+  // The version file goes first, so a failure part way through keeps the app's own files in use.
   static func apply(from appURL: URL, version: String) throws {
     let packedURL = appURL.appending(path: "Contents/Resources/web")
     try? FileManager.default.removeItem(at: versionURL)

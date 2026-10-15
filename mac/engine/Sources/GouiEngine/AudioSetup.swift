@@ -29,8 +29,7 @@ struct Teardown: @unchecked Sendable {
   }
 }
 
-// The tap, the aggregate device and the running callback, built away from the main thread.
-// The first build waits there until the person answers the permission prompt.
+// The tap, the aggregate device and the running callback, built away from the main thread. The first build waits there until the person answers the permission prompt.
 struct BuiltAudioPath: @unchecked Sendable {
   let outputID: AudioObjectID
   let aggregateID: AudioObjectID
@@ -79,6 +78,7 @@ struct BuiltAudioPath: @unchecked Sendable {
         outputName: outputName, sampleRateHz: sampleRateHz, tapChannelCount: tapChannelCount,
         totalDelayMs: Double(latencyFrames + safetyFrames + bufferFrames) / sampleRateHz * 1000, bufferDelayMs: Double(bufferFrames) / sampleRateHz * 1000
       )
+
       return BuiltAudioPath(outputID: outputID, aggregateID: aggregateID, render: render, summary: summary, teardown: teardown)
     } catch {
       teardown.runAll()
@@ -94,10 +94,12 @@ private func findOwnProcess() throws -> AudioObjectID {
   var process = AudioObjectID(kAudioObjectUnknown)
   var byteCount = UInt32(MemoryLayout<AudioObjectID>.size)
   let qualifierByteCount = UInt32(MemoryLayout<pid_t>.size)
+
   let status = AudioObjectGetPropertyData(systemObject, &address, qualifierByteCount, &processID, &byteCount, &process)
   try throwIfFailed(status, step: "Finding this process")
   // Without its own process to leave out, the tap would hear the engine's output and feed it back.
   guard process != kAudioObjectUnknown else { throw GouiError("Core Audio does not know this process yet, so the tap would hear its own output") }
+
   return process
 }
 

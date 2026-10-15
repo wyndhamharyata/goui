@@ -3,6 +3,8 @@
 The audio path in `../PLAN.md`. It plays every sound on the Mac through a preamp and up to 32
 bands, with the same filters as the extension.
 
+Its rules are in `CLAUDE.md` beside this file, and in the repo root.
+
 `goui-engine` is the command line tool. `goui` is the same engine in a menu bar app, run by launchd.
 `goui-render-check` checks the render code with no audio device.
 

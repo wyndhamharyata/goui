@@ -59,9 +59,17 @@ final class AppController: NSObject, WKNavigationDelegate {
 
   func start() {
     buildMenu()
+    configureStatusItem()
+    isOpeningAfterInstall = takeInstalledMarker()
+    if pagePath != Self.panelPagePath { togglePanel() }
+    openPanelOnceStarted(engine.status)
+  }
+
+  private func configureStatusItem() {
     // A template image takes the menu bar's own colour, in light mode and dark.
     let menuBarIcon = Bundle.main.image(forResource: "menu-bar")
     menuBarIcon?.isTemplate = true
+
     statusItem.button?.image = menuBarIcon
     statusItem.button?.title = menuBarIcon == nil ? "goui" : ""
     statusItem.button?.setAccessibilityLabel("goui")
@@ -69,9 +77,6 @@ final class AppController: NSObject, WKNavigationDelegate {
     statusItem.button?.target = self
     statusItem.button?.action = #selector(clickMenuBarItem)
     statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
-    isOpeningAfterInstall = takeInstalledMarker()
-    if pagePath != Self.panelPagePath { togglePanel() }
-    openPanelOnceStarted(engine.status)
   }
 
   // Building the tap gives the focus back to the app in front, which would hide the panel, so it opens after.

@@ -2,8 +2,7 @@ import CoreAudio
 import Foundation
 import Render
 
-// Plays test tones through the render code with no audio device. It checks the gain of each band
-// kind against the band's response, and that a change of sound fades without a click.
+// Plays test tones through the render code with no audio device. It checks the gain of each band kind against the band's response, and that a change of sound fades without a click.
 
 let sampleRateHz = 48_000.0
 let framesPerCallback = 512
@@ -93,16 +92,16 @@ func checkGain(_ name: String, preampDb: Double = 0, bands: [RenderBand], toneHz
   report(isPassing, String(format: "%@ at %.0f Hz: %.2f dB, the response says %.2f dB", name, toneHz, measuredDb, expectedDb))
 }
 
-func checkFade(_ name: String, from: (Double, [RenderBand]), to: (Double, [RenderBand]), toneHz: Double) {
-  let renderer = Renderer(preampDb: from.0, bands: from.1)
+func checkFade(_ name: String, from: (preampDb: Double, bands: [RenderBand]), to: (preampDb: Double, bands: [RenderBand]), toneHz: Double) {
+  let renderer = Renderer(preampDb: from.preampDb, bands: from.bands)
   let tone = makeTone(frequencyHz: toneHz, seconds: 1)
   // The change comes at a peak of the tone, where a click jumps furthest.
   let half = (tone.count / 2) + Int(sampleRateHz / toneHz / 4)
   let before = renderer.render(Array(tone[..<half]))
-  let isTaken = renderer.trySetSound(preampDb: to.0, bands: to.1)
-  let isRefusedDuringFade = !renderer.trySetSound(preampDb: to.0, bands: to.1)
+  let isTaken = renderer.trySetSound(preampDb: to.preampDb, bands: to.bands)
+  let isRefusedDuringFade = !renderer.trySetSound(preampDb: to.preampDb, bands: to.bands)
   let after = renderer.render(Array(tone[half...]))
-  let isTakenAfterFade = renderer.trySetSound(preampDb: to.0, bands: to.1)
+  let isTakenAfterFade = renderer.trySetSound(preampDb: to.preampDb, bands: to.bands)
 
   let steadyCount = tone.count / 4
   let stepLimit = clickStepRatio * max(largestStep(Array(before.suffix(steadyCount))), largestStep(Array(after.suffix(steadyCount))))

@@ -10,7 +10,9 @@ final class WebStorage {
 
   init() {
     let data = try? Data(contentsOf: Self.fileURL)
-    items = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
+    let saved = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+
+    items = saved ?? [:]
   }
 
   // nil keys reads every item, as in Chrome.

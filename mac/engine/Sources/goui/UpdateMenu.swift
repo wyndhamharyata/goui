@@ -1,7 +1,6 @@
 import AppKit
 
-// The update items in goui's menu and the check behind them.
-// A web-only release goes in at once. A new engine waits for one click, as it starts the app again.
+// The update items in goui's menu and the check behind them. A web-only release goes in at once and a new engine waits for one click, since it starts the app again.
 @MainActor
 final class UpdateMenu: NSObject {
   private static let automaticKey = "automaticUpdates"
@@ -77,16 +76,24 @@ final class UpdateMenu: NSObject {
   private func runCheck(isManual: Bool) async {
     let currentVersion = WebFolder.newerVersion ?? appVersion
     let upToDate = "goui \(currentVersion) is the newest version."
-    guard isRunningInstalledApp else { return report(log: upToDate, message: upToDate, isManual: isManual) }
+
+    if !isRunningInstalledApp {
+      report(log: upToDate, message: upToDate, isManual: isManual)
+      return
+    }
 
     let release: ReleaseDownload.Release
     do {
       release = try await ReleaseDownload.readLatest()
     } catch {
-      return reportFailure("The update check did not reach GitHub. \(error.localizedDescription)", isManual: isManual)
+      reportFailure("The update check did not reach GitHub. \(error.localizedDescription)", isManual: isManual)
+      return
     }
 
-    guard compareVersions(release.version, currentVersion) > 0 else { return report(log: upToDate, message: upToDate, isManual: isManual) }
+    guard compareVersions(release.version, currentVersion) > 0 else {
+      report(log: upToDate, message: upToDate, isManual: isManual)
+      return
+    }
 
     do {
       let newerAppURL = try await ReleaseDownload.bring(release)

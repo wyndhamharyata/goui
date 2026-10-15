@@ -2,6 +2,9 @@ import CoreAudio
 import Foundation
 import Render
 
+// DispatchTime counts in nanoseconds.
+private let nanosecondsPerSecond = 1_000_000_000.0
+
 public struct MeterReading {
   public let callbacksPerSecond: Double
   public let inputPeakLinear: Float
@@ -18,8 +21,7 @@ public struct ScopeReading {
   public let sampleRateHz: Double
 }
 
-// Keeps one audio path playing: a muted tap of every other process, played to the default output.
-// It builds the path again when the output changes, a start fails or the callbacks stop.
+// Keeps one audio path playing: a muted tap of every other process, played to the default output. It builds the path again when the output changes, a start fails or the callbacks stop.
 @MainActor
 public final class Engine {
   public enum Status: Equatable {
@@ -42,7 +44,9 @@ public final class Engine {
   private var sound = RenderSound(preampDb: 0, bands: [])
   public var onStatusChange: ((Status) -> Void)?
   public private(set) var status = Status.stopped {
-    didSet { if status != oldValue { onStatusChange?(status) } }
+    didSet {
+      if status != oldValue { onStatusChange?(status) }
+    }
   }
   private var built: BuiltAudioPath?
   // The engine lives as long as the app, so this listener is never taken off.
@@ -72,15 +76,19 @@ public final class Engine {
     status = .starting
     let sound = sound
     buildTask = Task { [weak self] in
-      let result = await withCheckedContinuation { continuation in
-        Engine.buildQueue.async { continuation.resume(returning: Result { try BuiltAudioPath.build(sound: sound) }) }
+      // The build waits for the permission prompt, so it runs off the main thread.
+      let buildResult = await withCheckedContinuation { continuation in
+        Engine.buildQueue.async {
+          continuation.resume(returning: Result { try BuiltAudioPath.build(sound: sound) })
+        }
       }
       guard let self, !Task.isCancelled else {
-        if case .success(var built) = result { built.teardown.runAll() }
+        // A cancelled build still finishes its work, so its path comes down here.
+        if case .success(var built) = buildResult { built.teardown.runAll() }
         return
       }
 
-      finishStart(result)
+      finishStart(buildResult)
     }
   }
 
@@ -111,11 +119,13 @@ public final class Engine {
 
     var meters = RenderMeters()
     renderReadMeters(render, &meters)
+
     let nowNanoseconds = DispatchTime.now().uptimeNanoseconds
-    let elapsedSeconds = Double(nowNanoseconds - lastMeterNanoseconds) / 1e9
+    let elapsedSeconds = Double(nowNanoseconds - lastMeterNanoseconds) / nanosecondsPerSecond
     let callbacksPerSecond = elapsedSeconds > 0 ? Double(meters.callbackCount - lastCallbackCount) / elapsedSeconds : 0
     lastMeterNanoseconds = nowNanoseconds
     lastCallbackCount = meters.callbackCount
+
     return MeterReading(
       callbacksPerSecond: callbacksPerSecond, inputPeakLinear: meters.inputPeakLinear, outputPeakLinear: meters.outputPeakLinear,
       inputBufferCount: meters.inputBufferCount, tapChannelCount: meters.tapChannelCount,
@@ -131,21 +141,10 @@ public final class Engine {
     return ScopeReading(samples: samples, sampleRateHz: built.summary.sampleRateHz)
   }
 
-  private func finishStart(_ result: Result<BuiltAudioPath, any Error>) {
+  private func finishStart(_ buildResult: Result<BuiltAudioPath, any Error>) {
     do {
-      var built = try result.get()
-      do {
-        try listen(to: built.aggregateID, kAudioDeviceProcessorOverload, teardown: &built.teardown) { [weak self] in
-          self?.overloadCount += 1
-        }
-        // A call on a Bluetooth headphone changes its rate, and the filters were worked out for the old one.
-        try listen(to: built.outputID, kAudioDevicePropertyNominalSampleRate, teardown: &built.teardown) { [weak self] in
-          self?.restart(reason: "The sample rate of the output changed.")
-        }
-      } catch {
-        built.teardown.runAll()
-        throw error
-      }
+      var built = try buildResult.get()
+      try listenToBuiltPath(&built)
 
       self.built = built
       overloadCount = 0
@@ -167,6 +166,22 @@ public final class Engine {
     }
   }
 
+  // A failed listener takes the whole built path down with it, so the next start builds a clean one.
+  private func listenToBuiltPath(_ built: inout BuiltAudioPath) throws {
+    do {
+      try listen(to: built.aggregateID, kAudioDeviceProcessorOverload, teardown: &built.teardown) { [weak self] in
+        self?.overloadCount += 1
+      }
+      // A call on a Bluetooth headphone changes its rate, and the filters were worked out for the old one.
+      try listen(to: built.outputID, kAudioDevicePropertyNominalSampleRate, teardown: &built.teardown) { [weak self] in
+        self?.restart(reason: "The sample rate of the output changed.")
+      }
+    } catch {
+      built.teardown.runAll()
+      throw error
+    }
+  }
+
   // The render code refuses a new sound while the last change still fades.
   private func sendSoundToPath() {
     pendingSound?.cancel()
@@ -175,7 +190,9 @@ public final class Engine {
     let isTaken = sound.bands.withUnsafeBufferPointer { bands in
       renderTrySetSound(render, sound.preampDb, bands.baseAddress, UInt32(bands.count))
     }
-    if !isTaken { pendingSound = schedule(afterSeconds: Self.fadeWaitSeconds) { [weak self] in self?.sendSoundToPath() } }
+    if !isTaken {
+      pendingSound = schedule(afterSeconds: Self.fadeWaitSeconds) { [weak self] in self?.sendSoundToPath() }
+    }
   }
 
   private func watchCallbacks() {

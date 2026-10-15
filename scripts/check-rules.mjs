@@ -73,6 +73,139 @@ function readScript(source) {
   return pieces;
 }
 
+// A Swift keyword is the language's own word, so the name list skips it.
+const swiftKeywords = new Set([
+  "actor", "any", "as", "associatedtype", "async", "await", "borrowing", "break", "case", "catch",
+  "class", "consuming", "continue", "convenience", "default", "defer", "deinit", "didSet", "do",
+  "dynamic", "each", "else", "enum", "extension", "fallthrough", "false", "fileprivate", "final",
+  "for", "func", "get", "guard", "if", "import", "in", "indirect", "infix", "init", "inout",
+  "internal", "is", "isolated", "lazy", "let", "macro", "mutating", "nil", "nonisolated", "open",
+  "operator", "optional", "override", "package", "postfix", "prefix", "private", "protocol",
+  "public", "repeat", "required", "rethrows", "return", "self", "sending", "set", "some", "static",
+  "struct", "subscript", "super", "switch", "throw", "throws", "true", "try", "typealias",
+  "unowned", "var", "weak", "where", "while", "willSet",
+]);
+
+// Swift has no parser here. Code goes to the name list, a string to the text list and a comment to
+// the comment list. Rule 3 keeps a comment to one line, and two comments in a row break it.
+/**
+ * @param {string} source
+ * @returns {Piece[]}
+ */
+function readSwift(source) {
+  const pieces = [];
+  const commentLines = new Set();
+  let index = 0;
+  let line = 1;
+
+  while (index < source.length) {
+    const character = source[index];
+
+    if (character === "\n") { line += 1; index += 1; continue; }
+    if (isCommentStart(source, index)) {
+      const comment = readSwiftComment(source, index, line);
+      pieces.push({ text: comment.text, kind: "comment", line });
+      if (comment.isLine) commentLines.add(line);
+      line = comment.line;
+      index = comment.stop;
+      continue;
+    }
+    if (character === '"') {
+      const literal = readSwiftString(source, index, line);
+      pieces.push({ text: literal.text, kind: "text", line });
+      line = literal.line;
+      index = literal.stop;
+      continue;
+    }
+    if (/[A-Za-z_]/.test(character)) {
+      const end = swiftWordEnd(source, index);
+      const word = source.slice(index, end);
+      if (!swiftKeywords.has(word)) pieces.push({ text: word, kind: "name", line });
+      index = end;
+      continue;
+    }
+    index += 1;
+  }
+
+  return pieces.concat(findSwiftLongComments(commentLines));
+}
+
+/**
+ * @param {string} source
+ * @param {number} index
+ * @returns {boolean}
+ */
+function isCommentStart(source, index) {
+  const next = source[index + 1];
+
+  return source[index] === "/" && (next === "/" || next === "*");
+}
+
+/**
+ * @param {string} source
+ * @param {number} start
+ * @param {number} line
+ * @returns {{ text: string, stop: number, line: number, isLine: boolean }}
+ */
+function readSwiftComment(source, start, line) {
+  const isLine = source[start + 1] === "/";
+  const end = isLine ? source.indexOf("\n", start) : source.indexOf("*/", start + 2);
+  const stop = end === -1 ? source.length : end + (isLine ? 0 : 2);
+  const text = source.slice(start + 2, end === -1 ? source.length : end);
+
+  return { text, stop, line: line + text.split("\n").length - 1, isLine };
+}
+
+/**
+ * @param {string} source
+ * @param {number} start
+ * @returns {number}
+ */
+function swiftWordEnd(source, start) {
+  let index = start + 1;
+
+  while (index < source.length && /[A-Za-z0-9_]/.test(source[index])) index += 1;
+
+  return index;
+}
+
+/**
+ * @param {Set<number>} commentLines
+ * @returns {Piece[]}
+ */
+function findSwiftLongComments(commentLines) {
+  const pieces = [];
+
+  for (const line of commentLines) {
+    if (commentLines.has(line - 1)) pieces.push({ text: "", kind: "longComment", line });
+  }
+
+  return pieces;
+}
+
+/**
+ * @param {string} source
+ * @param {number} start
+ * @param {number} line
+ * @returns {{ text: string, stop: number, line: number }}
+ */
+function readSwiftString(source, start, line) {
+  let index = start + 1;
+  let text = "";
+  let currentLine = line;
+
+  while (index < source.length) {
+    const character = source[index];
+    if (character === "\\") { text += source[index + 1] ?? ""; index += 2; continue; }
+    if (character === '"') { index += 1; break; }
+    if (character === "\n") currentLine += 1;
+    text += character;
+    index += 1;
+  }
+
+  return { text, stop: index, line: currentLine };
+}
+
 // Splitting on every backtick also blanks fenced blocks, since a fence has an odd count of them.
 function blankCode(markdown) {
   return markdown
@@ -89,6 +222,7 @@ const readers = {
   ".json": (source) => splitLines(source, "text"),
   ".md": (source) => splitLines(blankCode(source), "doc"),
   ".mjs": readScript,
+  ".swift": readSwift,
 };
 
 function findPunctuationProblems(text, kind) {

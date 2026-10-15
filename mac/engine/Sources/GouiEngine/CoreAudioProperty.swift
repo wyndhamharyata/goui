@@ -36,24 +36,29 @@ func readProperty<Value: BitwiseCopyable>(of object: AudioObjectID, _ selector: 
   let expectedByteCount = MemoryLayout<Value>.size
   var byteCount = UInt32(expectedByteCount)
   let step = "Reading \(fourCharacterCode(selector))"
+
   return try withUnsafeTemporaryAllocation(byteCount: expectedByteCount, alignment: MemoryLayout<Value>.alignment) { buffer in
     buffer.initializeMemory(as: UInt8.self, repeating: 0)
     try throwIfFailed(AudioObjectGetPropertyData(object, &address, 0, nil, &byteCount, buffer.baseAddress!), step: step)
     guard byteCount == expectedByteCount else {
       throw GouiError("\(step) returned \(byteCount) bytes instead of \(expectedByteCount)")
     }
+
     return buffer.load(as: Value.self)
   }
 }
 
 func readString(of object: AudioObjectID, _ selector: AudioObjectPropertySelector) throws -> String {
-  try readProperty(of: object, selector, as: Unmanaged<CFString>?.self)?.takeRetainedValue() as String? ?? ""
+  let value = try readProperty(of: object, selector, as: Unmanaged<CFString>?.self)
+
+  return value?.takeRetainedValue() as String? ?? ""
 }
 
 // Core Audio calls the handler on the main queue. The teardown takes the listener off again.
 func listen(to object: AudioObjectID, _ selector: AudioObjectPropertySelector, teardown: inout Teardown, handler: @escaping @MainActor () -> Void) throws {
   var address = propertyAddress(selector)
   let block: AudioObjectPropertyListenerBlock = { _, _ in MainActor.assumeIsolated { handler() } }
+
   try throwIfFailed(AudioObjectAddPropertyListenerBlock(object, &address, DispatchQueue.main, block), step: "Listening to \(fourCharacterCode(selector))")
   teardown.add("Removing the listener for \(fourCharacterCode(selector))") {
     AudioObjectRemovePropertyListenerBlock(object, &address, DispatchQueue.main, block)
