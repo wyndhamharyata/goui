@@ -198,6 +198,16 @@ button.on {
   padding: 8px;
 }
 
+.add-layers {
+  display: flex;
+  gap: 6px;
+}
+
+.add-layers button {
+  flex: 1;
+  padding: 8px;
+}
+
 input[type="text"],
 input[type="search"] {
   width: 100%;

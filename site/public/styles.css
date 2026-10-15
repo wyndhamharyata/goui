@@ -77,7 +77,7 @@ a.name {
 
 @media (max-height: 740px) and (min-width: 760px) {
   .demo {
-    zoom: 0.82;
+    zoom: 0.78;
   }
 }
 

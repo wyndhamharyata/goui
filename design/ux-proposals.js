@@ -15,8 +15,11 @@ const regions = [
 const typeColor = { PK: "#b06bff", LSC: "#2ec4b6", HSC: "#2ec4b6", HP: "#ff9f43", LP: "#ff9f43" };
 const typeName = { PK: "Peak", LSC: "Low shelf", HSC: "High shelf", HP: "Low cut", LP: "High cut" };
 const zooms = { all: [20, 20_000], lows: [20, 400], mids: [200, 5000], highs: [2000, 20_000] };
-const layerColor = { headphone: "#a9b8ff", ear: "#ffd166" };
+const layerColor = { headphone: "#a9b8ff", ear: "#ffd166", taste: "#ff8fb1" };
 const earText = "Preamp: 0.0 dB\nFilter 1: ON PK Fc 94 Hz Gain -5.0 dB Q 1.60\nFilter 2: ON PK Fc 7732 Hz Gain -3.0 dB Q 2.85";
+const tasteText = "Preamp: 0.0 dB\nFilter 1: ON LSC Fc 60 Hz Gain 2.0 dB Q 0.70\nFilter 2: ON PK Fc 3000 Hz Gain -1.5 dB Q 1.40";
+const layerNames = { headphone: "Headphone", ear: "My ear", taste: "Taste" };
+const pastedNames = { headphone: "Pasted headphone", ear: "Pasted ear tuning", taste: "Pasted taste" };
 
 const headphoneBands = [
   { on: true, type: "LSC", frequencyHz: 105, gainDb: -2.6, q: 0.7 },
@@ -339,8 +342,8 @@ function makeGraph(host, model, options) {
       const isSelected = index === model.selected;
       const fill = band.on ? typeColor[band.type] : "#0e1013";
       const ring = isSelected ? `<circle cx="${point.x}" cy="${point.y}" r="11" fill="none" stroke="#fff" stroke-opacity="0.7"/>` : "";
-      const earRing = band.layer === "ear" ? `<circle cx="${point.x}" cy="${point.y}" r="9" fill="none" stroke="${layerColor.ear}" stroke-width="1.5"/>` : "";
-      return `${earRing}${ring}<circle cx="${point.x}" cy="${point.y}" r="7" fill="${fill}" stroke="${typeColor[band.type]}" stroke-width="1.5"/>`
+      const layerRing = band.layer && band.layer !== "headphone" ? `<circle cx="${point.x}" cy="${point.y}" r="9" fill="none" stroke="${layerColor[band.layer]}" stroke-width="1.5"/>` : "";
+      return `${layerRing}${ring}<circle cx="${point.x}" cy="${point.y}" r="7" fill="${fill}" stroke="${typeColor[band.type]}" stroke-width="1.5"/>`
         + `<text x="${point.x}" y="${point.y + 3}" text-anchor="middle" font-size="9" font-weight="700" fill="#0e1013">${index + 1}</text>`;
     }).join("");
   }
@@ -747,7 +750,7 @@ function legendHtml(hasLayers) {
       <span>${dot(typeColor.PK)}Peak</span>
       <span>${dot(typeColor.LSC)}Shelf</span>
       <span>${dot(typeColor.HP)}Cut</span>
-      ${hasLayers ? `<span>${swatch(`height:0;border-top:2px dashed ${layerColor.headphone}`)}Headphone layer</span><span>${swatch(`height:0;border-top:2px dashed ${layerColor.ear}`)}My ear layer</span>` : ""}
+      ${hasLayers ? `<span>${swatch(`height:0;border-top:2px dashed ${layerColor.headphone}`)}Headphone layer</span><span>${swatch(`height:0;border-top:2px dashed ${layerColor.ear}`)}My ear layer</span><span>${swatch(`height:0;border-top:2px dashed ${layerColor.taste}`)}Taste layer</span>` : ""}
     </div>`;
 }
 
@@ -861,18 +864,21 @@ function mountLayers(host, model, onChange) {
         <button class="switch ${layer.on ? "" : "off"}" data-act="toggle" data-value="${key}" title="Turn this layer on or off"></button>
         <div class="grow"><small><i class="layer-mark" style="border-color:${layerColor[key]}"></i>${layer.label} · ${layer.source}</small><b>${layer.name}</b></div>
         <button data-act="change" data-value="${key}">Change</button>
-        ${key === "ear" ? `<button data-act="remove" title="Take the ear layer off">×</button>` : ""}
+        ${key === "headphone" ? "" : `<button data-act="remove" data-value="${key}" title="Take the ${key} layer off">×</button>`}
       </div>`);
-    const add = model.layers.ear ? "" : `<button class="wide-button" data-act="addEar">Add your ear tuning on top</button>`;
+    const missing = ["ear", "taste"].filter((key) => !model.layers[key]);
+    const words = { ear: ["Add ear tuning", "Add your ear tuning on top"], taste: ["Add taste", "Add your taste on top"] };
+    const buttons = missing.map((key) => `<button data-act="add" data-value="${key}">${words[key][missing.length > 1 ? 0 : 1]}</button>`);
+    const add = missing.length > 0 ? `<div class="add-layers">${buttons.join("")}</div>` : "";
     return rows.join("") + add;
   };
   mount(host, model, draw, {
     toggle: (key) => { model.layers[key].on = !model.layers[key].on; },
     change: (key) => onChange(key),
-    addEar: () => onChange("ear"),
-    remove: () => {
-      delete model.layers.ear;
-      model.bands = model.bands.filter((band) => band.layer !== "ear");
+    add: (key) => onChange(key),
+    remove: (key) => {
+      delete model.layers[key];
+      model.bands = model.bands.filter((band) => band.layer !== key);
       model.selected = -1;
     },
   });
@@ -900,15 +906,16 @@ function mountLayers(host, model, onChange) {
 
 {
   const model = makeModel(headphoneBands.map((band) => ({ ...band, layer: "headphone" })), "AKG N700NC M2");
-  model.bands.push(...parseAutoEqText(earText, "ear"));
+  model.bands.push(...parseAutoEqText(earText, "ear"), ...parseAutoEqText(tasteText, "taste"));
   model.layers = {
     headphone: { label: "Headphone", source: "AutoEQ", name: "AKG N700NC M2", on: true },
     ear: { label: "My ear", source: "EQByEar", name: "Ear test, 12 Oct", on: true },
+    taste: { label: "Taste", source: "Saved", name: "Warm and smooth", on: true },
   };
   let target = "ear";
   const showTab = mountTabs("f-tabs", model);
   const drawTarget = () => {
-    const choices = [["headphone", "Headphone"], ["ear", "My ear"]].map(([key, label]) => `<button class="${key === target ? "on" : ""}" data-target="${key}">${label}</button>`);
+    const choices = Object.entries(layerNames).map(([key, label]) => `<button class="${key === target ? "on" : ""}" data-target="${key}">${label}</button>`);
     byId("f-target").innerHTML = `<span>Put into</span>${choices.join("")}`;
   };
   byId("f-target").addEventListener("click", (event) => {
@@ -933,10 +940,9 @@ function mountLayers(host, model, onChange) {
   drawTarget();
   byId("f-apply").addEventListener("click", () => {
     const bands = parseAutoEqText(byId("f-text").value, target);
-    const order = { headphone: 0, ear: 1 };
+    const order = { headphone: 0, ear: 1, taste: 2 };
     model.bands = [...model.bands.filter((band) => band.layer !== target), ...bands].sort((first, second) => order[first.layer] - order[second.layer]);
-    const name = target === "ear" ? "Pasted ear tuning" : "Pasted headphone";
-    model.layers[target] = { label: target === "ear" ? "My ear" : "Headphone", source: "Pasted", name, on: true };
+    model.layers = Object.fromEntries(Object.keys(order).filter((key) => key === target || model.layers[key]).map((key) => [key, key === target ? { label: layerNames[key], source: "Pasted", name: pastedNames[key], on: true } : model.layers[key]]));
     model.selected = -1;
     showTab("listen");
   });
