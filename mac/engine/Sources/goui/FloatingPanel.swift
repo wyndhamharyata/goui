@@ -50,13 +50,20 @@ final class FloatingPanel: NSPanel, NSWindowDelegate {
   // Keeps the middle and the top edge where they are, and stays on the screen.
   func setWidth(_ width: Double) {
     let visibleFrame = screen?.visibleFrame ?? frame
-    let leftmostX = Double(visibleFrame.minX) + Self.gapPx
     let newWidth = min(max(width, Self.narrowWidthPx), Double(visibleFrame.width) - (2 * Self.gapPx))
-    let rightmostX = Double(visibleFrame.maxX) - newWidth - Self.gapPx
     var newFrame = frame
-    newFrame.origin.x = min(max(Double(frame.midX) - (newWidth / 2), leftmostX), rightmostX)
+    newFrame.origin.x = centredX(on: Double(frame.midX), width: newWidth, in: screen)
     newFrame.size.width = newWidth
     setFrame(newFrame, display: true)
+  }
+
+  // The left edge that centres a panel of this width on x, kept on the screen.
+  private func centredX(on x: Double, width: Double, in screen: NSScreen?) -> Double {
+    let visibleFrame = screen?.visibleFrame ?? frame
+    let leftmostX = Double(visibleFrame.minX) + Self.gapPx
+    let rightmostX = Double(visibleFrame.maxX) - width - Self.gapPx
+
+    return min(max(x - (width / 2), leftmostX), rightmostX)
   }
 
   // Keeps the top edge where it is, and stays on the screen.
@@ -73,10 +80,7 @@ final class FloatingPanel: NSPanel, NSWindowDelegate {
     guard let buttonWindow = button.window, let screen = buttonWindow.screen else { return }
 
     let buttonFrame = buttonWindow.convertToScreen(button.convert(button.bounds, to: nil))
-    let visibleFrame = screen.visibleFrame
-    let leftmostX = visibleFrame.minX + Self.gapPx
-    let rightmostX = visibleFrame.maxX - frame.width - Self.gapPx
-    let x = min(max(buttonFrame.midX - (frame.width / 2), leftmostX), rightmostX)
+    let x = centredX(on: Double(buttonFrame.midX), width: Double(frame.width), in: screen)
 
     setFrameOrigin(NSPoint(x: x, y: buttonFrame.minY - frame.height - Self.gapPx))
     // Until goui is the active app, macOS can hand the focus back to the app in front, which hides the panel.

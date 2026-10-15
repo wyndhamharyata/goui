@@ -18,7 +18,7 @@ final class AppController: NSObject, WKNavigationDelegate {
   // The click on the menu bar item that hides the panel would open it again straight away.
   private static let reopenDelaySeconds = 0.3
   // install.sh writes this after an install or an update, so the panel opens once and shows where goui lives.
-  private static let installedMarkerURL = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Library/Application Support/goui/just-installed")
+  private static let installedMarkerURL = SupportFolder.file("just-installed")
 
   private let pagePath: String
   private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -29,6 +29,7 @@ final class AppController: NSObject, WKNavigationDelegate {
   private var webView: WKWebView?
   private var panel: FloatingPanel?
   private var isOpeningAfterInstall = false
+  private lazy var updateMenu = UpdateMenu { [weak self] in self?.rebuildPanelAfterUpdate() }
 
   init(pagePath: String) {
     self.pagePath = pagePath
@@ -97,6 +98,8 @@ final class AppController: NSObject, WKNavigationDelegate {
     wideItem.state = UserDefaults.standard.double(forKey: Self.widthKey) >= Self.wideWidthPx ? .on : .off
     menu.addItem(wideItem)
     menu.addItem(.separator())
+    updateMenu.install(in: menu)
+    menu.addItem(.separator())
     menu.addItem(withTitle: "Quit goui", action: #selector(quit), keyEquivalent: "q").target = self
   }
 
@@ -136,14 +139,24 @@ final class AppController: NSObject, WKNavigationDelegate {
     return panel
   }
 
+  // The panel reads an updated web folder when the app runs from ~/Applications, so a build run from anywhere else keeps its own files.
+  private func webRoots() -> WebRoots {
+    var folders: [URL] = []
+
+    if Updater.isInstalled, AppVersion.hasNewerWeb { folders.append(Updater.webURL) }
+    if let bundledURL = Bundle.main.resourceURL?.appending(path: "web") { folders.append(bundledURL) }
+
+    return WebRoots(folders: folders)
+  }
+
   private func buildWebView() -> WKWebView {
     let configuration = WKWebViewConfiguration()
-    let webRootURL = Bundle.main.resourceURL?.appending(path: "web") ?? URL(fileURLWithPath: "/nonexistent")
-    configuration.setURLSchemeHandler(WebFileServer(rootURL: webRootURL), forURLScheme: WebFileServer.scheme)
+    let roots = webRoots()
+    configuration.setURLSchemeHandler(WebFileServer(roots: roots), forURLScheme: WebFileServer.scheme)
     if let bridge { configuration.userContentController.addScriptMessageHandler(bridge, contentWorld: .page, name: Bridge.name) }
 
     // The Chrome stand-in runs before the panel's own code, which reads chrome as it loads.
-    if let chromeSource = try? String(contentsOf: webRootURL.appending(path: Self.chromePath), encoding: .utf8) {
+    if let chromeURL = roots.file(atPath: Self.chromePath), let chromeSource = try? String(contentsOf: chromeURL, encoding: .utf8) {
       configuration.userContentController.addUserScript(WKUserScript(source: chromeSource, injectionTime: .atDocumentStart, forMainFrameOnly: true))
     } else {
       print("\(Self.chromePath) is missing from the app, so the panel cannot reach goui.")
@@ -200,6 +213,9 @@ final class AppController: NSObject, WKNavigationDelegate {
   // The name, icon and version come from the bundle. The credits add what goui is and where its guide lives.
   @objc private func showAbout() {
     let credits = NSMutableAttributedString(string: "An EQ for every sound on your Mac. AutoEQ tunes it to your headphone, and EQByEar to your ear.\n\n")
+    if let webVersion = AppVersion.web, webVersion != AppVersion.app {
+      credits.append(NSAttributedString(string: "The panel runs goui \(webVersion).\n\n"))
+    }
     credits.append(NSAttributedString(string: "goui.mwyndham.dev/mac", attributes: [.link: Self.guideURL]))
     credits.addAttributes([.font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize), .foregroundColor: NSColor.labelColor], range: NSRange(location: 0, length: credits.length))
     // A menu bar app is never in front on its own, so the About window would open behind other windows.
@@ -215,6 +231,20 @@ final class AppController: NSObject, WKNavigationDelegate {
     guard let webView else { return }
 
     loadPage(in: webView)
+  }
+
+  // The web files changed under the panel, so the next open builds the page again, stand-in and all.
+  private func rebuildPanelAfterUpdate() {
+    guard let oldPanel = panel else { return }
+
+    let wasVisible = oldPanel.isVisible
+    oldPanel.orderOut(nil)
+    panel = nil
+    webView = nil
+
+    guard wasVisible, let button = statusItem.button else { return }
+
+    buildPanel().show(below: button)
   }
 
   @objc private func quit() {

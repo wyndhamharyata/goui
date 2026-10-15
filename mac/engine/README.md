@@ -19,8 +19,13 @@ during a fade waits for it to end, and then only the newest sound goes in.
 | `goui-engine/main.swift` | Reads the flags, starts the engine, prints the meters and stops on a signal |
 | `goui/main.swift` | Starts the app. `--page` opens another page, such as a check, in place of the panel |
 | `goui/AppController.swift` | Owns the engine, the menu bar item with its right-click menu, and the panel |
+| `goui/UpdateMenu.swift` | The update items in the menu, the twice-a-day check and the one click that installs a new engine |
+| `goui/Updater.swift` | Applies a newer release: the web files alone when the engine is the same, the whole app when it is not |
+| `goui/ReleaseDownload.swift` | Reads the Latest release on GitHub, checks its sha256 and unpacks it |
+| `goui/AppVersion.swift` | The version in use, which an updated web folder can push ahead of the app |
+| `goui/SupportFolder.swift` | The folder goui keeps for a person, and the one way it writes there |
 | `goui/FloatingPanel.swift` | The panel under the menu bar item, which hides on a click elsewhere |
-| `goui/WebFileServer.swift` | Serves `goui://app/` from the web files inside the app |
+| `goui/WebFileServer.swift` | Serves `goui://app/` from the updated web folder first, then the web files inside the app |
 | `goui/Bridge.swift` | Answers the page's messages: status, meters, sound, power, storage, open, size, response, restart, print |
 | `goui/WebStorage.swift` | `chrome.storage.local` for the panel, in `~/Library/Application Support/goui/storage.json` |
 | `goui/SavedConfig.swift` | The power switch and the last sound, in `~/Library/Application Support/goui/config.json` |
@@ -29,7 +34,8 @@ during a fade waits for it to end, and then only the newest sound goes in.
 | `GouiEngine/Sound.swift` | The preamp and bands, as `toPlayedSound` makes them, checked and turned into C bands |
 | `goui-render-check/main.swift` | Plays test tones through the render code and checks each gain and each fade |
 | `GouiEngine/Engine.swift` | Keeps one audio path playing. It builds the path again when the output changes or the callbacks stop, and tries again after a failed start. |
-| `GouiEngine/AudioPath.swift` | Builds the tap, the aggregate device and the callback, and takes them down in reverse |
+| `GouiEngine/AudioSetup.swift` | Builds the tap, the aggregate device and the callback, and takes them down in reverse |
+| `GouiEngine/AudioPath.swift` | Keeps one run of the audio path and reads its meters and its scope |
 | `GouiEngine/PropertyListener.swift` | Listens to one Core Audio property on the main queue |
 | `GouiEngine/CoreAudioProperty.swift` | Reads Core Audio properties and names their errors |
 | `goui-engine/Options.swift` | Parses the flags |
@@ -76,6 +82,26 @@ installs, and `GOUI_YES=1` answers yes for a run with no terminal. The installed
 
 `App/reinstall.sh`, or `npm run mac` from the repo root, does both in one go and answers yes, so a
 change on this Mac is one command away. Each new build asks again to record the audio.
+
+### Updates
+
+The app checks `https://api.github.com/repos/wyndhamharyata/goui/releases/latest` a minute after it
+starts, then twice a day. It downloads `goui-mac.tar.gz`, checks the sha256 in the `-sha256.txt` file
+beside it, and unpacks it. A tarball whose `goui.app/Contents/MacOS/goui` is byte for byte the running
+one changes only the web files. The app copies them to `~/Library/Application Support/goui/web` and
+reads them before the copies inside the app. Any other release shows **Update to ...** in the menu,
+which moves the app into place and starts it again.
+
+`GOUI_UPDATE_FEED` points the check at a made-up release. It takes a path or a URL that serves the
+same JSON as the GitHub API, with asset URLs that can point at a local tarball. A test release can
+come from this checkout. Build the app, copy it, raise the version in the copy with `plutil -replace
+CFBundleShortVersionString`, and pack it again. A copy with the same binary is a web-only release.
+
+```sh
+launchctl setenv GOUI_UPDATE_FEED /tmp/release.json
+goui restart
+launchctl unsetenv GOUI_UPDATE_FEED
+```
 
 ### The render check
 

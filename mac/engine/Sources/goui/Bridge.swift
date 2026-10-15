@@ -141,8 +141,8 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
   private func describeMeters(_ reading: MeterReading, scope: ScopeReading?) -> [String: Any] {
     var meters: [String: Any] = [
       "callbacksPerSecond": reading.callbacksPerSecond,
-      "inputPeakDb": toDbfs(reading.inputPeakLinear) as Any,
-      "outputPeakDb": toDbfs(reading.outputPeakLinear) as Any,
+      "inputPeakDb": linearToDbfs(reading.inputPeakLinear) as Any,
+      "outputPeakDb": linearToDbfs(reading.outputPeakLinear) as Any,
       "overloadCount": reading.overloadCount,
     ]
     if let scope {
@@ -153,9 +153,4 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
     }
     return meters
   }
-}
-
-// nil for silence, which has no level in dB.
-private func toDbfs(_ linear: Float) -> Double? {
-  linear > 0 ? (20 * log10(Double(linear)) * 10).rounded() / 10 : nil
 }

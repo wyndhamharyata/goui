@@ -297,7 +297,7 @@ heading "Before you install"
 note "goui EQs every sound this Mac plays, from the menu bar." "It follows the Mac's default output, and one EQ covers every app."
 note "Spatial Audio and head tracking on AirPods and Beats drop out" "while goui plays. goui plays the sound in between, so macOS skips them."
 note "macOS asks to let goui record the audio of this Mac. Press Allow." "goui EQs the sound on its way to you and keeps none of it."
-note "goui is not signed by Apple yet, so each update asks for that" "permission again."
+note "goui is not signed by Apple yet, so a full update asks for that" "permission again."
 note "Your settings stay in ~/Library/Application Support/goui," "through updates and after goui uninstall."
 if ! ask "$plan goui $new_version now?" y; then
   printf '\n  %sNothing was installed.%s\n\n' "$dim" "$reset"
@@ -347,6 +347,9 @@ cat > "$plist" <<PLIST
 </dict>
 </plist>
 PLIST
+# An update through this script brings the release's own web files, so the ones beside the app go away.
+rm -rf "$HOME/Library/Application Support/goui/web" "$HOME/Library/Application Support/goui/web.previous"
+rm -f "$HOME/Library/Application Support/goui/web-version"
 # The app opens its panel once when it finds this, so the menu bar item is easy to spot.
 mkdir -p "$HOME/Library/Application Support/goui"
 : > "$HOME/Library/Application Support/goui/just-installed"

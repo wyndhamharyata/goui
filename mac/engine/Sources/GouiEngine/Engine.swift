@@ -118,15 +118,11 @@ public final class Engine {
     pendingSound = nil
     guard let path, !path.trySetSound(sound) else { return }
 
-    let workItem = DispatchWorkItem { [weak self] in MainActor.assumeIsolated { self?.sendSoundToPath() } }
-    pendingSound = workItem
-    DispatchQueue.main.asyncAfter(deadline: .now() + Self.fadeWaitSeconds, execute: workItem)
+    pendingSound = schedule(afterSeconds: Self.fadeWaitSeconds) { [weak self] in self?.sendSoundToPath() }
   }
 
   private func watchCallbacks() {
-    let workItem = DispatchWorkItem { [weak self] in MainActor.assumeIsolated { self?.checkCallbacks() } }
-    pendingWatch = workItem
-    DispatchQueue.main.asyncAfter(deadline: .now() + Self.callbackWatchSeconds, execute: workItem)
+    pendingWatch = schedule(afterSeconds: Self.callbackWatchSeconds) { [weak self] in self?.checkCallbacks() }
   }
 
   private func checkCallbacks() {
@@ -149,9 +145,14 @@ public final class Engine {
 
   private func scheduleStart(afterSeconds delaySeconds: Double, _ action: @escaping @MainActor () -> Void) {
     cancelPendingStart()
+    pendingStart = schedule(afterSeconds: delaySeconds, action)
+  }
+
+  // Main-actor work that runs once, later. The caller keeps the item so it can cancel it.
+  private func schedule(afterSeconds delaySeconds: Double, _ action: @escaping @MainActor () -> Void) -> DispatchWorkItem {
     let workItem = DispatchWorkItem { MainActor.assumeIsolated { action() } }
-    pendingStart = workItem
     DispatchQueue.main.asyncAfter(deadline: .now() + delaySeconds, execute: workItem)
+    return workItem
   }
 
   private func cancelPendingStart() {

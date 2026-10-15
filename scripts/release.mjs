@@ -1,5 +1,6 @@
 // npm run release -- patch --notes notes.md raises the version, makes every file again, publishes and deploys.
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 const steps = ["patch", "minor", "major"];
@@ -21,6 +22,14 @@ function run(command, args, cwd = ".") {
  */
 function readOutput(command, args) {
   return execFileSync(command, args, { encoding: "utf8" }).trim();
+}
+
+/**
+ * @param {string} path
+ * @returns {string}
+ */
+function sha256(path) {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
 
 /** @param {string} message */
@@ -76,7 +85,14 @@ const appVersion = execFileSync("plutil", ["-extract", "CFBundleShortVersionStri
 
 if (appVersion !== version) fail(`the Mac tarball says ${appVersion}, not ${version}. Nothing is published yet.`);
 
-run("gh", ["release", "create", tag, `dist/goui-${version}.zip`, "mac/engine/.build/goui-mac.tar.gz", "--target", "main", "--title", `goui ${tag}`, "--notes-file", notesPath]);
+// The Mac app checks the tarball against this file before it installs anything.
+const zipPath = `dist/goui-${version}.zip`;
+const tarballPath = "mac/engine/.build/goui-mac.tar.gz";
+const checksumsPath = `dist/goui-${version}-sha256.txt`;
+
+writeFileSync(checksumsPath, `${sha256(tarballPath)}  goui-mac.tar.gz\n${sha256(zipPath)}  goui-${version}.zip\n`);
+
+run("gh", ["release", "create", tag, zipPath, tarballPath, checksumsPath, "--target", "main", "--title", `goui ${tag}`, "--notes-file", notesPath]);
 run("npm", ["run", "deploy:prod"], "site");
 
 console.log(`\ngoui ${version} is released, and the site is deployed.`);

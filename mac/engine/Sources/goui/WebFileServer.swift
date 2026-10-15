@@ -1,20 +1,36 @@
 import UniformTypeIdentifiers
 import WebKit
 
-// Serves goui://app/<path> from the web folder inside the app, and nothing outside it.
+// The web folders the panel reads, in order. The first folder holding a file serves it.
+struct WebRoots {
+  let folders: [URL]
+
+  // A path that climbs out of a folder is refused. nil when no folder holds the file.
+  func file(atPath path: String) -> URL? {
+    for folder in folders {
+      let rootURL = folder.standardizedFileURL
+      let fileURL = rootURL.appending(path: path).standardizedFileURL
+      if fileURL.path.hasPrefix(rootURL.path + "/"), FileManager.default.fileExists(atPath: fileURL.path) { return fileURL }
+    }
+
+    return nil
+  }
+}
+
+// Serves goui://app/<path> from those folders, and nothing outside them.
 @MainActor
 final class WebFileServer: NSObject, WKURLSchemeHandler {
   static let scheme = "goui"
   static let host = "app"
 
-  private let rootURL: URL
+  private let roots: WebRoots
 
-  init(rootURL: URL) {
-    self.rootURL = rootURL.standardizedFileURL
+  init(roots: WebRoots) {
+    self.roots = roots
   }
 
   func webView(_ webView: WKWebView, start task: any WKURLSchemeTask) {
-    guard let url = task.request.url, let fileURL = findFile(url), let data = try? Data(contentsOf: fileURL) else {
+    guard let url = task.request.url, url.host == Self.host, let fileURL = roots.file(atPath: url.path), let data = try? Data(contentsOf: fileURL) else {
       task.didFailWithError(URLError(.fileDoesNotExist))
       return
     }
@@ -27,11 +43,4 @@ final class WebFileServer: NSObject, WKURLSchemeHandler {
   }
 
   func webView(_ webView: WKWebView, stop task: any WKURLSchemeTask) {}
-
-  private func findFile(_ url: URL) -> URL? {
-    guard url.host == Self.host else { return nil }
-
-    let fileURL = rootURL.appending(path: url.path).standardizedFileURL
-    return fileURL.path.hasPrefix(rootURL.path + "/") ? fileURL : nil
-  }
 }

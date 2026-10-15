@@ -3,7 +3,7 @@ import Foundation
 // chrome.storage.local for the panel, kept in ~/Library/Application Support/goui/storage.json.
 @MainActor
 final class WebStorage {
-  static let fileURL = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Library/Application Support/goui/storage.json")
+  static let fileURL = SupportFolder.file("storage.json")
 
   private var items: [String: Any]
 
@@ -33,8 +33,7 @@ final class WebStorage {
 
   private func save() {
     do {
-      try FileManager.default.createDirectory(at: Self.fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-      try JSONSerialization.data(withJSONObject: items).write(to: Self.fileURL, options: .atomic)
+      try SupportFolder.write(JSONSerialization.data(withJSONObject: items), to: Self.fileURL)
     } catch {
       print("The panel's storage could not be written. \(error)")
     }

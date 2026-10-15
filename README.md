@@ -134,10 +134,13 @@ you and keeps none of it.
 - goui follows the Mac's default output. Another system EQ, such as eqMac or SoundSource, stacks its
   curve on goui's, so run one at a time.
 - Spatial Audio and head tracking on AirPods and Beats drop out while goui plays.
-- goui is not signed by Apple yet, so each update asks for that permission again. Your settings stay
-  in `~/Library/Application Support/goui`.
-- Run the same line again to update. The `goui` command in Terminal takes `start`, `stop`, `restart`,
-  `logs` and `uninstall`.
+- goui is not signed by Apple yet, so a full update asks for that permission again. Your settings
+  stay in `~/Library/Application Support/goui`.
+- goui keeps itself up to date. A release that changes only the panel goes in quietly. A release
+  that changes the engine shows an **Update to …** item in the menu. One click installs it. Run the
+  install line again if you want to.
+- goui asks GitHub for the newest version twice a day. It sends nothing about you.
+- The `goui` command in Terminal takes `start`, `stop`, `restart`, `logs`, `rollback` and `uninstall`.
 
 [goui.mwyndham.dev/mac](https://goui.mwyndham.dev/mac) has more, with troubleshooting.
 
@@ -289,8 +292,13 @@ npm run release -- patch --notes notes.md
 The step is `patch`, `minor`, `major` or a version such as `0.2.0`. The script raises `version` in
 `manifest.json`, then makes the install pictures, the store images and `DEPENDENCIES.md` again. It
 runs lint and the journeys, commits and pushes, and builds `dist/goui-<version>.zip`, the store zip
-and the Mac tarball. Then it publishes the GitHub release with the zip and the tarball, and deploys
+and the Mac tarball. It writes `dist/goui-<version>-sha256.txt`, the hashes of the zip and the
+tarball. Then it publishes the GitHub release with the zip, the tarball and the hashes, and deploys
 the site. The curl line installs the tarball of the release GitHub marks as Latest.
+
+The Mac app updates itself from that release. It reads `goui-mac.tar.gz` and the `-sha256.txt` file
+beside it, and it trusts a release only when its tag matches the version the app holds. Keep those
+names and the `vX.Y.Z` tag when you change the release script.
 
 The Chrome Web Store upload stays a hand step. The script prints which zip to upload, and
 `store/listing.md` holds the text to paste.

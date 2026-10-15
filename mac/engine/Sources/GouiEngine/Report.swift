@@ -12,6 +12,15 @@ public func printMeters(_ reading: MeterReading) {
                reading.inputBufferCount, reading.tapChannelCount, reading.clippedSampleCount, reading.overloadCount))
 }
 
+// Silence has no level in dB. One decimal is enough for a meter.
+public func linearToDbfs(_ linear: Float) -> Double? {
+  guard linear > 0 else { return nil }
+
+  return (20 * log10(Double(linear)) * 10).rounded() / 10
+}
+
 private func formatDbfs(_ linear: Float) -> String {
-  linear > 0 ? String(format: "%6.1f dBFS", 20 * log10(linear)) : "  silent   "
+  guard let db = linearToDbfs(linear) else { return "  silent   " }
+
+  return String(format: "%6.1f dBFS", db)
 }
