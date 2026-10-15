@@ -74,6 +74,9 @@ in `~/.local/bin`. With no `GOUI_TARBALL` it downloads the latest release. It as
 installs, and `GOUI_YES=1` answers yes for a run with no terminal. The installed app and
 `agent.sh` use the same agent label, so whichever ran last is the one that starts at login.
 
+`App/reinstall.sh`, or `npm run mac` from the repo root, does both in one go and answers yes, so a
+change on this Mac is one command away. Each new build asks again to record the audio.
+
 ### The render check
 
 ```sh

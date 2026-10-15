@@ -1,5 +1,6 @@
 /* The palette and page basics that the side panel and the how-to page share. */
 :root {
+  color-scheme: dark;
   --bg: #0e1013;
   --panel: #161a20;
   --panel-2: #1c2129;

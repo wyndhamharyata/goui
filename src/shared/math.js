@@ -58,6 +58,17 @@ export function rootMeanSquare(samples) {
   return Math.sqrt(meanSquare(samples));
 }
 
+// Where a value falls between low and high, from 0 at low to 1 at high.
+/**
+ * @param {number} value
+ * @param {number} low
+ * @param {number} high
+ * @returns {number}
+ */
+export function linearPosition(value, low, high) {
+  return (value - low) / (high - low);
+}
+
 // Where a value falls between low and high on a log scale, from 0 at low to 1 at high.
 /**
  * @param {number} value

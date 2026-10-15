@@ -9,6 +9,7 @@
     "readme-images": "node scripts/make-readme-images.mjs",
     "dependencies-file": "node scripts/make-dependencies.mjs",
     "zip": "node scripts/make-extension-zip.mjs",
+    "mac": "sh mac/engine/App/reinstall.sh",
     "store-images": "node scripts/make-store-images.mjs",
     "targets": "node scripts/make-targets.mjs"
   },

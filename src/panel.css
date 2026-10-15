@@ -1,4 +1,5 @@
 :root {
+  --track: #3a4250;
   --peak: #b06bff;
   --hold: #ff9f43;
   --danger: #ff6b6b;
@@ -463,10 +464,40 @@ textarea {
   font-size: 10px;
 }
 
-.slider input {
+/* goui draws its own range, so Chrome and the Mac app's WebKit show the same blue fill and handle. */
+.slider input[type="range"] {
+  --fill: 50%;
   width: 100%;
   min-width: 0;
-  accent-color: var(--accent);
+  height: 16px;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slider input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--accent) var(--fill), var(--track) var(--fill));
+}
+
+.slider input[type="range"]::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  appearance: none;
+  background: var(--accent);
+}
+
+.slider input[type="range"]:focus-visible {
+  outline: none;
+}
+
+.slider input[type="range"]:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
 }
 
 .slider output {

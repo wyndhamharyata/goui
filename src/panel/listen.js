@@ -4,6 +4,7 @@ import { layerLabels, layerOrder, listExportBands, toPlayedSound, preampRangeDb,
 import { findTargetSet, newAutoEqItem, toAutoEq } from "../autoeq.js";
 import { layerColor } from "../graph/colors.js";
 import { formatDb } from "../graph/format.js";
+import { linearPosition } from "../shared/math.js";
 import { byId, buildElement, sectionOf, setField, showAllLines, showTab } from "./dom.js";
 import { describeLayerName } from "./items.js";
 import { changeTarget, clearHeadphoneLayer } from "./headphones.js";
@@ -101,10 +102,12 @@ function renderSound() {
 
   for (const sliderName of ["bass", "vocals", "treble"]) {
     setField(sliderName, state.config.sliders[`${sliderName}Db`]);
+    renderSliderFill(sliderName, state.config.sliders[`${sliderName}Db`]);
     byId(`${sliderName}Value`).textContent = `${formatDb(state.config.sliders[`${sliderName}Db`])} dB`;
   }
 
   setField("preamp", played.preampDb.toFixed(1));
+  renderSliderFill("preamp", played.preampDb);
   byId("preampValue").textContent = `${formatDb(played.preampDb)} dB`;
   byId("autoPreamp").classList.toggle("on", state.config.autoPreamp);
   byId("preampNote").textContent = state.config.autoPreamp ? "Auto" : "Manual";
@@ -118,6 +121,18 @@ function renderSound() {
   byId("meter").title = isClipping
     ? `The EQ can clip by ${headroomDb.toFixed(1)} dB. Turn the preamp down or press Auto.`
     : "Output level. No clipping.";
+}
+
+// WebKit has no CSS for the part of a range left of its handle, so the page gives it as --fill.
+/**
+ * @param {string} id
+ * @param {number} valueDb
+ */
+function renderSliderFill(id, valueDb) {
+  const slider = byId(id);
+  const share = linearPosition(valueDb, Number(slider.min), Number(slider.max));
+
+  slider.style.setProperty("--fill", `${(share * 100).toFixed(2)}%`);
 }
 
 // Turning Auto off keeps the value Auto had, so the sound does not jump.
