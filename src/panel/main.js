@@ -1,12 +1,12 @@
 // The side panel, and the popup in a window with no side panel. This file wires the page and starts it.
 import { bandTypeDetails, bandTypes } from "../shared/bands.js";
-import { sanitizeConfig } from "../shared/config.js";
+import { layerOrder, sanitizeConfig } from "../shared/config.js";
 import { loadTargets } from "../autoeq.js";
 import { applyCaptureState, startPopup, wireMessages } from "./capture.js";
 import { byId, showTab } from "./dom.js";
 import { graphs, renderPills, wireGraphButtons } from "./graphs.js";
 import { renderHeadphoneList } from "./headphones.js";
-import { renderEarList, wireLibrary } from "./library.js";
+import { renderLayerLists, showLibrarySection, wireLibrary } from "./library.js";
 import { setSliderRanges, wireListen } from "./listen.js";
 import { readPresets } from "./presets.js";
 import { refresh } from "./refresh.js";
@@ -16,7 +16,7 @@ import { wireTune } from "./tune.js";
 
 // The keys startPanel reads. savedSounds, presets and keepsPreampInCompare are older names it still loads.
 const storedKeys = [
-  "config", "headphonePresets", "earPresets", "view", "tab", "hasCaptured", "isLevelMatched",
+  "config", "headphonePresets", "earPresets", "tastePresets", "view", "tab", "libraryRole", "hasCaptured", "isLevelMatched",
   "savedSounds", "presets", "keepsPreampInCompare",
 ];
 
@@ -60,11 +60,12 @@ async function startPanel() {
   for (const graph of graphs) graph.setTall(stored.view === "tall" || stored.view === "vertical");
 
   showTab(stored.tab || "listen");
+  showLibrarySection(layerOrder.includes(stored.libraryRole) ? stored.libraryRole : "headphone");
   renderPills();
   sendAudio();
   refresh();
   renderHeadphoneList();
-  renderEarList();
+  renderLayerLists();
 
   const session = await chrome.storage.session.get("capture");
 

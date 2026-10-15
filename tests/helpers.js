@@ -400,6 +400,18 @@ export function sectionOf(panel, role) {
   return panel.locator(`.preset-section[data-role=${role}]`);
 }
 
+// The Library shows one layer at a time, so this opens the Library and that layer's tab.
+/**
+ * @param {Page} panel
+ * @param {string} role
+ * @returns {Promise<Locator>}
+ */
+export async function openLibrarySection(panel, role) {
+  await openTab(panel, "library");
+  await panel.locator(`#libraryTabs [data-role=${role}]`).click();
+  return sectionOf(panel, role);
+}
+
 // Pastes AutoEQ text into one layer. A second press on Paste closes the box, so it is pressed only when closed.
 /**
  * @param {Page} panel
@@ -407,9 +419,7 @@ export function sectionOf(panel, role) {
  * @param {string} text
  */
 export async function pasteInto(panel, role, text) {
-  await openTab(panel, "library");
-
-  const section = sectionOf(panel, role);
+  const section = await openLibrarySection(panel, role);
 
   if (!(await section.locator("[data-action=apply]").isVisible())) await section.locator("[data-action=paste]").click();
 
@@ -423,9 +433,7 @@ export async function pasteInto(panel, role, text) {
  * @param {string} name
  */
 export async function saveAs(panel, role, name) {
-  await openTab(panel, "library");
-
-  const section = sectionOf(panel, role);
+  const section = await openLibrarySection(panel, role);
 
   await section.locator("[data-action=saveAs]").click();
   await section.locator(".save-name").fill(name);
@@ -438,8 +446,9 @@ export async function saveAs(panel, role, name) {
  * @param {string} name
  */
 export async function pick(panel, role, name) {
-  await openTab(panel, "library");
-  await sectionOf(panel, role).locator(`.item[data-name="${name}"]`).click();
+  const section = await openLibrarySection(panel, role);
+
+  await section.locator(`.item[data-name="${name}"]`).click();
 }
 
 /**

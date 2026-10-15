@@ -21,7 +21,7 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 - `src/graph/` draws the curve as SVG. `EqGraph` in `graph.js` holds the state and the pointer
   events. Each other file draws one part from a view. The graph uses the same Web Audio filters the
   engine plays, so the picture matches the sound.
-- Each layer has its own preset list, under `headphonePresets` and `earPresets`. A preset holds bands
+- Each layer has its own preset list, under `headphonePresets`, `earPresets` and `tastePresets`. A preset holds bands
   only. The sliders and the preamp stay as they are when you pick one. A sound saved before the two
   lists splits into a headphone preset and, when it holds ear bands, an ear preset under that name.
 - `src/targets.json` holds AutoEQ's target curves in target sets, built by `npm run targets`. A
@@ -36,7 +36,7 @@ and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone l
 | Word | Means |
 | --- | --- |
 | Band | One biquad: type, frequency, gain, Q, and an on switch. |
-| Layer | A list of bands with its own switch, name and source. The `headphone` layer is always there. The `ear` layer is optional. |
+| Layer | A list of bands with its own switch, name and source. The `headphone` layer is always there. The `ear` and `taste` layers are optional. |
 | Preset | A saved band list for one layer. Each layer has its own list. |
 | Config | The stored sound: the main switch, the preamp, the three Listen sliders and the layers. |
 | Played sound | What the audio chain plays. `toPlayedSound` merges the bands of every layer that is on with the three sliders as fixed bands, and works out the auto preamp. Bands sum in dB, so the layers merge exactly. |

@@ -62,7 +62,11 @@ export function bandPointStyle(band) {
 }
 
 export const chosenRingStyle = { fill: "none", stroke: "#fff", strokeOpacity: 0.7 };
-export const earRingStyle = { fill: "none", stroke: layerColor.ear, strokeWidth: 1.5 };
+// A ring in the layer's colour marks the points of the layers on top of the headphone.
+export const layerRingStyle = {
+  ear: { fill: "none", stroke: layerColor.ear, strokeWidth: 1.5 },
+  taste: { fill: "none", stroke: layerColor.taste, strokeWidth: 1.5 },
+};
 export const bandNumberStyle = { textAnchor: "middle", fontSize: 9, fontWeight: 700, fill: backgroundColor };
 
 /**

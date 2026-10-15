@@ -4,7 +4,7 @@ import { clamp } from "./math.js";
 
 /** @typedef {import("./bands.js").Band} Band */
 
-/** @typedef {"headphone" | "ear"} LayerRole */
+/** @typedef {"headphone" | "ear" | "taste"} LayerRole */
 
 /**
  * @typedef {object} Layer
@@ -26,7 +26,7 @@ import { clamp } from "./math.js";
  * @property {number} preampDb
  * @property {boolean} autoPreamp
  * @property {Sliders} sliders
- * @property {{ headphone: Layer, ear?: Layer }} layers
+ * @property {{ headphone: Layer, ear?: Layer, taste?: Layer }} layers
  */
 
 /** @typedef {{ enabled: boolean, preampDb: number, bands: Band[] }} PlayedSound */
@@ -36,8 +36,8 @@ import { clamp } from "./math.js";
 export const sliderRangeDb = [-6, 6];
 export const preampRangeDb = [-24, 12];
 
-export const layerOrder = ["headphone", "ear"];
-export const layerLabels = { headphone: "Headphone", ear: "My ear" };
+export const layerOrder = ["headphone", "ear", "taste"];
+export const layerLabels = { headphone: "Headphone", ear: "My ear", taste: "Taste" };
 
 /**
  * @param {string} name
@@ -115,6 +115,7 @@ export function sanitizeConfig(raw) {
   const layers = { headphone: cleanLayer(storedLayers.headphone, "Flat") };
 
   if (storedLayers.ear) layers.ear = cleanLayer(storedLayers.ear, "Ear tuning");
+  if (storedLayers.taste) layers.taste = cleanLayer(storedLayers.taste, "Taste");
 
   return {
     enabled: raw.enabled !== false,

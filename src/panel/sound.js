@@ -23,6 +23,7 @@ import { layerSources, state } from "./state.js";
 /** @typedef {{ name: string, source: string, bands: Band[], preampDb?: number, autoEq?: AutoEqOrigin }} NewLayer */
 
 const storageWaitMs = 120;
+const newLayerNames = { ear: "My ear tuning", taste: "My taste" };
 
 /**
  * @param {Layer | undefined} layer
@@ -147,8 +148,8 @@ export function commitBandEdit() {
  * @param {number} gainDb
  */
 export function addBandToLayer(role, frequencyHz, gainDb) {
-  // The headphone layer is always there. The ear layer starts with its first band.
-  if (role === "ear") state.config.layers.ear ??= newLayer("My ear tuning", layerSources.yourBands);
+  // The headphone layer is always there. The ear and taste layers start with their first band.
+  if (role !== "headphone") state.config.layers[role] ??= newLayer(newLayerNames[role], layerSources.yourBands);
 
   const band = { ...newBand(frequencyHz), gainDb };
 
@@ -172,9 +173,9 @@ export function deleteSelectedBand() {
   commit();
 }
 
-/** @returns {void} */
-export function removeEarLayer() {
-  delete state.config.layers.ear;
+/** @param {LayerRole} role */
+export function removeLayer(role) {
+  delete state.config.layers[role];
   dropBandChoice();
   commit();
 }

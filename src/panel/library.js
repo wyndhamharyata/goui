@@ -1,18 +1,23 @@
-// The Library actions: save, import, paste, export and the EQByEar test, and the ear section's list.
+// The Library tabs and actions: save, import, paste, export and the EQByEar test, and the ear and taste lists.
 import { autoPreampDb } from "../shared/bands.js";
 import { layerLabels, layerOrder } from "../shared/config.js";
 import { parseAutoEq, toAutoEq } from "../autoeq.js";
-import { debounce, buildElement, partOf, resetBoxHeight, sectionOf, showAllLines, showHint } from "./dom.js";
+import { byId, debounce, buildElement, partOf, resetBoxHeight, sectionOf, showAllLines, showHint } from "./dom.js";
 import { renderHeadphoneList } from "./headphones.js";
 import { appendSection, describeBandCount, buildResultItem } from "./items.js";
 import { isSavedPreset, buildPresetItem, renderPresetCards, storePresets } from "./presets.js";
 import { onPresetsChange } from "./refresh.js";
-import { commit, readBands, removeEarLayer, replaceLayer } from "./sound.js";
+import { commit, readBands, removeLayer, replaceLayer } from "./sound.js";
 import { layerSources, state } from "./state.js";
 
 /** @typedef {import("../shared/config.js").LayerRole} LayerRole */
 
-const pastedNames = { headphone: "Pasted headphone", ear: "Pasted ear tuning" };
+const pastedNames = { headphone: "Pasted headphone", ear: "Pasted ear tuning", taste: "Pasted taste" };
+// The words of the ear and taste lists, which end with a row that takes the layer off.
+const listWords = {
+  ear: { heading: "Your ear presets", empty: "Nothing saved yet. Run the test, paste the result, then press Save.", off: "No ear tuning", offCaption: "Headphone only" },
+  taste: { heading: "Your taste presets", empty: "Nothing saved yet. Add bands in Tune, or paste AutoEQ text, then press Save.", off: "No taste", offCaption: "Headphone and ear only" },
+};
 const typingPauseMs = 150;
 
 /**
@@ -34,21 +39,37 @@ function savePreset(role, name) {
   showHint(role, `${isUpdate ? "Updated" : "Saved"} ${name}.`);
 }
 
-/** @returns {void} */
-export function renderEarList() {
-  const list = partOf("ear", "results");
-  const items = Object.keys(state.presets.ear).map((name) => buildPresetItem("ear", name, () => {}));
+/** @param {"ear" | "taste"} role */
+function renderLayerList(role) {
+  const words = listWords[role];
+  const list = partOf(role, "results");
+  const items = Object.keys(state.presets[role]).map((name) => buildPresetItem(role, name, () => {}));
 
-  if (items.length === 0) {
-    items.push(buildElement("p", { className: "hint", text: "Nothing saved yet. Run the test, paste the result, then press Save." }));
-  }
+  if (items.length === 0) items.push(buildElement("p", { className: "hint", text: words.empty }));
 
-  const turnOff = buildResultItem("No ear tuning", "Headphone only", removeEarLayer);
+  const turnOff = buildResultItem(words.off, words.offCaption, () => removeLayer(role));
 
   list.replaceChildren();
-  appendSection(list, "Your ear presets", items);
+  appendSection(list, words.heading, items);
   list.append(turnOff);
   renderPresetCards();
+}
+
+/** @returns {void} */
+export function renderLayerLists() {
+  renderLayerList("ear");
+  renderLayerList("taste");
+}
+
+// The Library shows one layer's section at a time, under a tab for each layer.
+/** @param {LayerRole} role */
+export function showLibrarySection(role) {
+  state.libraryRole = role;
+
+  for (const each of layerOrder) sectionOf(each).hidden = each !== role;
+  for (const button of byId("libraryTabs").children) button.classList.toggle("on", button.dataset.role === role);
+
+  chrome.storage.local.set({ libraryRole: role });
 }
 
 /**
@@ -168,6 +189,12 @@ async function importFile(role, file) {
 
 /** @returns {void} */
 export function wireLibrary() {
+  byId("libraryTabs").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-role]");
+
+    if (button) showLibrarySection(button.dataset.role);
+  });
+
   for (const role of layerOrder) {
     sectionOf(role).addEventListener("click", (event) => {
       const button = event.target.closest("[data-action]");
@@ -190,4 +217,5 @@ export function wireLibrary() {
   partOf("headphone", "search").addEventListener("input", debounce(renderHeadphoneList, typingPauseMs));
 }
 
-onPresetsChange("ear", renderEarList);
+onPresetsChange("ear", () => renderLayerList("ear"));
+onPresetsChange("taste", () => renderLayerList("taste"));

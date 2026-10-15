@@ -21,4 +21,4 @@ export const typeColor = {
   AP: passColor,
 };
 
-export const layerColor = { headphone: "#a9b8ff", ear: "#ffd166" };
+export const layerColor = { headphone: "#a9b8ff", ear: "#ffd166", taste: "#ff8fb1" };

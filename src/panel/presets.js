@@ -18,6 +18,8 @@ export function isSavedPreset(role) {
   return Boolean(layer) && layer.source === layerSources.saved && Boolean(state.presets[role][layer.name]);
 }
 
+const emptyLayerNames = { ear: "No ear tuning", taste: "No taste" };
+
 // Each Library section shows what plays in its layer now, and whether that is one of your presets.
 function renderPresetCard(role) {
   const layer = state.config.layers[role];
@@ -27,7 +29,7 @@ function renderPresetCard(role) {
   if (layer) caption = isSaved ? "Your preset" : `${layer.source}, not saved yet`;
 
   partOf(role, "current-caption").textContent = caption;
-  partOf(role, "current-name").textContent = layer ? describeLayerName(layer) : "No ear tuning";
+  partOf(role, "current-name").textContent = layer ? describeLayerName(layer) : emptyLayerNames[role];
 
   const save = partOf(role, "save");
   const hasNothingNew = isSaved && !layer.isEdited;

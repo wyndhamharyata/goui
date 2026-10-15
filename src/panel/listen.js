@@ -8,9 +8,9 @@ import { linearPosition } from "../shared/math.js";
 import { byId, buildElement, sectionOf, setField, showAllLines, showTab } from "./dom.js";
 import { describeLayerName } from "./items.js";
 import { changeTarget, clearHeadphoneLayer } from "./headphones.js";
-import { toggleLibraryAction } from "./library.js";
+import { showLibrarySection, toggleLibraryAction } from "./library.js";
 import { onRefresh } from "./refresh.js";
-import { commit, removeEarLayer } from "./sound.js";
+import { commit, removeLayer } from "./sound.js";
 import { state } from "./state.js";
 
 /** @typedef {import("../shared/config.js").Layer} Layer */
@@ -22,6 +22,7 @@ import { state } from "./state.js";
 /** @param {LayerRole} role */
 function openLibrarySection(role) {
   showTab("library");
+  showLibrarySection(role);
   sectionOf(role).scrollIntoView({ block: "start" });
 }
 
@@ -60,24 +61,41 @@ function buildLayerRow(role, layer) {
 
   parts.push(buildElement("button", { text: "Change", on: { click: () => openLibrarySection(role) } }));
 
-  if (role === "ear") parts.push(buildElement("button", { text: "×", title: "Take the ear layer off", on: { click: removeEarLayer } }));
+  if (role !== "headphone") parts.push(buildElement("button", { text: "×", title: `Take the ${role} layer off`, on: { click: () => removeLayer(role) } }));
   if (role === "headphone" && layer.bands.length > 0) parts.push(buildElement("button", { text: "×", title: "Clear the headphone layer to Flat", on: { click: clearHeadphoneLayer } }));
 
   return buildElement("div", { className: layer.on ? "layer" : "layer off" }, parts);
 }
 
-function buildAddEarButton() {
-  const openEarPaste = () => {
-    openLibrarySection("ear");
-
-    if (state.openActions.ear !== "paste") toggleLibraryAction("ear", "paste");
-  };
-
-  return buildElement("button", {
-    text: "Add your ear tuning on top",
+// The add buttons of the layers on top. Two share one row under short names, so a headphone alone keeps the stack short.
+const addLayerWords = {
+  ear: {
+    short: "Add ear tuning",
+    long: "Add your ear tuning on top",
     title: "Open My ear in the Library, to paste an EQByEar result or pick a saved ear preset",
-    on: { click: openEarPaste },
-  });
+  },
+  taste: {
+    short: "Add taste",
+    long: "Add your taste on top",
+    title: "Open Taste in the Library, to pick a saved taste preset or paste AutoEQ text. You can also add Taste bands in Tune.",
+  },
+};
+
+function openAddedLayer(role) {
+  openLibrarySection(role);
+
+  if (role === "ear" && state.openActions.ear !== "paste") toggleLibraryAction("ear", "paste");
+}
+
+function buildAddLayerButtons(missingRoles) {
+  const isShort = missingRoles.length > 1;
+  const buttons = missingRoles.map((role) => buildElement("button", {
+    text: isShort ? addLayerWords[role].short : addLayerWords[role].long,
+    title: addLayerWords[role].title,
+    on: { click: () => openAddedLayer(role) },
+  }));
+
+  return buildElement("div", { className: "add-layers" }, buttons);
 }
 
 // The stack on Listen. One row per layer, each with its own switch, its source and its name.
@@ -92,7 +110,9 @@ function renderLayers() {
     if (layer) host.append(buildLayerRow(role, layer));
   }
 
-  if (!state.config.layers.ear) host.append(buildAddEarButton());
+  const missingRoles = ["ear", "taste"].filter((role) => !state.config.layers[role]);
+
+  if (missingRoles.length > 0) host.append(buildAddLayerButtons(missingRoles));
 }
 
 function renderSound() {

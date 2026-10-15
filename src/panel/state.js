@@ -8,7 +8,7 @@ import { defaultConfig } from "../shared/config.js";
 export const state = {
   config: defaultConfig(),
   // Each layer has its own presets. A preset holds bands only, so the sliders and the preamp stay.
-  presets: { headphone: {}, ear: {} },
+  presets: { headphone: {}, ear: {}, taste: {} },
   /** @type {Band | null} */
   selectedBand: null,
   /** @type {Band | null} */
@@ -19,7 +19,9 @@ export const state = {
   isMoreOpen: false,
   /** @type {number[]} */
   spectrumDb: [],
-  openActions: { headphone: "", ear: "" },
+  openActions: { headphone: "", ear: "", taste: "" },
+  /** @type {import("../shared/config.js").LayerRole} */
+  libraryRole: "headphone",
   // Loaded before the first draw, so the Listen row can show the target choice at once.
   /** @type {TargetData | null} */
   targetData: null,

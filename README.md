@@ -47,10 +47,10 @@ use EQByEar to adjust the fine details that are specific to the interaction betw
 IEM and your hearing. Add flavour on top of that, based on your taste.
 
 goui runs the sound of one browser tab, or with the Mac app every sound the Mac plays, through a
-parametric EQ. It keeps the headphone profile and your ear
-profile apart, as two layers. The bands of both layers add up in dB, so the merge is exact. Bass,
-Vocals and Treble sit on top as your taste. The preamp follows the largest boost, so the sound never
-clips.
+parametric EQ. It keeps the headphone profile, your ear profile and your taste apart, as three
+layers. The bands of all three add up in dB, so the merge is exact. The Taste layer holds your own
+bands, and Bass, Vocals and Treble sit on top of it. The preamp follows the largest boost, so the
+sound never clips.
 
 ## Add the extension by hand
 
@@ -149,14 +149,15 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 
 **Listen**
 
-- The stack at the top holds a **Headphone** layer and a **My ear** layer. Each row has its own switch,
-  so AutoEQ alone compares against AutoEQ plus your ear with one press. **Change** opens that layer in
-  the Library. A row with bands has an **×**, which plays that layer flat.
+- The stack at the top holds a **Headphone** layer, a **My ear** layer and a **Taste** layer. Each row
+  has its own switch, so AutoEQ alone compares against AutoEQ plus your ear with one press. **Change**
+  opens that layer in the Library. The headphone row's **×** plays it flat, and the ear and taste rows'
+  **×** takes that layer off. A layer you have not added shows a button to add it.
 - A headphone from AutoEQ shows its **Target**, the sound AutoEQ tunes it toward. Pick another one to
   hear the headphone tuned to it. The list holds only the targets made for the rig that measured your
   headphone. A change of target loads the headphone again, so edits to its bands are lost.
-- Bass, Vocals and Treble nudge the sound. They sit on top of both layers and stay when you pick another
-  preset.
+- Bass, Vocals and Treble nudge the sound. They sit on top of all three layers and stay when you pick
+  another preset.
 - The preamp follows the largest boost, so the sound never clips. Move the slider to set it by hand.
   Press **Auto** to give it back.
 - **Level match** keeps the preamp while you hold A/B. The EQ usually plays quieter than the raw
@@ -170,18 +171,19 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 - On a selected peak, pull the square side handles apart for a wider band, or scroll on the point.
 - Double click empty space to make a new band. It joins the layer of the band you have selected, or the
   headphone layer when nothing is selected.
-- The chips come in two rows, one for the headphone and one for My ear. Each row has its own **Add band**
-  chip, and the chips wrap onto more lines as a layer gains bands. Ear bands carry a gold ring, and
-  each layer draws its own dashed curve under the solid total.
+- The chips come in three rows, one for each layer. Each row has its own **Add band** chip, and the
+  chips wrap onto more lines as a layer gains bands. **Add band** in the Taste row starts the Taste
+  layer. Ear bands carry a gold ring and Taste bands a pink one, and each layer draws its own dashed
+  curve under the solid total.
 - Press a chip to tune that band. Press it again to clear the choice.
 - All, Lows, Mids and Highs zoom the graph. **Tall** turns it, with low notes at the top.
 - The inspector under the chips edits one band with exact numbers. **Solo** plays that band alone.
 
 **Library**
 
-The Library has one section for each layer. Step 1 is your headphone. Step 2 is your ear, which tunes
-the sound to your own hearing on top of the headphone. Each section has its own list of presets and its
-own Save, Import, Paste and Export.
+The Library has a tab for each layer. Step 1 is your headphone. Step 2 is your ear, which tunes the
+sound to your own hearing on top of the headphone. Step 3 is your taste, your own bands on top of both.
+Each section has its own list of presets and its own Save, Import, Paste and Export.
 
 - **Save** keeps the bands you hear as a preset under a name. An AutoEQ pick fills in the headphone name,
   so one press keeps it. After an edit the button reads **Save changes**. **Save as new** keeps a second
@@ -196,12 +198,13 @@ own Save, Import, Paste and Export.
   writes that one layer as AutoEQ text.
 - **Measure my ear with EQByEar** is in the ear section. It turns My ear off, so the test hears the
   headphone alone, and opens EQByEar in a new tab.
-- The ear list starts with **No ear tuning**, which turns the ear layer off.
-- **Export the whole sound** at the bottom writes both layers and the sliders as one AutoEQ file. A
-  second press puts the text away.
+- The ear list ends with **No ear tuning**, and the taste list with **No taste**. Each takes its layer
+  off.
+- **Export the whole sound** under the tabs writes all three layers and the sliders as one AutoEQ file.
+  A second press puts the text away.
 
-On a panel 900 px or wider, the three tabs show side by side. At 1300 px and wider, Listen, Tune,
-Headphone and My ear each take a column.
+On a panel 900 px or wider, Listen, Tune and Library show side by side. The Mac's **Wide panel** opens
+at 1100 px, so it shows the same three columns.
 
 ## Measure your ear
 

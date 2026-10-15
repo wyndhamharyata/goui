@@ -1,7 +1,7 @@
 // Each view registers its redraw here, so a change can redraw every view with no view importing another.
 
 const renderers = [];
-const presetListRenderers = { headphone: [], ear: [] };
+const presetListRenderers = { headphone: [], ear: [], taste: [] };
 
 /** @param {() => void} render */
 export function onRefresh(render) {

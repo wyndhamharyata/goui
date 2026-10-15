@@ -11,6 +11,7 @@ import {
   layerSwitch,
   manifest,
   nudgeSlider,
+  openLibrarySection,
   openPanelPage,
   openTab,
   openTone,
@@ -305,35 +306,53 @@ journey("given an AutoEQ peak, the × on the headphone row plays the 1 kHz tone 
   await expect(clear).toHaveCount(0);
 });
 
-/**
- * @param {import("@playwright/test").Page} panel
- * @param {string} selector
- * @returns {Promise<{ x: number, y: number, width: number, height: number }>}
- */
 function readBox(panel, selector) {
   return panel.locator(selector).boundingBox();
 }
 
-journey("given a 1400 px panel, Listen, Tune, Headphone and My ear stand in one row, with Whole sound under My ear", async (context, port) => {
+journey("given a 1100 px panel, Listen, Tune and Library stand in one row, and the Library shows one layer under its tab", async (context, port) => {
   const { panel } = await startGouiOnTone(context, port, 1000);
 
-  await panel.setViewportSize({ width: 1400, height: 900 });
+  await panel.setViewportSize({ width: 1100, height: 900 });
 
-  const listen = await readBox(panel, "[data-pane=listen]");
-  const tune = await readBox(panel, "[data-pane=tune]");
-  const headphone = await readBox(panel, "[data-role=headphone]");
-  const ear = await readBox(panel, "[data-role=ear]");
-  const whole = await readBox(panel, ".card:has(#exportAll)");
-  const columns = [listen, tune, headphone, ear];
+  const columns = [];
+
+  for (const pane of ["listen", "tune", "library"]) columns.push(await readBox(panel, `[data-pane=${pane}]`));
 
   for (const [index, column] of columns.entries()) {
-    expect(column.y).toBeLessThan(listen.y + 40);
+    expect(column.y).toBeLessThan(columns[0].y + 40);
     if (index > 0) expect(column.x).toBeGreaterThan(columns[index - 1].x + columns[index - 1].width);
   }
 
-  expect(ear.width).toBe(headphone.width);
-  expect(whole.x).toBe(ear.x);
-  expect(whole.y).toBeGreaterThan(ear.y + ear.height);
+  await openLibrarySection(panel, "taste");
+  await expect(sectionOf(panel, "taste")).toBeVisible();
+  await expect(sectionOf(panel, "headphone")).toBeHidden();
+  await expect(sectionOf(panel, "ear")).toBeHidden();
+  await expect(panel.locator("#exportAll")).toBeVisible();
+});
+
+journey("given a Taste peak on a headphone peak, the tone plays 12 dB louder, Taste saves as its own preset, and No taste takes it off", async (context, port) => {
+  const { panel } = await startGouiOnTone(context, port, 1000);
+
+  await turnAutoPreampOff(panel);
+
+  const flat = await readSteadyLevel(panel);
+
+  await pasteInto(panel, "headphone", peakText);
+  await pasteInto(panel, "taste", peakText);
+  expectChangeDb(await readSteadyLevel(panel), flat, 12);
+  await expect(layerRow(panel, "Taste")).toContainText("Pasted taste");
+
+  await saveAs(panel, "taste", "warm taste");
+  await pick(panel, "taste", "No taste");
+  await expect(layerRow(panel, "Taste")).toHaveCount(0);
+  expectChangeDb(await readSteadyLevel(panel), flat, 6);
+
+  await pick(panel, "taste", "warm taste");
+  expectChangeDb(await readSteadyLevel(panel), flat, 12);
+
+  await panel.click("#exportAll");
+  await expect(panel.locator("#wholeText")).toHaveValue(/Filter 2: ON PK Fc 1000 Hz Gain 6\.0 dB/);
 });
 
 journey("given sounds and Level match saved by older builds, each sound shows in both lists and plays, and Level match stays on", async (context, port) => {

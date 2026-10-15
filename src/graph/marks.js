@@ -9,7 +9,7 @@ import {
   bandPointStyle,
   chosenAreaStyle,
   chosenRingStyle,
-  earRingStyle,
+  layerRingStyle,
   hoverBoxStyle,
   hoverDotStyle,
   hoverLineStyle,
@@ -84,7 +84,7 @@ export function drawBandPoints(view, entries, chosenIndex) {
 
     points.push({ index, ...point });
 
-    if (role === "ear") elements.push(buildCircle(point, 9.5, earRingStyle));
+    if (layerRingStyle[role]) elements.push(buildCircle(point, 9.5, layerRingStyle[role]));
     if (index === chosenIndex) elements.push(buildCircle(point, 11, chosenRingStyle));
 
     elements.push(buildCircle(point, bandPointRadiusPx, bandPointStyle(band)));

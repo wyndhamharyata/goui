@@ -189,6 +189,11 @@
 
         <section class="pane" data-pane="library">
           <h4 class="column-title">Library</h4>
+          <div class="tabs library-tabs" id="libraryTabs">
+            <button data-role="headphone" class="on">Headphone</button>
+            <button data-role="ear">My ear</button>
+            <button data-role="taste">Taste</button>
+          </div>
           <div class="card preset-section" data-role="headphone">
             <div class="section-head">
               <span class="step">1</span>
@@ -260,9 +265,43 @@
             <div class="results"></div>
           </div>
 
+          <div class="card preset-section" data-role="taste">
+            <div class="section-head">
+              <span class="step">3</span>
+              <div class="grow">
+                <b>Taste</b>
+                <small class="caption">Your own flavour, on top of your ear. Add bands in Tune, or paste AutoEQ text here, then save it.</small>
+              </div>
+            </div>
+            <div class="current">
+              <div class="grow">
+                <small class="caption current-caption"></small>
+                <b class="current-name"></b>
+              </div>
+              <button data-action="save" class="save">Save</button>
+              <button data-action="saveAs" class="save-as" title="Keep this as a new preset under another name">Save as new</button>
+            </div>
+            <div class="row save-row" hidden>
+              <input type="text" class="save-name" placeholder="Name for this taste preset" />
+              <button data-action="confirmSave" class="confirm-save on">Save</button>
+            </div>
+            <div class="library-actions">
+              <button data-action="import" title="Load a ParametricEQ.txt file into the taste layer">Import</button>
+              <button data-action="paste" title="Paste AutoEQ text into the taste layer">Paste</button>
+              <button data-action="export" title="Copy the taste layer as AutoEQ text">Export</button>
+            </div>
+            <div class="drawer" hidden>
+              <textarea class="text" spellcheck="false" placeholder="Paste AutoEQ text here"></textarea>
+              <button data-action="apply" class="apply on">Apply</button>
+            </div>
+            <input type="file" class="import-file" accept=".txt,text/plain" hidden />
+            <p class="hint action-hint"></p>
+            <div class="results"></div>
+          </div>
+
           <div class="card">
             <b>Whole sound</b>
-            <small class="caption">Both layers and the sliders in one AutoEQ file, for other apps.</small>
+            <small class="caption">All three layers and the sliders in one AutoEQ file, for other apps.</small>
             <button id="exportAll">Export the whole sound</button>
             <textarea id="wholeText" spellcheck="false" readonly hidden></textarea>
           </div>

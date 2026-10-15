@@ -9,10 +9,10 @@ final class AppController: NSObject, WKNavigationDelegate {
   nonisolated static let panelPagePath = "src/panel.html?tab=1"
   private static let chromePath = "mac/web/chrome.js"
   private static let panelSize = NSSize(width: FloatingPanel.narrowWidthPx, height: 600)
-  // At 900 px src/panel.css shows Listen, Tune and Library side by side. At 1300 px each layer has its own column too.
+  // At 900 px src/panel.css shows Listen, Tune and Library side by side.
   private static let wideWidthPx = 900.0
-  // Wide panel fills the screen's width up to this, and the room beyond the fixed columns goes to Tune.
-  private static let fullWideWidthPx = 1800.0
+  // Wide panel opens at a width a Chrome side panel can take too, so both show the same three columns.
+  private static let wideOpenWidthPx = 1100.0
   private static let widthKey = "panelWidth"
   private static let guideURL = URL(string: "https://goui.mwyndham.dev/mac")!
   // The click on the menu bar item that hides the panel would open it again straight away.
@@ -193,7 +193,7 @@ final class AppController: NSObject, WKNavigationDelegate {
 
     let panel = panel ?? buildPanel()
     let isWide = panel.frame.width >= Self.wideWidthPx
-    panel.setWidth(isWide ? FloatingPanel.narrowWidthPx : Self.fullWideWidthPx)
+    panel.setWidth(isWide ? FloatingPanel.narrowWidthPx : Self.wideOpenWidthPx)
     if !panel.isVisible { panel.show(below: button) }
   }
 
