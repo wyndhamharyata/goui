@@ -1320,6 +1320,11 @@ button.ui-chip:hover {
   .pn-set-picker {
     display: none;
   }
+
+  /* Tune shows the same curve beside Listen, so a second picture of it says nothing new. */
+  #listenGraph {
+    display: none;
+  }
 }
 
 .pn-target {

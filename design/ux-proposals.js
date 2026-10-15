@@ -1687,7 +1687,10 @@ function buildRegions(names) {
 
 function buildPane(name, isWide) {
   const title = isWide ? ui.sectionHeader({ variant: "column", label: paneTitles[name] }) : "";
-  return `<section class="pn-pane" data-pane="${name}">${title}${buildRegions(paneRegions[name])}</section>`;
+  // The wide Listen column drops its curve, since the Tune column shows the same one beside it.
+  const regions = isWide && name === "listen" ? paneRegions[name].filter((region) => region !== "listen-plot") : paneRegions[name];
+
+  return `<section class="pn-pane" data-pane="${name}">${title}${buildRegions(regions)}</section>`;
 }
 
 const paneTitles = { listen: "Listen", tune: "Tune", library: "Library" };
