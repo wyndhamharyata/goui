@@ -1,5 +1,5 @@
-// The rows of the Library lists.
-import { buildElement } from "./dom.js";
+// The groups of the Library lists, and the words their rows show.
+import { buildElement, buildSectionHeader } from "./dom.js";
 
 /** @typedef {import("../shared/bands.js").Band} Band */
 
@@ -13,24 +13,7 @@ export function describeBandCount(bands) {
   return bands.length === 1 ? "1 band" : `${bands.length} bands`;
 }
 
-/**
- * @param {string} label
- * @param {string} detail
- * @param {() => void} onPick
- * @param {() => void} [onRemove]
- * @returns {HTMLElement}
- */
-export function buildResultItem(label, detail, onPick, onRemove) {
-  const labels = [buildElement("span", { text: label }), buildElement("small", { text: detail })];
-  const button = buildElement("button", { className: "item", dataset: { name: label }, on: { click: onPick } }, labels);
-
-  if (!onRemove) return button;
-
-  const remove = buildElement("button", { className: "remove", text: "×", title: `Delete ${label}`, on: { click: onRemove } });
-
-  return buildElement("div", { className: "result-row" }, [button, remove]);
-}
-
+// A group counts its rows. A hint in their place, such as "Nothing saved yet", does not count.
 /**
  * @param {HTMLElement} list
  * @param {string} title
@@ -39,7 +22,9 @@ export function buildResultItem(label, detail, onPick, onRemove) {
 export function appendSection(list, title, items) {
   if (items.length === 0) return;
 
-  list.append(buildElement("h4", { text: title }), ...items);
+  const count = items.filter((item) => item.classList.contains("ui-list-row")).length;
+
+  list.append(buildElement("div", { className: "ui-stack ui-stack--tight" }, [buildSectionHeader({ label: title, count }), ...items]));
 }
 
 /**

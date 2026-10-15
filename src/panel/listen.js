@@ -2,13 +2,13 @@
 import { maxBoostDb } from "../shared/bands.js";
 import { layerLabels, layerOrder, listExportBands, toPlayedSound, preampRangeDb, sliderRangeDb } from "../shared/config.js";
 import { findTargetSet, newAutoEqItem, toAutoEq } from "../autoeq.js";
-import { layerColor } from "../graph/colors.js";
+import { layerTone } from "../graph/colors.js";
 import { formatDb } from "../graph/format.js";
 import { linearPosition } from "../shared/math.js";
-import { byId, buildElement, sectionOf, setField, showAllLines, showTab } from "./dom.js";
+import { byId, buildButton, buildElement, buildIcon, buildStackRow, sectionOf, setField, showAllLines, showTab } from "./dom.js";
 import { describeLayerName } from "./items.js";
 import { changeTarget, clearHeadphoneLayer } from "./headphones.js";
-import { showLibrarySection, toggleLibraryAction } from "./library.js";
+import { toggleLibraryAction } from "./library.js";
 import { onRefresh } from "./refresh.js";
 import { commit, removeLayer } from "./sound.js";
 import { state } from "./state.js";
@@ -21,24 +21,25 @@ import { state } from "./state.js";
 
 /** @param {LayerRole} role */
 function openLibrarySection(role) {
-  showTab("library");
-  showLibrarySection(role);
+  showTab("tab", "library");
+  showTab("role", role);
   sectionOf(role).scrollIntoView({ block: "start" });
 }
 
 // The targets a headphone from AutoEQ can take. A target set of one shows its name only.
 function buildTargetChoice(autoEq) {
   const targetSet = findTargetSet(state.targetData.targetSets, newAutoEqItem(autoEq.name, autoEq.path));
-  const choice = { className: "target", text: "Target", title: "The sound AutoEQ tunes your headphone toward" };
+  const choice = { className: "pn-target target", title: "The sound AutoEQ tunes your headphone toward" };
 
-  if (!targetSet || targetSet.labels.length < 2) return buildElement("label", choice, [buildElement("span", { text: autoEq.target })]);
+  if (!targetSet || targetSet.labels.length < 2) return buildElement("span", choice, [buildElement("span", { className: "pn-target-name", text: `Target · ${autoEq.target}` })]);
 
   const options = targetSet.labels.map((label) => new Option(label, label));
-  const select = buildElement("select", { on: { change: (event) => changeTarget(event.target.value) } }, options);
+  const select = buildElement("select", { className: "ui-field__control", on: { change: (event) => changeTarget(event.target.value) } }, options);
+  const field = buildElement("span", { className: "ui-field ui-field--select" }, [buildElement("span", { className: "ui-field__prefix", text: "Target" }), select, buildIcon("chevron")]);
 
   select.value = autoEq.target;
 
-  return buildElement("label", choice, [select]);
+  return buildElement("label", choice, [field]);
 }
 
 function buildLayerRow(role, layer) {
@@ -46,37 +47,39 @@ function buildLayerRow(role, layer) {
     layer.on = event.target.checked;
     commit();
   };
-  const toggle = buildElement("label", { className: "switch", title: `Turn the ${layerLabels[role]} layer on or off` }, [
+  const toggle = buildElement("label", { className: "ui-switch switch", title: `Turn the ${layerLabels[role]} layer on or off` }, [
     buildElement("input", { type: "checkbox", checked: layer.on, on: { change: switchLayer } }),
-    buildElement("span", { className: "track" }),
+    buildElement("span", { className: "ui-switch__knob" }),
   ]);
 
-  const mark = buildElement("i", { className: "layer-mark", style: { borderColor: layerColor[role] } });
-  const caption = buildElement("small", { className: "caption" }, [mark, `${layerLabels[role]} · ${layer.source}`]);
-  const texts = [caption, buildElement("b", { text: describeLayerName(layer) })];
+  const change = buildButton({ variant: "quiet", isSmall: true, label: "Change", title: `Open ${layerLabels[role]} in the Library`, onClick: () => openLibrarySection(role) });
+  const trail = [change];
 
-  if (layer.autoEq) texts.push(buildTargetChoice(layer.autoEq));
+  if (role !== "headphone") trail.push(buildButton({ variant: "quiet", isSmall: true, icon: "close", title: `Take the ${role} layer off`, onClick: () => removeLayer(role) }));
+  if (role === "headphone" && layer.bands.length > 0) trail.push(buildButton({ variant: "quiet", isSmall: true, icon: "close", title: "Clear the headphone layer to Flat", onClick: clearHeadphoneLayer }));
 
-  const parts = [toggle, buildElement("div", { className: "grow" }, texts)];
+  const extra = layer.autoEq ? [buildTargetChoice(layer.autoEq)] : [];
 
-  parts.push(buildElement("button", { text: "Change", on: { click: () => openLibrarySection(role) } }));
-
-  if (role !== "headphone") parts.push(buildElement("button", { text: "×", title: `Take the ${role} layer off`, on: { click: () => removeLayer(role) } }));
-  if (role === "headphone" && layer.bands.length > 0) parts.push(buildElement("button", { text: "×", title: "Clear the headphone layer to Flat", on: { click: clearHeadphoneLayer } }));
-
-  return buildElement("div", { className: layer.on ? "layer" : "layer off" }, parts);
+  return buildStackRow({
+    tone: layerTone[role],
+    lead: toggle,
+    caption: `${layerLabels[role]} · ${layer.source}`,
+    name: describeLayerName(layer),
+    extra,
+    trail,
+    isOff: !layer.on,
+    hook: "layer",
+  });
 }
 
-// The add buttons of the layers on top. Two share one row under short names, so a headphone alone keeps the stack short.
+// A layer you have not added keeps its place in the chain, as an empty row with its add button.
 const addLayerWords = {
   ear: {
-    short: "Add ear tuning",
-    long: "Add your ear tuning on top",
+    label: "Add your ear tuning",
     title: "Open My ear in the Library, to paste an EQByEar result or pick a saved ear preset",
   },
   taste: {
-    short: "Add taste",
-    long: "Add your taste on top",
+    label: "Add your taste",
     title: "Open Taste in the Library, to pick a saved taste preset or paste AutoEQ text. You can also add Taste bands in Tune.",
   },
 };
@@ -87,38 +90,29 @@ function openAddedLayer(role) {
   if (role === "ear" && state.openActions.ear !== "paste") toggleLibraryAction("ear", "paste");
 }
 
-function buildAddLayerButtons(missingRoles) {
-  const isShort = missingRoles.length > 1;
-  const buttons = missingRoles.map((role) => buildElement("button", {
-    text: isShort ? addLayerWords[role].short : addLayerWords[role].long,
-    title: addLayerWords[role].title,
-    on: { click: () => openAddedLayer(role) },
-  }));
+function buildEmptyLayerRow(role) {
+  const words = addLayerWords[role];
+  const add = buildButton({ isSmall: true, icon: "plus", label: words.label, title: words.title, onClick: () => openAddedLayer(role) });
 
-  return buildElement("div", { className: "add-layers" }, buttons);
+  return buildStackRow({ tone: layerTone[role], caption: layerLabels[role], name: "Not added", trail: [add], isEmpty: true });
 }
 
 // The stack on Listen. One row per layer, each with its own switch, its source and its name.
 function renderLayers() {
-  const host = byId("layers");
+  const layers = state.config.layers;
+  const rows = layerOrder.map((role) => (layers[role] ? buildLayerRow(role, layers[role]) : buildEmptyLayerRow(role)));
+  const onCount = layerOrder.filter((role) => layers[role] && layers[role].on).length;
 
-  host.replaceChildren();
-
-  for (const role of layerOrder) {
-    const layer = state.config.layers[role];
-
-    if (layer) host.append(buildLayerRow(role, layer));
-  }
-
-  const missingRoles = ["ear", "taste"].filter((role) => !state.config.layers[role]);
-
-  if (missingRoles.length > 0) host.append(buildAddLayerButtons(missingRoles));
+  byId("layers").replaceChildren(...rows);
+  byId("layerCount").textContent = `${onCount} of 3 on`;
 }
 
 function renderSound() {
   const played = toPlayedSound(state.config);
 
   byId("enabled").checked = state.config.enabled;
+  byId("compare").classList.toggle("is-held", state.isComparing);
+  byId("hearingCaption").textContent = state.isComparing ? "Holding A/B, the EQ is off" : "Hearing";
 
   for (const sliderName of ["bass", "vocals", "treble"]) {
     setField(sliderName, state.config.sliders[`${sliderName}Db`]);
@@ -129,30 +123,33 @@ function renderSound() {
   setField("preamp", played.preampDb.toFixed(1));
   renderSliderFill("preamp", played.preampDb);
   byId("preampValue").textContent = `${formatDb(played.preampDb)} dB`;
-  byId("autoPreamp").classList.toggle("on", state.config.autoPreamp);
+  byId("autoPreamp").classList.toggle("is-on", state.config.autoPreamp);
   byId("preampNote").textContent = state.config.autoPreamp ? "Auto" : "Manual";
 
   // A rounding margin, so a boost that auto preamp offsets exactly never shows red.
   const clipMarginDb = 0.05;
   const headroomDb = maxBoostDb(played.bands) + played.preampDb;
   const isClipping = state.config.enabled && headroomDb > clipMarginDb;
+  const meter = byId("meter");
 
-  byId("clip").classList.toggle("red", isClipping);
-  byId("meter").title = isClipping
+  meter.classList.toggle("tone-danger", isClipping);
+  meter.classList.toggle("tone-good", !isClipping);
+  meter.title = isClipping
     ? `The EQ can clip by ${headroomDb.toFixed(1)} dB. Turn the preamp down or press Auto.`
     : "Output level. No clipping.";
 }
 
-// WebKit has no CSS for the part of a range left of its handle, so the page gives it as --fill.
+// A dB slider fills from 0 dB to its value, so a cut and a boost read apart at a glance.
 /**
  * @param {string} id
  * @param {number} valueDb
  */
 function renderSliderFill(id, valueDb) {
   const slider = byId(id);
-  const share = linearPosition(valueDb, Number(slider.min), Number(slider.max));
+  const [zeroShare, valueShare] = [0, valueDb].map((levelDb) => linearPosition(levelDb, Number(slider.min), Number(slider.max)) * 100);
 
-  slider.style.setProperty("--fill", `${(share * 100).toFixed(2)}%`);
+  slider.style.setProperty("--low", `${Math.min(zeroShare, valueShare).toFixed(2)}%`);
+  slider.style.setProperty("--high", `${Math.max(zeroShare, valueShare).toFixed(2)}%`);
 }
 
 // Turning Auto off keeps the value Auto had, so the sound does not jump.
@@ -200,7 +197,7 @@ export function wireListen() {
 
     whole.hidden = !whole.hidden;
     showAllLines(whole, toAutoEq({ preampDb: toPlayedSound(state.config).preampDb, bands: listExportBands(state.config) }));
-    byId("exportAll").classList.toggle("on", !whole.hidden);
+    byId("exportAll").classList.toggle("is-on", !whole.hidden);
   });
 }
 

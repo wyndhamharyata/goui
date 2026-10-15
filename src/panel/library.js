@@ -1,10 +1,10 @@
-// The Library tabs and actions: save, import, paste, export and the EQByEar test, and the ear and taste lists.
+// The Library actions: save, import, paste, export and the EQByEar test, and the ear and taste lists.
 import { autoPreampDb } from "../shared/bands.js";
 import { layerLabels, layerOrder } from "../shared/config.js";
 import { parseAutoEq, toAutoEq } from "../autoeq.js";
-import { byId, debounce, buildElement, partOf, resetBoxHeight, sectionOf, showAllLines, showHint } from "./dom.js";
+import { buildElement, buildListRow, debounce, partOf, resetBoxHeight, sectionOf, showAllLines, showHint } from "./dom.js";
 import { renderHeadphoneList } from "./headphones.js";
-import { appendSection, describeBandCount, buildResultItem } from "./items.js";
+import { appendSection, describeBandCount } from "./items.js";
 import { isSavedPreset, buildPresetItem, renderPresetCards, storePresets } from "./presets.js";
 import { onPresetsChange } from "./refresh.js";
 import { commit, readBands, removeLayer, replaceLayer } from "./sound.js";
@@ -45,9 +45,9 @@ function renderLayerList(role) {
   const list = partOf(role, "results");
   const items = Object.keys(state.presets[role]).map((name) => buildPresetItem(role, name, () => {}));
 
-  if (items.length === 0) items.push(buildElement("p", { className: "hint", text: words.empty }));
+  if (items.length === 0) items.push(buildElement("p", { className: "ui-text-hint", text: words.empty }));
 
-  const turnOff = buildResultItem(words.off, words.offCaption, () => removeLayer(role));
+  const turnOff = buildListRow({ name: words.off, detail: words.offCaption, onPick: () => removeLayer(role) });
 
   list.replaceChildren();
   appendSection(list, words.heading, items);
@@ -59,17 +59,6 @@ function renderLayerList(role) {
 export function renderLayerLists() {
   renderLayerList("ear");
   renderLayerList("taste");
-}
-
-// The Library shows one layer's section at a time, under a tab for each layer.
-/** @param {LayerRole} role */
-export function showLibrarySection(role) {
-  state.libraryRole = role;
-
-  for (const each of layerOrder) sectionOf(each).hidden = each !== role;
-  for (const button of byId("libraryTabs").children) button.classList.toggle("on", button.dataset.role === role);
-
-  chrome.storage.local.set({ libraryRole: role });
 }
 
 /**
@@ -144,7 +133,7 @@ export function toggleLibraryAction(role, action) {
   partOf(role, "drawer").hidden = openAction !== "paste" && openAction !== "export";
   partOf(role, "apply").hidden = openAction !== "paste";
 
-  for (const button of partOf(role, "library-actions").children) button.classList.toggle("on", button.dataset.action === openAction);
+  for (const button of partOf(role, "library-actions").children) button.classList.toggle("is-on", button.dataset.action === openAction);
 
   showHint(role, "");
 
@@ -189,12 +178,6 @@ async function importFile(role, file) {
 
 /** @returns {void} */
 export function wireLibrary() {
-  byId("libraryTabs").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-role]");
-
-    if (button) showLibrarySection(button.dataset.role);
-  });
-
   for (const role of layerOrder) {
     sectionOf(role).addEventListener("click", (event) => {
       const button = event.target.closest("[data-action]");

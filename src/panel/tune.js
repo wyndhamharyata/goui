@@ -2,9 +2,9 @@
 import { bandTypeDetails, hasGain, hasQ, newBandFrequencyHz, qStepRatio, setBandFrequency, setBandGain, setBandQ } from "../shared/bands.js";
 import { layerLabels, layerOrder } from "../shared/config.js";
 import { qToOctaves, semitonesToRatio } from "../shared/math.js";
-import { layerColor, typeColor } from "../graph/colors.js";
+import { layerTone, typeTone } from "../graph/colors.js";
 import { formatDb, formatHz } from "../graph/format.js";
-import { byId, buildElement, setField } from "./dom.js";
+import { byId, buildElement, buildIcon, buildSectionHeader, markCurrent, setField } from "./dom.js";
 import { onRefresh } from "./refresh.js";
 import { addBandToLayer, commit, commitBandEdit, deleteSelectedBand, listBandEntries, readSelectedIndex, readSelectedRole, selectBand } from "./sound.js";
 import { state } from "./state.js";
@@ -14,14 +14,15 @@ import { state } from "./state.js";
 const gainStepDb = 0.5;
 
 function buildChip(entry, index) {
-  const classNames = ["chip"];
+  const classNames = ["ui-chip", "ui-chip--band", typeTone[entry.band.type]];
 
-  if (entry.band === state.selectedBand) classNames.push("on");
-  if (!entry.band.on) classNames.push("muted");
+  if (entry.band === state.selectedBand) classNames.push("is-on");
+  if (!entry.band.on) classNames.push("is-muted");
 
-  const number = buildElement("i", { text: index + 1, style: { background: typeColor[entry.band.type] } });
+  const number = buildElement("i", { className: "ui-chip__mark", text: index + 1 });
+  const title = `${bandTypeDetails[entry.band.type].label} at ${Math.round(entry.band.frequencyHz)} Hz`;
 
-  return buildElement("button", { className: classNames.join(" "), dataset: { index } }, [number, formatHz(entry.band.frequencyHz)]);
+  return buildElement("button", { type: "button", className: classNames.join(" "), title, dataset: { index } }, [number, buildElement("span", { text: formatHz(entry.band.frequencyHz) })]);
 }
 
 // One row per layer, each with its own label and its own Add band chip.
@@ -29,23 +30,40 @@ function renderChips() {
   const entries = listBandEntries();
   const rows = layerOrder.map((role) => {
     const chips = entries.flatMap((entry, index) => (entry.role === role ? [buildChip(entry, index)] : []));
-    const add = buildElement("button", { className: "chip add", text: "Add band", title: `Make a new band in ${layerLabels[role]}`, dataset: { add: role } });
-    const label = buildElement("span", { className: "chip-label", text: layerLabels[role], style: { color: layerColor[role] } });
+    const add = buildElement("button", { type: "button", className: "ui-chip ui-chip--add", title: `Make a new band in ${layerLabels[role]}`, dataset: { add: role } }, [
+      buildIcon("plus"),
+      buildElement("span", { text: "Add band" }),
+    ]);
+    const head = buildSectionHeader({ label: layerLabels[role], count: chips.length, tone: layerTone[role] });
 
-    return buildElement("div", { className: "chip-row" }, [label, buildElement("div", { className: "chip-track" }, [...chips, add])]);
+    return buildElement("div", { className: "pn-chip-row" }, [head, buildElement("div", { className: "ui-cluster" }, [...chips, add])]);
   });
 
   byId("chips").replaceChildren(...rows);
 }
 
 function describeQ(band) {
-  if (band.type === "PK") return `Q, ${qToOctaves(band.q).toFixed(1)} octaves wide`;
-  if (bandTypeDetails[band.type].node.endsWith("shelf")) return "Q, not used by a shelf";
+  if (band.type === "PK") return `Q, ${qToOctaves(band.q).toFixed(1)} oct`;
 
   return "Q";
 }
 
-// A value the band type does not use stays on show, with its field and its steps turned off.
+// The line under the fields says why a field is missing for this type.
+const missingFieldNotes = {
+  shelf: "A shelf has no Q. Web Audio shelves take a corner and a gain only, so goui keeps the Q of an AutoEQ shelf in the file and does not play it.",
+  cut: "A cut has no gain, and its Q is not edited here.",
+  pass: "This type has no gain.",
+};
+
+function readMissingFieldNote(type) {
+  if (hasGain(type) && !hasQ(type)) return missingFieldNotes.shelf;
+  if (!hasGain(type) && !hasQ(type)) return missingFieldNotes.cut;
+  if (!hasGain(type)) return missingFieldNotes.pass;
+
+  return "";
+}
+
+// A value the band type does not use is not shown. Its field and its steps also turn off.
 /**
  * @param {string} step
  * @param {string} inputId
@@ -53,8 +71,22 @@ function describeQ(band) {
  */
 function renderStepper(step, inputId, isUsed) {
   byId(inputId).disabled = !isUsed;
+  byId(inputId).closest(".ui-field--stepper").hidden = !isUsed;
 
   for (const button of document.querySelectorAll(`[data-step="${step}"]`)) button.disabled = !isUsed;
+}
+
+// The common types have a cell each. More is the sixth cell, and it opens a select of the rare types.
+function renderTypeChoice(band) {
+  const isCommon = Boolean(byId("bandSegments").querySelector(`[data-type="${band.type}"]`));
+  const isMoreShown = !isCommon || state.isMoreOpen;
+  const more = byId("moreTypes");
+
+  markCurrent(byId("bandSegments"), "type", isMoreShown ? "" : band.type);
+  more.classList.toggle("is-current", isMoreShown);
+  more.setAttribute("aria-checked", String(isMoreShown));
+  byId("bandTypeField").hidden = !isMoreShown;
+  setField("bandType", isCommon ? "" : band.type);
 }
 
 /** @returns {void} */
@@ -68,25 +100,13 @@ export function renderInspector() {
 
   if (!isChosen) return;
 
-  const title = byId("bandTitle");
-
-  title.textContent = `${layerLabels[readSelectedRole()]} · ${index + 1}. ${bandTypeDetails[band.type].label}`;
-  Object.assign(title.style, { color: typeColor[band.type] });
-  setField("bandType", band.type);
-
-  // The segment buttons hold the common types. The others are under More.
-  const isCommon = Boolean(byId("bandSegments").querySelector(`[data-type="${band.type}"]`));
-
-  byId("bandType").hidden = isCommon && !state.isMoreOpen;
-  byId("moreTypes").classList.toggle("on", !byId("bandType").hidden);
-
-  for (const button of byId("bandSegments").querySelectorAll("[data-type]")) {
-    button.classList.toggle("on", button.dataset.type === band.type);
-  }
+  byId("bandHead").className = `ui-section-header ui-section-header--section ${typeTone[band.type]}`;
+  byId("bandTitle").textContent = `${layerLabels[readSelectedRole()]} · ${index + 1}. ${bandTypeDetails[band.type].label}`;
+  renderTypeChoice(band);
 
   byId("bandOn").textContent = band.on ? "On" : "Off";
-  byId("bandOn").classList.toggle("on", band.on);
-  byId("bandSolo").classList.toggle("on", state.soloBand === band);
+  byId("bandOn").classList.toggle("is-on", band.on);
+  byId("bandSolo").classList.toggle("is-on", state.soloBand === band);
 
   setField("frequencyInput", Math.round(band.frequencyHz));
   setField("gainInput", formatDb(band.gainDb));
@@ -94,21 +114,29 @@ export function renderInspector() {
   renderStepper("gain", "gainInput", hasGain(band.type));
   renderStepper("q", "qInput", hasQ(band.type));
   byId("qHint").textContent = describeQ(band);
+  byId("bandFields").style.setProperty("--columns", String(1 + Number(hasGain(band.type)) + Number(hasQ(band.type))));
+  byId("bandNote").textContent = readMissingFieldNote(band.type);
 }
 
 function buildTableRow({ band }, index) {
-  const number = buildElement("span", { className: "number", text: index + 1, style: { color: typeColor[band.type] } });
+  const number = buildElement("span", { className: `ui-badge ui-badge--step ${typeTone[band.type]}`, text: index + 1 });
   const gain = hasGain(band.type) ? formatDb(band.gainDb) : "";
   const values = [Math.round(band.frequencyHz), gain, band.q.toFixed(2)];
   const cells = [buildElement("td", {}, [number, bandTypeDetails[band.type].label]), ...values.map((value) => buildElement("td", { text: value }))];
+  const classNames = [];
 
-  return buildElement("tr", { className: band === state.selectedBand ? "on" : "", dataset: { index } }, cells);
+  if (band === state.selectedBand) classNames.push("is-selected");
+  if (!band.on) classNames.push("is-muted");
+
+  return buildElement("tr", { className: classNames.join(" "), dataset: { index } }, cells);
 }
 
 function renderTable() {
+  const entries = listBandEntries();
   const head = buildElement("tr", {}, ["Band", "Hz", "dB", "Q"].map((label) => buildElement("th", { text: label })));
 
-  byId("table").replaceChildren(head, ...listBandEntries().map(buildTableRow));
+  byId("table").replaceChildren(head, ...entries.map(buildTableRow));
+  byId("tableCount").textContent = String(entries.length);
 }
 
 const bandSteps = {
@@ -170,10 +198,12 @@ export function wireTune() {
       return;
     }
 
+    state.isMoreOpen = false;
     state.selectedBand.type = button.dataset.type;
     commitBandEdit();
   });
   byId("bandType").addEventListener("change", (event) => {
+    state.isMoreOpen = false;
     state.selectedBand.type = event.target.value;
     commitBandEdit();
   });

@@ -1,24 +1,20 @@
-// The colours of the graph and the panel, which match src/base.css.
+// The colour of a band type and of a layer, as a tone class. Each tone class in src/base.css reads one token.
 
-export const backgroundColor = "#0e1013";
-export const textColor = "#e6e9ef";
-export const curveColor = "#5b8cff";
+const peakTone = "tone-peak";
+const shelfTone = "tone-shelf";
+const cutTone = "tone-cut";
 
-const peakColor = "#b06bff";
-const shelfColor = "#2ec4b6";
-const passColor = "#ff9f43";
-
-export const typeColor = {
-  PK: peakColor,
-  LSC: shelfColor,
-  HSC: shelfColor,
-  LSF: shelfColor,
-  HSF: shelfColor,
-  LP: passColor,
-  HP: passColor,
-  BP: passColor,
-  NO: passColor,
-  AP: passColor,
+export const typeTone = {
+  PK: peakTone,
+  LSC: shelfTone,
+  HSC: shelfTone,
+  LSF: shelfTone,
+  HSF: shelfTone,
+  LP: cutTone,
+  HP: cutTone,
+  BP: cutTone,
+  NO: cutTone,
+  AP: cutTone,
 };
 
-export const layerColor = { headphone: "#a9b8ff", ear: "#ffd166", taste: "#ff8fb1" };
+export const layerTone = { headphone: "tone-headphone", ear: "tone-ear", taste: "tone-taste" };

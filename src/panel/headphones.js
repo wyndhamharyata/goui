@@ -1,8 +1,8 @@
 // The headphone section of the Library: your presets, the starter sounds and the AutoEQ search.
 import { butterworthQ } from "../shared/bands.js";
 import { describeMeasurement, fetchHeadphone, findTargetSet, loadAutoEqIndex, newAutoEqItem } from "../autoeq.js";
-import { buildElement, partOf, showTab } from "./dom.js";
-import { appendSection, describeBandCount, buildResultItem } from "./items.js";
+import { buildElement, buildListRow, partOf, showTab } from "./dom.js";
+import { appendSection, describeBandCount } from "./items.js";
 import { buildPresetItem, renderPresetCards } from "./presets.js";
 import { onPresetsChange } from "./refresh.js";
 import { replaceLayer } from "./sound.js";
@@ -70,22 +70,17 @@ function endHeadphoneSearch() {
 
   box.value = "";
   renderHeadphoneList();
-  showTab("listen");
+  showTab("tab", "listen");
 }
 
 function buildMeasurementItem(item, hint) {
   const detail = describeMeasurement(item, findTargetSet(state.targetData.targetSets, item));
-  const row = buildResultItem(item.name, detail, async () => {
+  const pickMark = buildElement("span", { className: "ui-badge ui-badge--pill tone-good", text: "AutoEQ's pick", title: "AutoEQ recommends this measurement of the headphone" });
+  const loadPicked = async () => {
     if (await loadHeadphone(item, hint)) endHeadphoneSearch();
-  });
+  };
 
-  row.classList.add("measurement");
-
-  const pickMark = buildElement("em", { className: "pick", text: "AutoEQ's pick", title: "AutoEQ recommends this measurement of the headphone" });
-
-  if (item.isAutoEqPick) row.firstChild.append(pickMark);
-
-  return row;
+  return buildListRow({ name: item.name, detail, badge: item.isAutoEqPick ? pickMark : undefined, onPick: loadPicked });
 }
 
 async function findHeadphones(query, hint) {
@@ -140,7 +135,7 @@ export async function renderHeadphoneList() {
   const saved = Object.keys(state.presets.headphone).filter((name) => matchesQuery(name, query)).map((name) => buildPresetItem("headphone", name, endHeadphoneSearch));
 
   if (saved.length === 0 && query === "") {
-    saved.push(buildElement("p", { className: "hint", text: "Nothing saved yet. Pick your headphone, then press Save." }));
+    saved.push(buildElement("p", { className: "ui-text-hint", text: "Nothing saved yet. Pick your headphone, then press Save." }));
   }
 
   const starter = starterPresets.filter((preset) => matchesQuery(preset.name, query)).map((preset) => {
@@ -149,7 +144,7 @@ export async function renderHeadphoneList() {
       endHeadphoneSearch();
     };
 
-    return buildResultItem(preset.name, describeBandCount(preset.bands), place);
+    return buildListRow({ name: preset.name, detail: describeBandCount(preset.bands), onPick: place });
   });
 
   // Your presets and the starter sounds show at once. The AutoEQ list joins once it loads.

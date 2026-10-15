@@ -16,29 +16,41 @@
       <symbol id="headphones" viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 0-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2a7 7 0 0 1 14 0v2h-4v8h3c1.66 0 3-1.34 3-3v-7a9 9 0 0 0-9-9z" /></symbol>
       <symbol id="power-icon" viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z" /></symbol>
       <symbol id="cursor" viewBox="0 0 24 24"><path d="M5 2l14 11-6.5.8L16 21l-3 1.3-3.4-7.3L5 19.5z" /></symbol>
+      <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></symbol>
+      <symbol id="icon-minus" viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z" /></symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></symbol>
+      <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z" /></symbol>
+      <symbol id="icon-search" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></symbol>
+      <symbol id="icon-external" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" /></symbol>
     </svg>
 
     <div class="app" id="app" data-showing="listen">
-      <header class="head">
-        <div class="row">
-          <span class="brand"><img src="../icons/icon32.png" alt="" width="24" height="24" />goui</span>
-          <button id="help" class="small" title="How to use goui">?</button>
-          <button id="compare" class="hold" title="Hold to hear the sound without the EQ">A/B</button>
-          <label class="switch" title="Turn the EQ on or off">
-            <input type="checkbox" id="enabled" />
-            <span class="track"></span>
-          </label>
+      <header class="pn-head head">
+        <div class="ui-split">
+          <span class="pn-brand"><img src="../icons/icon32.png" alt="" width="18" height="18" />goui</span>
+          <span class="ui-cluster">
+            <button id="power" class="ui-button ui-button--small tone-good" aria-pressed="false" hidden><svg class="ui-icon" aria-hidden="true"><use href="#power-icon" /></svg><span id="powerText">OFF</span></button>
+            <button id="help" class="ui-button ui-button--quiet ui-button--small" title="How to use goui">?</button>
+            <button id="compare" class="ui-button ui-button--hold" title="Hold to hear the sound with the EQ off">A/B</button>
+            <label class="ui-switch switch" title="Turn the EQ on or off">
+              <input type="checkbox" id="enabled" aria-label="EQ on" />
+              <span class="ui-switch__knob"></span>
+            </label>
+          </span>
         </div>
-        <div class="row">
-          <button id="power" class="power" aria-pressed="false" hidden><svg><use href="#power-icon" /></svg><span id="powerText">OFF</span></button>
-          <span id="status" class="source"></span>
-          <span class="meter" id="meter"><i id="clip" class="dot"></i><span id="level">--</span> dB</span>
+        <div class="ui-split">
+          <span class="pn-hearing" id="hearing"><small id="hearingCaption">Hearing</small><b id="status"></b></span>
+          <span class="ui-badge ui-badge--dot tone-good pn-level" id="meter"><i class="ui-badge__mark"></i><span><span id="level">--</span> dB</span></span>
         </div>
       </header>
 
-      <section class="start" id="start">
-        <h2>Get started</h2>
-        <p class="mantra">Different ear, different head, different sound.</p>
+      <section class="pn-start ui-stack ui-stack--loose" id="start">
+        <div class="ui-section-header ui-section-header--title">
+          <span class="ui-section-header__text">
+            <span class="ui-section-header__title">Get started</span>
+            <span class="ui-section-header__caption">Different ear, different head, different sound.</span>
+          </span>
+        </div>
         <ol class="guide-steps">
           <li class="guide-step">
             <div class="shot">
@@ -79,237 +91,267 @@
             <p class="guide-text"><span><b>Click the goui icon</b>goui starts listening to that tab, and the icon shows a green ON.</span></p>
           </li>
         </ol>
-        <button id="guide" class="wide">Open the full guide</button>
+        <button id="guide" class="ui-button ui-button--primary ui-button--wide">Open the full guide</button>
       </section>
 
-      <nav class="tabs" id="tabs">
-        <button data-tab="listen">Listen</button>
-        <button data-tab="tune">Tune</button>
-        <button data-tab="library">Library</button>
+      <nav class="ui-tabs ui-tabs--large pn-tabs" id="tabs" role="tablist">
+        <button class="ui-tabs__item" role="tab" data-tab="listen">Listen</button>
+        <button class="ui-tabs__item" role="tab" data-tab="tune">Tune</button>
+        <button class="ui-tabs__item" role="tab" data-tab="library">Library</button>
       </nav>
 
-      <div class="panes">
-        <section class="pane" data-pane="listen">
-          <h4 class="column-title">Listen</h4>
-          <div class="card" id="layers"></div>
-          <div class="card"><div class="graph" id="listenGraph"></div></div>
-          <div class="card" id="sliders">
-            <label class="slider">
-              <span>Bass<small>Below 120 Hz</small></span>
-              <input type="range" id="bass" step="0.5" value="0" />
-              <output id="bassValue">0.0 dB</output>
-            </label>
-            <label class="slider">
-              <span>Vocals<small>Around 1.5 kHz</small></span>
-              <input type="range" id="vocals" step="0.5" value="0" />
-              <output id="vocalsValue">0.0 dB</output>
-            </label>
-            <label class="slider">
-              <span>Treble<small>Above 3.5 kHz</small></span>
-              <input type="range" id="treble" step="0.5" value="0" />
-              <output id="trebleValue">0.0 dB</output>
-            </label>
-            <div class="slider preamp">
-              <span>Preamp<small id="preampNote">Auto</small></span>
-              <input type="range" id="preamp" step="0.1" value="0" />
-              <output id="preampValue">0.0 dB</output>
-              <button id="autoPreamp" class="small" title="Set the preamp from the largest boost, so the sound never clips">Auto</button>
+      <div class="pn-panes">
+        <section class="pn-pane" data-pane="listen">
+          <div class="ui-section-header ui-section-header--column pn-column-title"><span class="ui-section-header__text"><span class="ui-section-header__title">Listen</span></span></div>
+          <div class="ui-section-header ui-section-header--eyebrow">
+            <span>Your sound</span><span class="ui-section-header__count" id="layerCount"></span><span class="ui-section-header__rule"></span>
+          </div>
+          <div class="ui-stack ui-stack--chain" id="layers"></div>
+          <div class="ui-plot graph" id="listenGraph"></div>
+          <div class="ui-stack" id="sliders">
+            <div class="ui-section-header ui-section-header--eyebrow">
+              <span>Nudge</span><span class="ui-section-header__rule"></span><span class="ui-badge ui-badge--pill tone-muted">On top of all three</span>
             </div>
-            <label class="slider level-match" title="Holding A/B keeps the preamp, so neither side wins just for being louder">
-              <span>Level match<small>Keep the preamp in A/B testing</small></span>
-              <span class="switch"><input type="checkbox" id="levelMatch" /><span class="track"></span></span>
+            <label class="ui-slider-row">
+              <span class="ui-slider-row__label"><span>Bass</span><small>Below 120 Hz</small></span>
+              <input type="range" class="ui-slider-row__range" id="bass" step="0.5" value="0" />
+              <output class="ui-slider-row__value" id="bassValue">0.0 dB</output>
+            </label>
+            <label class="ui-slider-row">
+              <span class="ui-slider-row__label"><span>Vocals</span><small>Around 1.5 kHz</small></span>
+              <input type="range" class="ui-slider-row__range" id="vocals" step="0.5" value="0" />
+              <output class="ui-slider-row__value" id="vocalsValue">0.0 dB</output>
+            </label>
+            <label class="ui-slider-row">
+              <span class="ui-slider-row__label"><span>Treble</span><small>Above 3.5 kHz</small></span>
+              <input type="range" class="ui-slider-row__range" id="treble" step="0.5" value="0" />
+              <output class="ui-slider-row__value" id="trebleValue">0.0 dB</output>
+            </label>
+            <div class="ui-section-header ui-section-header--eyebrow">
+              <span>Output</span><span class="ui-section-header__rule"></span>
+            </div>
+            <div class="ui-slider-row ui-slider-row--trail">
+              <span class="ui-slider-row__label"><span>Preamp</span><small id="preampNote">Auto</small></span>
+              <input type="range" class="ui-slider-row__range" id="preamp" step="0.1" value="0" aria-label="Preamp" />
+              <output class="ui-slider-row__value" id="preampValue">0.0 dB</output>
+              <span class="ui-slider-row__trail"><button id="autoPreamp" class="ui-button ui-button--small" title="Set the preamp from the largest boost, so the sound never clips">Auto</button></span>
+            </div>
+            <label class="ui-stack-row" title="Holding A/B keeps the preamp, so neither side wins just for being louder">
+              <span class="ui-switch"><input type="checkbox" id="levelMatch" /><span class="ui-switch__knob"></span></span>
+              <span class="ui-stack-row__body">
+                <span class="ui-stack-row__caption">Keep the preamp while A/B is held</span>
+                <span class="ui-stack-row__name">Level match</span>
+              </span>
             </label>
           </div>
         </section>
 
-        <section class="pane" data-pane="tune">
-          <h4 class="column-title">Tune</h4>
-          <div class="pills" id="zoom">
-            <button data-zoom="all">All</button>
-            <button data-zoom="lows">Lows</button>
-            <button data-zoom="mids">Mids</button>
-            <button data-zoom="highs">Highs</button>
-            <button id="tall" title="Turn the graph so frequency runs down the panel">Tall</button>
+        <section class="pn-pane" data-pane="tune">
+          <div class="ui-section-header ui-section-header--column pn-column-title"><span class="ui-section-header__text"><span class="ui-section-header__title">Tune</span></span></div>
+          <div class="ui-split">
+            <div class="ui-segmented ui-segmented--pill" id="zoom" role="radiogroup" aria-label="Zoom">
+              <button class="ui-segmented__item" role="radio" data-zoom="all">All</button>
+              <button class="ui-segmented__item" role="radio" data-zoom="lows">Lows</button>
+              <button class="ui-segmented__item" role="radio" data-zoom="mids">Mids</button>
+              <button class="ui-segmented__item" role="radio" data-zoom="highs">Highs</button>
+            </div>
+            <button id="tall" class="ui-button ui-button--small" title="Turn the graph so frequency runs down the panel">Tall</button>
           </div>
-          <div class="card">
-            <div class="graph" id="tuneGraph"></div>
-            <div class="legend">
-              <span><i class="swatch" style="height: 2px; background: #5b8cff"></i>EQ curve</span>
-              <span><i class="swatch" style="background: rgba(150, 165, 200, 0.4)"></i>Live sound</span>
-              <span><i class="swatch" style="background: rgba(255, 122, 144, 0.5)"></i>Louder</span>
-              <span><i class="swatch" style="background: rgba(79, 163, 255, 0.5)"></i>Quieter</span>
-              <span><i class="swatch" style="background: rgba(176, 107, 255, 0.35)"></i>Selected band</span>
-              <span><i class="swatch" style="height: 0; border-top: 2px dashed #b06bff"></i>Band width (Q)</span>
-              <span><i class="swatch round" style="background: #b06bff"></i>Peak</span>
-              <span><i class="swatch round" style="background: #2ec4b6"></i>Shelf</span>
-              <span><i class="swatch round" style="background: #ff9f43"></i>Cut and notch</span>
+          <div class="ui-plot graph" id="tuneGraph"></div>
+          <div class="ui-cluster ui-cluster--legend">
+            <span class="ui-badge ui-badge--key ui-badge--key-line tone-accent"><i class="ui-badge__mark"></i><span>EQ curve</span></span>
+            <span class="ui-badge ui-badge--key ui-badge--key-fill tone-spectrum"><i class="ui-badge__mark"></i><span>Live sound</span></span>
+            <span class="ui-badge ui-badge--key ui-badge--key-fill tone-louder"><i class="ui-badge__mark"></i><span>Louder</span></span>
+            <span class="ui-badge ui-badge--key ui-badge--key-fill tone-quieter"><i class="ui-badge__mark"></i><span>Quieter</span></span>
+            <span class="ui-badge ui-badge--key ui-badge--key-dot tone-peak"><i class="ui-badge__mark"></i><span>Peak</span></span>
+            <span class="ui-badge ui-badge--key ui-badge--key-dot tone-shelf"><i class="ui-badge__mark"></i><span>Shelf</span></span>
+            <span class="ui-badge ui-badge--key ui-badge--key-dot tone-cut"><i class="ui-badge__mark"></i><span>Cut</span></span>
+            <span class="ui-badge ui-badge--key ui-badge--key-dash tone-headphone"><i class="ui-badge__mark"></i><span>Headphone</span></span>
+            <span class="ui-badge ui-badge--key ui-badge--key-dash tone-ear"><i class="ui-badge__mark"></i><span>My ear</span></span>
+            <span class="ui-badge ui-badge--key ui-badge--key-dash tone-taste"><i class="ui-badge__mark"></i><span>Taste</span></span>
+          </div>
+          <div class="ui-stack" id="chips"></div>
+          <div id="inspector">
+            <p class="ui-text-hint pn-empty" id="inspectorEmpty">Tap a point or a chip to tune that band. Double click the graph to make a new band.</p>
+            <div class="ui-stack" id="inspectorBody" hidden>
+              <div class="ui-section-header ui-section-header--section" id="bandHead">
+                <span class="ui-section-header__text"><span class="ui-section-header__title" id="bandTitle"></span></span>
+                <span class="ui-cluster">
+                  <button id="bandOn" class="ui-button ui-button--small" title="Turn this band on or off">On</button>
+                  <button id="bandSolo" class="ui-button ui-button--small" title="Hear this band alone">Solo</button>
+                  <button id="bandDelete" class="ui-button ui-button--danger ui-button--small" title="Delete this band">Delete</button>
+                </span>
+              </div>
+              <div class="ui-segmented ui-segmented--grid" id="bandSegments" role="radiogroup" aria-label="Band type">
+                <button class="ui-segmented__item" role="radio" data-type="PK">Peak</button>
+                <button class="ui-segmented__item" role="radio" data-type="LSC">Low shelf</button>
+                <button class="ui-segmented__item" role="radio" data-type="HSC">High shelf</button>
+                <button class="ui-segmented__item" role="radio" data-type="HP">Low cut</button>
+                <button class="ui-segmented__item" role="radio" data-type="LP">High cut</button>
+                <button class="ui-segmented__item" role="radio" id="moreTypes" title="More band types">More</button>
+              </div>
+              <label class="ui-field ui-field--select" id="bandTypeField" hidden>
+                <span class="ui-field__prefix">Type</span>
+                <select class="ui-field__control" id="bandType"></select>
+                <svg class="ui-icon" aria-hidden="true"><use href="#icon-chevron" /></svg>
+              </label>
+              <div class="ui-grid" id="bandFields">
+                <div class="ui-field ui-field--stepper">
+                  <button class="ui-button ui-button--quiet ui-button--icon" data-step="frequency" data-direction="-1" title="One semitone lower" aria-label="One semitone lower"><svg class="ui-icon"><use href="#icon-minus" /></svg></button>
+                  <label class="ui-field__middle"><input class="ui-field__control" type="text" inputmode="decimal" id="frequencyInput" /><small>Hz</small></label>
+                  <button class="ui-button ui-button--quiet ui-button--icon" data-step="frequency" data-direction="1" title="One semitone higher" aria-label="One semitone higher"><svg class="ui-icon"><use href="#icon-plus" /></svg></button>
+                </div>
+                <div class="ui-field ui-field--stepper" id="gainField">
+                  <button class="ui-button ui-button--quiet ui-button--icon" data-step="gain" data-direction="-1" title="0.5 dB lower" aria-label="0.5 dB lower"><svg class="ui-icon"><use href="#icon-minus" /></svg></button>
+                  <label class="ui-field__middle"><input class="ui-field__control" type="text" inputmode="decimal" id="gainInput" /><small>dB</small></label>
+                  <button class="ui-button ui-button--quiet ui-button--icon" data-step="gain" data-direction="1" title="0.5 dB higher" aria-label="0.5 dB higher"><svg class="ui-icon"><use href="#icon-plus" /></svg></button>
+                </div>
+                <div class="ui-field ui-field--stepper" id="qField">
+                  <button class="ui-button ui-button--quiet ui-button--icon" data-step="q" data-direction="-1" title="Wider band" aria-label="Wider band"><svg class="ui-icon"><use href="#icon-minus" /></svg></button>
+                  <label class="ui-field__middle"><input class="ui-field__control" type="text" inputmode="decimal" id="qInput" /><small id="qHint">Q</small></label>
+                  <button class="ui-button ui-button--quiet ui-button--icon" data-step="q" data-direction="1" title="Narrower band" aria-label="Narrower band"><svg class="ui-icon"><use href="#icon-plus" /></svg></button>
+                </div>
+              </div>
+              <p class="ui-text-hint" id="bandNote"></p>
             </div>
           </div>
-          <div class="chips" id="chips"></div>
-          <div class="card" id="inspector">
-            <p class="hint" id="inspectorEmpty">Tap a point or a chip to tune that band. Double click the graph to make a new band.</p>
-            <div id="inspectorBody" hidden>
-              <div class="row">
-                <b id="bandTitle" class="grow"></b>
-                <button id="bandOn" class="small">On</button>
-                <button id="bandSolo" class="small" title="Hear this band alone">Solo</button>
-                <button id="bandDelete" class="small" title="Delete this band">Delete</button>
-              </div>
-              <div class="segments" id="bandSegments">
-                <button data-type="PK">Peak</button>
-                <button data-type="LSC">Low shelf</button>
-                <button data-type="HSC">High shelf</button>
-                <button data-type="HP">Low cut</button>
-                <button data-type="LP">High cut</button>
-                <button id="moreTypes" class="more" title="More band types">More</button>
-              </div>
-              <select id="bandType" hidden></select>
-              <div class="stepper">
-                <button data-step="frequency" data-direction="-1" title="One semitone lower">-</button>
-                <label><input type="text" inputmode="decimal" id="frequencyInput" /><small>frequency, Hz</small></label>
-                <button data-step="frequency" data-direction="1" title="One semitone higher">+</button>
-              </div>
-              <div class="stepper">
-                <button data-step="gain" data-direction="-1" title="0.5 dB lower">-</button>
-                <label><input type="text" inputmode="decimal" id="gainInput" /><small>gain, dB</small></label>
-                <button data-step="gain" data-direction="1" title="0.5 dB higher">+</button>
-              </div>
-              <div class="stepper">
-                <button data-step="q" data-direction="-1" title="Wider band">-</button>
-                <label><input type="text" inputmode="decimal" id="qInput" /><small id="qHint">Q</small></label>
-                <button data-step="q" data-direction="1" title="Narrower band">+</button>
-              </div>
-            </div>
-          </div>
-          <details class="card">
-            <summary>Number table</summary>
-            <table class="band-table" id="table"></table>
+          <details class="ui-expander ui-expander--disclosure">
+            <summary class="ui-expander__summary"><svg class="ui-icon" aria-hidden="true"><use href="#icon-chevron" /></svg><span>Number table</span><span class="ui-expander__count" id="tableCount"></span></summary>
+            <table class="pn-table" id="table"></table>
           </details>
         </section>
 
-        <section class="pane" data-pane="library">
-          <h4 class="column-title">Library</h4>
-          <div class="tabs library-tabs" id="libraryTabs">
-            <button data-role="headphone" class="on">Headphone</button>
-            <button data-role="ear">My ear</button>
-            <button data-role="taste">Taste</button>
+        <section class="pn-pane" data-pane="library">
+          <div class="ui-section-header ui-section-header--column pn-column-title"><span class="ui-section-header__text"><span class="ui-section-header__title">Library</span></span></div>
+          <div class="ui-tabs ui-tabs--small" id="libraryTabs" role="tablist">
+            <button class="ui-tabs__item" role="tab" data-role="headphone">Headphone</button>
+            <button class="ui-tabs__item" role="tab" data-role="ear">My ear</button>
+            <button class="ui-tabs__item" role="tab" data-role="taste">Taste</button>
           </div>
-          <div class="card preset-section" data-role="headphone">
-            <div class="section-head">
-              <span class="step">1</span>
-              <div class="grow">
-                <b>Headphone</b>
-                <small class="caption">Makes your headphone sound neutral. Find it in AutoEQ below, then save it as your own preset.</small>
+          <div class="pn-library" id="library" data-showing="headphone">
+            <div class="pn-section preset-section ui-stack" data-role="headphone">
+              <div class="ui-section-header ui-section-header--section tone-headphone">
+                <span class="ui-badge ui-badge--step tone-headphone">1</span>
+                <span class="ui-section-header__text">
+                  <span class="ui-section-header__title">Headphone</span>
+                  <span class="ui-section-header__caption">Makes your headphone sound neutral. Find it in AutoEQ below, then save it as your own preset.</span>
+                </span>
               </div>
-            </div>
-            <div class="current">
-              <div class="grow">
-                <small class="caption current-caption"></small>
-                <b class="current-name"></b>
+              <div class="ui-stack-row has-bar tone-headphone current">
+                <span class="ui-stack-row__body"><span class="ui-stack-row__caption current-caption"></span><span class="ui-stack-row__name current-name"></span></span>
+                <span class="ui-stack-row__trail">
+                  <button data-action="save" class="ui-button ui-button--primary ui-button--small save">Save</button>
+                  <button data-action="saveAs" class="ui-button ui-button--small save-as" title="Keep this as a new preset under another name">Save as new</button>
+                </span>
               </div>
-              <button data-action="save" class="save">Save</button>
-              <button data-action="saveAs" class="save-as" title="Keep this as a new preset under another name">Save as new</button>
+              <div class="ui-expander ui-expander--drawer save-row" hidden>
+                <div class="ui-cluster ui-cluster--fill">
+                  <label class="ui-field"><input type="text" class="ui-field__control save-name" placeholder="Name for this headphone preset" /></label>
+                  <button data-action="confirmSave" class="ui-button ui-button--primary ui-button--small confirm-save">Save</button>
+                </div>
+              </div>
+              <div class="ui-grid library-actions">
+                <button data-action="import" class="ui-button ui-button--small" title="Load a ParametricEQ.txt file into the headphone layer">Import</button>
+                <button data-action="paste" class="ui-button ui-button--small" title="Paste AutoEQ text into the headphone layer">Paste</button>
+                <button data-action="export" class="ui-button ui-button--small" title="Copy the headphone layer as AutoEQ text">Export</button>
+              </div>
+              <div class="ui-expander ui-expander--drawer drawer" hidden>
+                <textarea class="ui-field ui-field--area text" spellcheck="false" placeholder="Paste AutoEQ text here"></textarea>
+                <button data-action="apply" class="ui-button ui-button--primary ui-button--small pn-drawer-apply apply">Apply</button>
+              </div>
+              <input type="file" class="import-file" accept=".txt,text/plain" hidden />
+              <p class="ui-text-hint action-hint"></p>
+              <label class="ui-field ui-field--search">
+                <svg class="ui-icon" aria-hidden="true"><use href="#icon-search" /></svg>
+                <input type="search" class="ui-field__control search" placeholder="Search AutoEQ or your presets, for example HD 600" />
+              </label>
+              <div class="pn-results results"></div>
+              <p class="ui-text-hint search-hint"></p>
             </div>
-            <div class="row save-row" hidden>
-              <input type="text" class="save-name" placeholder="Name for this headphone preset" />
-              <button data-action="confirmSave" class="confirm-save on">Save</button>
+
+            <div class="pn-section preset-section ui-stack" data-role="ear">
+              <div class="ui-section-header ui-section-header--section tone-ear">
+                <span class="ui-badge ui-badge--step tone-ear">2</span>
+                <span class="ui-section-header__text">
+                  <span class="ui-section-header__title">My ear</span>
+                  <span class="ui-section-header__caption">Tunes the sound to your own hearing, on top of the headphone. Measure it with the EQByEar test, paste the result here, then save it.</span>
+                </span>
+              </div>
+              <div class="ui-stack-row has-bar tone-ear current">
+                <span class="ui-stack-row__body"><span class="ui-stack-row__caption current-caption"></span><span class="ui-stack-row__name current-name"></span></span>
+                <span class="ui-stack-row__trail">
+                  <button data-action="save" class="ui-button ui-button--primary ui-button--small save">Save</button>
+                  <button data-action="saveAs" class="ui-button ui-button--small save-as" title="Keep this as a new preset under another name">Save as new</button>
+                </span>
+              </div>
+              <div class="ui-expander ui-expander--drawer save-row" hidden>
+                <div class="ui-cluster ui-cluster--fill">
+                  <label class="ui-field"><input type="text" class="ui-field__control save-name" placeholder="Name for this ear preset" /></label>
+                  <button data-action="confirmSave" class="ui-button ui-button--primary ui-button--small confirm-save">Save</button>
+                </div>
+              </div>
+              <button data-action="measure" id="eqbyear" class="ui-button ui-button--wide" title="Open eqbyear.com in a new tab, with My ear off, to measure your ear"><svg class="ui-icon" aria-hidden="true"><use href="#icon-external" /></svg><span>Measure my ear with EQByEar</span></button>
+              <div class="ui-grid library-actions">
+                <button data-action="import" class="ui-button ui-button--small" title="Load a ParametricEQ.txt file into the ear layer">Import</button>
+                <button data-action="paste" class="ui-button ui-button--small" title="Paste AutoEQ text, such as an EQByEar result, into the ear layer">Paste</button>
+                <button data-action="export" class="ui-button ui-button--small" title="Copy the ear layer as AutoEQ text">Export</button>
+              </div>
+              <div class="ui-expander ui-expander--drawer drawer" hidden>
+                <textarea class="ui-field ui-field--area text" spellcheck="false" placeholder="Paste the EQByEar result here"></textarea>
+                <button data-action="apply" class="ui-button ui-button--primary ui-button--small pn-drawer-apply apply">Apply</button>
+              </div>
+              <input type="file" class="import-file" accept=".txt,text/plain" hidden />
+              <p class="ui-text-hint action-hint"></p>
+              <div class="pn-results results"></div>
             </div>
-            <div class="library-actions">
-              <button data-action="import" title="Load a ParametricEQ.txt file into the headphone layer">Import</button>
-              <button data-action="paste" title="Paste AutoEQ text into the headphone layer">Paste</button>
-              <button data-action="export" title="Copy the headphone layer as AutoEQ text">Export</button>
+
+            <div class="pn-section preset-section ui-stack" data-role="taste">
+              <div class="ui-section-header ui-section-header--section tone-taste">
+                <span class="ui-badge ui-badge--step tone-taste">3</span>
+                <span class="ui-section-header__text">
+                  <span class="ui-section-header__title">Taste</span>
+                  <span class="ui-section-header__caption">Your own flavour, on top of your ear. Add bands in Tune, or paste AutoEQ text here, then save it.</span>
+                </span>
+              </div>
+              <div class="ui-stack-row has-bar tone-taste current">
+                <span class="ui-stack-row__body"><span class="ui-stack-row__caption current-caption"></span><span class="ui-stack-row__name current-name"></span></span>
+                <span class="ui-stack-row__trail">
+                  <button data-action="save" class="ui-button ui-button--primary ui-button--small save">Save</button>
+                  <button data-action="saveAs" class="ui-button ui-button--small save-as" title="Keep this as a new preset under another name">Save as new</button>
+                </span>
+              </div>
+              <div class="ui-expander ui-expander--drawer save-row" hidden>
+                <div class="ui-cluster ui-cluster--fill">
+                  <label class="ui-field"><input type="text" class="ui-field__control save-name" placeholder="Name for this taste preset" /></label>
+                  <button data-action="confirmSave" class="ui-button ui-button--primary ui-button--small confirm-save">Save</button>
+                </div>
+              </div>
+              <div class="ui-grid library-actions">
+                <button data-action="import" class="ui-button ui-button--small" title="Load a ParametricEQ.txt file into the taste layer">Import</button>
+                <button data-action="paste" class="ui-button ui-button--small" title="Paste AutoEQ text into the taste layer">Paste</button>
+                <button data-action="export" class="ui-button ui-button--small" title="Copy the taste layer as AutoEQ text">Export</button>
+              </div>
+              <div class="ui-expander ui-expander--drawer drawer" hidden>
+                <textarea class="ui-field ui-field--area text" spellcheck="false" placeholder="Paste AutoEQ text here"></textarea>
+                <button data-action="apply" class="ui-button ui-button--primary ui-button--small pn-drawer-apply apply">Apply</button>
+              </div>
+              <input type="file" class="import-file" accept=".txt,text/plain" hidden />
+              <p class="ui-text-hint action-hint"></p>
+              <div class="pn-results results"></div>
             </div>
-            <div class="drawer" hidden>
-              <textarea class="text" spellcheck="false" placeholder="Paste AutoEQ text here"></textarea>
-              <button data-action="apply" class="apply on">Apply</button>
-            </div>
-            <input type="file" class="import-file" accept=".txt,text/plain" hidden />
-            <p class="hint action-hint"></p>
-            <input type="search" class="search" placeholder="Search AutoEQ or your presets, for example HD 600" />
-            <div class="results"></div>
-            <p class="hint search-hint"></p>
           </div>
 
-          <div class="card preset-section" data-role="ear">
-            <div class="section-head">
-              <span class="step">2</span>
-              <div class="grow">
-                <b>My ear</b>
-                <small class="caption">Tunes the sound to your own hearing, on top of the headphone. Measure it with the EQByEar test, paste the result here, then save it.</small>
-              </div>
-            </div>
-            <div class="current">
-              <div class="grow">
-                <small class="caption current-caption"></small>
-                <b class="current-name"></b>
-              </div>
-              <button data-action="save" class="save">Save</button>
-              <button data-action="saveAs" class="save-as" title="Keep this as a new preset under another name">Save as new</button>
-            </div>
-            <div class="row save-row" hidden>
-              <input type="text" class="save-name" placeholder="Name for this ear preset" />
-              <button data-action="confirmSave" class="confirm-save on">Save</button>
-            </div>
-            <button data-action="measure" id="eqbyear" title="Open eqbyear.com in a new tab, with My ear off, to measure your ear">Measure my ear with EQByEar</button>
-            <div class="library-actions">
-              <button data-action="import" title="Load a ParametricEQ.txt file into the ear layer">Import</button>
-              <button data-action="paste" title="Paste AutoEQ text, such as an EQByEar result, into the ear layer">Paste</button>
-              <button data-action="export" title="Copy the ear layer as AutoEQ text">Export</button>
-            </div>
-            <div class="drawer" hidden>
-              <textarea class="text" spellcheck="false" placeholder="Paste the EQByEar result here"></textarea>
-              <button data-action="apply" class="apply on">Apply</button>
-            </div>
-            <input type="file" class="import-file" accept=".txt,text/plain" hidden />
-            <p class="hint action-hint"></p>
-            <div class="results"></div>
+          <div class="ui-stack pn-whole">
+            <div class="ui-section-header ui-section-header--eyebrow"><span>Whole sound</span><span class="ui-section-header__rule"></span></div>
+            <p class="ui-text-hint">All three layers and the sliders in one AutoEQ file, for other apps.</p>
+            <button id="exportAll" class="ui-button ui-button--wide">Export the whole sound</button>
+            <textarea id="wholeText" class="ui-field ui-field--area" spellcheck="false" readonly hidden></textarea>
           </div>
 
-          <div class="card preset-section" data-role="taste">
-            <div class="section-head">
-              <span class="step">3</span>
-              <div class="grow">
-                <b>Taste</b>
-                <small class="caption">Your own flavour, on top of your ear. Add bands in Tune, or paste AutoEQ text here, then save it.</small>
-              </div>
-            </div>
-            <div class="current">
-              <div class="grow">
-                <small class="caption current-caption"></small>
-                <b class="current-name"></b>
-              </div>
-              <button data-action="save" class="save">Save</button>
-              <button data-action="saveAs" class="save-as" title="Keep this as a new preset under another name">Save as new</button>
-            </div>
-            <div class="row save-row" hidden>
-              <input type="text" class="save-name" placeholder="Name for this taste preset" />
-              <button data-action="confirmSave" class="confirm-save on">Save</button>
-            </div>
-            <div class="library-actions">
-              <button data-action="import" title="Load a ParametricEQ.txt file into the taste layer">Import</button>
-              <button data-action="paste" title="Paste AutoEQ text into the taste layer">Paste</button>
-              <button data-action="export" title="Copy the taste layer as AutoEQ text">Export</button>
-            </div>
-            <div class="drawer" hidden>
-              <textarea class="text" spellcheck="false" placeholder="Paste AutoEQ text here"></textarea>
-              <button data-action="apply" class="apply on">Apply</button>
-            </div>
-            <input type="file" class="import-file" accept=".txt,text/plain" hidden />
-            <p class="hint action-hint"></p>
-            <div class="results"></div>
-          </div>
-
-          <div class="card">
-            <b>Whole sound</b>
-            <small class="caption">All three layers and the sliders in one AutoEQ file, for other apps.</small>
-            <button id="exportAll">Export the whole sound</button>
-            <textarea id="wholeText" spellcheck="false" readonly hidden></textarea>
-          </div>
-
-          <p class="credits">
+          <p class="ui-text-fine pn-credits credits">
             Headphone profiles from AutoEQ by Jaakko Pasanen. Ear test from EQByEar. Icon art from Google Material Icons.
             goui is under the MIT licence.
-            <button id="credits" class="small" title="Open the credits in the guide">Credits</button>
+            <button id="credits" class="ui-button ui-button--quiet ui-button--small" title="Open the credits in the guide">Credits</button>
           </p>
         </section>
       </div>

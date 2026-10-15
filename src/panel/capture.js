@@ -27,12 +27,13 @@ export function applyCaptureState(capture) {
   const status = byId("status");
 
   status.textContent = capture.error || (isCapturing ? capture.title : words.idleInstruction);
-  status.classList.toggle("instruction", !isCapturing);
+  byId("hearing").classList.toggle("is-instruction", !isCapturing);
   status.title = isCapturing && !isPopup ? "Click the goui icon on this tab to turn goui off, or on another tab to move it there." : "";
 
   state.isPopupTabHeard = isCapturing && capture.tabId === popupTabId;
   byId("powerText").textContent = state.isPopupTabHeard ? "ON" : "OFF";
   byId("power").setAttribute("aria-pressed", String(state.isPopupTabHeard));
+  byId("power").classList.toggle("is-on", state.isPopupTabHeard);
   byId("power").title = state.isPopupTabHeard ? words.powerOffTitle : words.powerOnTitle;
 }
 

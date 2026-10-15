@@ -2,7 +2,7 @@
 import { cleanBands, newBand } from "../shared/bands.js";
 import { flatSliders, layerOrder, listOnLayers, listPlayedBands, newLayer, toPlayedSound } from "../shared/config.js";
 import { messageTypes, trySendMessage } from "../shared/messages.js";
-import { byId, debounce } from "./dom.js";
+import { debounce } from "./dom.js";
 import { refresh } from "./refresh.js";
 import { layerSources, state } from "./state.js";
 
@@ -200,7 +200,6 @@ export function setComparing(isOn) {
   if (state.isComparing === isOn) return;
 
   state.isComparing = isOn;
-  byId("compare").classList.toggle("on", isOn);
   sendAudio();
   refresh();
 }

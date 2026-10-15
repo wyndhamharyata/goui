@@ -3,10 +3,10 @@ import { bandTypeDetails, bandTypes } from "../shared/bands.js";
 import { layerOrder, sanitizeConfig } from "../shared/config.js";
 import { loadTargets } from "../autoeq.js";
 import { applyCaptureState, startPopup, wireMessages } from "./capture.js";
-import { byId, showTab } from "./dom.js";
+import { byId, buildElement, showTab, wireTabs } from "./dom.js";
 import { graphs, renderPills, wireGraphButtons } from "./graphs.js";
 import { renderHeadphoneList } from "./headphones.js";
-import { renderLayerLists, showLibrarySection, wireLibrary } from "./library.js";
+import { renderLayerLists, wireLibrary } from "./library.js";
 import { setSliderRanges, wireListen } from "./listen.js";
 import { readPresets } from "./presets.js";
 import { refresh } from "./refresh.js";
@@ -21,12 +21,6 @@ const storedKeys = [
 ];
 
 function wireHeader() {
-  byId("tabs").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-tab]");
-
-    if (button) showTab(button.dataset.tab);
-  });
-
   for (const id of ["help", "guide", "credits"]) {
     byId(id).addEventListener("click", () => chrome.tabs.create({ url: chrome.runtime.getURL("src/intro.html") }));
   }
@@ -41,7 +35,11 @@ function wireHeader() {
 }
 
 async function startPanel() {
-  for (const type of bandTypes) byId("bandType").append(new Option(bandTypeDetails[type].label, type));
+  // The band type grid holds the common types. The select under More holds the rest.
+  const rareTypes = bandTypes.filter((type) => !byId("bandSegments").querySelector(`[data-type="${type}"]`));
+  const placeholder = buildElement("option", { value: "", text: "Pick a rarer type", disabled: true });
+
+  byId("bandType").append(placeholder, ...rareTypes.map((type) => new Option(bandTypeDetails[type].label, type)));
 
   setSliderRanges();
 
@@ -59,8 +57,8 @@ async function startPanel() {
   await readPresets(stored);
   for (const graph of graphs) graph.setTall(stored.view === "tall" || stored.view === "vertical");
 
-  showTab(stored.tab || "listen");
-  showLibrarySection(layerOrder.includes(stored.libraryRole) ? stored.libraryRole : "headphone");
+  showTab("tab", stored.tab || "listen");
+  showTab("role", layerOrder.includes(stored.libraryRole) ? stored.libraryRole : "headphone");
   renderPills();
   sendAudio();
   refresh();
@@ -75,6 +73,7 @@ async function startPanel() {
 }
 
 wireHeader();
+wireTabs();
 wireListen();
 wireGraphButtons();
 wireTune();

@@ -20,8 +20,6 @@ export const state = {
   /** @type {number[]} */
   spectrumDb: [],
   openActions: { headphone: "", ear: "", taste: "" },
-  /** @type {import("../shared/config.js").LayerRole} */
-  libraryRole: "headphone",
   // Loaded before the first draw, so the Listen row can show the target choice at once.
   /** @type {TargetData | null} */
   targetData: null,

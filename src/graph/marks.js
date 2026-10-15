@@ -1,5 +1,5 @@
 // The band points, the chosen band with its Q handles and label, and the reading under the pointer.
-import { hasGain, responseDb } from "../shared/bands.js";
+import { hasGain, hasQ, responseDb } from "../shared/bands.js";
 import { clamp, octavesToRatio, qToOctaves } from "../shared/math.js";
 import { formatDb, formatHz } from "./format.js";
 import {
@@ -94,7 +94,7 @@ export function drawBandPoints(view, entries, chosenIndex) {
   return { elements, points };
 }
 
-// The label above the chosen point, with its frequency, gain and Q.
+// The label above the chosen point, with its frequency and the fields the band plays.
 /**
  * @param {View} view
  * @param {Band} band
@@ -104,8 +104,12 @@ export function drawBandLabel(view, band) {
   const { size } = view;
 
   const point = placePoint(view, band.frequencyHz, drawnGainDb(band));
-  const gain = hasGain(band.type) ? `${formatDb(band.gainDb)} dB  ` : "";
-  const content = `${formatHz(band.frequencyHz)} Hz  ${gain}Q ${band.q.toFixed(2)}`;
+  const parts = [`${formatHz(band.frequencyHz)} Hz`];
+
+  if (hasGain(band.type)) parts.push(`${formatDb(band.gainDb)} dB`);
+  if (hasQ(band.type)) parts.push(`Q ${band.q.toFixed(2)}`);
+
+  const content = parts.join("  ");
 
   const width = (content.length * charWidthPx) + 12;
   const x = clamp(point.x - (width / 2), 2, size.width - width - 2);

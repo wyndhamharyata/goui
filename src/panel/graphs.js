@@ -1,5 +1,5 @@
 // The Listen graph and the Tune graph, and the zoom and tall buttons they share.
-import { byId } from "./dom.js";
+import { byId, markCurrent } from "./dom.js";
 import { EqGraph } from "../graph/graph.js";
 import { onRefresh } from "./refresh.js";
 import { addBandToLayer, commitBandEdit, isEqOff, listBandEntries, listCurveBands, listCurveLayers, readSelectedIndex, readSelectedRole, selectBand } from "./sound.js";
@@ -29,11 +29,8 @@ export const graphs = [listenGraph, tuneGraph];
 
 /** @returns {void} */
 export function renderPills() {
-  for (const button of byId("zoom").querySelectorAll("[data-zoom]")) {
-    button.classList.toggle("on", button.dataset.zoom === tuneGraph.zoom);
-  }
-
-  byId("tall").classList.toggle("on", tuneGraph.isTall);
+  markCurrent(byId("zoom"), "zoom", tuneGraph.zoom);
+  byId("tall").classList.toggle("is-on", tuneGraph.isTall);
 }
 
 /** @returns {void} */

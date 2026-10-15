@@ -1,8 +1,8 @@
 // Your presets: the card at the top of each Library section, deleting a preset, and reading them.
 import { cleanBands } from "../shared/bands.js";
 import { layerOrder, sanitizeConfig } from "../shared/config.js";
-import { partOf, sectionOf } from "./dom.js";
-import { describeBandCount, describeLayerName, buildResultItem } from "./items.js";
+import { buildListRow, partOf, sectionOf } from "./dom.js";
+import { describeBandCount, describeLayerName } from "./items.js";
 import { onRefresh, renderPresetList } from "./refresh.js";
 import { commit, replaceLayer } from "./sound.js";
 import { layerSources, state } from "./state.js";
@@ -38,8 +38,11 @@ function renderPresetCard(role) {
   save.disabled = !layer || hasNothingNew;
   partOf(role, "save-as").disabled = !layer;
 
+  // The row of the sound that plays is marked. With no ear or taste layer, its "No ear tuning" or "No taste" row is.
+  const playingName = layer ? layer.name : emptyLayerNames[role];
+
   for (const item of sectionOf(role).querySelectorAll(".item[data-name]")) {
-    item.classList.toggle("on", Boolean(layer) && item.dataset.name === layer.name);
+    item.closest(".ui-list-row").classList.toggle("is-selected", item.dataset.name === playingName);
   }
 }
 
@@ -80,7 +83,7 @@ export function buildPresetItem(role, name, onPlaced) {
     onPlaced();
   };
 
-  return buildResultItem(name, describeBandCount(bands), place, () => deletePreset(role, name));
+  return buildListRow({ name, detail: describeBandCount(bands), onPick: place, onRemove: () => deletePreset(role, name) });
 }
 
 /**

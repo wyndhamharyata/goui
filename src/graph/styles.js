@@ -1,5 +1,5 @@
-// Every look the graph draws with, as SVG attributes for buildSvg.
-import { backgroundColor, curveColor, layerColor, textColor, typeColor } from "./colors.js";
+// Every look the graph draws with, as SVG attributes for buildSvg. Each class is a rule in src/panel.css that reads the tokens.
+import { layerTone, typeTone } from "./colors.js";
 
 /** @typedef {import("./svg.js").SvgAttributes} SvgAttributes */
 
@@ -9,36 +9,28 @@ import { backgroundColor, curveColor, layerColor, textColor, typeColor } from ".
 
 /** @typedef {import("../shared/config.js").LayerRole} LayerRole */
 
-/**
- * @param {number} opacity
- * @returns {string}
- */
-function white(opacity) {
-  return `rgba(255,255,255,${opacity})`;
-}
+export const regionStyles = { even: { class: "plot-region" }, odd: { class: "plot-region is-alternate" } };
+export const regionLabelStyle = { class: "plot-label" };
 
-export const regionStyles = { even: { fill: "rgba(0,0,0,0)" }, odd: { fill: white(0.025) } };
-export const regionLabelStyle = { fill: white(0.45), fontSize: 9, fillOpacity: 0.8 };
+export const gridLabelStyle = { class: "plot-label" };
+export const strongGridLineStyle = { class: "plot-grid is-major" };
+export const faintGridLineStyle = { class: "plot-grid" };
+export const zeroGainLineStyle = { class: "plot-grid is-zero" };
 
-export const gridLabelStyle = { fill: white(0.45), fontSize: 9 };
-export const strongGridLineStyle = { stroke: white(0.13) };
-export const faintGridLineStyle = { stroke: white(0.05) };
-export const zeroGainLineStyle = { stroke: white(0.22) };
+export const spectrumStyle = { class: "plot-spectrum" };
+export const boostAreaStyle = { class: "plot-louder" };
+export const cutAreaStyle = { class: "plot-quieter" };
 
-export const spectrumStyle = { fill: "rgba(150,165,200,0.13)" };
-export const boostAreaStyle = { fill: "rgba(255,122,144,0.24)" };
-export const cutAreaStyle = { fill: "rgba(79,163,255,0.24)" };
-
-export const curveStyle = { stroke: curveColor, strokeWidth: 2 };
-// With the EQ off, the curve turns grey and stays in place.
-export const offCurveStyle = { stroke: white(0.35), strokeWidth: 2 };
+// The curve is the accent. With the EQ off, it turns grey and dotted and stays in place.
+export const curveStyle = { class: "plot-curve" };
+export const offCurveStyle = { class: "plot-curve is-off" };
 
 /**
  * @param {LayerRole} role
  * @returns {SvgAttributes}
  */
 export function layerCurveStyle(role) {
-  return { stroke: layerColor[role], strokeWidth: 1.5, strokeDasharray: "4 3" };
+  return { class: `plot-layer ${layerTone[role]}` };
 }
 
 /**
@@ -46,40 +38,42 @@ export function layerCurveStyle(role) {
  * @returns {SvgAttributes}
  */
 export function chosenAreaStyle(type) {
-  return { fill: typeColor[type], fillOpacity: 0.18 };
+  return { class: `plot-band-area ${typeTone[type]}` };
 }
 
-export const qGuideStyle = { stroke: typeColor.PK, strokeOpacity: 0.55, strokeDasharray: "3 3" };
-export const qHandleStyle = { rx: 2, fill: backgroundColor, stroke: typeColor.PK, strokeWidth: 2 };
+export const qGuideStyle = { class: `plot-q-line ${typeTone.PK}` };
+export const qHandleStyle = { rx: 2, class: `plot-q-handle ${typeTone.PK}` };
 
-// A band that is off draws hollow, in the background colour.
+// A band that is off draws hollow.
 /**
  * @param {Band} band
  * @returns {SvgAttributes}
  */
 export function bandPointStyle(band) {
-  return { fill: band.on ? typeColor[band.type] : backgroundColor, stroke: typeColor[band.type], strokeWidth: 1.5 };
+  const offClass = band.on ? "" : " is-off";
+
+  return { class: `plot-point ${typeTone[band.type]}${offClass}` };
 }
 
-export const chosenRingStyle = { fill: "none", stroke: "#fff", strokeOpacity: 0.7 };
+export const chosenRingStyle = { class: "plot-chosen" };
 // A ring in the layer's colour marks the points of the layers on top of the headphone.
 export const layerRingStyle = {
-  ear: { fill: "none", stroke: layerColor.ear, strokeWidth: 1.5 },
-  taste: { fill: "none", stroke: layerColor.taste, strokeWidth: 1.5 },
+  ear: { class: `plot-ring ${layerTone.ear}` },
+  taste: { class: `plot-ring ${layerTone.taste}` },
 };
-export const bandNumberStyle = { textAnchor: "middle", fontSize: 9, fontWeight: 700, fill: backgroundColor };
+export const bandNumberStyle = { textAnchor: "middle", class: "plot-number" };
 
 /**
  * @param {BandType} type
  * @returns {SvgAttributes}
  */
 export function bandLabelBoxStyle(type) {
-  return { rx: 8, fill: backgroundColor, stroke: typeColor[type] };
+  return { rx: 8, class: `plot-pill ${typeTone[type]}` };
 }
 
-export const bandLabelTextStyle = { textAnchor: "middle", fontSize: 9.5, fill: textColor };
+export const bandLabelTextStyle = { textAnchor: "middle", class: "plot-pill-text" };
 
-export const hoverLineStyle = { stroke: white(0.25) };
-export const hoverDotStyle = { fill: "#fff" };
-export const hoverBoxStyle = { rx: 4, fill: "rgba(14,16,19,0.9)" };
-export const hoverTextStyle = { fontSize: 9.5, fill: textColor };
+export const hoverLineStyle = { class: "plot-hover" };
+export const hoverDotStyle = { class: "plot-hover-dot" };
+export const hoverBoxStyle = { rx: 4, class: "plot-readout" };
+export const hoverTextStyle = { class: "plot-pill-text" };
