@@ -1,6 +1,9 @@
 import Foundation
 import GouiEngine
 
+// The one folder goui keeps for a person. AppController makes it at start.
+let supportFolderURL = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Library/Application Support/goui")
+
 // What toPlayedSound in src/shared/config.js gives: the EQ switch, the preamp and every band that plays.
 struct PlayedSound: Codable {
   var enabled: Bool
@@ -10,7 +13,7 @@ struct PlayedSound: Codable {
 
 // The power switch and the last sound. They play again from login, before any window opens.
 struct SavedConfig: Codable {
-  static let fileURL = SupportFolder.file("config.json")
+  static let fileURL = supportFolderURL.appending(path: "config.json")
 
   var isOn = true
   var sound = PlayedSound(enabled: true, preampDb: 0, bands: [])
@@ -33,7 +36,7 @@ struct SavedConfig: Codable {
 
   func write() {
     do {
-      try SupportFolder.write(JSONEncoder().encode(self), to: Self.fileURL)
+      try JSONEncoder().encode(self).write(to: Self.fileURL, options: .atomic)
     } catch {
       print("The config file could not be written. \(error)")
     }

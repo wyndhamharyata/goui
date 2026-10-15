@@ -7,7 +7,7 @@ public struct Band: Codable, Equatable, Sendable {
   public var gainDb: Double
   public var q: Double
 
-  public init(on: Bool = true, type: String, frequencyHz: Double, gainDb: Double, q: Double) {
+  public init(on: Bool, type: String, frequencyHz: Double, gainDb: Double, q: Double) {
     self.on = on
     self.type = type
     self.frequencyHz = frequencyHz
@@ -29,10 +29,6 @@ public struct Sound: Equatable, Sendable {
   }
 }
 
-public struct SoundError: Error, CustomStringConvertible {
-  public let description: String
-}
-
 // The sound as the C render code takes it, with the bands that are off left out.
 struct RenderSound {
   let preampDb: Double
@@ -47,9 +43,9 @@ private let bandKinds: [String: BandKind] = [
 
 extension Band {
   func toRenderBand() throws -> RenderBand {
-    guard let kind = bandKinds[type] else { throw SoundError(description: "goui has no band type called \(type)") }
+    guard let kind = bandKinds[type] else { throw GouiError("goui has no band type called \(type)") }
     guard frequencyHz.isFinite, frequencyHz > 0, gainDb.isFinite, q.isFinite, q > 0 else {
-      throw SoundError(description: "A \(type) band needs a frequency and Q above 0 and a finite gain")
+      throw GouiError("A \(type) band needs a frequency and Q above 0 and a finite gain")
     }
 
     return RenderBand(kind: kind, frequencyHz: frequencyHz, gainDb: gainDb, q: q)
@@ -58,10 +54,10 @@ extension Band {
 
 extension Sound {
   func toRenderSound() throws -> RenderSound {
-    guard preampDb.isFinite else { throw SoundError(description: "The preamp must be a finite number") }
+    guard preampDb.isFinite else { throw GouiError("The preamp must be a finite number") }
 
     let bands = try bands.filter(\.on).map { try $0.toRenderBand() }
-    guard bands.count <= Int(maxBandCount) else { throw SoundError(description: "goui plays up to \(maxBandCount) bands at once") }
+    guard bands.count <= Int(maxBandCount) else { throw GouiError("goui plays up to \(maxBandCount) bands at once") }
 
     return RenderSound(preampDb: preampDb, bands: bands)
   }
@@ -69,7 +65,7 @@ extension Sound {
 
 // The band's gain at each frequency, from the coefficients the engine plays. The check page compares it with WebKit.
 public func bandResponse(_ band: Band, sampleRateHz: Double, frequenciesHz: [Double]) throws -> [Double] {
-  guard sampleRateHz > 0 else { throw SoundError(description: "The sample rate must be above 0") }
+  guard sampleRateHz > 0 else { throw GouiError("The sample rate must be above 0") }
 
   let renderBand = try band.toRenderBand()
   var magnitudes = [Double](repeating: 0, count: frequenciesHz.count)

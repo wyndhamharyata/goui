@@ -1,10 +1,6 @@
 import GouiEngine
 import WebKit
 
-struct BridgeError: Error, CustomStringConvertible {
-  let description: String
-}
-
 // A message from the page. type names it, and the other fields belong to that type.
 private struct Request: Decodable {
   let type: String
@@ -63,7 +59,7 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
     case "meters":
       return engine.readMeters().map { describeMeters($0, scope: engine.readScope()) }
     case "sound":
-      guard let sound = request.sound, sound.preampDb.isFinite else { throw BridgeError(description: "A sound message needs a sound with a finite preampDb") }
+      guard let sound = request.sound else { throw GouiError("A sound message needs a sound") }
 
       var newConfig = config
       newConfig.sound = sound
@@ -73,7 +69,7 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
       config.write()
       return nil
     case "power":
-      guard let isOn = request.isOn else { throw BridgeError(description: "A power message needs isOn") }
+      guard let isOn = request.isOn else { throw GouiError("A power message needs isOn") }
 
       config.isOn = isOn
       config.write()
@@ -81,19 +77,19 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
       return nil
     case "response":
       guard let band = request.band, let sampleRateHz = request.sampleRateHz, let frequenciesHz = request.frequenciesHz, frequenciesHz.count <= Self.maxFrequencyCount else {
-        throw BridgeError(description: "A response message needs a band, a sampleRateHz and up to \(Self.maxFrequencyCount) frequenciesHz")
+        throw GouiError("A response message needs a band, a sampleRateHz and up to \(Self.maxFrequencyCount) frequenciesHz")
       }
 
       return try bandResponse(band, sampleRateHz: sampleRateHz, frequenciesHz: frequenciesHz)
     case "open":
       guard let text = request.url, let url = URL(string: text), url.scheme == "https" || url.scheme == "http" else {
-        throw BridgeError(description: "An open message needs a web address")
+        throw GouiError("An open message needs a web address")
       }
 
       NSWorkspace.shared.open(url)
       return nil
     case "size":
-      guard let height = request.height, height.isFinite, height > 0 else { throw BridgeError(description: "A size message needs a height above 0") }
+      guard let height = request.height, height.isFinite, height > 0 else { throw GouiError("A size message needs a height above 0") }
 
       onResize?(height)
       return nil
@@ -104,7 +100,7 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
       print("Page: \(request.text ?? "")")
       return nil
     default:
-      throw BridgeError(description: "goui has no message called \(request.type)")
+      throw GouiError("goui has no message called \(request.type)")
     }
   }
 
@@ -117,13 +113,13 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
     case "storage:get":
       return storage.read(keys)
     case "storage:set":
-      guard let items = message["items"] as? [String: Any] else { throw BridgeError(description: "A storage:set message needs items") }
+      guard let items = message["items"] as? [String: Any] else { throw GouiError("A storage:set message needs items") }
 
       try storage.write(items)
     case "storage:remove":
       storage.remove(keys ?? [])
     default:
-      throw BridgeError(description: "goui has no message called \(type)")
+      throw GouiError("goui has no message called \(type)")
     }
     return NSNull()
   }

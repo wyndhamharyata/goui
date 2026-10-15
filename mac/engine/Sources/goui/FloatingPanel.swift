@@ -28,9 +28,7 @@ final class FloatingPanel: NSPanel, NSWindowDelegate {
     self.contentView = contentView
   }
 
-  override var canBecomeKey: Bool {
-    true
-  }
+  override var canBecomeKey: Bool { true }
 
   override func resignKey() {
     super.resignKey()

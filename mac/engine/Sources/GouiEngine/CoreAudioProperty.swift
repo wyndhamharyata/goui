@@ -1,19 +1,23 @@
 import CoreAudio
+import Foundation
 
-struct AudioError: Error, CustomStringConvertible {
-  let description: String
+// The one error goui throws. The app prints it and shows it as the error's localized text.
+public struct GouiError: LocalizedError, CustomStringConvertible {
+  public let description: String
 
-  init(_ description: String) {
+  public init(_ description: String) {
     self.description = description
   }
 
   init(step: String, status: OSStatus) {
     description = "\(step) failed with \(fourCharacterCode(UInt32(bitPattern: status)))"
   }
+
+  public var errorDescription: String? { description }
 }
 
 func throwIfFailed(_ status: OSStatus, step: String) throws {
-  if status != noErr { throw AudioError(step: step, status: status) }
+  if status != noErr { throw GouiError(step: step, status: status) }
 }
 
 // Core Audio packs most of its codes and selectors as four ASCII characters.
@@ -36,13 +40,22 @@ func readProperty<Value: BitwiseCopyable>(of object: AudioObjectID, _ selector: 
     buffer.initializeMemory(as: UInt8.self, repeating: 0)
     try throwIfFailed(AudioObjectGetPropertyData(object, &address, 0, nil, &byteCount, buffer.baseAddress!), step: step)
     guard byteCount == expectedByteCount else {
-      throw AudioError("\(step) returned \(byteCount) bytes instead of \(expectedByteCount)")
+      throw GouiError("\(step) returned \(byteCount) bytes instead of \(expectedByteCount)")
     }
     return buffer.load(as: Value.self)
   }
 }
 
 func readString(of object: AudioObjectID, _ selector: AudioObjectPropertySelector) throws -> String {
-  let value = try readProperty(of: object, selector, as: Unmanaged<CFString>?.self)
-  return value?.takeRetainedValue() as String? ?? ""
+  try readProperty(of: object, selector, as: Unmanaged<CFString>?.self)?.takeRetainedValue() as String? ?? ""
+}
+
+// Core Audio calls the handler on the main queue. The teardown takes the listener off again.
+func listen(to object: AudioObjectID, _ selector: AudioObjectPropertySelector, teardown: inout Teardown, handler: @escaping @MainActor () -> Void) throws {
+  var address = propertyAddress(selector)
+  let block: AudioObjectPropertyListenerBlock = { _, _ in MainActor.assumeIsolated { handler() } }
+  try throwIfFailed(AudioObjectAddPropertyListenerBlock(object, &address, DispatchQueue.main, block), step: "Listening to \(fourCharacterCode(selector))")
+  teardown.add("Removing the listener for \(fourCharacterCode(selector))") {
+    AudioObjectRemovePropertyListenerBlock(object, &address, DispatchQueue.main, block)
+  }
 }

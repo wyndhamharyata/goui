@@ -18,32 +18,30 @@ final class AppController: NSObject, WKNavigationDelegate {
   // The click on the menu bar item that hides the panel would open it again straight away.
   private static let reopenDelaySeconds = 0.3
   // install.sh writes this after an install or an update, so the panel opens once and shows where goui lives.
-  private static let installedMarkerURL = SupportFolder.file("just-installed")
+  private static let installedMarkerURL = supportFolderURL.appending(path: "just-installed")
 
   private let pagePath: String
   private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
   private let menu = NSMenu()
   private let wideItem = NSMenuItem(title: "Wide panel", action: #selector(toggleWide), keyEquivalent: "")
-  private var engine: Engine?
-  private var bridge: Bridge?
-  private var webView: WKWebView?
+  private let engine: Engine
+  private let bridge: Bridge
   private var panel: FloatingPanel?
   private var isOpeningAfterInstall = false
   private lazy var updateMenu = UpdateMenu { [weak self] in self?.rebuildPanelAfterUpdate() }
 
   init(pagePath: String) {
-    self.pagePath = pagePath
-  }
-
-  func start() {
+    try? FileManager.default.createDirectory(at: supportFolderURL, withIntermediateDirectories: true)
     let config = SavedConfig.read()
-    let engine: Engine
     do {
       engine = try Engine()
     } catch {
       print("goui engine could not start. \(error)")
       exit(1)
     }
+    bridge = Bridge(engine: engine, config: config)
+    self.pagePath = pagePath
+    super.init()
 
     do {
       try engine.setSound(config.playedSound)
@@ -51,16 +49,15 @@ final class AppController: NSObject, WKNavigationDelegate {
       print("The saved sound cannot play, so goui plays the sound as it is. \(error)")
     }
 
-    let bridge = Bridge(engine: engine, config: config)
-    engine.onStatusChange = { [weak self] status in
+    engine.onStatusChange = { [weak self, bridge] status in
       bridge.sendStatus()
       self?.openPanelOnceStarted(status)
     }
-    self.engine = engine
-    self.bridge = bridge
     print("goui. \(config.isOn ? "On" : "Off"), preamp \(config.playedSound.preampDb) dB, \(config.playedSound.bands.count) bands.")
     if config.isOn { engine.start() }
+  }
 
+  func start() {
     buildMenu()
     // A template image takes the menu bar's own colour, in light mode and dark.
     let menuBarIcon = Bundle.main.image(forResource: "menu-bar")
@@ -132,9 +129,8 @@ final class AppController: NSObject, WKNavigationDelegate {
     let savedWidth = UserDefaults.standard.double(forKey: Self.widthKey)
     let size = NSSize(width: max(savedWidth, FloatingPanel.narrowWidthPx), height: Self.panelSize.height)
     let panel = FloatingPanel(contentView: webView, size: size)
-    bridge?.onResize = { [weak panel] height in panel?.resize(toHeight: height) }
+    bridge.onResize = { [weak panel] height in panel?.resize(toHeight: height) }
     panel.onWidthChange = { [weak self] width in self?.keepWidth(width) }
-    self.webView = webView
     self.panel = panel
     return panel
   }
@@ -143,7 +139,7 @@ final class AppController: NSObject, WKNavigationDelegate {
   private func webRoots() -> WebRoots {
     var folders: [URL] = []
 
-    if Updater.isInstalled, AppVersion.hasNewerWeb { folders.append(Updater.webURL) }
+    if WebFolder.isInUse { folders.append(WebFolder.url) }
     if let bundledURL = Bundle.main.resourceURL?.appending(path: "web") { folders.append(bundledURL) }
 
     return WebRoots(folders: folders)
@@ -153,7 +149,7 @@ final class AppController: NSObject, WKNavigationDelegate {
     let configuration = WKWebViewConfiguration()
     let roots = webRoots()
     configuration.setURLSchemeHandler(WebFileServer(roots: roots), forURLScheme: WebFileServer.scheme)
-    if let bridge { configuration.userContentController.addScriptMessageHandler(bridge, contentWorld: .page, name: Bridge.name) }
+    configuration.userContentController.addScriptMessageHandler(bridge, contentWorld: .page, name: Bridge.name)
 
     // The Chrome stand-in runs before the panel's own code, which reads chrome as it loads.
     if let chromeURL = roots.file(atPath: Self.chromePath), let chromeSource = try? String(contentsOf: chromeURL, encoding: .utf8) {
@@ -168,7 +164,7 @@ final class AppController: NSObject, WKNavigationDelegate {
     // The panel's own background shows from the first frame, with no white flash before it loads.
     webView.underPageBackgroundColor = .black
     webView.setValue(false, forKey: "drawsBackground")
-    bridge?.webView = webView
+    bridge.webView = webView
     loadPage(in: webView)
     return webView
   }
@@ -213,7 +209,7 @@ final class AppController: NSObject, WKNavigationDelegate {
   // The name, icon and version come from the bundle. The credits add what goui is and where its guide lives.
   @objc private func showAbout() {
     let credits = NSMutableAttributedString(string: "An EQ for every sound on your Mac. AutoEQ tunes it to your headphone, and EQByEar to your ear.\n\n")
-    if let webVersion = AppVersion.web, webVersion != AppVersion.app {
+    if let webVersion = WebFolder.version, webVersion != appVersion {
       credits.append(NSAttributedString(string: "The panel runs goui \(webVersion).\n\n"))
     }
     credits.append(NSAttributedString(string: "goui.mwyndham.dev/mac", attributes: [.link: Self.guideURL]))
@@ -224,11 +220,11 @@ final class AppController: NSObject, WKNavigationDelegate {
   }
 
   @objc private func restartEngine() {
-    engine?.restart(reason: "Restart engine was chosen in the menu.")
+    engine.restart(reason: "Restart engine was chosen in the menu.")
   }
 
   @objc private func reloadPanel() {
-    guard let webView else { return }
+    guard let webView = panel?.contentView as? WKWebView else { return }
 
     loadPage(in: webView)
   }
@@ -240,7 +236,6 @@ final class AppController: NSObject, WKNavigationDelegate {
     let wasVisible = oldPanel.isVisible
     oldPanel.orderOut(nil)
     panel = nil
-    webView = nil
 
     guard wasVisible, let button = statusItem.button else { return }
 
@@ -248,7 +243,7 @@ final class AppController: NSObject, WKNavigationDelegate {
   }
 
   @objc private func quit() {
-    engine?.stop()
+    engine.stop()
     NSApp.terminate(nil)
   }
 }

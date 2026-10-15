@@ -19,11 +19,9 @@ during a fade waits for it to end, and then only the newest sound goes in.
 | `goui-engine/main.swift` | Reads the flags, starts the engine, prints the meters and stops on a signal |
 | `goui/main.swift` | Starts the app. `--page` opens another page, such as a check, in place of the panel |
 | `goui/AppController.swift` | Owns the engine, the menu bar item with its right-click menu, and the panel |
-| `goui/UpdateMenu.swift` | The update items in the menu, the twice-a-day check and the one click that installs a new engine |
-| `goui/Updater.swift` | Applies a newer release: the web files alone when the engine is the same, the whole app when it is not |
+| `goui/UpdateMenu.swift` | The update items in the menu and the twice-a-day check: the web files alone when the engine is the same, one click for a new engine |
 | `goui/ReleaseDownload.swift` | Reads the Latest release on GitHub, checks its sha256 and unpacks it |
-| `goui/AppVersion.swift` | The version in use, which an updated web folder can push ahead of the app |
-| `goui/SupportFolder.swift` | The folder goui keeps for a person, and the one way it writes there |
+| `goui/Install.swift` | Puts a newer app or newer web files in place, and knows which version is in use |
 | `goui/FloatingPanel.swift` | The panel under the menu bar item, which hides on a click elsewhere |
 | `goui/WebFileServer.swift` | Serves `goui://app/` from the updated web folder first, then the web files inside the app |
 | `goui/Bridge.swift` | Answers the page's messages: status, meters, sound, power, storage, open, size, response, restart, print |
@@ -33,11 +31,9 @@ during a fade waits for it to end, and then only the newest sound goes in.
 | `Render/Render.c` | The audio callback: the two chains, the fade and the meters |
 | `GouiEngine/Sound.swift` | The preamp and bands, as `toPlayedSound` makes them, checked and turned into C bands |
 | `goui-render-check/main.swift` | Plays test tones through the render code and checks each gain and each fade |
-| `GouiEngine/Engine.swift` | Keeps one audio path playing. It builds the path again when the output changes or the callbacks stop, and tries again after a failed start. |
+| `GouiEngine/Engine.swift` | Keeps one audio path playing and reads its meters and its scope. It builds the path again when the output changes or the callbacks stop, and tries again after a failed start. |
 | `GouiEngine/AudioSetup.swift` | Builds the tap, the aggregate device and the callback, and takes them down in reverse |
-| `GouiEngine/AudioPath.swift` | Keeps one run of the audio path and reads its meters and its scope |
-| `GouiEngine/PropertyListener.swift` | Listens to one Core Audio property on the main queue |
-| `GouiEngine/CoreAudioProperty.swift` | Reads Core Audio properties and names their errors |
+| `GouiEngine/CoreAudioProperty.swift` | Reads and listens to Core Audio properties, and holds goui's one error type |
 | `goui-engine/Options.swift` | Parses the flags |
 | `GouiEngine/Report.swift` | Prints the summary and the meters |
 

@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import GouiEngine
 
 // Reads the newest release from GitHub and brings a verified copy of it in.
 enum ReleaseDownload {
@@ -17,35 +18,28 @@ enum ReleaseDownload {
 
   // Reads the feed for the newest release, or the file a test names in GOUI_UPDATE_FEED.
   static func readLatest() async throws -> Release {
-    let data = try await read(feedURL())
-    let feed = try JSONDecoder().decode(Feed.self, from: data)
-    let version = feed.tagName.hasPrefix("v") ? String(feed.tagName.dropFirst()) : feed.tagName
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    let feed = try await decoder.decode(Feed.self, from: read(feedURL()))
 
-    guard let tarball = feed.assets.first(where: { $0.name == tarballName }) else {
-      throw UpdateError(message: "The newest release holds no \(tarballName).")
-    }
-    guard let checksums = feed.assets.first(where: { $0.name.hasSuffix("-sha256.txt") }) else {
-      throw UpdateError(message: "The newest release holds no checksums file.")
-    }
-
-    return Release(version: version, tarballURL: tarball.url, checksumsURL: checksums.url)
+    return Release(
+      version: String(feed.tagName.trimmingPrefix("v")),
+      tarballURL: try feed.asset(where: { $0 == tarballName }, orThrow: "The newest release holds no \(tarballName)."),
+      checksumsURL: try feed.asset(where: { $0.hasSuffix("-sha256.txt") }, orThrow: "The newest release holds no checksums file.")
+    )
   }
 
-  // Downloads the release, compares it with its published hash and unpacks the app.
+  // Downloads the release, compares it with its published hash and unpacks the app. release.mjs already checked its version.
   static func bring(_ release: Release) async throws -> URL {
     let workURL = FileManager.default.temporaryDirectory.appending(path: "goui-update-\(release.version)-\(UUID().uuidString)")
     try FileManager.default.createDirectory(at: workURL, withIntermediateDirectories: true)
 
     let tarballURL = workURL.appending(path: tarballName)
-    try await fetch(release.tarballURL, to: tarballURL)
+    try await read(release.tarballURL).write(to: tarballURL, options: .atomic)
     try await verify(tarballURL, with: release.checksumsURL)
+    try unpack(tarballURL, to: workURL)
 
-    let unpackedURL = workURL.appending(path: "unpacked")
-    try FileManager.default.createDirectory(at: unpackedURL, withIntermediateDirectories: true)
-    try unpack(tarballURL, to: unpackedURL)
-
-    let appURL = unpackedURL.appending(path: "goui.app")
-    try checkVersion(of: appURL, is: release.version)
+    let appURL = workURL.appending(path: "goui.app")
     try checkSystemRequirement(of: appURL)
 
     return appURL
@@ -56,10 +50,10 @@ enum ReleaseDownload {
     let text = String(decoding: try await read(checksumsURL), as: UTF8.self)
 
     guard let expected = hash(of: tarballName, in: text) else {
-      throw UpdateError(message: "The checksums file names no \(tarballName).")
+      throw GouiError("The checksums file names no \(tarballName).")
     }
     guard try fileHash(tarballURL) == expected else {
-      throw UpdateError(message: "The download does not match its checksum, so goui did not use it.")
+      throw GouiError("The download does not match its checksum, so goui did not use it.")
     }
   }
 
@@ -72,13 +66,7 @@ enum ReleaseDownload {
     tar.waitUntilExit()
 
     guard tar.terminationStatus == 0 else {
-      throw UpdateError(message: "The download could not be unpacked.")
-    }
-  }
-
-  private static func checkVersion(of appURL: URL, is version: String) throws {
-    guard AppVersion.version(of: appURL) == version else {
-      throw UpdateError(message: "The release holds another version than its tag.")
+      throw GouiError("The download could not be unpacked.")
     }
   }
 
@@ -87,7 +75,7 @@ enum ReleaseDownload {
     guard let required = Bundle(url: appURL)?.object(forInfoDictionaryKey: "LSMinimumSystemVersion") as? String else { return }
 
     if compareVersions(required, systemVersion) > 0 {
-      throw UpdateError(message: "The release needs macOS \(required).")
+      throw GouiError("The release needs macOS \(required).")
     }
   }
 
@@ -109,20 +97,11 @@ enum ReleaseDownload {
     if url.host == "api.github.com" { request.setValue(githubAccept, forHTTPHeaderField: "Accept") }
 
     let (data, response) = try await URLSession.shared.data(for: request)
-    try checkResponse(response, for: url)
+    guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+      throw GouiError("The update server refused \(url.lastPathComponent).")
+    }
 
     return data
-  }
-
-  // Saves a download where the unpack step reads it.
-  private static func fetch(_ url: URL, to destinationURL: URL) async throws {
-    try await read(url).write(to: destinationURL, options: .atomic)
-  }
-
-  private static func checkResponse(_ response: URLResponse, for url: URL) throws {
-    guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-      throw UpdateError(message: "The update server refused \(url.lastPathComponent).")
-    }
   }
 
   // shasum writes a hash, two spaces, then the file name.
@@ -148,17 +127,13 @@ enum ReleaseDownload {
 
     struct Asset: Decodable {
       let name: String
-      let url: URL
-
-      enum CodingKeys: String, CodingKey {
-        case name
-        case url = "browser_download_url"
-      }
+      let browserDownloadUrl: URL
     }
 
-    enum CodingKeys: String, CodingKey {
-      case tagName = "tag_name"
-      case assets
+    func asset(where isWanted: (String) -> Bool, orThrow message: String) throws -> URL {
+      guard let asset = assets.first(where: { isWanted($0.name) }) else { throw GouiError(message) }
+
+      return asset.browserDownloadUrl
     }
   }
 }
@@ -166,10 +141,4 @@ enum ReleaseDownload {
 // The sha256 of a file, in the same form the release's checksums file holds it.
 func fileHash(_ url: URL) throws -> String {
   SHA256.hash(data: try Data(contentsOf: url)).map { String(format: "%02x", $0) }.joined()
-}
-
-private struct UpdateError: LocalizedError {
-  let message: String
-
-  var errorDescription: String? { message }
 }

@@ -1,6 +1,7 @@
 import AppKit
 
-// The update items in goui's menu: the check, the twice-a-day timer, and the one click that installs a new engine.
+// The update items in goui's menu and the check behind them.
+// A web-only release goes in at once. A new engine waits for one click, as it starts the app again.
 @MainActor
 final class UpdateMenu: NSObject {
   private static let automaticKey = "automaticUpdates"
@@ -8,11 +9,12 @@ final class UpdateMenu: NSObject {
   private static let intervalSeconds = 12 * 60 * 60.0
   private static let firstDelaySeconds = 60.0
 
-  private let updater = Updater()
-  private let checkItem = NSMenuItem(title: "Check for Updates…", action: nil, keyEquivalent: "")
-  private let updateItem = NSMenuItem(title: "Update…", action: nil, keyEquivalent: "")
-  private let automaticItem = NSMenuItem(title: "Automatic updates", action: nil, keyEquivalent: "")
+  private let checkItem = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
+  private let updateItem = NSMenuItem(title: "Update…", action: #selector(applyUpdate), keyEquivalent: "")
+  private let automaticItem = NSMenuItem(title: "Automatic updates", action: #selector(toggleAutomatic), keyEquivalent: "")
   private var timer: Timer?
+  // The unpacked newer app, kept until the menu installs it.
+  private var readyAppURL: URL?
   // The web files changed under the panel, so the app builds the page again.
   private let rebuildPanel: () -> Void
 
@@ -20,13 +22,8 @@ final class UpdateMenu: NSObject {
     self.rebuildPanel = rebuildPanel
     super.init()
 
-    checkItem.target = self
-    checkItem.action = #selector(checkForUpdates)
-    updateItem.target = self
-    updateItem.action = #selector(applyUpdate)
+    for item in [checkItem, updateItem, automaticItem] { item.target = self }
     updateItem.isHidden = true
-    automaticItem.target = self
-    automaticItem.action = #selector(toggleAutomatic)
     automaticItem.state = isAutomaticOn ? .on : .off
   }
 
@@ -45,9 +42,13 @@ final class UpdateMenu: NSObject {
 
   @objc private func applyUpdate() {
     updateItem.isHidden = true
-    guard let problem = updater.installPending() else { return }
+    guard let readyAppURL else { return }
 
-    showMessage(problem)
+    do {
+      try installApp(readyAppURL)
+    } catch {
+      showMessage("The update could not be put in place. \(error.localizedDescription)")
+    }
   }
 
   @objc private func toggleAutomatic() {
@@ -61,10 +62,8 @@ final class UpdateMenu: NSObject {
     UserDefaults.standard.object(forKey: Self.automaticKey) as? Bool ?? true
   }
 
-  // The automatic check never speaks. The menu shows what it found.
   private func startTimer() {
     timer?.invalidate()
-    timer = nil
     guard isAutomaticOn else { return }
 
     let timer = Timer(timeInterval: Self.intervalSeconds, repeats: true) { [weak self] _ in
@@ -75,33 +74,54 @@ final class UpdateMenu: NSObject {
     self.timer = timer
   }
 
-  // A web-only release goes in at once, and a new engine waits here for the one click.
   private func runCheck(isManual: Bool) async {
-    let outcome = await updater.check()
-    if case .webUpdated = outcome { rebuildPanel() }
-    describe(outcome, isManual: isManual)
+    let currentVersion = WebFolder.newerVersion ?? appVersion
+    let upToDate = "goui \(currentVersion) is the newest version."
+    guard isRunningInstalledApp else { return report(log: upToDate, message: upToDate, isManual: isManual) }
+
+    let release: ReleaseDownload.Release
+    do {
+      release = try await ReleaseDownload.readLatest()
+    } catch {
+      return reportFailure("The update check did not reach GitHub. \(error.localizedDescription)", isManual: isManual)
+    }
+
+    guard compareVersions(release.version, currentVersion) > 0 else { return report(log: upToDate, message: upToDate, isManual: isManual) }
+
+    do {
+      let newerAppURL = try await ReleaseDownload.bring(release)
+      if try isWebOnlyChange(to: newerAppURL) {
+        try WebFolder.apply(from: newerAppURL, version: release.version)
+        rebuildPanel()
+        report(log: "goui updated the web files to \(release.version).", message: "goui updated the panel to \(release.version).", isManual: isManual)
+        return
+      }
+
+      readyAppURL = newerAppURL
+      updateItem.title = "Update to \(release.version)…"
+      updateItem.isHidden = false
+      print("goui \(release.version) is ready. The menu installs it.")
+      if isManual { askToInstall(release.version) }
+    } catch {
+      reportFailure(error.localizedDescription, isManual: isManual)
+    }
   }
 
-  private func describe(_ outcome: Updater.Outcome, isManual: Bool) {
-    switch outcome {
-    case .upToDate(let version):
-      print("goui \(version) is the newest version.")
-      if isManual { showMessage("goui \(version) is the newest version.") }
+  // Two releases that share an engine differ only in their web files, which the running app reads without a restart.
+  private func isWebOnlyChange(to appURL: URL) throws -> Bool {
+    guard let runningURL = Bundle.main.executableURL else { return false }
 
-    case .webUpdated(let version):
-      print("goui updated the web files to \(version).")
-      if isManual { showMessage("goui updated the panel to \(version).") }
+    return try fileHash(appURL.appending(path: "Contents/MacOS/goui")) == fileHash(runningURL)
+  }
 
-    case .ready(let version, _):
-      updateItem.title = "Update to \(version)…"
-      updateItem.isHidden = false
-      print("goui \(version) is ready. The menu installs it.")
-      if isManual { askToInstall(version) }
+  // The automatic check never speaks. The menu shows what it found.
+  private func report(log: String, message: String, isManual: Bool) {
+    print(log)
+    if isManual { showMessage(message) }
+  }
 
-    case .failed(let reason):
-      print("The update check failed. \(reason)")
-      if isManual { showMessage(reason) }
-    }
+  private func reportFailure(_ reason: String, isManual: Bool) {
+    report(log: "The update check failed. \(reason)", message: reason, isManual: isManual)
   }
 
   // A release that changes the engine starts the app again and makes macOS ask for the audio once more, so it asks first.

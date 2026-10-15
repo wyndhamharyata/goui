@@ -1,7 +1,25 @@
 import CoreAudio
 import Foundation
+import Render
 
-// Keeps one audio path playing, building it again when the output changes, a start fails or the callbacks stop.
+public struct MeterReading {
+  public let callbacksPerSecond: Double
+  public let inputPeakLinear: Float
+  public let outputPeakLinear: Float
+  public let inputBufferCount: UInt32
+  public let tapChannelCount: UInt32
+  public let clippedSampleCount: UInt64
+  public let overloadCount: Int
+}
+
+public struct ScopeReading {
+  // The last frames played, mixed to mono, oldest first.
+  public let samples: [Float]
+  public let sampleRateHz: Double
+}
+
+// Keeps one audio path playing: a muted tap of every other process, played to the default output.
+// It builds the path again when the output changes, a start fails or the callbacks stop.
 @MainActor
 public final class Engine {
   public enum Status: Equatable {
@@ -19,46 +37,56 @@ public final class Engine {
   private static let restartSettleSeconds = 0.3
   // The callbacks run about 90 times a second, even in silence. None for this long means the path hangs.
   private static let callbackWatchSeconds = 2.0
+  private static let buildQueue = DispatchQueue(label: "goui.engine.build", qos: .userInitiated)
 
   private var sound = RenderSound(preampDb: 0, bands: [])
   public var onStatusChange: ((Status) -> Void)?
   public private(set) var status = Status.stopped {
     didSet { if status != oldValue { onStatusChange?(status) } }
   }
-  private var path: AudioPath?
-  private var defaultOutputListener: PropertyListener?
-  private var pendingStart: DispatchWorkItem?
+  private var built: BuiltAudioPath?
+  // The engine lives as long as the app, so this listener is never taken off.
+  private var defaultOutputListener = Teardown()
+  // A build that finishes after a newer start or a stop finds its task cancelled and is taken down.
+  private var buildTask: Task<Void, Never>?
+  private var pendingStart: Task<Void, Never>?
+  private var pendingSound: Task<Void, Never>?
+  private var pendingWatch: Task<Void, Never>?
   private var failedStartCount = 0
-  private var pendingSound: DispatchWorkItem?
-  private var pendingWatch: DispatchWorkItem?
   private var watchedCallbackCount: UInt64 = 0
-  // Each start has a number. A build that finishes after a newer start or a stop is taken down.
-  private var startNumber = 0
-  private let buildQueue = DispatchQueue(label: "goui.engine.build", qos: .userInitiated)
+  private var overloadCount = 0
+  private var lastCallbackCount: UInt64 = 0
+  private var lastMeterNanoseconds: UInt64 = 0
 
   public init() throws {
-    defaultOutputListener = try PropertyListener(object: AudioObjectID(kAudioObjectSystemObject), selector: kAudioHardwarePropertyDefaultOutputDevice) { [weak self] in
+    try listen(to: AudioObjectID(kAudioObjectSystemObject), kAudioHardwarePropertyDefaultOutputDevice, teardown: &defaultOutputListener) { [weak self] in
       self?.restart(reason: "The default output changed.")
     }
   }
 
   public func start() {
-    cancelPendingStart()
-    guard path == nil else { return }
+    pendingStart?.cancel()
+    guard built == nil else { return }
 
-    startNumber += 1
-    if status != .starting { status = .starting }
-    let number = startNumber
+    buildTask?.cancel()
+    status = .starting
     let sound = sound
-    buildQueue.async {
-      let result = Result { try BuiltAudioPath.build(sound: sound) }
-      DispatchQueue.main.async { MainActor.assumeIsolated { [weak self] in self?.finishStart(result, number: number) } }
+    buildTask = Task { [weak self] in
+      let result = await withCheckedContinuation { continuation in
+        Engine.buildQueue.async { continuation.resume(returning: Result { try BuiltAudioPath.build(sound: sound) }) }
+      }
+      guard let self, !Task.isCancelled else {
+        if case .success(var built) = result { built.teardown.runAll() }
+        return
+      }
+
+      finishStart(result)
     }
   }
 
   public func stop() {
-    cancelPendingStart()
-    startNumber += 1
+    pendingStart?.cancel()
+    buildTask?.cancel()
     stopPath()
     status = .stopped
   }
@@ -79,27 +107,53 @@ public final class Engine {
   }
 
   public func readMeters() -> MeterReading? {
-    path?.readMeters()
+    guard let render = built?.render else { return nil }
+
+    var meters = RenderMeters()
+    renderReadMeters(render, &meters)
+    let nowNanoseconds = DispatchTime.now().uptimeNanoseconds
+    let elapsedSeconds = Double(nowNanoseconds - lastMeterNanoseconds) / 1e9
+    let callbacksPerSecond = elapsedSeconds > 0 ? Double(meters.callbackCount - lastCallbackCount) / elapsedSeconds : 0
+    lastMeterNanoseconds = nowNanoseconds
+    lastCallbackCount = meters.callbackCount
+    return MeterReading(
+      callbacksPerSecond: callbacksPerSecond, inputPeakLinear: meters.inputPeakLinear, outputPeakLinear: meters.outputPeakLinear,
+      inputBufferCount: meters.inputBufferCount, tapChannelCount: meters.tapChannelCount,
+      clippedSampleCount: meters.clippedSampleCount, overloadCount: overloadCount
+    )
   }
 
   public func readScope() -> ScopeReading? {
-    path?.readScope()
+    guard let built else { return nil }
+
+    var samples = [Float](repeating: 0, count: Int(scopeFrameCount))
+    samples.withUnsafeMutableBufferPointer { renderReadScope(built.render, $0.baseAddress!) }
+    return ScopeReading(samples: samples, sampleRateHz: built.summary.sampleRateHz)
   }
 
-  private func finishStart(_ result: Result<BuiltAudioPath, any Error>, number: Int) {
-    guard number == startNumber else {
-      if case .success(var built) = result { built.teardown.runAll() }
-      return
-    }
-
+  private func finishStart(_ result: Result<BuiltAudioPath, any Error>) {
     do {
-      let path = try AudioPath(built: result.get()) { [weak self] in
-        self?.restart(reason: "The sample rate of the output changed.")
+      var built = try result.get()
+      do {
+        try listen(to: built.aggregateID, kAudioDeviceProcessorOverload, teardown: &built.teardown) { [weak self] in
+          self?.overloadCount += 1
+        }
+        // A call on a Bluetooth headphone changes its rate, and the filters were worked out for the old one.
+        try listen(to: built.outputID, kAudioDevicePropertyNominalSampleRate, teardown: &built.teardown) { [weak self] in
+          self?.restart(reason: "The sample rate of the output changed.")
+        }
+      } catch {
+        built.teardown.runAll()
+        throw error
       }
-      self.path = path
+
+      self.built = built
+      overloadCount = 0
+      lastCallbackCount = 0
+      lastMeterNanoseconds = DispatchTime.now().uptimeNanoseconds
       status = .running
       failedStartCount = 0
-      printSummary(path.summary)
+      printSummary(built.summary)
       // The sound can change while the path builds.
       sendSoundToPath()
       watchedCallbackCount = 0
@@ -113,12 +167,15 @@ public final class Engine {
     }
   }
 
+  // The render code refuses a new sound while the last change still fades.
   private func sendSoundToPath() {
     pendingSound?.cancel()
-    pendingSound = nil
-    guard let path, !path.trySetSound(sound) else { return }
+    guard let render = built?.render else { return }
 
-    pendingSound = schedule(afterSeconds: Self.fadeWaitSeconds) { [weak self] in self?.sendSoundToPath() }
+    let isTaken = sound.bands.withUnsafeBufferPointer { bands in
+      renderTrySetSound(render, sound.preampDb, bands.baseAddress, UInt32(bands.count))
+    }
+    if !isTaken { pendingSound = schedule(afterSeconds: Self.fadeWaitSeconds) { [weak self] in self?.sendSoundToPath() } }
   }
 
   private func watchCallbacks() {
@@ -126,7 +183,9 @@ public final class Engine {
   }
 
   private func checkCallbacks() {
-    guard let count = path?.readCallbackCount() else { return }
+    guard let render = built?.render else { return }
+
+    let count = renderReadCallbackCount(render)
     guard count != watchedCallbackCount else {
       restart(reason: "The audio callbacks stopped.")
       return
@@ -138,25 +197,20 @@ public final class Engine {
 
   private func stopPath() {
     pendingWatch?.cancel()
-    pendingWatch = nil
-    path?.stop()
-    path = nil
+    built?.teardown.runAll()
+    built = nil
   }
 
   private func scheduleStart(afterSeconds delaySeconds: Double, _ action: @escaping @MainActor () -> Void) {
-    cancelPendingStart()
+    pendingStart?.cancel()
     pendingStart = schedule(afterSeconds: delaySeconds, action)
   }
 
-  // Main-actor work that runs once, later. The caller keeps the item so it can cancel it.
-  private func schedule(afterSeconds delaySeconds: Double, _ action: @escaping @MainActor () -> Void) -> DispatchWorkItem {
-    let workItem = DispatchWorkItem { MainActor.assumeIsolated { action() } }
-    DispatchQueue.main.asyncAfter(deadline: .now() + delaySeconds, execute: workItem)
-    return workItem
-  }
-
-  private func cancelPendingStart() {
-    pendingStart?.cancel()
-    pendingStart = nil
+  // Main-actor work that runs once, later, unless its task is cancelled first.
+  private func schedule(afterSeconds delaySeconds: Double, _ action: @escaping @MainActor () -> Void) -> Task<Void, Never> {
+    Task {
+      try? await Task.sleep(for: .seconds(delaySeconds))
+      if !Task.isCancelled { action() }
+    }
   }
 }

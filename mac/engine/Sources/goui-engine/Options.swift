@@ -27,7 +27,7 @@ struct Options {
 
   // The bass is a low shelf at 105 Hz, the corner AutoEQ and the Bass slider use.
   var sound: Sound {
-    let bass = Band(type: "LSC", frequencyHz: 105, gainDb: bassDb, q: 0.71)
+    let bass = Band(on: true, type: "LSC", frequencyHz: 105, gainDb: bassDb, q: 0.71)
     return Sound(preampDb: gainDb, bands: bassDb == 0 ? [] : [bass])
   }
 

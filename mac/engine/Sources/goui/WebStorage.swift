@@ -1,9 +1,10 @@
 import Foundation
+import GouiEngine
 
 // chrome.storage.local for the panel, kept in ~/Library/Application Support/goui/storage.json.
 @MainActor
 final class WebStorage {
-  static let fileURL = SupportFolder.file("storage.json")
+  static let fileURL = supportFolderURL.appending(path: "storage.json")
 
   private var items: [String: Any]
 
@@ -20,7 +21,7 @@ final class WebStorage {
   }
 
   func write(_ newItems: [String: Any]) throws {
-    guard JSONSerialization.isValidJSONObject(newItems) else { throw BridgeError(description: "Storage takes only values JSON can hold") }
+    guard JSONSerialization.isValidJSONObject(newItems) else { throw GouiError("Storage takes only values JSON can hold") }
 
     items.merge(newItems) { _, new in new }
     save()
@@ -33,7 +34,7 @@ final class WebStorage {
 
   private func save() {
     do {
-      try SupportFolder.write(JSONSerialization.data(withJSONObject: items), to: Self.fileURL)
+      try JSONSerialization.data(withJSONObject: items).write(to: Self.fileURL, options: .atomic)
     } catch {
       print("The panel's storage could not be written. \(error)")
     }
