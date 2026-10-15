@@ -267,6 +267,8 @@ npx playwright install chromium
 | `npm run readme-images`     | Rebuild the pictures in `docs/images`.                    |
 | `npm run dependencies-file` | Rebuild `DEPENDENCIES.md` from the installed packages.    |
 | `npm run zip`               | Build the release zip and the Chrome Web Store zip.       |
+| `npm run mac`               | Build the Mac app and install it on this Mac.             |
+| `npm run release`           | Cut a release, from the version to the deployed site.     |
 
 The pictures in `docs/images` are drawn by `scripts/make-readme-images.mjs`. Each one is written as an
 SVG and as a PNG. Edit the SVG by hand, or edit the script and run `npm run readme-images`.
@@ -278,10 +280,20 @@ who unzips it gets a folder to point Chrome at.
 `npm run zip` also writes `dist/goui-<version>-store.zip`, with `manifest.json` at its root, for the
 Chrome Web Store.
 
-To cut a release, raise `version` in `manifest.json`, then run `npm run readme-images` and `npm run zip`.
-Build the Mac app with `cd mac/engine && App/make-tarball.sh`, which takes the same version. Commit and
-push, then attach `dist/goui-<version>.zip` and `mac/engine/.build/goui-mac.tar.gz` to a new release
-named after the version. The curl line installs the tarball of the release GitHub marks as Latest.
+To cut a release, write its notes to a file, then run one command from a clean `main`:
+
+```bash
+npm run release -- patch --notes notes.md
+```
+
+The step is `patch`, `minor`, `major` or a version such as `0.2.0`. The script raises `version` in
+`manifest.json`, then makes the install pictures, the store images and `DEPENDENCIES.md` again. It
+runs lint and the journeys, commits and pushes, and builds `dist/goui-<version>.zip`, the store zip
+and the Mac tarball. Then it publishes the GitHub release with the zip and the tarball, and deploys
+the site. The curl line installs the tarball of the release GitHub marks as Latest.
+
+The Chrome Web Store upload stays a hand step. The script prints which zip to upload, and
+`store/listing.md` holds the text to paste.
 
 The Mac app lives in `mac/`. `mac/engine/README.md` covers its engine and how to build it, and
 `mac/PLAN.md` records how it came together.
