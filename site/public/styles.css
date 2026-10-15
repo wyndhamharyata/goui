@@ -270,7 +270,6 @@ a.name {
 .two-col img {
   width: 100%;
   max-width: 560px;
-  border: 1px solid var(--line-1);
   border-radius: var(--radius-3);
 }
 
@@ -282,7 +281,6 @@ a.name {
 .wide-shot {
   display: block;
   width: 100%;
-  border: 1px solid var(--line-1);
   border-radius: var(--radius-3);
 }
 
