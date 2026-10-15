@@ -49,15 +49,6 @@
   --control-height: 28px;
   --control-height-small: 24px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  /* The how-to page and the guide pictures still read these older names, until they move to the tokens. */
-  --bg: var(--ink-1);
-  --panel: var(--ink-2);
-  --panel-2: var(--ink-3);
-  --line: var(--line-1);
-  --text: var(--text-1);
-  --muted: var(--text-2);
-  --ear: var(--layer-ear);
-  --taste: var(--layer-taste);
 }
 
 .tone-accent { --tone: var(--accent); }

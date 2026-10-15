@@ -8,219 +8,166 @@ body {
 .doc {
   max-width: 880px;
   margin: 0 auto;
-  padding: 32px 24px 48px;
+  padding: var(--space-7) var(--space-6) 56px;
 }
 
 .intro-head {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-5);
 }
 
 .intro-brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .intro-brand img {
-  border-radius: 13px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
 }
 
 h1 {
   margin: 0;
-  font-size: 26px;
-}
-
-h2 {
-  margin: 30px 0 10px;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-}
-
-.pitch {
-  margin: 0;
-  color: var(--muted);
-}
-
-.pitch b {
-  color: #fff;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
 }
 
 .version {
-  color: var(--muted);
-  font-size: 12px;
+  align-self: flex-end;
+  padding-bottom: var(--space-2);
+  color: var(--text-3);
+  font: 600 var(--size-small) / 1 var(--font-number);
+  letter-spacing: 0.04em;
 }
 
-.flow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+h2 {
+  margin: 56px 0 var(--space-4);
 }
 
-.flow-box {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-width: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel);
-  text-align: center;
+.pitch {
+  max-width: 680px;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.6;
 }
 
-.flow-box small {
-  color: var(--muted);
+.pitch b {
+  color: var(--text-1);
 }
 
-.flow-box.headphone {
-  border-color: #a9b8ff;
-}
-
-.flow-box.ear {
-  border-color: var(--ear);
-}
-
-.flow-icon {
-  width: 20px;
-  height: 20px;
-  fill: var(--text);
-}
-
-.flow-arrow {
-  flex: none;
-  color: var(--muted);
+.flow .ui-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-2);
 }
 
 .lead {
-  margin: 14px 0 0;
+  max-width: 680px;
+  margin: var(--space-5) 0 0;
+  color: var(--text-2);
+  line-height: 1.6;
 }
 
 .guide-steps.grid {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-5);
 }
 
-/* A card left alone in the last row fills that row, so both edges stay straight. */
-.guide-steps.grid > .guide-step:last-child:nth-child(3n + 1),
-.links > a:last-child:nth-child(3n + 1) {
+/* A step left alone in the last row fills that row, so both edges stay straight. */
+.guide-steps.grid > .guide-step:last-child:nth-child(3n + 1) {
   grid-column: 1 / -1;
 }
 
-.links {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.links a {
-  display: flex;
-  flex-direction: column;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel);
-  color: var(--text);
+.links .ui-list-row__main {
   text-decoration: none;
 }
 
-.links a:hover {
-  border-color: var(--accent);
+.links .ui-list-row:hover {
+  background: var(--ink-3);
 }
 
-.links span {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.links a.store {
-  flex-direction: row;
+.store {
+  display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 14px 16px;
-  border-color: rgba(91, 140, 255, 0.45);
-  background: linear-gradient(120deg, rgba(91, 140, 255, 0.16), rgba(176, 107, 255, 0.12) 60%, var(--panel));
-  box-shadow: 0 10px 28px -14px rgba(91, 140, 255, 0.7);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-3);
+  background: radial-gradient(120% 160% at 100% 0%, var(--accent-soft), transparent 60%), var(--ink-2);
+  color: var(--text-1);
+  text-decoration: none;
+  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease);
 }
 
-.links a.store:hover {
+.store:hover {
+  border-color: var(--accent-line);
   transform: translateY(-2px);
-  box-shadow: 0 16px 32px -14px rgba(91, 140, 255, 0.9);
 }
 
-.links a.store span {
+.store img {
+  flex: none;
+  border-radius: var(--radius-1);
+}
+
+.store span {
   display: flex;
   flex-direction: column;
+  color: var(--text-2);
   font-size: 13px;
 }
 
-.links a.store b {
-  color: var(--text);
-  font-size: 14px;
+.store b {
+  color: var(--text-1);
+  font-size: var(--size-name);
 }
 
 .fine {
-  margin: 14px 0 0;
-  color: var(--muted);
-  font-size: 12px;
+  margin: var(--space-5) 0 0;
+  color: var(--text-3);
+  font-size: var(--size-body);
 }
 
 .fine a {
   color: var(--accent);
 }
 
-.primary {
-  margin-top: 28px;
-  padding: 9px 16px;
-  font: inherit;
-  color: #fff;
-  background: var(--accent);
-  border: 0;
-  border-radius: 8px;
-  cursor: pointer;
+.close {
+  margin-top: var(--space-7);
 }
 
 @media (max-width: 719px) {
-  .guide-steps.grid,
-  .links {
-    grid-template-columns: repeat(2, 1fr);
+  .guide-steps.grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  /* With two columns the odd card of four is the one left alone. */
-  .guide-steps.grid > .guide-step:last-child:nth-child(3n + 1),
-  .links > a:last-child:nth-child(3n + 1) {
+  /* With two columns the odd step of four is the one left alone. */
+  .guide-steps.grid > .guide-step:last-child:nth-child(3n + 1) {
     grid-column: auto;
   }
 
-  .guide-steps.grid > .guide-step:last-child:nth-child(2n + 1),
-  .links > a:last-child:nth-child(2n + 1) {
+  .guide-steps.grid > .guide-step:last-child:nth-child(2n + 1) {
     grid-column: 1 / -1;
   }
 }
 
 @media (max-width: 559px) {
-  .flow {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .flow-arrow {
-    align-self: center;
-    transform: rotate(90deg);
-  }
-
-  .guide-steps.grid,
-  .links {
+  .guide-steps.grid {
     grid-template-columns: 1fr;
   }
 
-  .guide-steps.grid > .guide-step:last-child,
-  .links > a:last-child {
+  .guide-steps.grid > .guide-step:last-child {
     grid-column: auto;
+  }
+
+  .store {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

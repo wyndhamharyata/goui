@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#08090b" />
+    <meta name="theme-color" content="#07080a" />
     <meta
       name="description"
       content="An EQ for a browser tab or the whole Mac, joining AutoEQ and EQByEar. Different ear, different head, different sound."
@@ -28,26 +28,26 @@
         </nav>
       </header>
 
-      <section class="hero">
+      <section class="hero pn-hero">
         <div class="hero-text">
-          <p class="eyebrow">Chrome and Brave extension, and now a Mac app</p>
-          <h1>goui</h1>
+          <p class="ui-section-header ui-section-header--eyebrow eyebrow"><span class="ui-section-header__label">Chrome and Brave extension, and now a Mac app</span><span class="ui-section-header__rule"></span></p>
+          <h1 class="pn-hero__title">goui</h1>
           <p class="mantra">Different ear, different head, different sound.</p>
-          <p class="pitch">
+          <p class="pitch pn-hero__lede">
             Your headphone, tuned to your ears and your taste. AutoEQ makes it neutral, an EQByEar
             test fits it to your hearing, and your own bands go on top, for any tab or your whole Mac.
           </p>
-          <div class="buttons">
+          <div class="ui-cluster buttons">
             <a class="store-badge" href="https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap">
               <img src="/chrome-web-store.png" alt="Available in the Chrome Web Store" width="198" height="60" />
             </a>
-            <a class="button" href="https://github.com/wyndhamharyata/goui">View on GitHub</a>
+            <a class="ui-button" href="https://github.com/wyndhamharyata/goui">View on GitHub</a>
           </div>
           <div class="hero-install">
             <span class="hero-install-label">Get goui for your Mac. One line in Terminal:</span>
-            <div class="hero-install-row">
-              <code id="mac-curl">curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh</code>
-              <button class="button" id="copy-curl" type="button">Copy</button>
+            <div class="ui-cluster ui-cluster--fill hero-install-row">
+              <code class="ui-field ui-field--code" id="mac-curl">curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh</code>
+              <button class="ui-button" id="copy-curl" type="button">Copy</button>
             </div>
           </div>
           <p class="fine">
@@ -57,7 +57,7 @@
           </p>
         </div>
 
-        <div class="demo" id="try">
+        <div class="demo record" id="try">
           <div class="frame">
             <div id="f-head"></div>
             <div class="tabs" id="f-tabs">

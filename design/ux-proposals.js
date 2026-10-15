@@ -3369,28 +3369,32 @@ function wireGuide() {
   });
 }
 
-accentColor = readToken("--accent");
-renderTokens();
-renderAccentPicker();
-wireAccentPicker();
-renderScales();
-renderGallery();
-wireGallery();
-renderMapping();
-renderGuide();
-wireGuide();
+// The design page's own startup. The site copies this file for its panel demo, so this part runs
+// only where the page's hosts are.
+if (byId("token-palette")) {
+  accentColor = readToken("--accent");
+  renderTokens();
+  renderAccentPicker();
+  wireAccentPicker();
+  renderScales();
+  renderGallery();
+  wireGallery();
+  renderMapping();
+  renderGuide();
+  wireGuide();
 
-mountView(byId("panel-narrow"), "narrow", { hasSetPicker: true });
-mountView(byId("panel-start"), "start", { isHearing: false });
-mountView(byId("header-tab"), "header");
-mountView(byId("header-nothing"), "header", { isHearing: false });
-mountView(byId("header-popup"), "header", { isPopup: true, heard: "YT Music", instruction: "goui is off for this window. Press ON to hear it again." });
-mountView(byId("panel-wide"), "wide", { heard: "Every sound on this Mac", libraryTab: "sets" });
-mountView(byId("sets-picker"), "setsPicker", { hasSetPicker: true });
-mountView(byId("sets-library"), "setsLibrary", { libraryTab: "sets" });
-mountView(byId("screen-menu"), "menu");
-mountView(byId("screen-tile"), "tile");
-mountView(byId("screen-site"), "hero", { heard: "Every sound on this Mac" });
+  mountView(byId("panel-narrow"), "narrow", { hasSetPicker: true });
+  mountView(byId("panel-start"), "start", { isHearing: false });
+  mountView(byId("header-tab"), "header");
+  mountView(byId("header-nothing"), "header", { isHearing: false });
+  mountView(byId("header-popup"), "header", { isPopup: true, heard: "YT Music", instruction: "goui is off for this window. Press ON to hear it again." });
+  mountView(byId("panel-wide"), "wide", { heard: "Every sound on this Mac", libraryTab: "sets" });
+  mountView(byId("sets-picker"), "setsPicker", { hasSetPicker: true });
+  mountView(byId("sets-library"), "setsLibrary", { libraryTab: "sets" });
+  mountView(byId("screen-menu"), "menu");
+  mountView(byId("screen-tile"), "tile");
+  mountView(byId("screen-site"), "hero", { heard: "Every sound on this Mac" });
+}
 
 function updateLevels() {
   const level = `${readLevelDb().toFixed(1)} dB`;

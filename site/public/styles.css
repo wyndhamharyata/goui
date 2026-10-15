@@ -1,4 +1,4 @@
-/* The homepage. panel.css holds the styles for the mock panel, and the palette both files share. */
+/* The site's own layout. panel.css holds the tokens, the primitives and the mock panel. */
 
 body {
   font-size: 15px;
@@ -16,9 +16,10 @@ a:hover {
 
 code {
   padding: 1px 5px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  background: var(--panel-2);
+  border: 1px solid var(--line-1);
+  border-radius: var(--radius-1);
+  background: var(--ink-2);
+  color: var(--text-1);
   font-size: 13px;
 }
 
@@ -26,7 +27,7 @@ code {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-4);
 }
 
 .site-head img {
@@ -35,15 +36,15 @@ code {
 
 /* As tall as the icon's bars, so the name and the icon read as one mark. */
 .site-head .name {
-  font-size: 30px;
+  font-size: var(--size-display);
   font-weight: 800;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
 }
 
-/* On the privacy page the name is a link home, in the text colour like on the homepage. */
+/* On the other pages the name is a link home, in the text colour like on the homepage. */
 a.name {
-  color: var(--text);
+  color: var(--text-1);
 }
 
 .site-head nav {
@@ -55,12 +56,19 @@ a.name {
   font-size: 14px;
 }
 
+.site-head nav a {
+  color: var(--text-2);
+}
+
+.site-head nav a:hover {
+  color: var(--text-1);
+  text-decoration: none;
+}
+
 .hero {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 48px;
-  margin-top: 28px;
+  margin-top: var(--space-6);
+  border: 1px solid var(--line-1);
+  border-radius: var(--radius-3);
 }
 
 /* The layer rows already name both dashed lines, so the Listen legend goes and the panel fits a laptop screen. */
@@ -82,67 +90,54 @@ a.name {
 }
 
 .hero-text {
-  flex: 1;
-  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
 }
 
 .eyebrow {
   margin: 0;
-  color: var(--muted);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  line-height: 1.4;
 }
 
 .hero h1 {
-  margin: 8px 0 0;
-  font-size: 60px;
-  line-height: 1;
+  margin: 0;
 }
 
 .mantra {
-  margin: 10px 0 0;
-  color: #fff;
+  margin: calc(-1 * var(--space-3)) 0 0;
+  color: var(--accent);
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
 }
 
+/* panel.css also styles .pitch for its record, with a token that is set only inside the record. */
 .pitch {
-  max-width: 560px;
-  margin: 18px 0 0;
-  color: var(--muted);
+  margin: 0;
+  color: var(--text-2);
 }
 
 .buttons {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 24px;
+  gap: var(--space-4);
 }
 
 .hero-install {
-  max-width: 640px;
-  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .hero-install-label {
-  color: var(--text);
-  font-size: 14px;
+  color: var(--text-1);
+  font-size: 13px;
   font-weight: 600;
 }
 
-.hero-install-row {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.hero-install-row code {
-  flex: 1;
-  min-width: 0;
-  padding: 10px 12px;
+#mac-curl {
+  flex: 1 1 0;
   overflow-x: auto;
   white-space: pre;
 }
@@ -158,11 +153,10 @@ a.name {
   position: relative;
   isolation: isolate;
   display: inline-block;
-  margin-right: 8px;
   border-radius: 6px;
   line-height: 0;
-  box-shadow: 0 10px 30px -8px rgba(91, 140, 255, 0.6);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 30px -8px var(--accent-line);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
 
 .store-badge::before {
@@ -171,7 +165,7 @@ a.name {
   inset: -3px;
   z-index: -1;
   border-radius: 9px;
-  background: conic-gradient(from var(--spin), var(--accent), var(--peak), var(--shelf), var(--accent));
+  background: conic-gradient(from var(--spin), var(--accent), var(--type-peak), var(--type-shelf), var(--accent));
   filter: blur(8px);
   opacity: 0.6;
   animation: spin 6s linear infinite;
@@ -179,7 +173,7 @@ a.name {
 
 .store-badge:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 36px -8px rgba(91, 140, 255, 0.8);
+  box-shadow: 0 16px 36px -8px var(--accent);
 }
 
 .store-badge:hover::before {
@@ -200,72 +194,75 @@ a.name {
   }
 }
 
-.button {
-  display: inline-block;
-  padding: 10px 18px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel-2);
-  color: var(--text);
-  font-size: 14px;
-}
-
-.button:hover {
-  border-color: var(--accent);
+.ui-button:hover {
   text-decoration: none;
 }
 
-.button.primary {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #fff;
-  font-weight: 600;
+.fine {
+  margin: var(--space-5) 0 0;
+  color: var(--text-3);
+  font-size: 13px;
 }
 
-.fine {
-  margin: 16px 0 0;
-  color: var(--muted);
-  font-size: 13px;
+.hero .fine {
+  margin: 0;
 }
 
 .demo {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.demo .frame {
+  max-width: 100%;
+  box-shadow: 0 40px 80px -40px var(--accent-line);
+}
+
+/* The mock panel puts white on the accent. The tokens put the accent ink there. */
+.demo button.on,
+.demo button.primary {
+  color: var(--accent-ink);
 }
 
 .demo-caption {
   max-width: 360px;
   margin: 0;
-  color: var(--muted);
+  color: var(--text-3);
   font-size: 12px;
   text-align: center;
 }
 
 .block {
-  margin-top: 72px;
-  padding-top: 32px;
-  border-top: 1px solid var(--line);
+  margin-top: 88px;
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--line-1);
 }
 
 .block h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: var(--size-display);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
 }
 
 .block .lead {
   max-width: 720px;
-  margin: 6px 0 22px;
-  color: var(--muted);
+  margin: var(--space-3) 0 var(--space-6);
+  color: var(--text-2);
 }
 
 .block h3 {
-  margin: 34px 0 0;
-  font-size: 17px;
+  margin: var(--space-7) 0 0;
+  font-size: var(--size-title);
+  letter-spacing: -0.02em;
 }
 
 .block h3 + .lead {
-  margin-top: 4px;
+  margin-top: var(--space-2);
 }
 
 .two-col {
@@ -283,20 +280,20 @@ a.name {
 .two-col img {
   width: 100%;
   max-width: 560px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border: 1px solid var(--line-1);
+  border-radius: var(--radius-3);
 }
 
 .two-col p {
   margin-top: 0;
-  color: var(--muted);
+  color: var(--text-2);
 }
 
 .wide-shot {
   display: block;
   width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border: 1px solid var(--line-1);
+  border-radius: var(--radius-3);
 }
 
 .install-line {
@@ -306,93 +303,126 @@ a.name {
 
 .install-line code {
   display: block;
-  padding: 12px 16px;
-  font-size: 13px;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-2);
+  color: var(--text-2);
   white-space: pre;
 }
 
 .steps {
   margin: 0;
   padding-left: 20px;
-  color: var(--muted);
+  color: var(--text-2);
 }
 
 .steps li {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-4);
+}
+
+.steps li::marker,
+.policy ol li::marker {
+  color: var(--accent);
+  font-family: var(--font-number);
+  font-weight: 700;
 }
 
 .steps b {
-  color: var(--text);
+  color: var(--text-1);
 }
 
 .credits {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
+  gap: var(--space-2);
 }
 
 .credit {
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel);
-  color: var(--text);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-2);
+  color: var(--text-1);
+  transition: background 0.12s var(--ease);
 }
 
 .credit:hover {
-  border-color: var(--accent);
+  background: var(--ink-3);
   text-decoration: none;
 }
 
 .credit b {
   display: block;
-  color: #fff;
+  font-weight: 600;
 }
 
 .credit span {
-  color: var(--muted);
+  color: var(--text-2);
   font-size: 13px;
 }
 
-/* The privacy page: one column of text at a readable width. */
+/* The privacy page and the Mac page: one column of text at a readable width. */
 .policy {
   max-width: 720px;
-  margin-top: 48px;
+  margin-top: 56px;
   padding-top: 0;
   border-top: 0;
+  color: var(--text-2);
 }
 
 .policy h1 {
   margin: 0;
-  font-size: 36px;
+  color: var(--text-1);
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
 }
 
 .policy h2 {
-  margin-top: 32px;
-  font-size: 20px;
+  margin: 40px 0 0;
+  color: var(--text-1);
+  font-size: var(--size-title);
+  letter-spacing: -0.02em;
+}
+
+.policy b {
+  color: var(--text-1);
 }
 
 .policy li {
-  margin-bottom: 8px;
+  margin-bottom: var(--space-3);
+}
+
+.not-found {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-top: 120px;
+}
+
+.not-found h1 {
+  margin: 0;
 }
 
 footer {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 20px;
-  margin-top: 72px;
+  gap: var(--space-3) 20px;
+  margin-top: 88px;
   padding-top: 20px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
+  border-top: 1px solid var(--line-1);
+  color: var(--text-3);
   font-size: 13px;
 }
 
+footer a {
+  color: var(--text-2);
+}
+
 @media (max-width: 720px) {
-  .hero h1 {
-    font-size: 44px;
+  .hero {
+    padding: var(--space-6) var(--space-4);
   }
 
-  .hero {
-    gap: 28px;
+  .hero h1 {
+    font-size: 44px;
   }
 }

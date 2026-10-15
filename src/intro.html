@@ -6,6 +6,7 @@
     <title>goui, how to use it</title>
     <link rel="icon" href="../icons/icon128.png" />
     <link rel="stylesheet" href="base.css" />
+    <link rel="stylesheet" href="panel.css" />
     <link rel="stylesheet" href="guide.css" />
     <link rel="stylesheet" href="intro.css" />
   </head>
@@ -33,17 +34,13 @@
       </header>
 
       <section>
-        <h2>How it works</h2>
-        <div class="flow" aria-label="The tab's audio passes the headphone layer, then the ear layer, then the sliders, then reaches you.">
-          <span class="flow-box"><svg class="flow-icon"><use href="#speaker" /></svg>Tab audio</span>
-          <span class="flow-arrow">→</span>
-          <span class="flow-box headphone"><b>Headphone</b><small>AutoEQ</small></span>
-          <span class="flow-arrow">→</span>
-          <span class="flow-box ear"><b>My ear</b><small>EQByEar</small></span>
-          <span class="flow-arrow">→</span>
-          <span class="flow-box"><b>Your taste</b><small>Bass, Vocals, Treble</small></span>
-          <span class="flow-arrow">→</span>
-          <span class="flow-box"><svg class="flow-icon"><use href="#headphones" /></svg>You</span>
+        <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">How it works</span><span class="ui-section-header__rule"></span></h2>
+        <div class="ui-stack ui-stack--chain flow" aria-label="The tab's audio passes the headphone layer, then the ear layer, then the sliders, then reaches you.">
+          <div class="ui-stack-row"><svg class="ui-icon flow-icon"><use href="#speaker" /></svg><span class="ui-stack-row__body"><span class="ui-stack-row__name">Tab audio</span></span></div>
+          <div class="ui-stack-row has-bar tone-headphone"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">AutoEQ</span><span class="ui-stack-row__name">Headphone</span></span></div>
+          <div class="ui-stack-row has-bar tone-ear"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">EQByEar</span><span class="ui-stack-row__name">My ear</span></span></div>
+          <div class="ui-stack-row has-bar tone-taste"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">Bass, Vocals, Treble</span><span class="ui-stack-row__name">Your taste</span></span></div>
+          <div class="ui-stack-row has-bar tone-accent"><svg class="ui-icon flow-icon"><use href="#headphones" /></svg><span class="ui-stack-row__body"><span class="ui-stack-row__name">You</span></span></div>
         </div>
         <p class="lead">
           This extension works on the notion of joining two incredibly important audio tools: AutoEQ
@@ -54,7 +51,7 @@
       </section>
 
       <section>
-        <h2>Get started</h2>
+        <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Get started</span><span class="ui-section-header__rule"></span></h2>
         <ol class="guide-steps grid">
           <li class="guide-step">
             <div class="shot">
@@ -98,7 +95,7 @@
       </section>
 
       <section>
-        <h2>Make it yours</h2>
+        <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Make it yours</span><span class="ui-section-header__rule"></span></h2>
         <ol class="guide-steps grid" start="4" style="counter-reset: step 3">
           <li class="guide-step">
             <div class="shot">
@@ -121,10 +118,10 @@
           <li class="guide-step">
             <div class="shot">
               <svg class="mock-graph" viewBox="0 0 240 64" aria-hidden="true">
-                <line x1="0" y1="34" x2="240" y2="34" stroke="#262d38" />
-                <path d="M0 34 C60 34 80 34 110 34 S140 12 160 12 S190 34 240 34" fill="none" stroke="#5b8cff" stroke-width="2" />
-                <circle cx="160" cy="12" r="6" fill="#b06bff" />
-                <path d="M172 12h22m-5-4l5 4-5 4M148 12h-22m5-4l-5 4 5 4" stroke="#8993a2" stroke-width="1.5" fill="none" />
+                <line class="mock-graph-zero" x1="0" y1="34" x2="240" y2="34" />
+                <path class="mock-graph-curve" d="M0 34 C60 34 80 34 110 34 S140 12 160 12 S190 34 240 34" />
+                <circle class="mock-graph-point" cx="160" cy="12" r="6" />
+                <path class="mock-graph-arrows" d="M172 12h22m-5-4l5 4-5 4M148 12h-22m5-4l-5 4 5 4" />
               </svg>
             </div>
             <p class="guide-text"><span><b>Add your flavour</b>Drag the points in Tune, or nudge Bass, Vocals and Treble in Listen. Go with what sounds good to you.</span></p>
@@ -144,13 +141,13 @@
       </section>
 
       <section>
-        <h2>Credits</h2>
-        <div class="links">
-          <a href="https://github.com/jaakkopasanen/AutoEQ" target="_blank" rel="noreferrer"><b>AutoEQ</b><span>Headphone profiles by Jaakko Pasanen, under the MIT licence</span></a>
-          <a href="https://eqbyear.com" target="_blank" rel="noreferrer"><b>EQByEar</b><span>The hearing test behind your My ear layer</span></a>
-          <a href="https://github.com/google/material-design-icons" target="_blank" rel="noreferrer"><b>Material Icons</b><span>Icon art by Google, under the Apache 2.0 licence</span></a>
-          <a class="store" href="https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap" target="_blank" rel="noreferrer"><img src="images/chrome-web-store.png" alt="Available in the Chrome Web Store" width="165" height="50" /><span><b>Like goui?</b>Rate it in the store, or send the link to a friend.</span></a>
+        <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Credits</span><span class="ui-section-header__rule"></span></h2>
+        <div class="ui-stack ui-stack--tight links">
+          <div class="ui-list-row"><a class="ui-list-row__main" href="https://github.com/jaakkopasanen/AutoEQ" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>AutoEQ</span></span><span class="ui-list-row__detail">Headphone profiles by Jaakko Pasanen, under the MIT licence</span></span></a></div>
+          <div class="ui-list-row"><a class="ui-list-row__main" href="https://eqbyear.com" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>EQByEar</span></span><span class="ui-list-row__detail">The hearing test behind your My ear layer</span></span></a></div>
+          <div class="ui-list-row"><a class="ui-list-row__main" href="https://github.com/google/material-design-icons" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Material Icons</span></span><span class="ui-list-row__detail">Icon art by Google, under the Apache 2.0 licence</span></span></a></div>
         </div>
+        <a class="store" href="https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap" target="_blank" rel="noreferrer"><img src="images/chrome-web-store.png" alt="Available in the Chrome Web Store" width="165" height="50" /><span><b>Like goui?</b>Rate it in the store, or send the link to a friend.</span></a>
         <p class="fine">
           goui is under the MIT licence. <a href="https://github.com/wyndhamharyata/goui/blob/main/LICENSE" target="_blank" rel="noreferrer">Read the licence</a>,
           or the <a href="https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noreferrer">full notices</a>.
@@ -158,7 +155,7 @@
         </p>
       </section>
 
-      <button id="close" class="primary">Close this tab</button>
+      <button id="close" class="ui-button ui-button--primary close">Close this tab</button>
     </main>
     <script type="module" src="intro.js"></script>
   </body>
