@@ -7,23 +7,320 @@
     <link rel="stylesheet" href="ux-proposals.css" />
   </head>
   <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></symbol>
+      <symbol id="icon-minus" viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z" /></symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></symbol>
+      <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z" /></symbol>
+      <symbol id="icon-next" viewBox="0 0 24 24"><path d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" /></symbol>
+      <symbol id="icon-check" viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></symbol>
+      <symbol id="icon-search" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></symbol>
+      <symbol id="icon-external" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" /></symbol>
+      <symbol id="icon-power" viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z" /></symbol>
+      <symbol id="icon-puzzle" viewBox="0 0 24 24"><path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-2 .9-2 2v3.8h1.5c1.49 0 2.7 1.21 2.7 2.7S4.99 16.2 3.5 16.2H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7s2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z" /></symbol>
+      <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h6v7l1 1 1-1v-7h6v-2c-1.66 0-3-1.34-3-3z" /></symbol>
+      <symbol id="icon-speaker" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" /></symbol>
+    </svg>
+
     <main>
-      <header class="intro">
-        <h1>goui design</h1>
-        <p>
-          Design C is built. The first section shows it as it ships, with the changes made after the
-          proposal. The second section proposes Combine, the next feature, and design F there is now
-          built too. The first four proposals stay at the bottom as a record. Every mock is live. The
-          spectrum is fake. The curve uses the real RBJ cookbook math.
-        </p>
+      <header class="doc-intro">
+        <div>
+          <p class="doc-eyebrow">goui design · one system</p>
+          <h1>One set of parts.<br /><em>Every goui screen.</em></h1>
+          <p>
+            This page redesigns every goui screen as one system. Section 01 holds the tokens and the accent
+            picker. Section 02 holds twelve primitives. Sections 03 and 04 build the panel, the guide, the Mac
+            menu, the store tile and the site only from those. Section 05 maps today's classes to the
+            primitives, for the code pass. Every frame is live and plays one shared sound, so an edit in the
+            narrow panel reaches the wide panel, the Mac menu, the tile and the site. The curve uses the RBJ
+            cookbook math. The spectrum and the level are fake.
+          </p>
+        </div>
+        <ol class="doc-index-list">
+          <li><a href="#tokens"><b>01</b>Tokens</a></li>
+          <li><a href="#primitives"><b>02</b>Primitives</a></li>
+          <li><a href="#panel"><b>03</b>The panel</a></li>
+          <li><a href="#screens"><b>04</b>The other screens</a></li>
+          <li><a href="#mapping"><b>05</b>Today's class, and its primitive</a></li>
+          <li><a href="#record"><b>--</b>The record</a></li>
+        </ol>
       </header>
 
+      <section class="doc-section" id="tokens">
+        <header class="doc-head">
+          <span class="doc-head__index">01</span>
+          <div>
+            <h2>Tokens</h2>
+            <p>
+              Flat ink in five steps, two hairlines, three text steps and one brand accent. The audio colours
+              are their own group. A band type, a layer or a level always wears the same colour, and no
+              accent may come close to one of them.
+            </p>
+          </div>
+        </header>
+        <div class="doc-token-grid" id="token-palette"></div>
+
+        <div class="doc-sub"><h3>Brand accent</h3><p>Pick one, and the whole page follows: the panels, the site, the tile and the record.</p></div>
+        <div class="doc-accent-panel">
+          <div>
+            <h4>Pick an accent</h4>
+            <div id="accent-picker"></div>
+            <p class="doc-caption">The switch, the primary button, the curve, a selected row and the current tab read the accent. A light accent takes dark text, and a dark one takes white.</p>
+          </div>
+          <div>
+            <h4>Kept apart from the audio colours</h4>
+            <div id="accent-check"></div>
+          </div>
+        </div>
+
+        <div class="doc-sub"><h3>Type, space and radius</h3><p>Seven text sizes in two families. Numbers are always in the mono family, so a dB value never jumps as it changes.</p></div>
+        <div class="doc-scale-grid">
+          <div><h4>Type</h4><div id="type-scale"></div></div>
+          <div><h4>Space</h4><div id="space-scale"></div></div>
+          <div><h4>Radius</h4><div id="radius-scale"></div></div>
+        </div>
+
+        <div class="doc-sub"><h3>States</h3><p>Nine states, the same on every primitive. On, current and selected are three meanings, so they wear three looks.</p></div>
+        <div class="doc-state-grid" id="state-grid"></div>
+      </section>
+
+      <section class="doc-section" id="primitives">
+        <header class="doc-head">
+          <span class="doc-head__index">02</span>
+          <div>
+            <h2>Primitives</h2>
+            <p>
+              Twelve, each shown once with its variants. Each card is live. Today the panel has seven row
+              layouts, four heading styles, ten de facto buttons, two tab controllers and two segmented
+              controls. Here it has one of each.
+            </p>
+          </div>
+        </header>
+        <div class="doc-card-grid" id="primitive-grid"></div>
+        <p class="doc-caption">
+          Layout is four helpers, not components: <code>ui-stack</code>, <code>ui-cluster</code>,
+          <code>ui-split</code> and <code>ui-grid</code>. Two text styles, <code>ui-text-hint</code> and
+          <code>ui-text-fine</code>, carry hints and credits. Every colour comes from a tone class that sets
+          <code>--tone</code>.
+        </p>
+      </section>
+
+      <section class="doc-section" id="panel">
+        <header class="doc-head">
+          <span class="doc-head__index">03</span>
+          <div>
+            <h2>The panel</h2>
+            <p>
+              Listen, Tune and Library, the header in its three states, the start screen, the narrow and
+              wide forms, and Sets. One renderer paints them all from regions, and each region is a few
+              primitives. No frame has a control of its own.
+            </p>
+          </div>
+        </header>
+
+        <div class="doc-sub"><h3>Narrow, 360 px</h3><p>The side panel. Every control is live.</p></div>
+        <div class="doc-split">
+          <div>
+            <p class="pn-frame-label">Side panel</p>
+            <div class="pn-frame" id="panel-narrow"></div>
+          </div>
+          <div class="doc-notes">
+            <h4>How each tab is put together</h4>
+            <dl class="doc-recipe">
+              <dt>Header</dt>
+              <dd>Button quiet for <code>?</code>, Button hold for <code>A/B</code>, a Switch, the title, and a Badge dot for the level and the clip light.</dd>
+              <dt>Listen</dt>
+              <dd>A Stack row for the Set picker. A Section header, then three Stack rows in a chain. The plot. Four Slider rows, with a Button in the preamp's slot. A Stack row with a Switch for Level match.</dd>
+              <dt>Tune</dt>
+              <dd>Segmented and a Button for Tall. The plot. Badge keys. A Section header and Chips for each layer. For the band, a Section header with Buttons, a Segmented grid and Field steppers. An Expander of List rows for the table.</dd>
+              <dt>Library</dt>
+              <dd>Tabs. A Section header with a step. A Stack row with Save. An Expander with a Field and a Button for each action. A Field search. List rows under Section headers, with a Badge for AutoEQ's pick.</dd>
+            </dl>
+            <h4>Try it</h4>
+            <ul>
+              <li><b>Hold A/B.</b> The curve goes grey and dotted, the title line says the EQ is off, and a release anywhere brings it back. It never stays down.</li>
+              <li><b>Tune.</b> Drag a point. It moves after 5 px, and Shift gives fine steps. Pull a peak's square handles, or scroll on a point, for Q. Double click empty space for a new band.</li>
+              <li><b>Pick Low shelf</b> in the band type. The Q stepper goes away, and the line under the fields says a shelf has no Q.</li>
+              <li><b>Library, Headphone.</b> Type <code>hd 6</code>. Each result names its source, form, rig and target, and AutoEQ's pick is marked.</li>
+              <li><b>Library, My ear.</b> Paste is filled with a sample here, so Apply works on its own. The real box starts empty.</li>
+            </ul>
+            <h4>What changed from today</h4>
+            <ul>
+              <li><b>No cards.</b> An eyebrow and a hairline name each group. Listen is about 60 px shorter.</li>
+              <li><b>The chain.</b> The three layers stack flush, each with a bar in its colour. A layer you have not added keeps its place as an empty row with its add button, so the order never changes.</li>
+              <li><b>dB sliders fill from 0 dB,</b> so a cut and a boost read apart at a glance.</li>
+              <li><b>The band type is a 3 by 2 grid.</b> More is the sixth cell and opens a select of the rare types.</li>
+              <li><b>The inspector shows only the fields a type uses.</b> Today a shelf shows its Q greyed out. Here it shows none, with the reason under the fields.</li>
+              <li><b>One list row.</b> Presets, AutoEQ results, starter sounds, Sets and the table rows are one primitive.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="doc-sub"><h3>Header, three states</h3><p>The same header block with three settings. It never holds a Start or a capture button.</p></div>
+        <div class="doc-grid-3">
+          <div><p class="pn-frame-label">Hearing a tab</p><div class="pn-frame" id="header-tab"></div></div>
+          <div><p class="pn-frame-label">Hearing nothing yet</p><div class="pn-frame" id="header-nothing"></div></div>
+          <div><p class="pn-frame-label">Popup, for a window with no side panel</p><div class="pn-frame" id="header-popup"></div></div>
+        </div>
+        <p class="doc-caption">The power button shows only in a popup. Chrome grants a tab's audio after a click on the toolbar icon, so in the side panel the icon is the switch.</p>
+
+        <div class="doc-sub"><h3>Start</h3><p>Before goui first hears a tab, Get started takes the place of the EQ.</p></div>
+        <div class="doc-split">
+          <div>
+            <p class="pn-frame-label">Get started</p>
+            <div class="pn-frame" id="panel-start"></div>
+          </div>
+          <div class="doc-notes">
+            <h4>Made of</h4>
+            <ul>
+              <li><b>A Section header, title variant,</b> with the mantra as its caption.</li>
+              <li><b>Three Section headers with steps,</b> each over a picture.</li>
+              <li><b>The pictures are primitives too.</b> A read-only Field is the address bar, a quiet Button the puzzle piece, a dense List row the extensions menu, Chips the browser tabs and a Badge the green ON.</li>
+              <li><b>A primary Button</b> opens the full guide, which is section 04 on this page.</li>
+            </ul>
+            <h4>Kept as it is</h4>
+            <ul>
+              <li><b>No Start button and no capture button.</b> The steps teach the toolbar icon, the one switch Chrome allows.</li>
+              <li><b>The header tells you what to click,</b> in the accent, where the title would be.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="doc-sub" id="panel-wide-title"><h3>Wide, 1100 px</h3><p>From 900 px the three tabs become three columns. The Mac's Wide panel opens at this width. This one hears the whole Mac and opens on the Sets tab.</p></div>
+        <div class="pn-frame pn-frame--wide" id="panel-wide"></div>
+        <p class="doc-caption">The same regions as the narrow panel, in a grid. The tabs go, and a column Section header names each column. The wide Listen column has no Set picker, since the Sets tab is in view beside it.</p>
+
+        <div class="doc-sub"><h3>Sets, two more compositions</h3><p>Proposed. One picker row on Listen and one more Library tab, made of the same primitives.</p></div>
+        <div class="doc-split">
+          <div class="ui-stack ui-stack--loose">
+            <div><p class="pn-frame-label">On Listen</p><div class="pn-frame" id="sets-picker"></div></div>
+            <div><p class="pn-frame-label">In the Library</p><div class="pn-frame pn-frame--bare" id="sets-library"></div></div>
+          </div>
+          <div class="doc-notes">
+            <h4>What a Set holds</h4>
+            <ul>
+              <li><b>One headphone preset, one ear preset and one taste preset, by name,</b> and Bass, Vocals and Treble. An edit to a preset reaches every Set that names it.</li>
+              <li><b>An empty ear or taste slot turns that layer off.</b> An empty headphone slot plays Flat.</li>
+              <li><b>A deleted preset</b> marks its slot as missing and plays as empty. AKG commute names the AKG, which is not saved yet, so its slot reads missing until you save it.</li>
+            </ul>
+            <h4>Made of</h4>
+            <ul>
+              <li><b>Listen.</b> One Stack row in the accent, with a Field select and a Badge. It names the Set that plays, or says none does.</li>
+              <li><b>Library.</b> The Sets tab is the same regions as a layer tab: a Section header with a step, a Stack row with Save as Set, an Expander with a Field, and List rows naming the three parts.</li>
+            </ul>
+            <h4>Saving</h4>
+            <ul>
+              <li><b>Save as Set needs each layer with bands saved as a preset first.</b> Try it now. The AKG came from AutoEQ and is not saved, so it names Headphone and stops. Save the AKG in the Headphone tab, then try again.</li>
+            </ul>
+            <h4>Also</h4>
+            <ul>
+              <li><b>The Mac menu bar</b> has a Sets submenu with the current one ticked, and <code>goui set "name"</code> switches from Terminal. Both are in section 04.</li>
+            </ul>
+            <h4>Open for you</h4>
+            <ol>
+              <li>The unsaved layer warning: inform and stop, or offer to save the layer for you?</li>
+              <li>A Set loses the headphone's Target, since a preset holds bands only. Should a headphone preset keep its Target?</li>
+              <li>Where is a Set renamed: its row, or a pencil beside the name?</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc-section" id="screens">
+        <header class="doc-head">
+          <span class="doc-head__index">04</span>
+          <div>
+            <h2>The other screens</h2>
+            <p>The how-to guide, the Mac menu, the store tile and the site, on the same tokens and the same primitives. The menu, the tile and the site play the shared sound too.</p>
+          </div>
+        </header>
+
+        <div class="doc-sub"><h3>The how-to guide</h3><p>It opens once on install, and again from the panel's <code>?</code>.</p></div>
+        <div class="pn-frame pn-frame--wide" id="screen-guide"></div>
+        <p class="doc-caption">The chain is Stack rows, the steps are Section headers over the same pictures as Get started, the page list is dense List rows, and the credits are List rows. The links are Buttons.</p>
+
+        <div class="doc-sub"><h3>The Mac menu bar</h3><p>Right-click the menu bar item. A pick from Sets switches every panel on this page.</p></div>
+        <div class="doc-split doc-split--menu">
+          <div class="pn-frame pn-frame--menu" id="screen-menu"></div>
+          <div class="doc-notes">
+            <ul>
+              <li><b>Wide panel, Restart engine, Reload panel and Quit goui,</b> as today, with Update to the newest version when a release changes the engine.</li>
+              <li><b>Sets</b> is the proposed submenu. The Set that plays carries a tick. A pick applies it with the panel closed.</li>
+              <li><b>Made of</b> dense List rows in a layout helper. The real menu is native AppKit, so this is a picture of it. The tokens do not reach the real one.</li>
+              <li><b>Terminal.</b> <code>goui set "name"</code> switches the same way, for a keyboard shortcut or a login item.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="doc-sub"><h3>The store tile</h3><p>The Chrome Web Store small tile, 440 by 280 px.</p></div>
+        <div class="doc-split doc-split--tile">
+          <div class="pn-frame pn-frame--tile" id="screen-tile"></div>
+          <div class="doc-notes">
+            <ul>
+              <li><b>The wordmark, the mantra, three compact Stack rows and the plot.</b> The switches work, and the curve follows.</li>
+              <li><b>The accent</b> tints the glow behind it, so the tile changes with the brand.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="doc-sub"><h3>The site hero</h3><p>The top of goui.mwyndham.dev.</p></div>
+        <div class="pn-frame pn-frame--wide" id="screen-site"></div>
+        <p class="doc-caption">The copy keeps the two products apart: the extension changes one browser tab, and goui for the Mac changes every sound the Mac plays. The badges are facts from the README. The install line is a code Field with a Button.</p>
+      </section>
+
+      <section class="doc-section" id="mapping">
+        <header class="doc-head">
+          <span class="doc-head__index">05</span>
+          <div>
+            <h2>Today's class, and its primitive</h2>
+            <p>The checklist for the code pass. Each class or builder in <code>src/panel.html</code>, <code>src/panel.css</code> and <code>src/panel/</code> becomes one primitive and a variant.</p>
+          </div>
+        </header>
+        <table class="doc-table" id="mapping-table"></table>
+
+        <div class="doc-sub"><h3>Where the set was pushed</h3><p>The places a screen asked for more, and the call made each time.</p></div>
+        <div class="doc-notes">
+          <ul>
+            <li><b>The plot is a block, not a primitive.</b> It is the one drawing, on the panel, the tile and the site. It is styled only by tokens, through SVG classes. A second kind of chart would make it the thirteenth primitive.</li>
+            <li><b>The stepper is a Field with two Buttons.</b> It has no look of its own.</li>
+            <li><b>The number table is List rows in columns.</b> A screen reader announces a real table more clearly, so the code pass may keep a table element with the List row's look.</li>
+            <li><b>More is a sixth segment, then a Field select.</b> Today it is a button that shows a hidden select.</li>
+            <li><b>The legend is Badge keys.</b> The guide pictures are a read-only Field, Buttons, Chips and a Badge.</li>
+            <li><b>Feedback is a hint line.</b> Saved, Applied and the Set warning show in a hint line under the actions, and Copy changes its own label. If a third kind of place needs short feedback, a Toast should join the set.</li>
+            <li><b>The Set picker and Target use a native select.</b> The open list is the browser's own and does not take the tokens.</li>
+          </ul>
+        </div>
+
+        <div class="doc-sub"><h3>What changed from the previous page</h3></div>
+        <div class="doc-notes">
+          <ul>
+            <li><b>The system sketch is replaced.</b> It had a token list, twelve static primitives and a picture of the panel. This page builds every frame live from the primitive builders in the script.</li>
+            <li><b>New tokens.</b> Ink steps take the place of panel and panel-2, and the accent is acid by default with a check against the audio colours. Peak is a lighter violet, and the shelf keeps sky blue.</li>
+            <li><b>The panel as it ships and the first Sets mock</b> moved into the record, with Combine and the first four proposals. They read the new tokens through old names, so the accent reaches them too.</li>
+          </ul>
+        </div>
+
+        <div class="doc-sub"><h3>Check by eye</h3></div>
+        <div class="doc-notes">
+          <ul>
+            <li>The three steppers side by side in the 360 px inspector, on a peak.</li>
+            <li>Bone and Cobalt as the accent, on the primary button and a selected row.</li>
+            <li>The Sets submenu lined up beside its row in the Mac menu.</li>
+            <li>The store tile at its real 440 by 280 px.</li>
+            <li>Hover on rows and buttons, which a screenshot does not show.</li>
+            <li>Tall in the narrow Tune tab, and the wide panel below 980 px, where it stacks.</li>
+          </ul>
+        </div>
+      </section>
+
+      <details class="record" id="record">
+        <summary>The record<small>The panel as it ships today, the first Sets mock, Combine and the first four proposals, as they were drawn. They read the same tokens, so the accent picker reaches them too.</small></summary>
       <section class="design recommended">
         <div class="design-head">
           <span class="letter">C</span>
           <div>
-            <h2>Three tabs <span class="badge">Built</span></h2>
-            <p class="pitch">Listen for everyday use, Tune for the graph, Library for everything you keep. This is the panel as it ships today.</p>
+            <h2>Three tabs, three layers <span class="badge">Built</span></h2>
+            <p class="pitch">Listen for everyday use, Tune for the graph, Library for everything you keep. The sound is a headphone layer, your ear and your taste. This is the panel as it ships today.</p>
           </div>
         </div>
         <div class="design-body">
@@ -35,15 +332,15 @@
               <button data-tab="library">Library</button>
             </div>
             <div class="pane" data-pane="listen">
-              <div class="card" id="c-profile"></div>
+              <div class="card" id="c-layers"></div>
               <div class="card"><div id="c-listen-graph"></div></div>
-              <div class="card" id="c-macros"></div>
+              <div class="card" id="c-sliders"></div>
             </div>
             <div class="pane" data-pane="tune" hidden>
               <div id="c-zoom"></div>
               <div class="card">
                 <div id="c-graph"></div>
-                <div class="legend-host"></div>
+                <div class="legend-host" data-layers></div>
               </div>
               <div id="c-chips"></div>
               <div class="card" id="c-inspector"></div>
@@ -57,22 +354,122 @@
             </div>
           </div>
           <div class="notes">
-            <h3>Changed after the proposal</h3>
+            <h3>The panel as it ships</h3>
             <ul>
-              <li><b>Sound card.</b> The whole card opens the Library. It shows the kind of sound above the name, and says "edited" once you change anything.</li>
-              <li><b>Search.</b> The search box lives in the Library only. A pick from a typed search empties the box and returns to Listen.</li>
-              <li><b>Listen graph.</b> Same size as the Tune graph, with the region names and no points. It follows the Tune zoom and Tall.</li>
+              <li><b>Three layers.</b> Headphone, My ear and Taste each have a row on Listen with its own switch, source and name, and Change. The headphone row plays flat with ×, and the ear and taste rows come off.</li>
+              <li><b>Library tabs.</b> Each layer has its own tab and its own preset list, with Save, Save as new, Import, Paste and Export. The headphone tab holds the AutoEQ search.</li>
+              <li><b>Listen.</b> The layer stack, the live graph and the Bass, Vocals and Treble sliders with the Auto preamp and Level match.</li>
+              <li><b>Tune.</b> Every band of every layer. Ear bands carry a gold ring and Taste bands a pink one, and each layer draws its own dashed curve under the total.</li>
+              <li><b>Whole sound.</b> Export writes all three layers and the sliders as one AutoEQ file.</li>
+              <li><b>Wide.</b> From 900 px, Listen, Tune and Library show as three columns.</li>
               <li><b>Preamp.</b> Auto follows the largest boost, so the sound never clips. Moving the slider sets it by hand. The light by the level turns red when the EQ can clip.</li>
-              <li><b>Save.</b> The name of the current sound is filled in. When that name exists, the button reads Update and writes over it.</li>
-              <li><b>Library actions.</b> Save, Import, Paste and Export each open their own row under the list.</li>
-              <li><b>Inspector.</b> Five type buttons, with the rare types behind More. Each stepper shows its value with a label under it.</li>
-              <li><b>Graph points.</b> A press only selects a point. It moves once you drag it 5 px. Q has one range, 0.1 to 18, on the graph and in the inspector.</li>
-              <li><b>Spectrum.</b> The horizontal view fills up from a floor 100 dB below full scale. Tall mirrors it around 0 dB, with the 3 dB per octave slope.</li>
-              <li><b>How-to page.</b> A page opens once on the first install, with what goui is for, the steps and further reading. The ? button in the header opens it again. The icon is a coloured tile with white bars, so it reads on a light toolbar and on a dark one.</li>
-              <li><b>Header.</b> The title of the tab goui hears, or what to click when it hears nothing, and the level with the clip light. The toolbar icon turns the capture on and off, with an ON badge on the tab goui hears.</li>
-              <li><b>Number table.</b> Each band number is in its type color. The chips wrap onto more lines, so every band stays in view.</li>
+              <li><b>Header.</b> The title of the tab goui hears, or what to click when it hears nothing, and the level with the clip light.</li>
             </ul>
-          </div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="design recommended">
+        <div class="design-head">
+          <span class="letter">G</span>
+          <div>
+            <h2>Sets <span class="badge">Proposed</span></h2>
+            <p class="pitch">One press brings back a headphone, your ear and your taste together. A Set points at three presets and the sliders.</p>
+          </div>
+        </div>
+        <div class="design-body">
+          <div class="frame">
+            <div id="g-head"></div>
+            <div class="tabs" id="g-tabs">
+              <button data-tab="listen" class="on">Listen</button>
+              <button data-tab="tune">Tune</button>
+              <button data-tab="library">Library</button>
+            </div>
+            <div class="pane" data-pane="listen">
+              <div class="card" id="g-sets"></div>
+              <div class="card" id="g-layers"></div>
+              <div class="card"><div id="g-listen-graph"></div></div>
+              <div class="card" id="g-sliders"></div>
+            </div>
+            <div class="pane" data-pane="tune" hidden>
+              <div id="g-zoom"></div>
+              <div class="card">
+                <div id="g-graph"></div>
+                <div class="legend-host" data-layers></div>
+              </div>
+              <div id="g-chips"></div>
+              <div class="card" id="g-inspector"></div>
+            </div>
+            <div class="pane" data-pane="library" hidden>
+              <div class="tabs library-tabs">
+                <button>Headphone</button>
+                <button>My ear</button>
+                <button>Taste</button>
+                <button class="on">Sets</button>
+              </div>
+              <div class="card" id="g-library"></div>
+            </div>
+          </div>
+          <div class="notes">
+            <h3>How it works</h3>
+            <ul>
+              <li><b>What a Set holds.</b> One headphone preset, one ear preset and one taste preset, plus Bass, Vocals and Treble. It points at the presets, so an edit to a preset reaches every Set that uses it.</li>
+              <li><b>One press.</b> A Set applies all three layers and the sliders, so the sound is exactly what the Set holds. An empty ear or taste slot takes that layer off, and an empty headphone slot plays Flat.</li>
+              <li><b>Listen.</b> One picker row. It names the Set that plays now and switches on a pick, and it stays one line however many Sets you keep.</li>
+              <li><b>Library.</b> A fourth tab, Sets, with the plain list of names. Each row names the three presets, and Save as Set is above it.</li>
+              <li><b>Saving.</b> Save as Set needs each layer with bands saved as a preset first. When a layer still has unsaved bands, an alert names it and stops.</li>
+              <li><b>A deleted preset.</b> The Set marks that slot as missing and treats it as empty, so the press still works.</li>
+              <li><b>Wide.</b> The picker row is taken off Listen from 900 px, so with Listen and Library side by side, the Sets tab is the one place they appear.</li>
+            </ul>
+            <h3>Later, not in this release</h3>
+            <ul>
+              <li><b>Device rule.</b> A Set remembers an output device and applies when the Mac switches to it. Unsaved edits at that moment need a rule of their own.</li>
+            </ul>
+            <h3>Open for you</h3>
+            <ol>
+              <li>The unsaved-layer alert: inform and stop, or offer to save the layer for you?</li>
+              <li>A Set loses the headphone's Target, since a preset holds bands only. Should the headphone preset carry its Target, so a Set brings it back?</li>
+              <li>Where a Set is renamed: the Library row, as a preset has none today, or a pencil beside the name?</li>
+            </ol>
+          </div>
+        </div>
+        <h3 class="sub">On a wide panel, Sets appear in the Library only</h3>
+        <div class="wide-frame">
+          <div id="gw-head"></div>
+          <div class="columns">
+            <div class="column">
+              <h4 class="column-title">Listen</h4>
+              <div class="card" id="gw-layers"></div>
+              <div class="card" id="gw-sliders"></div>
+              <p class="hint">No Set picker on wide. With Listen and the Library side by side, the picker and the Sets tab would both switch, so Sets live in one column.</p>
+            </div>
+            <div class="column column-main">
+              <h4 class="column-title">Tune</h4>
+              <div class="card"><div id="gw-graph"></div></div>
+              <div id="gw-chips"></div>
+            </div>
+            <div class="column">
+              <h4 class="column-title">Library</h4>
+              <div class="tabs library-tabs">
+                <button>Headphone</button>
+                <button>My ear</button>
+                <button>Taste</button>
+                <button class="on">Sets</button>
+              </div>
+              <div class="card" id="gw-library"></div>
+            </div>
+          </div>
+        </div>
+        <h3 class="sub">A Set from the menu bar, and from the goui command</h3>
+        <div class="design-body">
+          <div id="g-menu"></div>
+          <div class="notes">
+            <ul>
+              <li><b>Menu bar.</b> The right-click menu gains a Sets submenu. The Set that plays now carries a tick. One click switches it, with the panel closed.</li>
+              <li><b>Command.</b> <code>goui set "HD 600 home"</code> switches from a terminal or a script, for a keyboard shortcut or a login hook.</li>
+              <li><b>Device rule, later.</b> With a device on a Set, plugging in a headphone applies it with no click at all. The menu and the command cover the rest.</li>
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -462,6 +859,7 @@
         </ol>
       </section>
 
+      </details>
       </details>
     </main>
     <script src="ux-proposals.js"></script>
