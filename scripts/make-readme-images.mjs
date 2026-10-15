@@ -9,21 +9,25 @@ const zipName = `goui-${JSON.parse(readFileSync("manifest.json", "utf8")).versio
 // The colours of src/base.css, so the pictures match the panel.
 const palette = {
   background: "#0e1013",
-  panel: "#161a20",
-  panelRaised: "#1c2129",
-  line: "#262d38",
-  text: "#e6e9ef",
-  muted: "#8993a2",
-  accent: "#5b8cff",
+  panel: "#15181d",
+  panelRaised: "#1d2128",
+  control: "#282d36",
+  line: "#22262e",
+  lineStrong: "#363c48",
+  text: "#f2f3f5",
+  muted: "#a2a9b6",
+  faint: "#6a717e",
+  accent: "#d4ff3f",
+  accentInk: "#0b0c0e",
+  headphone: "#9fb0ff",
   ear: "#ffd166",
-  good: "#43d39e",
+  taste: "#ff8fb1",
+  good: "#3ddc97",
 };
 
-const bodyFont = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+const bodyFont = "-apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', 'Segoe UI', Roboto, sans-serif";
 const monoFont = "'SF Mono', Menlo, Consolas, monospace";
-const headFont = "Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-const earBorder = palette.ear;
-const headphoneBorder = "#a9b8ff";
+const headFont = bodyFont;
 const chromeText = "#e8eaed";
 
 function escapeText(text) {
@@ -98,7 +102,6 @@ const defs = `<defs>
   <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="${tileColors[0]}"/><stop offset="1" stop-color="${tileColors[1]}"/>
   </linearGradient>
-  <clipPath id="boxClip"><rect x="0" y="0" width="176" height="92" rx="12"/></clipPath>
 </defs>`;
 
 /**
@@ -133,7 +136,7 @@ function pinGlyph(x, y, size, color) {
 
 function downloadGlyph(x, y, size) {
   const scale = size / 16;
-  return `<g transform="translate(${x} ${y}) scale(${scale})"><path d="M7 0 h2 v6 h3 l-4 4.5 -4-4.5 h3 z" fill="#ffffff"/><rect x="1" y="12" width="14" height="2" fill="#ffffff"/></g>`;
+  return `<g transform="translate(${x} ${y}) scale(${scale})"><path d="M7 0 h2 v6 h3 l-4 4.5 -4-4.5 h3 z" fill="${palette.accentInk}"/><rect x="1" y="12" width="14" height="2" fill="${palette.accentInk}"/></g>`;
 }
 
 /**
@@ -169,37 +172,40 @@ function browserChrome(x, y, width, options = {}) {
   const { tabTitle = "Lofi radio", url = "radio.example.com", showGoui = false, showOnBadge = false, highlight = "", cursorAt = null } = options;
   const parts = [];
   const tabHeight = 34;
+  const tabWidth = Math.min(150, width - 80);
 
   parts.push(rect({ x, y, width, height: tabHeight, radius: 10, fill: "#202124" }));
-  parts.push(rect({ x: x + 10, y: y + 7, width: 150, height: tabHeight - 14, radius: 8, fill: "#292a2d" }));
+  parts.push(rect({ x: x + 10, y: y + 7, width: tabWidth, height: tabHeight - 14, radius: 8, fill: "#292a2d" }));
   parts.push(circle({ cx: x + 26, cy: y + 17, r: 6, fill: "#8ab4f8" }));
   parts.push(text({ x: x + 40, y: y + 21, content: tabTitle, size: 12, fill: chromeText }));
-  parts.push(text({ x: x + 178, y: y + 21, content: "Mail", size: 12, fill: "#9aa0a6" }));
+  parts.push(text({ x: x + tabWidth + 28, y: y + 21, content: "Mail", size: 12, fill: "#9aa0a6" }));
 
   const barY = y + tabHeight + 8;
   const barHeight = 32;
+  const urlWidth = width - 126;
 
   parts.push(rect({ x, y: barY, width, height: barHeight, radius: 10, fill: "#202124" }));
   parts.push(circle({ cx: x + 22, cy: barY + 16, r: 8, fill: "#303134" }));
-  parts.push(rect({ x: x + 40, y: barY + 6, width: width - 120, height: barHeight - 12, radius: 8, fill: "#303134" }));
-  parts.push(text({ x: x + 52, y: barY + 21, content: url, size: 12, fill: "#9aa0a6" }));
+  parts.push(rect({ x: x + 40, y: barY + 6, width: urlWidth, height: barHeight - 12, radius: 8, fill: "#303134" }));
+  // A nested svg clips the address to its field, as Chrome shortens a long address.
+  parts.push(`<svg x="${x + 40}" y="${barY}" width="${urlWidth - 6}" height="${barHeight}">${text({ x: 12, y: 21, content: url, size: 12, fill: "#9aa0a6" })}</svg>`);
 
-  const rightX = x + width - 44;
+  const rightX = x + width - 48;
 
   if (showGoui) {
     const badge = showOnBadge
-      ? circle({ cx: rightX + 14, cy: barY + 8, r: 8, fill: palette.good }) + text({ x: rightX + 14, y: barY + 12, content: "ON", size: 8, weight: 700, fill: palette.background, anchor: "middle" })
+      ? circle({ cx: rightX + 12, cy: barY + 8, r: 8, fill: palette.good }) + text({ x: rightX + 12, y: barY + 11, content: "ON", size: 7, weight: 700, fill: palette.background, anchor: "middle" })
       : "";
-    const ring = highlight === "goui" ? rect({ x: rightX - 6, y: barY + 2, width: 40, height: barHeight - 4, radius: 8, fill: "none", stroke: palette.accent, strokeWidth: 2 }) : "";
+    const ring = highlight === "goui" ? rect({ x: rightX - 5, y: barY + 2, width: 26, height: barHeight - 4, radius: 8, fill: "none", stroke: palette.accent, strokeWidth: 2 }) : "";
 
     parts.push(ring + icon(rightX, barY + 8, 16) + badge);
   }
 
-  const puzzleX = x + width - 78;
-  const puzzleRing = highlight === "puzzle" ? rect({ x: puzzleX - 8, y: barY + 2, width: 32, height: barHeight - 4, radius: 8, fill: "none", stroke: palette.accent, strokeWidth: 2 }) : "";
+  const puzzleX = x + width - 76;
+  const puzzleRing = highlight === "puzzle" ? rect({ x: puzzleX - 6, y: barY + 2, width: 26, height: barHeight - 4, radius: 8, fill: "none", stroke: palette.accent, strokeWidth: 2 }) : "";
 
   parts.push(puzzleRing + puzzleGlyph(puzzleX, barY + 9, 14));
-  parts.push(circle({ cx: x + width - 22, cy: barY + 16, r: 9, fill: "#5f6368" }));
+  parts.push(circle({ cx: x + width - 18, cy: barY + 16, r: 8, fill: "#5f6368" }));
 
   if (cursorAt) parts.push(cursor(cursorAt.x, cursorAt.y));
 
@@ -244,7 +250,7 @@ function stepCard(x, y, width, step) {
   const parts = [
     rect({ x, y, width, height, radius: 14, fill: palette.panel, stroke: palette.line }),
     circle({ cx: x + 26, cy: y + 30, r: 14, fill: palette.accent }),
-    text({ x: x + 26, y: y + 35, content: String(step.number), size: 14, weight: 700, fill: "#ffffff", anchor: "middle" }),
+    text({ x: x + 26, y: y + 35, content: String(step.number), size: 14, weight: 700, fill: palette.accentInk, anchor: "middle" }),
     text({ x: x + 50, y: y + 30, content: step.title, size: 15, weight: 700 }),
     text({ x: x + 50, y: y + 48, content: step.note, size: 12, fill: palette.muted }),
     step.picture(x + 18, y + 70, width - 36),
@@ -272,7 +278,7 @@ function pictureLoadUnpacked(x, y, width) {
   parts.push(rect({ x: x + width - 56, y: y + 94, width: 32, height: 18, radius: 9, fill: palette.good }));
   parts.push(circle({ cx: x + width - 32, cy: y + 103, r: 6, fill: "#ffffff" }));
   parts.push(rect({ x: x + 12, y: y + 124, width: width - 24, height: 24, radius: 6, fill: palette.accent }));
-  parts.push(text({ x: x + width / 2, y: y + 140, content: "Load unpacked", size: 11, weight: 700, fill: "#ffffff", anchor: "middle" }));
+  parts.push(text({ x: x + width / 2, y: y + 140, content: "Load unpacked", size: 11, weight: 700, fill: palette.accentInk, anchor: "middle" }));
   parts.push(cursor(x + 70, y + 146));
 
   return parts.join("");
@@ -311,8 +317,8 @@ function picturePickFolder(x, y, width) {
   parts.push(text({ x: x + 34, y: y + 82, content: "manifest.json", size: 11, fill: palette.muted, font: monoFont }));
   parts.push(text({ x: x + 34, y: y + 100, content: "src", size: 11, fill: palette.muted, font: monoFont }));
   parts.push(text({ x: x + 34, y: y + 118, content: "icons", size: 11, fill: palette.muted, font: monoFont }));
-  parts.push(rect({ x: x + width - 118, y: y + 116, width: 96, height: 22, radius: 6, fill: palette.accent }));
-  parts.push(text({ x: x + width - 70, y: y + 131, content: "Open", size: 11, weight: 700, fill: "#ffffff", anchor: "middle" }));
+  parts.push(rect({ x: x + width - 118, y: y + 102, width: 96, height: 22, radius: 6, fill: palette.accent }));
+  parts.push(text({ x: x + width - 70, y: y + 117, content: "Open", size: 11, weight: 700, fill: palette.accentInk, anchor: "middle" }));
 
   return parts.join("");
 }
@@ -320,41 +326,45 @@ function picturePickFolder(x, y, width) {
 // The toolbar with the pin pressed, and the short menu below it.
 function picturePin(x, y, width) {
   const chrome = browserChrome(x, y, width, { highlight: "puzzle" });
-  const menu = compactExtensionsMenu(x + width - 210, chrome.bottom + 6, { highlight: "pin" });
+  const menu = compactExtensionsMenu(x + width - 200, chrome.bottom + 6, { highlight: "pin" });
   return chrome.svg + menu;
 }
 
 // The toolbar with the goui icon pressed and its green ON badge.
 function picturePanel(x, y, width) {
-  return browserChrome(x, y, width, { showGoui: true, showOnBadge: true, highlight: "goui", cursorAt: { x: width - 112, y: 96 } }).svg;
+  return browserChrome(x, y, width, { showGoui: true, showOnBadge: true, highlight: "goui", cursorAt: { x: x + width - 36, y: y + 64 } }).svg;
 }
 
 // The side panel, as it looks once goui hears a tab.
 function sidePanel(x, y, width) {
   const height = 168;
-  const parts = [rect({ x, y, width, height, radius: 12, fill: palette.panel, stroke: palette.line })];
+  const parts = [rect({ x, y, width, height, radius: 12, fill: palette.background, stroke: palette.line })];
 
-  parts.push(text({ x: x + 14, y: y + 26, content: "goui", size: 14, weight: 700 }));
-  parts.push(rect({ x: x + 74, y: y + 12, width: 26, height: 18, radius: 4, fill: palette.panelRaised, stroke: palette.line }));
-  parts.push(text({ x: x + 87, y: y + 25, content: "A/B", size: 9, fill: palette.muted, anchor: "middle" }));
-  parts.push(rect({ x: x + 108, y: y + 12, width: 26, height: 18, radius: 9, fill: palette.good }));
-  parts.push(circle({ cx: x + 126, cy: y + 21, r: 6, fill: "#ffffff" }));
-  parts.push(text({ x: x + 14, y: y + 50, content: "playing", size: 12, fill: palette.muted }));
-  parts.push(text({ x: x + width - 14, y: y + 50, content: "-24.0 dB", size: 12, fill: palette.good, anchor: "end" }));
-  parts.push(text({ x: x + 14, y: y + 70, content: "Lofi radio", size: 12 }));
+  parts.push(icon(x + 12, y + 13, 16) + text({ x: x + 32, y: y + 26, content: "goui", size: 14, weight: 700 }));
+  parts.push(rect({ x: x + width - 84, y: y + 11, width: 34, height: 20, radius: 6, fill: palette.panelRaised, stroke: palette.lineStrong }));
+  parts.push(text({ x: x + width - 67, y: y + 25, content: "A/B", size: 9, weight: 700, font: monoFont, anchor: "middle" }));
+  parts.push(rect({ x: x + width - 42, y: y + 12, width: 30, height: 18, radius: 9, fill: palette.accent }));
+  parts.push(circle({ cx: x + width - 21, cy: y + 21, r: 6, fill: palette.accentInk }));
+  parts.push(text({ x: x + 14, y: y + 48, content: "HEARING", size: 8, weight: 600, fill: palette.faint, font: monoFont }));
+  parts.push(circle({ cx: x + width - 78, cy: y + 61, r: 3, fill: palette.good }));
+  parts.push(text({ x: x + width - 14, y: y + 65, content: "-24.0 dB", size: 11, weight: 700, font: monoFont, anchor: "end" }));
+  parts.push(text({ x: x + 14, y: y + 65, content: "Lofi radio", size: 12, weight: 700 }));
+  parts.push(rect({ x, y: y + 76, width, height: 1, fill: palette.line }));
 
   const tabs = ["Listen", "Tune", "Library"];
 
   tabs.forEach((label, index) => {
-    const tabX = x + 12 + (index * 68);
+    const tabX = x + 14 + (index * 56);
     const isOn = index === 0;
 
-    parts.push(rect({ x: tabX, y: y + 82, width: 62, height: 22, radius: 11, fill: isOn ? palette.accent : palette.panelRaised }));
-    parts.push(text({ x: tabX + 31, y: y + 97, content: label, size: 10, fill: isOn ? "#ffffff" : palette.muted, anchor: "middle" }));
+    parts.push(text({ x: tabX, y: y + 96, content: label, size: 11, weight: 700, fill: isOn ? palette.text : palette.faint }));
   });
-  parts.push(rect({ x: x + 12, y: y + 112, width: width - 24, height: 46, radius: 8, fill: palette.panelRaised }));
-  parts.push(text({ x: x + 24, y: y + 132, content: "1  Headphone", size: 11 }));
-  parts.push(text({ x: x + 24, y: y + 150, content: "2  My ear", size: 11, fill: palette.muted }));
+  parts.push(rect({ x: x + 14, y: y + 102, width: 36, height: 2, radius: 1, fill: palette.accent }));
+  parts.push(rect({ x: x + 12, y: y + 114, width: width - 24, height: 44, radius: 8, fill: palette.panel }));
+  parts.push(rect({ x: x + 12, y: y + 117, width: 3, height: 17, radius: 1.5, fill: palette.headphone }));
+  parts.push(rect({ x: x + 12, y: y + 138, width: 3, height: 17, radius: 1.5, fill: palette.ear }));
+  parts.push(text({ x: x + 24, y: y + 130, content: "1  Headphone", size: 11 }));
+  parts.push(text({ x: x + 24, y: y + 151, content: "2  My ear", size: 11, fill: palette.muted }));
 
   return parts.join("");
 }
@@ -372,23 +382,21 @@ function buildHowItWorks() {
     { title: "Tab audio", note: "Any tab", tone: "plain" },
     { title: "Headphone", note: "AutoEQ baseline", tone: "headphone" },
     { title: "My ear", note: "EQByEar test", tone: "ear" },
-    { title: "Your taste", note: "Bass, Vocals, Treble", tone: "plain" },
-    { title: "You", note: "Headphones on", tone: "plain" },
+    { title: "Your taste", note: "Bass, Vocals, Treble", tone: "taste" },
+    { title: "You", note: "Headphones on", tone: "accent" },
   ];
   const parts = [
     text({ x: 40, y: 46, content: "How the sound flows", size: 20, weight: 700, font: headFont }),
     text({ x: 40, y: 68, content: "goui joins two audio tools. Each one corrects a different thing.", size: 13, fill: palette.muted }),
   ];
-  const borders = { plain: palette.line, headphone: headphoneBorder, ear: earBorder };
+  const bars = { headphone: palette.headphone, ear: palette.ear, taste: palette.taste, accent: palette.accent };
 
   boxes.forEach((box, index) => {
     const x = startX + (index * (boxWidth + gap));
 
-    parts.push(rect({ x, y: boxY, width: boxWidth, height: boxHeight, radius: 12, fill: palette.panel, stroke: borders[box.tone] }));
+    parts.push(rect({ x, y: boxY, width: boxWidth, height: boxHeight, radius: 12, fill: palette.panel, stroke: palette.line }));
 
-    if (box.tone !== "plain") {
-      parts.push(`<g clip-path="url(#boxClip)" transform="translate(${x} ${boxY})">${rect({ x: 0, y: 0, width: 8, height: boxHeight, fill: borders[box.tone] })}</g>`);
-    }
+    if (box.tone !== "plain") parts.push(rect({ x, y: boxY + 14, width: 4, height: boxHeight - 28, radius: 2, fill: bars[box.tone] }));
 
     parts.push(text({ x: x + (boxWidth / 2), y: boxY + 40, content: box.title, size: 16, weight: 700, anchor: "middle" }));
     parts.push(text({ x: x + (boxWidth / 2), y: boxY + 64, content: box.note, size: 12, fill: palette.muted, anchor: "middle" }));
@@ -403,7 +411,7 @@ function buildHowItWorks() {
 // The install flow: four numbered cards in a row.
 function buildInstallFlow() {
   const width = 1120;
-  const cardWidth = 254;
+  const cardWidth = 236;
   const gap = 32;
   const steps = [
     { number: 1, title: "Download the zip", note: "From the Releases page", picture: pictureDownload },
@@ -457,7 +465,7 @@ function buildDownload() {
   parts.push(rect({ x: 48, y: 184, width: 366, height: 40, radius: 8, fill: palette.panelRaised, stroke: palette.line }));
   parts.push(text({ x: 64, y: 209, content: zipName, size: 12, font: monoFont }));
   parts.push(rect({ x: 312, y: 192, width: 88, height: 24, radius: 6, fill: palette.accent }));
-  parts.push(text({ x: 356, y: 208, content: "Download", size: 11, weight: 700, fill: "#ffffff", anchor: "middle" }));
+  parts.push(text({ x: 356, y: 208, content: "Download", size: 11, weight: 700, fill: palette.accentInk, anchor: "middle" }));
   parts.push(cursor(392, 218));
   parts.push(arrow(438, 486, 200));
   parts.push(text({ x: 462, y: 188, content: "unzip", size: 11, fill: palette.muted, anchor: "middle" }));
@@ -510,7 +518,7 @@ function buildClickIcon() {
     text({ x: 32, y: 44, content: "Step 4. Click the goui icon", size: 19, weight: 700, font: headFont }),
     text({ x: 32, y: 68, content: "Open a page with sound. Click the goui icon on that page.", size: 13, fill: palette.muted }),
     text({ x: 32, y: 88, content: "The side panel opens, and the icon shows a green ON.", size: 13, fill: palette.muted }),
-    browserChrome(32, 108, chromeWidth, { showGoui: true, showOnBadge: true, highlight: "goui", cursorAt: { x: chromeWidth - 46, y: 202 } }).svg,
+    browserChrome(32, 108, chromeWidth, { showGoui: true, showOnBadge: true, highlight: "goui", cursorAt: { x: chromeWidth - 12, y: 172 } }).svg,
     sidePanel(476, 108, 220),
   ];
 

@@ -787,7 +787,8 @@ const byId = (id) => document.getElementById(id);
 
 for (const host of document.querySelectorAll(".legend-host")) host.innerHTML = legendHtml("layers" in host.dataset);
 
-{
+// Each block of the record runs only on the design page, where its hosts are.
+if (byId("a-head")) {
   const model = makeModel(headphoneBands, "AKG N700NC M2");
   const libraryHost = byId("a-library");
   mountHeader(byId("a-head"), model);
@@ -806,7 +807,7 @@ for (const host of document.querySelectorAll(".legend-host")) host.innerHTML = l
   });
 }
 
-{
+if (byId("b-head")) {
   const model = makeModel(headphoneBands, "AKG N700NC M2");
   model.selected = 4;
   mountHeader(byId("b-head"), model);
@@ -820,7 +821,7 @@ for (const host of document.querySelectorAll(".legend-host")) host.innerHTML = l
   mountLibrary(byId("b-library"), model, closeSheet);
 }
 
-{
+if (byId("c-head")) {
   const model = makeModel(headphoneBands.map((band) => ({ ...band, layer: "headphone" })), "AKG N700NC M2");
   model.bands.push(...parseAutoEqText(earText, "ear"), ...parseAutoEqText(tasteText, "taste"));
   model.layers = {
@@ -851,7 +852,7 @@ for (const host of document.querySelectorAll(".legend-host")) host.innerHTML = l
   mountLibrarySections(byId("c-library"), model);
 }
 
-{
+if (byId("d-head")) {
   const model = makeModel(headphoneBands, "AKG N700NC M2");
   model.selected = 1;
   mountHeader(byId("d-head"), model);
@@ -863,7 +864,7 @@ for (const host of document.querySelectorAll(".legend-host")) host.innerHTML = l
   mountLibrary(byId("d-library"), model, closeSheet);
 }
 
-{
+if (byId("w-head")) {
   const model = makeModel(headphoneBands, "AKG N700NC M2");
   model.selected = 4;
   mountHeader(byId("w-head"), model);
@@ -919,7 +920,7 @@ function mountLayers(host, model, onChange) {
   });
 }
 
-{
+if (byId("e-head")) {
   const model = makeModel(headphoneBands, "AKG N700NC M2");
   const showTab = mountTabs("e-tabs", model);
   mountHeader(byId("e-head"), model);
@@ -939,7 +940,7 @@ function mountLayers(host, model, onChange) {
   byId("e-replace").addEventListener("click", () => merge(false));
 }
 
-{
+if (byId("f-head")) {
   const model = makeModel(headphoneBands.map((band) => ({ ...band, layer: "headphone" })), "AKG N700NC M2");
   model.bands.push(...parseAutoEqText(earText, "ear"), ...parseAutoEqText(tasteText, "taste"));
   model.layers = {
@@ -1159,7 +1160,7 @@ function mountMenuMock(host, model) {
   update();
 }
 
-{
+if (byId("g-head")) {
   const model = makeModel([], "Flat");
   model.sets = [
     { name: "HD 600 home", parts: { headphone: "Sennheiser HD 600", ear: "Ear test, 12 Oct", taste: "Warm and smooth" }, sliders: { bass: 1.5, vocals: 0, treble: -1 } },
@@ -1720,6 +1721,7 @@ function mountView(host, form, settings = {}) {
     isWholeOpen: false,
     isTableOpen: false,
     hasSetPicker: false,
+    hasSets: true,
     ...settings,
   };
 
@@ -2150,7 +2152,7 @@ const regionBuilders = {
   },
   inspector: buildInspector,
   table: buildTable,
-  "library-tabs": (view) => ui.tabs({ items: libraryTabItems, current: view.libraryTab, act: "library-tab", size: "small" }),
+  "library-tabs": (view) => ui.tabs({ items: view.hasSets ? libraryTabItems : libraryTabItems.slice(0, -1), current: view.libraryTab, act: "library-tab", size: "small" }),
   "library-head": (view) => {
     const role = readLibraryRole(view);
 
@@ -3369,8 +3371,7 @@ function wireGuide() {
   });
 }
 
-// The design page's own startup. The site copies this file for its panel demo, so this part runs
-// only where the page's hosts are.
+// The site copies this file for its panel demo, so each part of the startup runs only where its host is.
 if (byId("token-palette")) {
   accentColor = readToken("--accent");
   renderTokens();
@@ -3382,18 +3383,28 @@ if (byId("token-palette")) {
   renderMapping();
   renderGuide();
   wireGuide();
+}
 
-  mountView(byId("panel-narrow"), "narrow", { hasSetPicker: true });
-  mountView(byId("panel-start"), "start", { isHearing: false });
-  mountView(byId("header-tab"), "header");
-  mountView(byId("header-nothing"), "header", { isHearing: false });
-  mountView(byId("header-popup"), "header", { isPopup: true, heard: "YT Music", instruction: "goui is off for this window. Press ON to hear it again." });
-  mountView(byId("panel-wide"), "wide", { heard: "Every sound on this Mac", libraryTab: "sets" });
-  mountView(byId("sets-picker"), "setsPicker", { hasSetPicker: true });
-  mountView(byId("sets-library"), "setsLibrary", { libraryTab: "sets" });
-  mountView(byId("screen-menu"), "menu");
-  mountView(byId("screen-tile"), "tile");
-  mountView(byId("screen-site"), "hero", { heard: "Every sound on this Mac" });
+// The last host is the site's demo, with no Sets while Sets is not built.
+const viewHosts = [
+  ["panel-narrow", "narrow", { hasSetPicker: true }],
+  ["panel-start", "start", { isHearing: false }],
+  ["header-tab", "header"],
+  ["header-nothing", "header", { isHearing: false }],
+  ["header-popup", "header", { isPopup: true, heard: "YT Music", instruction: "goui is off for this window. Press ON to hear it again." }],
+  ["panel-wide", "wide", { heard: "Every sound on this Mac", libraryTab: "sets" }],
+  ["sets-picker", "setsPicker", { hasSetPicker: true }],
+  ["sets-library", "setsLibrary", { libraryTab: "sets" }],
+  ["screen-menu", "menu"],
+  ["screen-tile", "tile"],
+  ["screen-site", "hero", { heard: "Every sound on this Mac" }],
+  ["site-panel", "narrow", { hasSets: false }],
+];
+
+for (const [id, form, settings] of viewHosts) {
+  const host = byId(id);
+
+  if (host) mountView(host, form, settings);
 }
 
 function updateLevels() {

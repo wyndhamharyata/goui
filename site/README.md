@@ -9,8 +9,9 @@ The site shows the icons, two README pictures and the live panel mock from `desi
 assets` copies them into `public/`, and every dev and deploy command runs it first. The copies stay
 out of git, so the site always matches the repo.
 
-The panel mock is `design/ux-proposals.js` with one change. Each design block runs only when its own
-markup is on the page, so the homepage shows design F alone.
+The panel mock is `design/ux-proposals.js` as it is. It mounts each part only where that part's
+markup is on the page, so the homepage builds the panel from `#site-panel` and nothing else. The
+homepage asks for the narrow panel with no Sets, since Sets is not built yet.
 
 ## Develop
 

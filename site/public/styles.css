@@ -71,19 +71,14 @@ a.name {
   border-radius: var(--radius-3);
 }
 
-/* The layer rows already name both dashed lines, so the Listen legend goes and the panel fits a laptop screen. */
-.demo [data-pane="listen"] .legend-host {
-  display: none;
-}
-
 /* A short window, such as a laptop with the page zoomed, shows the whole panel and its caption. */
-@media (max-height: 820px) and (min-width: 760px) {
+@media (max-height: 1020px) and (min-width: 981px) {
   .demo {
     zoom: 0.88;
   }
 }
 
-@media (max-height: 740px) and (min-width: 760px) {
+@media (max-height: 918px) and (min-width: 981px) {
   .demo {
     zoom: 0.78;
   }
@@ -216,15 +211,10 @@ a.name {
   min-width: 0;
 }
 
-.demo .frame {
+.demo .pn-frame {
   max-width: 100%;
+  border-color: var(--line-2);
   box-shadow: 0 40px 80px -40px var(--accent-line);
-}
-
-/* The mock panel puts white on the accent. The tokens put the accent ink there. */
-.demo button.on,
-.demo button.primary {
-  color: var(--accent-ink);
 }
 
 .demo-caption {

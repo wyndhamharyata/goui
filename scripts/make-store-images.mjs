@@ -6,6 +6,8 @@ import { layOutIcon, tileColors } from "./icon-geometry.mjs";
 
 const out = "store";
 const panelSize = { width: 1280, height: 800 };
+// The ink and the accent of src/base.css.
+const palette = { ink1: "#0e1013", accent: "#d4ff3f" };
 const headphoneText = [
   "Preamp: -6.0 dB",
   "Filter 1: ON LSC Fc 105 Hz Gain -2.6 dB Q 0.70",
@@ -43,12 +45,15 @@ async function screenshots() {
   await saveAs(panel, "headphone", "AKG N700NC M2");
   await saveAs(panel, "ear", "Ear test, 12 Oct");
   await panel.waitForTimeout(400);
+  // The panel is taller than the screenshot, and saving scrolls it, so each shot starts at the header.
+  await panel.evaluate(() => window.scrollTo(0, 0));
   await panel.screenshot({ path: `${out}/screenshot-1-panel.png` });
 
   // A chosen band opens the inspector, and the table lists every number.
-  await panel.locator("#chips .chip").nth(3).click();
-  await panel.locator("details.card > summary").click();
+  await panel.locator("#chips .ui-chip--band").nth(3).click();
+  await panel.locator("details.ui-expander > summary").click();
   await panel.waitForTimeout(300);
+  await panel.evaluate(() => window.scrollTo(0, 0));
   await panel.screenshot({ path: `${out}/screenshot-2-tune.png` });
 
   const guide = await context.newPage();
@@ -63,7 +68,7 @@ async function screenshots() {
 
   // The store takes 24-bit PNGs with no alpha for the screenshots.
   for (const name of ["screenshot-1-panel.png", "screenshot-2-tune.png", "screenshot-3-guide.png"]) {
-    execFileSync("convert", [`${out}/${name}`, "-background", "#0e1013", "-alpha", "remove", "-alpha", "off", `PNG24:${out}/${name}`]);
+    execFileSync("convert", [`${out}/${name}`, "-background", palette.ink1, "-alpha", "remove", "-alpha", "off", `PNG24:${out}/${name}`]);
   }
 }
 
@@ -97,9 +102,9 @@ function frame(width, height, content) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`
     + "<defs>"
     + `<linearGradient id="tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tileColors[0]}"/><stop offset="1" stop-color="${tileColors[1]}"/></linearGradient>`
-    + '<radialGradient id="glow" cx="0.5" cy="0.5" r="0.6"><stop offset="0" stop-color="#5b8cff" stop-opacity="0.55"/><stop offset="1" stop-color="#5b8cff" stop-opacity="0"/></radialGradient>'
+    + `<radialGradient id="glow" cx="0.5" cy="0.5" r="0.6"><stop offset="0" stop-color="${palette.accent}" stop-opacity="0.2"/><stop offset="1" stop-color="${palette.accent}" stop-opacity="0"/></radialGradient>`
     + "</defs>"
-    + `<rect width="${width}" height="${height}" fill="#0b0d10"/>`
+    + `<rect width="${width}" height="${height}" fill="${palette.ink1}"/>`
     + content
     + "</svg>";
 }
@@ -126,14 +131,14 @@ function tiles() {
     440,
     280,
     `<ellipse cx="220" cy="140" rx="260" ry="180" fill="url(#glow)"/>`
-      + `<path d="${curvePath(440, 280, 78)}" fill="none" stroke="#5b8cff" stroke-width="6" stroke-linecap="round" opacity="0.8"/>`
+      + `<path d="${curvePath(440, 280, 78)}" fill="none" stroke="${palette.accent}" stroke-width="6" stroke-linecap="round" opacity="0.8"/>`
       + gouiTile(145, 65, 150),
   );
   const marquee = frame(
     1400,
     560,
     `<ellipse cx="700" cy="280" rx="820" ry="360" fill="url(#glow)"/>`
-      + `<path d="${curvePath(1400, 560, 150)}" fill="none" stroke="#5b8cff" stroke-width="10" stroke-linecap="round" opacity="0.75"/>`
+      + `<path d="${curvePath(1400, 560, 150)}" fill="none" stroke="${palette.accent}" stroke-width="10" stroke-linecap="round" opacity="0.75"/>`
       + gouiTile(600, 180, 200),
   );
 
@@ -143,7 +148,7 @@ function tiles() {
   execFileSync("rsvg-convert", ["-w", "1400", "-h", "560", "-o", `${out}/promo-marquee-1400x560.png`, `${out}/promo-marquee.svg`]);
 
   for (const name of ["promo-small-440x280.png", "promo-marquee-1400x560.png"]) {
-    execFileSync("convert", [`${out}/${name}`, "-background", "#0b0d10", "-alpha", "remove", "-alpha", "off", `PNG24:${out}/${name}`]);
+    execFileSync("convert", [`${out}/${name}`, "-background", palette.ink1, "-alpha", "remove", "-alpha", "off", `PNG24:${out}/${name}`]);
   }
 }
 
