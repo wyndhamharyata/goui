@@ -1,12 +1,43 @@
 # goui
 
-An EQ for a browser tab or the whole Mac, to show how easy and significant it is to adjust EQ for your headphone against
-your own ear. It all comes down to a very simple mantra: **different ear, different head, different
-sound.**
+An EQ for a browser tab or the whole Mac, to show how easy and significant it is to adjust EQ for
+your headphone against your own ear. It all comes down to a very simple mantra: **different ear,
+different head, different sound.**
+
+## Install
+
+### Chrome and Brave
 
 <a href="https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap"><img src="docs/images/chrome-web-store.png" alt="Available in the Chrome Web Store" height="58"></a>
 
+One click, and Chrome keeps it up to date. To load the files yourself instead, see
+[Add the extension by hand](#add-the-extension-by-hand).
+
+### Mac
+
+Paste this in Terminal:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh
+```
+
+It needs a Mac with Apple silicon and macOS 26 or newer. Read
+[goui for the Mac](#goui-for-the-mac) first, for what the installer does and what to expect.
+
 ![The sound of a tab passes the headphone layer, then the ear layer, then your taste, then reaches you.](docs/images/how-it-works.png)
+
+## Contents
+
+- [Install](#install)
+- [What it does](#what-it-does)
+- [Add the extension by hand](#add-the-extension-by-hand)
+- [The icon is the switch](#the-icon-is-the-switch)
+- [goui for the Mac](#goui-for-the-mac)
+- [Use it](#use-it)
+- [Measure your ear](#measure-your-ear)
+- [Notes](#notes)
+- [Credits](#credits)
+- [Develop](#develop)
 
 ## What it does
 
@@ -21,19 +52,15 @@ profile apart, as two layers. The bands of both layers add up in dB, so the merg
 Vocals and Treble sit on top as your taste. The preamp follows the largest boost, so the sound never
 clips.
 
-## Install
+## Add the extension by hand
 
-goui is in the Chrome Web Store. [Install goui](https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap)
-in one click, and Chrome keeps it up to date.
-
-### Add it by hand
-
-To run the files yourself instead, add it by hand one time, in about two minutes. You download a
+To run the files yourself instead of the Chrome Web Store, add goui by hand one time, in about two
+minutes. You download a
 zip, unzip it, then point Chrome at the folder.
 
 ![Install goui in four steps: download the zip, load the folder, pin goui, click the icon.](docs/images/install-flow.png)
 
-#### 1. Download the zip
+### 1. Download the zip
 
 ![The Releases page, with the zip and a Download button.](docs/images/install-download.png)
 
@@ -44,7 +71,7 @@ Unzip it after the download. Double clicking the file is enough.
 Keep the unzipped folder where it is. Chrome reads it from there on every start, so a move or a
 delete turns goui off.
 
-#### 2. Load the folder in Chrome
+### 2. Load the folder in Chrome
 
 ![The extensions page with Developer mode on and its Load unpacked button.](docs/images/install-load-unpacked.png)
 
@@ -56,14 +83,14 @@ at the top right. Press **Load unpacked**.
 The button asks for a folder. Pick the goui folder, the one that holds `manifest.json`. A file
 inside it will not load.
 
-#### 3. Pin goui
+### 3. Pin goui
 
 ![Press the pin beside goui in the extensions menu.](docs/images/install-pin.png)
 
 Click the puzzle piece in the toolbar. Press the pin beside goui. The goui icon then stays in the
 toolbar, one click away.
 
-#### 4. Start listening
+### 4. Start listening
 
 ![Click the goui icon on a page with sound. The panel opens and the icon shows a green ON.](docs/images/install-click-icon.png)
 
@@ -75,7 +102,7 @@ again. It shows how goui works as a picture, each step with a picture of what to
 AutoEQ and EQByEar. Until goui hears its first tab, the panel itself shows the first three steps in
 place of the EQ.
 
-### The icon is the switch
+## The icon is the switch
 
 Chrome only lets an extension take a tab's audio after you click its icon on that tab, so the panel
 has no Start button.
