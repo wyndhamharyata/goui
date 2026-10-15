@@ -1,6 +1,7 @@
 /* The site's own layout. panel.css holds the tokens, the primitives and the mock panel. */
 
 body {
+  font-family: var(--font-ui);
   font-size: var(--size-name);
   line-height: 1.65;
 }

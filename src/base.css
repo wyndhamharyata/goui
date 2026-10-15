@@ -1,4 +1,21 @@
 /* The tokens and page basics that the side panel and the how-to page share. */
+
+/* Atkinson Hyperlegible Next and Mono, by the Braille Institute. SIL OFL 1.1, in fonts/OFL.txt. */
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("fonts/atkinson-hyperlegible-next-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Mono";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("fonts/atkinson-hyperlegible-mono-latin.woff2") format("woff2");
+}
 :root {
   color-scheme: dark;
   --ink-0: #07080a;
@@ -32,8 +49,8 @@
   --plot-grid-zero: color-mix(in srgb, white 24%, transparent);
   --plot-hover: color-mix(in srgb, white 25%, transparent);
   --plot-readout: color-mix(in srgb, var(--ink-0) 90%, transparent);
-  --font-ui: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-  --font-number: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  --font-ui: "Atkinson Hyperlegible Next", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-number: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
   --size-tiny: 9px;
   --size-micro: 10px;
   --size-small: 11px;

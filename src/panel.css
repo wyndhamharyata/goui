@@ -336,14 +336,15 @@ button.ui-list-row__main {
   background: var(--accent-soft);
 }
 
-/* The bar is an inset shadow on a copy of the row, so it runs the full height and follows the row's corners. */
 .ui-list-row.is-selected::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 3px 0 0 var(--accent);
-  pointer-events: none;
+  top: 6px;
+  bottom: 6px;
+  left: 0;
+  width: 3px;
+  border-radius: var(--radius-bar);
+  background: var(--accent);
 }
 
 .ui-list-row.is-muted {
@@ -389,14 +390,15 @@ button.ui-list-row__main {
   padding-left: var(--space-4);
 }
 
-/* The bar is an inset shadow on a copy of the row, so it runs the full height and follows the row's corners. */
 .ui-stack-row.has-bar::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 3px 0 0 var(--tone);
-  pointer-events: none;
+  top: 7px;
+  bottom: 7px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 var(--radius-bar) var(--radius-bar) 0;
+  background: var(--tone);
 }
 
 .ui-stack-row__body {
