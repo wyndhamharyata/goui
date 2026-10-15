@@ -25,8 +25,8 @@ enum ReleaseDownload {
 
     return Release(
       version: String(feed.tagName.trimmingPrefix("v")),
-      tarballURL: try feed.asset(where: { $0 == tarballName }, orThrow: "The newest release holds no \(tarballName)."),
-      checksumsURL: try feed.asset(where: { $0.hasSuffix("-sha256.txt") }, orThrow: "The newest release holds no checksums file.")
+      tarballURL: try feed.asset(where: { $0 == tarballName }, orThrow: "The release has no \(tarballName)."),
+      checksumsURL: try feed.asset(where: { $0.hasSuffix("-sha256.txt") }, orThrow: "The release has no checksums file.")
     )
   }
 
@@ -54,13 +54,13 @@ enum ReleaseDownload {
       throw GouiError("The checksums file names no \(tarballName).")
     }
     guard try fileHash(tarballURL) == expected else {
-      throw GouiError("The download does not match its checksum, so goui did not use it.")
+      throw GouiError("The download does not match its checksum.")
     }
   }
 
   // The app is packed with tar, so tar unpacks it.
   private static func unpack(_ tarballURL: URL, to folderURL: URL) throws {
-    try run("/usr/bin/tar", ["-xzf", tarballURL.path, "-C", folderURL.path], failure: "The download could not be unpacked.")
+    try run("/usr/bin/tar", ["-xzf", tarballURL.path, "-C", folderURL.path], failure: "Could not unpack the download.")
   }
 
   // A release can ask for a newer macOS than this Mac runs.
@@ -91,7 +91,7 @@ enum ReleaseDownload {
 
     let (data, response) = try await URLSession.shared.data(for: request)
     guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-      throw GouiError("The update server refused \(url.lastPathComponent).")
+      throw GouiError("Server refused \(url.lastPathComponent).")
     }
 
     return data

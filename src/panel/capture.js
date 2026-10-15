@@ -12,7 +12,7 @@ import { isPopup, popupTabId, state } from "./state.js";
 
 // A page that holds the panel, as the Mac app does, can name what goui hears with window.gouiWords.
 const words = {
-  idleInstruction: isPopup ? "goui is off on this tab. Press the power button to EQ it." : "Click the goui icon in the toolbar while you are on the tab you want to EQ.",
+  idleInstruction: isPopup ? "goui is off on this tab. Press the power button to turn it on." : "Click the goui icon on a tab with audio.",
   powerOffTitle: "Turn goui off on this tab",
   powerOnTitle: "Turn goui on for this tab",
   ...globalThis.gouiWords,
@@ -26,7 +26,7 @@ function renderMeter() {
   const headroomDb = maxBoostDb(played.bands) + played.preampDb;
   const isClipping = state.config.enabled && headroomDb > clipMarginDb;
   const meter = byId("meter");
-  let title = isClipping ? `The EQ can clip by ${headroomDb.toFixed(1)} dB. Turn the preamp down or press Auto.` : "Output level. No clipping.";
+  let title = isClipping ? `The EQ may clip by ${headroomDb.toFixed(1)} dB. Turn the preamp down or press Auto.` : "Output level. No clipping.";
 
   if (!state.isCapturing) title = "Output level. goui hears nothing now.";
 
@@ -59,7 +59,7 @@ export function applyCaptureState(capture) {
   state.isCapturing = isCapturing;
   status.textContent = capture.error || (isCapturing ? capture.title : words.idleInstruction);
   byId("hearing").classList.toggle("is-instruction", !isCapturing || Boolean(capture.error));
-  status.title = isCapturing && !isPopup ? "Click the goui icon on this tab to turn goui off, or on another tab to move it there." : "";
+  status.title = isCapturing && !isPopup ? "Click the icon on this tab to turn goui off, or on another tab to move goui there." : "";
 
   if (!isCapturing) clearLevel();
 

@@ -108,7 +108,7 @@ function placeSet(name) {
   if (!hasTooManyBands(state.config)) return true;
 
   state.config = before;
-  showHint("sets", `${name} holds more bands than goui plays at once. goui plays up to ${maxPlayedBandCount}, with the three sliders. Save the Set again with fewer bands.`, true);
+  showHint("sets", `${name} has more bands than goui plays at once (up to ${maxPlayedBandCount} with the three sliders). Save the Set with fewer bands.`, true);
 
   return false;
 }
@@ -178,7 +178,7 @@ function showUnsavedAlert() {
   const names = listUnsavedRoles().map((role) => layerLabels[role]).join(" and ");
 
   setSaveRowOpen(false);
-  showHint("sets", `Save ${names} as a preset first. A Set names its presets, so each layer with bands needs one.`, true);
+  showHint("sets", `Save ${names} as a preset first. Each layer with bands needs a saved preset.`, true);
 }
 
 /**
@@ -245,7 +245,7 @@ function renderSaveRow() {
   const sliderWords = `Bass ${formatDb(sliders.bassDb)}, Vocals ${formatDb(sliders.vocalsDb)} and Treble ${formatDb(sliders.trebleDb)} dB`;
 
   renderSaveLabel("sets", hasSet);
-  partOf("sets", "set-note").textContent = `It names ${describeSet(readCurrentSet())}, with ${sliderWords}.`;
+  partOf("sets", "set-note").textContent = `Names ${describeSet(readCurrentSet())}, with ${sliderWords}.`;
 }
 
 // The picker is drawn again only when a name or the playing Set changes, so an open picker stays open.
@@ -268,7 +268,7 @@ function renderSetCard(playing) {
   const hasSets = Object.keys(state.sets).length > 0;
   let name = playing;
 
-  if (!playing) name = hasSets ? "Pick a Set below" : "Save your first Set";
+  if (!playing) name = hasSets ? "Pick a Set below" : "No Sets yet";
 
   partOf("sets", "current-caption").textContent = playing ? "The Set that plays" : "No Set plays now";
   partOf("sets", "current-name").textContent = name;
@@ -287,7 +287,7 @@ function renderSetList() {
       onRemove: () => deleteSet(name),
     }));
 
-    if (rows.length === 0) rows.push(buildElement("p", { className: "ui-text-hint", text: "Nothing saved yet. Set up the three layers, then press Save as Set." }));
+    if (rows.length === 0) rows.push(buildElement("p", { className: "ui-text-hint", text: "Nothing saved yet. Save a Set from the layers and sliders." }));
 
     return buildListGroup("Your Sets", rows);
   };

@@ -22,7 +22,7 @@ import { state } from "./state.js";
 // The targets a headphone from AutoEQ can take. A target set of one shows its name only.
 function buildTargetChoice(autoEq) {
   const targetSet = findTargetSet(state.targetData.targetSets, newAutoEqItem(autoEq.name, autoEq.path));
-  const choice = { className: "pn-target target", title: "The sound AutoEQ tunes your headphone toward" };
+  const choice = { className: "pn-target target", title: "The target AutoEQ tunes the headphone toward" };
 
   if (!targetSet || targetSet.labels.length < 2) return buildElement("span", choice, [buildElement("span", { className: "pn-target-name", text: `Target · ${autoEq.target}` })]);
 
@@ -49,7 +49,7 @@ function buildLayerRow(role, layer) {
   const change = buildButton({ variant: "quiet", isSmall: true, label: "Change", title: `Open ${layerLabels[role]} in the Library`, onClick: () => openLibrarySection(role) });
   const trail = [change];
 
-  if (role !== "headphone") trail.push(buildButton({ variant: "quiet", isSmall: true, icon: "close", title: `Take the ${role} layer off`, onClick: () => removeLayer(role) }));
+  if (role !== "headphone") trail.push(buildButton({ variant: "quiet", isSmall: true, icon: "close", title: `Remove the ${role} layer`, onClick: () => removeLayer(role) }));
   if (role === "headphone" && layer.bands.length > 0) trail.push(buildButton({ variant: "quiet", isSmall: true, icon: "close", title: "Clear the headphone layer to Flat", onClick: clearHeadphoneLayer }));
 
   const extra = layer.autoEq ? [buildTargetChoice(layer.autoEq)] : [];
@@ -70,11 +70,11 @@ function buildLayerRow(role, layer) {
 const addLayerWords = {
   ear: {
     label: "Add your ear tuning",
-    title: "Open My ear in the Library, to paste an EQByEar result or pick a saved ear preset",
+    title: "Open My ear in the Library to paste an EQByEar result or pick a preset",
   },
   taste: {
     label: "Add your taste",
-    title: "Open Taste in the Library, to pick a saved taste preset or paste AutoEQ text. You can also add Taste bands in Tune.",
+    title: "Open Taste in the Library to pick a preset or paste AutoEQ text",
   },
 };
 
@@ -111,7 +111,7 @@ function renderLayers() {
 function renderHeader() {
   byId("enabled").checked = state.config.enabled;
   byId("compare").classList.toggle("is-held", state.isComparing);
-  byId("hearingCaption").textContent = state.isComparing ? "Holding A/B, the EQ is off" : "Hearing";
+  byId("hearingCaption").textContent = state.isComparing ? "A/B held, EQ off" : "Hearing";
 }
 
 function renderSliders() {

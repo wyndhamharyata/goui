@@ -15,13 +15,13 @@ import { state } from "./state.js";
 // The words of each layer's section. The ear and taste lists end with a row that takes the layer off.
 const sectionWords = {
   headphone: {
-    caption: "Makes your headphone sound neutral. Find it in AutoEQ below, then save it as your own preset.",
+    caption: "Find your headphone in AutoEQ below. Save it as your own preset.",
     pasted: "Pasted headphone",
     pasteTitle: "Paste AutoEQ text into the headphone layer",
     pastePlaceholder: "Paste AutoEQ text here",
   },
   ear: {
-    caption: "Tunes the sound to your own hearing, on top of the headphone. Measure it with the EQByEar test, paste the result here, then save it.",
+    caption: "Tunes the sound to your hearing, on top of the headphone. Run the EQByEar test, paste the result, then save it.",
     pasted: "Pasted ear tuning",
     pasteTitle: "Paste AutoEQ text, such as an EQByEar result, into the ear layer",
     pastePlaceholder: "Paste the EQByEar result here",
@@ -30,7 +30,7 @@ const sectionWords = {
     offCaption: "Headphone only",
   },
   taste: {
-    caption: "Your own flavour, on top of your ear. Add bands in Tune, or paste AutoEQ text here, then save it.",
+    caption: "Your own sound, on top of your ear. Add bands in Tune, or paste AutoEQ text, then save it.",
     pasted: "Pasted taste",
     pasteTitle: "Paste AutoEQ text into the taste layer",
     pastePlaceholder: "Paste AutoEQ text here",
@@ -52,7 +52,7 @@ function buildActionButton(action, label, { className = "", title = "" } = {}) {
 }
 
 function buildMeasureButton() {
-  const title = "Open eqbyear.com in a new tab, with My ear off, to measure your ear";
+  const title = "Open eqbyear.com with My ear off";
 
   return buildElement("button", { type: "button", id: "eqbyear", className: "ui-button ui-button--wide", title, dataset: { action: "measure" } }, [
     buildIcon("external"),
@@ -61,7 +61,7 @@ function buildMeasureButton() {
 }
 
 function buildSearch() {
-  const placeholder = "Search AutoEQ or your presets, for example HD 600";
+  const placeholder = "Search AutoEQ or your presets";
   const field = buildElement("input", { type: "search", className: "ui-field__control search", placeholder });
 
   return buildElement("label", { className: "ui-field ui-field--search" }, [buildIcon("search"), field]);
@@ -87,7 +87,7 @@ function buildCurrentRow(role) {
   ]);
   const trail = buildElement("span", { className: "ui-stack-row__trail" }, [
     buildActionButton("save", "Save", { className: "ui-button--primary save" }),
-    buildActionButton("saveAs", "Save as new", { className: "save-as", title: "Keep this as a new preset under another name" }),
+    buildActionButton("saveAs", "Save as new", { className: "save-as", title: "Save as a new preset under another name" }),
   ]);
 
   return buildElement("div", { className: `ui-stack-row has-bar tone-${role} current` }, [body, trail]);
@@ -197,7 +197,7 @@ function applyAutoEqText(role, text, name, source) {
   }
 
   replaceLayer(role, { name, source, bands: parsed.bands, preampDb: parsed.preampDb });
-  showHint(role, `Applied ${describeBandCount(parsed.bands)} to ${layerLabels[role]}. Press Save to keep it.`);
+  showHint(role, `Applied ${describeBandCount(parsed.bands)} to ${layerLabels[role]}. Press Save to keep them.`);
 }
 
 /**
@@ -223,7 +223,7 @@ function fillExportText(role) {
   const bands = readBands(state.config.layers[role]);
 
   showAllLines(partOf(role, "text"), toAutoEq({ preampDb: autoPreampDb(bands), bands }));
-  showHint(role, `${layerLabels[role]} alone, as AutoEQ text. Copy it out.`);
+  showHint(role, `${layerLabels[role]} alone, as AutoEQ text.`);
 }
 
 function emptyPasteBox(role) {

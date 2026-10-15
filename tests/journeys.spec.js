@@ -657,7 +657,7 @@ journey("given goui hears a 1 kHz tab, a click on the icon of a 5 kHz tab moves 
   const blank = await context.newPage();
 
   await pressIcon(context, blank);
-  await expect(panel.locator("#status")).toHaveText("Open a web page with audio, then click the goui icon.");
+  await expect(panel.locator("#status")).toHaveText("Open a web page with audio, then click the goui icon on it.");
   await expect.poll(() => readBadge(context, low)).toBe("ON");
   expectChangeDb(await readSteadyLevel(panel), withPeak, 0);
   await blank.close();
@@ -697,7 +697,7 @@ journey("given a tab in a window with no side panel, its icon opens goui as a po
   expectChangeDb(await readSteadyLevel(panel), flat, 6);
 
   await panel.click("#power");
-  await expect(panel.locator("#status")).toHaveText("goui is off on this tab. Press the power button to EQ it.");
+  await expect(panel.locator("#status")).toHaveText("goui is off on this tab. Press the power button to turn it on.");
   await panel.click("#power");
   await expect(panel.locator("#power")).toHaveText("ON");
   expectChangeDb(await readSteadyLevel(panel), flat, 6);
@@ -847,7 +847,7 @@ journey("given a Set of a saved headphone peak and Vocals at +2 dB, picking it a
   await pasteInto(panel, "headphone", peakText);
   await openTab(panel, "listen");
   await panel.click("#saveSet");
-  await expect(sets.locator(".action-hint")).toHaveText("Save Headphone as a preset first. A Set names its presets, so each layer with bands needs one.");
+  await expect(sets.locator(".action-hint")).toHaveText("Save Headphone as a preset first. Each layer with bands needs a saved preset.");
 
   await saveAs(panel, "headphone", "voice");
   await openTab(panel, "listen");

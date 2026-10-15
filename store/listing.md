@@ -7,26 +7,25 @@ Everything to paste into the developer dashboard, field by field. The images are
 **Description** (the long description field, up to 16,000 characters)
 
 ```
-goui is an equaliser for your browser. It runs the sound of one tab through a parametric EQ, tuned
-to your headphone and to your own ear.
+goui is a parametric EQ for a browser tab, tuned to your headphone and your hearing.
 
-- Headphone: pick your model from AutoEQ for a neutral baseline.
-- My ear: an EQByEar hearing test adds what your ear still wants.
-- Taste: your own bands on top, with Bass, Vocals and Treble.
+- Headphone: pick your model from AutoEQ for a corrected baseline.
+- My ear: an EQByEar test measures what your ear still wants.
+- Taste: your own bands, with Bass, Vocals and Treble.
 
-The layers stay apart, each with its own switch, so a new headphone keeps your ear tuning. The
-preamp follows the largest boost, so the sound never clips.
+Three layers, each with its own switch. A new headphone keeps your ear tuning. The preamp follows
+the largest boost to prevent clipping.
 
-Drag points on the graph or type exact numbers. Save presets, import or paste ParametricEQ.txt, and
+Drag points on the graph or type exact values. Save presets, import or paste ParametricEQ.txt,
 export to other apps.
 
-Click the goui icon on a tab to start. The side panel opens, and the icon shows a green ON.
+Click the goui icon on a tab to start. The side panel opens and the icon turns green.
 
 ALSO ON THE MAC
-goui for the Mac EQs every sound the Mac plays, from the menu bar, with the same panel. It needs
-Apple silicon and macOS 26. Get it at goui.mwyndham.dev/mac.
+goui for the Mac EQs every sound on the Mac, from the menu bar, with the same panel. Needs Apple
+silicon and macOS 26. See goui.mwyndham.dev/mac.
 
-goui collects no personal data. Free and open source, under the MIT licence.
+No personal data collected. Free and open source, MIT licence.
 ```
 
 **Category**: Productivity. The store has no audio or music category, and Productivity is the closest
@@ -65,27 +64,27 @@ optional. To set it later, verify `mwyndham.dev` in Search Console, then pick it
 **Single purpose**
 
 ```
-goui runs the audio of one browser tab through a parametric EQ. It joins an AutoEQ headphone profile
-with an EQByEar ear-correction profile, keeps them as separate layers with a Taste layer of your own
-bands, and adds Bass, Vocals and Treble on top.
+goui runs the audio of one browser tab through a parametric EQ. It combines an AutoEQ headphone
+profile with an EQByEar ear-correction profile in separate layers, plus a Taste layer of your own
+bands, with Bass, Vocals and Treble.
 ```
 
 **Permission justifications**
 
-- `activeTab`: Reads the address and the title of the tab whose icon you click, to check it is a web
-  page and to show its title in the panel. goui reads no other tab.
-- `tabCapture`: Takes the audio of the tab whose icon you click, so it can run through the EQ. Chrome
-  grants this for that tab alone.
-- `offscreen`: Runs the Web Audio graph in an offscreen document, since a service worker has no audio
-  of its own.
-- `storage`: Keeps your presets, your sliders and your settings on your device, and the current
-  capture state for the session.
-- `sidePanel`: Shows the EQ interface in the side panel.
+- `activeTab`: Reads the address and title of the clicked tab to check it is a web page and show its
+  title. Reads no other tab.
+- `tabCapture`: Captures the audio of the clicked tab for the EQ. Chrome grants this for that tab
+  only.
+- `offscreen`: Runs the Web Audio graph in an offscreen document. A service worker has no audio
+  context.
+- `storage`: Keeps presets, sliders and settings on your device, plus the capture state for the
+  session.
+- `sidePanel`: Shows the EQ in the side panel.
 - `https://raw.githubusercontent.com/jaakkopasanen/AutoEq/*`: Downloads the AutoEQ headphone list and
-  the profile you pick. These are the only network requests goui makes.
+  the profile you pick. The only network requests goui makes.
 
-**Remote code**: select "No, I am not using remote code." goui runs only the files in the package. It
-downloads AutoEQ text, which it reads as numbers and never runs.
+**Remote code**: select "No, I am not using remote code." goui runs only the bundled files. AutoEQ
+downloads are text data, parsed as numbers.
 
 **Data usage**: tick no "collected" boxes. goui collects no user data. Then tick all three
 certifications at the bottom of the section.

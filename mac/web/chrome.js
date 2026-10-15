@@ -77,7 +77,7 @@ function withDefaults(keys, found) {
 function toCaptureState(status) {
   if (status.state === "running") return { isCapturing: true, tabId: macTabId, title: "Every sound on this Mac" };
   if (status.state === "starting") return { isCapturing: false, error: "goui is starting. If macOS asks to record the system audio, press Allow." };
-  if (status.state === "waitingToRetry") return { isCapturing: false, error: `goui could not start and tries again. ${status.lastError}` };
+  if (status.state === "waitingToRetry") return { isCapturing: false, error: `goui could not start. Trying again. ${status.lastError}` };
 
   return { isCapturing: false };
 }
@@ -143,9 +143,9 @@ async function sendLevel() {
 
 // The panel's words for what goui hears, told for the whole Mac and not one tab.
 window.gouiWords = {
-  idleInstruction: "goui is off. Press the power button to EQ every sound on this Mac.",
+  idleInstruction: "goui is off. Press the power button to turn it on.",
   powerOffTitle: "Turn goui off",
-  powerOnTitle: "Turn goui on for every sound on this Mac",
+  powerOnTitle: "Turn goui on",
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -153,7 +153,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const { renderMacGuide } = await importFromApp("mac/web/guide.js");
 
   document.head.append(buildElement("link", { rel: "stylesheet", href: `${macAppUrl}mac/web/chrome.css` }));
-  document.getElementById("eqbyear").title = "Open eqbyear.com in your browser, with My ear off, to measure your ear";
+  document.getElementById("eqbyear").title = "Open eqbyear.com with My ear off";
   renderMacGuide();
 });
 

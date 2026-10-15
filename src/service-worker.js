@@ -169,7 +169,7 @@ chrome.action.onClicked.addListener(async (tab) => {
   const isWebPage = url.startsWith("http://") || url.startsWith("https://");
 
   if (!tab.id || !isWebPage) {
-    publishCaptureError("Open a web page with audio, then click the goui icon.");
+    publishCaptureError("Open a web page with audio, then click the goui icon on it.");
     return;
   }
 

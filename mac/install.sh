@@ -231,32 +231,31 @@ read_output_name() {
 }
 
 show_logo
-printf '\n    %sfor the Mac%s  %sDifferent ear, different head, different sound.%s\n' "$bold" "$reset" "$dim" "$reset"
+printf '\n    %sfor the Mac%s  %sEvery ear hears differently.%s\n' "$bold" "$reset" "$dim" "$reset"
 
 heading "Checking this Mac"
-[ "$(uname -s)" = Darwin ] || fail "goui for the Mac needs macOS." "On Chrome or Brave, the goui extension works on any system: https://goui.mwyndham.dev"
+[ "$(uname -s)" = Darwin ] || fail "goui for the Mac needs macOS." "The goui extension works on any system in Chrome or Brave: https://goui.mwyndham.dev"
 
 macos=$(sw_vers -productVersion)
-[ "${macos%%.*}" -ge 26 ] || fail "goui needs macOS 26 or newer. This Mac runs macOS $macos." \
-  "goui is built for macOS 26 and newer only." \
+[ "${macos%%.*}" -ge 26 ] || fail "goui needs macOS 26 or later. This Mac runs macOS $macos." \
   "Update in System Settings, General, Software Update, or use the goui extension in Chrome or Brave."
 passed "macOS $macos"
 
 # hw.optional.arm64 tells Apple silicon apart even from a shell running under Rosetta.
-[ "$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)" = 1 ] || fail "goui needs a Mac with Apple silicon. This Mac has an Intel chip." \
-  "goui is built for M1 and newer only for now. The goui extension in Chrome or Brave works here."
+[ "$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)" = 1 ] || fail "goui needs Apple silicon. This Mac has an Intel chip." \
+  "The goui extension in Chrome or Brave works on Intel."
 passed "Apple silicon"
 
 for other in eqMac SoundSource "Boom 3D" FxSound; do
   if pgrep -xq "$other"; then
-    warn "$other is running." "Two system EQs at once stack their curves. Quit one of them once goui is in."
+    warn "$other is running." "Two system EQs stack their curves. Quit one before using goui."
   fi
 done
 
 output=$(read_output_name)
 case "$output" in
 *AirPods* | *Beats*)
-  warn "The sound goes to $output." "Spatial Audio and head tracking drop out while goui plays. Turn Spatial Audio off" "for them in Control Center, or quit goui while you use it." ;;
+  warn "Sound goes to $output." "Spatial Audio and head tracking stop while goui plays. Turn Spatial Audio off" "in Control Center, or quit goui while using them." ;;
 "") ;;
 *) passed "Sound goes to $output" ;;
 esac
@@ -275,10 +274,10 @@ if [ -n "${GOUI_TARBALL:-}" ]; then
   tar -xzf "$GOUI_TARBALL" -C "$unpacked" || fail "$GOUI_TARBALL is not a goui tarball."
   passed "Unpacked $GOUI_TARBALL"
 else
-  curl -fsSL "$url" | tar -xzf - -C "$unpacked" || fail "The download failed." "Check the connection and run the line again. The releases are at" "https://github.com/wyndhamharyata/goui/releases"
+  curl -fsSL "$url" | tar -xzf - -C "$unpacked" || fail "Download failed." "Check the connection and try again. Releases: https://github.com/wyndhamharyata/goui/releases"
   passed "Downloaded the latest release"
 fi
-[ -x "$unpacked/goui.app/Contents/MacOS/goui" ] || fail "The download holds no goui.app."
+[ -x "$unpacked/goui.app/Contents/MacOS/goui" ] || fail "The download has no goui.app."
 
 new_version=$(read_version "$unpacked/goui.app")
 if [ -d "$app" ]; then
@@ -294,11 +293,11 @@ fi
 printf '  %s→%s %s goui %s%s\n' "$blue" "$reset" "$plan" "$change" "$reset"
 
 heading "Before you install"
-note "goui EQs every sound this Mac plays, from the menu bar." "It follows the Mac's default output, and one EQ covers every app."
-note "Spatial Audio and head tracking on AirPods and Beats drop out" "while goui plays. goui plays the sound in between, so macOS skips them."
-note "macOS asks to let goui record the audio of this Mac. Press Allow." "goui EQs the sound on its way to you and keeps none of it."
-note "goui is not signed by Apple yet, so a full update asks for that" "permission again."
-note "Your settings stay in ~/Library/Application Support/goui," "through updates and after goui uninstall."
+note "goui EQs every sound on this Mac, from the menu bar." "One EQ covers every app. It follows the default output."
+note "Spatial Audio and head tracking on AirPods and Beats stop" "while goui plays. goui processes the audio before the output."
+note "macOS asks to let goui record audio. Press Allow." "goui EQs the sound on its way out and keeps none of it."
+note "goui is not signed by Apple yet, so a full update asks for" "that permission again."
+note "Settings stay in ~/Library/Application Support/goui," "through updates and after goui uninstall."
 if ! ask "$plan goui $new_version now?" y; then
   printf '\n  %sNothing was installed.%s\n\n' "$dim" "$reset"
   exit 1
@@ -309,7 +308,7 @@ heading "Installing"
 if launchctl print "$domain/$label" >/dev/null 2>&1; then
   launchctl bootout "$domain/$label" 2>/dev/null || true
   while launchctl print "$domain/$label" >/dev/null 2>&1; do sleep 0.2; done
-  passed "Stopped the running goui"
+  passed "Stopped goui"
 fi
 
 mkdir -p "$apps" "$bin" "$(dirname "$plist")" "$(dirname "$log")"
@@ -354,16 +353,16 @@ rm -f "$HOME/Library/Application Support/goui/web-version"
 mkdir -p "$HOME/Library/Application Support/goui"
 : > "$HOME/Library/Application Support/goui/just-installed"
 launchctl bootstrap "$domain" "$plist"
-passed "Started goui, and set it to start at login"
+passed "Started goui. It starts at login."
 
 printf '\n  %s%s♪ goui %s is in.%s\n' "$bold" "$green" "$new_version" "$reset"
-printf '\n  1. The goui panel opens under its menu bar item. Press the power button.\n'
-printf '  2. When macOS asks to record the audio of this Mac, press %sAllow%s.\n' "$bold" "$reset"
+printf '\n  1. The panel opens under the menu bar item. Press the power button.\n'
+printf '  2. macOS asks to record audio. Press %sAllow%s.\n' "$bold" "$reset"
 printf '  3. Play something.\n'
 printf '\n  %sRead more:%s %s%s%s\n' "$bold" "$reset" "$cyan" "$guide" "$reset"
 printf '\n  %sgoui set "name" · start · stop · restart · logs · rollback · uninstall%s\n' "$dim" "$reset"
 case ":$PATH:" in
 *":$bin:"*) ;;
-*) printf '  %s!%s The goui command is in %s, which is not on your PATH. Add it, or run %s/goui.\n' "$yellow" "$reset" "$bin" "$bin" ;;
+*) printf '  %s!%s The goui command is in %s, not on your PATH. Add it or run %s/goui.\n' "$yellow" "$reset" "$bin" "$bin" ;;
 esac
 printf '\n'

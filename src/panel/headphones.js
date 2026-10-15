@@ -152,7 +152,7 @@ export async function renderHeadphoneList() {
   const saved = Object.keys(state.presets.headphone).filter((name) => matchesQuery(name, query)).map((name) => buildPresetItem("headphone", name, endHeadphoneSearch));
 
   if (saved.length === 0 && query === "") {
-    saved.push(buildElement("p", { className: "ui-text-hint", text: "Nothing saved yet. Pick your headphone, then press Save." }));
+    saved.push(buildElement("p", { className: "ui-text-hint", text: "Nothing saved yet. Find your headphone below, then press Save." }));
   }
 
   const starter = starterPresets.filter((preset) => matchesQuery(preset.name, query)).map((preset) => {
@@ -177,7 +177,7 @@ export async function renderHeadphoneList() {
   showHeadphoneList(list, { saved, autoEq: headphones.map((item) => buildMeasurementItem(item, hint)), starter });
 
   // A failed download has already said so in the hint.
-  if (list.children.length === 0 && hint.textContent === "") hint.textContent = "No sound by that name.";
+  if (list.children.length === 0 && hint.textContent === "") hint.textContent = "No match.";
 }
 
 onPresetsChange("headphone", renderHeadphoneList);

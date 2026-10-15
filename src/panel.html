@@ -31,7 +31,7 @@
           <span class="ui-cluster">
             <button id="power" class="ui-button ui-button--small tone-good" aria-pressed="false" hidden><svg class="ui-icon" aria-hidden="true"><use href="#icon-power" /></svg><span id="powerText">OFF</span></button>
             <button id="help" class="ui-button ui-button--quiet ui-button--small" title="How to use goui">?</button>
-            <button id="compare" class="ui-button ui-button--hold" title="Hold to hear the sound with the EQ off">A/B</button>
+            <button id="compare" class="ui-button ui-button--hold" title="Hold to hear the sound without the EQ">A/B</button>
             <label class="ui-switch switch" title="Turn the EQ on or off">
               <input type="checkbox" id="enabled" aria-label="EQ on" />
               <span class="ui-switch__knob"></span>
@@ -68,13 +68,13 @@
             <span class="ui-stack-row__body">
               <span class="ui-stack-row__caption">Set</span>
               <span class="ui-stack-row__name">
-                <label class="ui-field ui-field--select" title="Play one of your Sets">
+                <label class="ui-field ui-field--select" title="Pick a Set to play">
                   <select class="ui-field__control" id="setSelect" aria-label="Set"></select>
                   <svg class="ui-icon" aria-hidden="true"><use href="#icon-chevron" /></svg>
                 </label>
               </span>
             </span>
-            <span class="ui-stack-row__trail"><button id="saveSet" class="ui-button ui-button--small" title="Keep the three layers and the sliders as one Set">Save as Set</button></span>
+            <span class="ui-stack-row__trail"><button id="saveSet" class="ui-button ui-button--small" title="Save the layers and sliders as a Set">Save as Set</button></span>
           </div>
           <div class="ui-section-header ui-section-header--eyebrow">
             <span>Your sound</span><span class="ui-section-header__count" id="layerCount"></span><span class="ui-section-header__rule"></span>
@@ -107,9 +107,9 @@
               <span class="ui-slider-row__label"><span>Preamp</span><small id="preampNote">Auto</small></span>
               <input type="range" class="ui-slider-row__range" id="preamp" step="0.1" value="0" aria-label="Preamp" />
               <output class="ui-slider-row__value" id="preampValue">0.0 dB</output>
-              <span class="ui-slider-row__trail"><button id="autoPreamp" class="ui-button ui-button--small" title="Set the preamp from the largest boost, so the sound never clips">Auto</button></span>
+              <span class="ui-slider-row__trail"><button id="autoPreamp" class="ui-button ui-button--small" title="Set the preamp from the largest boost">Auto</button></span>
             </div>
-            <label class="ui-stack-row" title="Holding A/B keeps the preamp, so neither side wins just for being louder">
+            <label class="ui-stack-row" title="A/B keeps the preamp at its current level">
               <span class="ui-switch"><input type="checkbox" id="levelMatch" /><span class="ui-switch__knob"></span></span>
               <span class="ui-stack-row__body">
                 <span class="ui-stack-row__caption">Keep the preamp while A/B is held</span>
@@ -145,7 +145,7 @@
           </div>
           <div class="ui-stack" id="chips"></div>
           <div id="inspector">
-            <p class="ui-text-hint pn-empty" id="inspectorEmpty">Tap a point or a chip to tune that band. Double click the graph to make a new band.</p>
+            <p class="ui-text-hint pn-empty" id="inspectorEmpty">Press a point or a chip to tune a band. Double-click the graph to add one.</p>
             <div class="ui-stack" id="inspectorBody" hidden>
               <div class="ui-section-header ui-section-header--section" id="bandHead">
                 <span class="ui-section-header__text"><span class="ui-section-header__title" id="bandTitle"></span></span>
@@ -208,13 +208,13 @@
                 <span class="ui-badge ui-badge--step tone-accent">S</span>
                 <span class="ui-section-header__text">
                   <span class="ui-section-header__title">Sets</span>
-                  <span class="ui-section-header__caption">Your headphone, your ear and your taste in one press. A Set names three presets, with the sliders, so an edit to a preset reaches every Set that names it.</span>
+                  <span class="ui-section-header__caption">One headphone, one ear and one taste preset, with the sliders. An edit to a preset reaches every Set that names it.</span>
                 </span>
               </div>
               <div class="ui-stack-row has-bar tone-accent current">
                 <span class="ui-stack-row__body"><span class="ui-stack-row__caption current-caption"></span><span class="ui-stack-row__name current-name"></span></span>
                 <span class="ui-stack-row__trail">
-                  <button class="ui-button ui-button--primary ui-button--small save-set" title="Keep the three layers and the sliders as one Set">Save as Set</button>
+                  <button class="ui-button ui-button--primary ui-button--small save-set" title="Save the layers and sliders as a Set">Save as Set</button>
                 </span>
               </div>
               <div class="ui-expander ui-expander--drawer save-row" hidden>
@@ -231,13 +231,13 @@
 
           <div class="ui-stack pn-whole">
             <div class="ui-section-header ui-section-header--eyebrow"><span>Whole sound</span><span class="ui-section-header__rule"></span></div>
-            <p class="ui-text-hint">All three layers and the sliders in one AutoEQ file, for other apps.</p>
+            <p class="ui-text-hint">All three layers and the sliders as one AutoEQ file.</p>
             <button id="exportAll" class="ui-button ui-button--wide">Export the whole sound</button>
             <textarea id="wholeText" class="ui-field ui-field--area" spellcheck="false" readonly hidden></textarea>
           </div>
 
           <p class="ui-text-fine pn-credits credits">
-            Headphone profiles from AutoEQ by Jaakko Pasanen. Ear test from EQByEar. Icon art from Google Material Icons.
+            Headphone profiles from AutoEQ by Jaakko Pasanen. Ear test from EQByEar. Icons from Google Material Icons.
             goui is under the MIT licence.
             <button id="credits" class="ui-button ui-button--quiet ui-button--small" title="Open the credits in the guide">Credits</button>
           </p>

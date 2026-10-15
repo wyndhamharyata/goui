@@ -6,7 +6,7 @@
     <meta name="color-scheme" content="dark" />
     <meta
       name="description"
-      content="An EQ for a browser tab or the whole Mac, joining AutoEQ and EQByEar. Different ear, different head, different sound."
+      content="An EQ for a browser tab or the whole Mac, with AutoEQ and EQByEar. Every ear hears differently."
     />
     <link rel="icon" href="/icons/icon48.png" />
     <link rel="stylesheet" href="/panel.css" />
@@ -31,86 +31,84 @@
         <div class="hero-text">
           <div id="site-hero"></div>
           <p class="fine">
-            Free and open source. goui for the Mac needs Apple silicon and macOS 26 or newer.
-            <a href="/mac">goui for the Mac</a> has the questions people ask and the troubleshooting.
+            Free and open source. The Mac app needs Apple silicon and macOS 26 or later.
+            <a href="/mac">goui for the Mac</a> covers common questions and troubleshooting.
           </p>
         </div>
 
         <div class="demo" id="try">
           <div class="pn-frame" id="site-panel"></div>
           <p class="demo-caption">
-            The panel's design, live. Drag a point, hold A/B, or pick a Set. The spectrum and the AutoEQ
-            search results are samples, not real measurements.
+            The panel, live. Drag a point, hold A/B, or pick a Set. The spectrum and AutoEQ
+            results are samples, not real measurements.
           </p>
         </div>
       </section>
 
       <section class="block" id="mac">
         <h2>goui for the Mac</h2>
-        <p class="lead">The same EQ, for every sound the Mac plays. Not one tab, the whole Mac.</p>
+        <p class="lead">The same EQ, for every sound on the Mac. Not one tab, the whole output.</p>
         <div class="two-col">
           <img src="/images/mac-panel.jpg" alt="The goui panel open under its menu bar item, over YouTube Music, with a Set picked, the Sennheiser HD 600 curve and the live spectrum." />
           <div>
             <p>
-              goui lives in the menu bar. One click opens the panel you know from the browser. It tunes
-              Music, Spotify, a call or a game the same way, all at once.
+              goui lives in the menu bar. One click opens the same panel as the browser extension. It
+              covers Music, Spotify, calls and games at once.
             </p>
             <p>
               The headphone, ear and taste layers carry over, with Bass, Vocals and Treble. So do the
-              AutoEQ search and the live spectrum. The sound runs through the EQ on your Mac, in a
-              native audio engine. goui keeps none of it.
+              AutoEQ search and the live spectrum. A native audio engine runs the EQ on the Mac. goui
+              keeps none of the audio.
             </p>
             <p>
-              Your Sets carry over too. Right-click the menu bar item to switch to another Set, with the
-              panel closed. <code>goui set "name"</code> does the same from Terminal.
+              Sets carry over too. Right-click the menu bar item to switch Sets without opening the
+              panel. <code>goui set "name"</code> does the same from Terminal.
             </p>
             <p>
-              It starts at login and comes back on its own after a crash. If the sound stops, it builds
-              its audio path again.
+              It starts at login and restarts after a crash. If the sound stops, it rebuilds
+              the audio path.
             </p>
           </div>
         </div>
         <h3>Wide panel</h3>
-        <p class="lead">Widen it, and Listen, Tune and Library stand side by side, as in a wide Chrome side panel.</p>
+        <p class="lead">Widen the panel, and Listen, Tune and Library stand side by side.</p>
         <img class="wide-shot" src="/images/mac-wide.jpg" alt="The wide goui panel under its menu bar item, with Listen, Tune and Library in three columns and the Sets tab open." />
         <h3>Install</h3>
-        <p class="lead">One line in Terminal. No admin password. It checks your Mac and asks before it installs.</p>
+        <p class="lead">One line in Terminal. No admin password. It checks the Mac and asks before installing.</p>
         <pre class="install-line"><code>curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh</code></pre>
         <p class="fine">
-          It needs a Mac with Apple silicon and macOS 26 or newer. goui is not signed by Apple yet. An
-          update of the engine asks to record the audio again. <a href="/mac">Read more before you install</a>,
-          such as what happens to Spatial Audio on AirPods.
+          Needs Apple silicon and macOS 26 or later. goui is not signed by Apple yet. An engine
+          update asks to record audio again. <a href="/mac">Read more before installing</a>,
+          including what happens to Spatial Audio on AirPods.
         </p>
       </section>
 
       <section class="block" id="how">
         <h2>How it works</h2>
         <p class="lead">
-          Three layers, kept apart. One for the headphone, one for your ear, one for your taste.
+          Three layers. One for the headphone, one for your ear, one for your taste.
         </p>
         <div class="two-col">
           <img src="/images/how-it-works.png" alt="The sound of a tab passes the headphone layer, then the ear layer, then the taste layer, then reaches you. Bass, Vocals and Treble nudge the sound on top of all three layers." />
           <div>
             <p>
-              A headphone has its own colour. AutoEQ measures it and writes a profile that cancels
-              it, so the headphone sounds neutral. That is the headphone layer.
+              Every headphone colours the sound. AutoEQ measures that colour and writes a correction
+              profile. That is the headphone layer.
             </p>
             <p>
-              Your hearing is your own too. No profile can know it. An EQByEar test
-              measures what your ear still wants on top of the neutral sound. That is the ear layer.
+              Your hearing is your own. No profile can know it. An EQByEar test measures what
+              your ear still wants on top of the corrected sound. That is the ear layer.
             </p>
             <p>
-              Your taste is the third layer, with bands of your own for the sound you like on any
-              headphone. Bass, Vocals and Treble nudge the sound on top of all three layers. Each layer
-              has its own switch, so you can hear AutoEQ alone in one press.
+              Taste is the third layer, with bands of your own. Bass, Vocals and Treble adjust the
+              sound on top of all three layers. Each layer has its own switch.
             </p>
             <p>
-              The layers add up in dB, so the merge is exact. The preamp follows the largest boost, so
-              the sound never clips.
+              The layers add up in dB. The preamp follows the largest boost to prevent clipping.
             </p>
             <p>
-              A Set names one preset for each layer, with the sliders. Pick it on Listen. The whole sound
-              comes back in one press. An edit to a preset reaches every Set that names it.
+              A Set names one preset per layer, with the sliders. Pick it on Listen and the whole sound
+              loads at once. Editing a preset updates every Set that uses it.
             </p>
           </div>
         </div>
@@ -118,7 +116,7 @@
 
       <section class="block" id="install">
         <h2>Install</h2>
-        <p class="lead">One click from the Chrome Web Store. Chrome then keeps goui up to date.</p>
+        <p class="lead">One click from the Chrome Web Store. Chrome keeps it up to date.</p>
         <a class="store-badge" href="https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap">
           <img src="/chrome-web-store.png" alt="Available in the Chrome Web Store" width="198" height="60" />
         </a>
@@ -143,13 +141,13 @@
         </div>
         <p class="fine">
           The <a href="https://github.com/wyndhamharyata/goui#add-the-extension-by-hand">README</a> has a picture for
-          each step. It also explains the Chrome warning about developer mode extensions.
+          each step and explains the developer mode warning.
         </p>
       </section>
 
       <section class="block" id="credits">
         <h2>Credits</h2>
-        <p class="lead">goui stands on other people's work.</p>
+        <p class="lead">goui builds on other people's work.</p>
         <div class="credits">
           <a class="credit" href="https://github.com/jaakkopasanen/AutoEQ">
             <b>AutoEQ</b>
@@ -161,13 +159,17 @@
           </a>
           <a class="credit" href="https://github.com/google/material-design-icons">
             <b>Material Icons</b>
-            <span>Icon art by Google, under the Apache 2.0 licence.</span>
+            <span>Icons by Google, under the Apache 2.0 licence.</span>
+          </a>
+          <a class="credit" href="https://github.com/googlefonts/atkinson-hyperlegible-next">
+            <b>Atkinson Hyperlegible</b>
+            <span>Text in Atkinson Hyperlegible Next and Mono, by the Braille Institute, under the SIL Open Font licence.</span>
           </a>
         </div>
         <p class="fine">
           goui itself is under the MIT licence. The
           <a href="https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md">full notices</a>
-          name every part that ships in the extension.
+          list every part that ships in the extension.
         </p>
       </section>
 

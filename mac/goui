@@ -60,11 +60,11 @@ apply_set() {
 
   if ! wait_while "$pickup_wait_seconds" is_request_waiting; then
     rm -f "$set_request"
-    echo "goui is not running, so the Set did not change. Run goui start, then try again." >&2
+    echo "goui is not running. Run goui start, then try again." >&2
     exit 1
   fi
   if ! wait_while "$answer_wait_seconds" is_answer_missing; then
-    echo "goui heard the request but did not answer. goui logs says more." >&2
+    echo "goui did not answer. Run goui logs for details." >&2
     exit 1
   fi
 
@@ -78,7 +78,7 @@ apply_set() {
     ;;
   unknown)
     if [ -z "$names" ]; then
-      echo "goui has no Sets yet. Save one in the panel, under Library, then Sets." >&2
+      echo "No Sets saved yet. Save one in the panel under Library, then Sets." >&2
     else
       echo "goui has no Set called \"$name\". Your Sets are:" >&2
       printf '%s\n' "$names" | sed 's/^/  /' >&2
@@ -86,19 +86,19 @@ apply_set() {
     exit 1
     ;;
   tooManyBands)
-    echo "The Set \"$name\" holds more bands than goui plays at once, so the sound did not change." >&2
+    echo "The Set \"$name\" has more bands than goui plays at once." >&2
     exit 1
     ;;
   refused)
-    echo "The engine refused the sound of the Set \"$name\". goui logs says why." >&2
+    echo "The engine refused the Set \"$name\". Run goui logs for details." >&2
     exit 1
     ;;
   replaced)
-    echo "Another Set was asked for before goui was ready, so \"$name\" did not play." >&2
+    echo "Another Set was requested before goui finished loading \"$name\"." >&2
     exit 1
     ;;
   *)
-    echo "The panel did not load, so the Set \"$name\" did not play. Pick Reload panel in the menu and try again." >&2
+    echo "The panel has not loaded. Pick Reload panel in the menu, then try again." >&2
     exit 1
     ;;
   esac
@@ -115,7 +115,7 @@ start)
   ;;
 stop)
   stop_agent
-  echo "goui is stopped until you run goui start or log in again."
+  echo "goui stopped. Run goui start or log in again to restart."
   ;;
 restart)
   if is_loaded; then
@@ -123,7 +123,7 @@ restart)
   else
     launchctl bootstrap "$domain" "$plist"
   fi
-  echo "goui started again."
+  echo "goui restarted."
   ;;
 rollback)
   previous="$HOME/Applications/goui.app.previous"
@@ -140,7 +140,7 @@ rollback)
   fi
   rm -f "$support/web-version"
   launchctl bootstrap "$domain" "$plist"
-  echo "goui went back to the earlier app. Pick Reload panel if the panel is open."
+  echo "goui rolled back. Pick Reload panel if the panel is open."
   ;;
 set)
   if [ -z "${2:-}" ]; then
@@ -156,7 +156,7 @@ uninstall)
   stop_agent
   rm -f "$plist" "$link"
   rm -rf "$app"
-  echo "goui is removed. Your settings stay in ~/Library/Application Support/goui, and its log in $log."
+  echo "goui removed. Settings remain in ~/Library/Application Support/goui. Log in $log."
   ;;
 *)
   echo 'Usage: goui start | stop | restart | set "name" | logs | rollback | uninstall' >&2

@@ -84,7 +84,7 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
     statusItem.button?.image = menuBarIcon
     statusItem.button?.title = menuBarIcon == nil ? "goui" : ""
     statusItem.button?.setAccessibilityLabel("goui")
-    statusItem.button?.toolTip = "goui. Click for the panel, right-click for the menu."
+    statusItem.button?.toolTip = "goui. Click to open the panel. Right-click for the menu."
     statusItem.button?.target = self
     statusItem.button?.action = #selector(clickMenuBarItem)
     statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -144,8 +144,8 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
 
   // With no Sets, the submenu says where to save one, so a new person finds it.
   private func buildSetItems() -> [NSMenuItem] {
-    guard let setList else { return [buildNoteItem("Sets show once the panel loads")] }
-    guard !setList.names.isEmpty else { return [buildNoteItem("No Sets yet. Save one in the panel, under Library, then Sets.")] }
+    guard let setList else { return [buildNoteItem("Sets show once the panel loads.")] }
+    guard !setList.names.isEmpty else { return [buildNoteItem("No Sets yet. Save one in the panel under Library, then Sets.")] }
 
     return setList.names.map { name in
       let item = buildItem(name, #selector(pickSet))
@@ -224,10 +224,10 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
   private func toMenuMessage(_ answer: SetAnswer, name: String) -> String? {
     switch answer {
     case .applied, .replaced: nil
-    case .unknown: "goui has no Set called \(name). Pick one from the Sets menu, or save it in the panel first."
-    case .tooManyBands: "The Set \(name) holds more bands than goui plays at once, so the sound did not change. The Sets tab in the panel says more."
-    case .refused: "The engine refused the sound of the Set \(name). The log at ~/Library/Logs/goui.log says why."
-    case .notReady: "The panel did not load, so the Set \(name) did not play. Pick Reload panel and try again."
+    case .unknown: "goui has no Set called \(name). Pick one from the Sets menu or save it in the panel."
+    case .tooManyBands: "The Set \(name) has more bands than goui plays at once. Open the Sets tab in the panel for details."
+    case .refused: "The engine refused the Set \(name). The log at ~/Library/Logs/goui.log has details."
+    case .notReady: "The panel has not loaded. Pick Reload panel, then try the Set again."
     }
   }
 
@@ -344,7 +344,7 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
 
   // The name, icon and version come from the bundle. The credits add what goui is and where its guide lives.
   @objc private func showAbout() {
-    let credits = NSMutableAttributedString(string: "An EQ for every sound on your Mac. AutoEQ tunes it to your headphone, and EQByEar to your ear.\n\n")
+    let credits = NSMutableAttributedString(string: "An EQ for every sound on your Mac. AutoEQ corrects your headphone. EQByEar tunes to your hearing.\n\n")
     let guideText = (guideURL.host() ?? "") + guideURL.path()
 
     if let webVersion = WebFolder.version, webVersion != appVersion {

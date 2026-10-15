@@ -46,7 +46,7 @@ final class UpdateMenu: NSObject {
     do {
       try installApp(readyAppURL)
     } catch {
-      showMessage("The update could not be put in place. \(error.localizedDescription)")
+      showMessage("Update failed. \(error.localizedDescription)")
     }
   }
 
@@ -76,7 +76,7 @@ final class UpdateMenu: NSObject {
 
   private func runCheck(isManual: Bool) async {
     let currentVersion = WebFolder.newerVersion ?? appVersion
-    let upToDate = "goui \(currentVersion) is the newest version."
+    let upToDate = "goui \(currentVersion) is up to date."
 
     if !isRunningInstalledApp {
       report(log: upToDate, message: upToDate, isManual: isManual)
@@ -88,7 +88,7 @@ final class UpdateMenu: NSObject {
     do {
       release = try await ReleaseDownload.readLatest()
     } catch {
-      reportFailure("The update check did not reach GitHub. \(error.localizedDescription)", isManual: isManual)
+      reportFailure("Could not reach GitHub. \(error.localizedDescription)", isManual: isManual)
       return
     }
 
@@ -103,14 +103,14 @@ final class UpdateMenu: NSObject {
       if try isWebOnlyChange(from: Bundle.main.bundleURL, to: newerAppURL) {
         try WebFolder.apply(from: newerAppURL, version: release.version)
         rebuildPanel()
-        report(log: "goui updated the web files to \(release.version).", message: "goui updated the panel to \(release.version).", isManual: isManual)
+        report(log: "goui updated the web files to \(release.version).", message: "Panel updated to \(release.version).", isManual: isManual)
         return
       }
 
       readyAppURL = newerAppURL
       updateItem.title = "Update to \(release.version)…"
       updateItem.isHidden = false
-      print("goui \(release.version) is ready. The menu installs it.")
+      print("goui \(release.version) is ready. Use the menu to install it.")
 
       if isManual { askToInstall(release.version) }
     } catch {
@@ -132,7 +132,7 @@ final class UpdateMenu: NSObject {
   private func askToInstall(_ version: String) {
     let alert = NSAlert()
     alert.messageText = "goui \(version) is ready."
-    alert.informativeText = "goui updates and starts again. macOS asks once more to let goui record the audio of this Mac."
+    alert.informativeText = "goui restarts after updating. macOS asks again to let goui record audio."
     alert.addButton(withTitle: "Update")
     alert.addButton(withTitle: "Later")
     NSApp.activate()

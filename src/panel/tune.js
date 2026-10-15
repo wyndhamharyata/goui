@@ -39,7 +39,7 @@ function renderChips() {
   const entries = listBandEntries();
   const buildRows = () => layerOrder.map((role) => {
     const chips = entries.flatMap((entry, index) => (entry.role === role ? [buildChip(entry, index)] : []));
-    const add = buildElement("button", { type: "button", className: "ui-chip ui-chip--add", title: `Make a new band in ${layerLabels[role]}`, dataset: { add: role } }, [
+    const add = buildElement("button", { type: "button", className: "ui-chip ui-chip--add", title: `Add a band to ${layerLabels[role]}`, dataset: { add: role } }, [
       buildIcon("plus"),
       buildElement("span", { text: "Add band" }),
     ]);
@@ -59,8 +59,8 @@ function describeQ(band) {
 
 // The line under the fields says why a field is missing for this type.
 const missingFieldNotes = {
-  shelf: "A shelf has no Q. Web Audio shelves take a corner and a gain only, so goui keeps the Q of an AutoEQ shelf in the file and does not play it.",
-  cut: "A cut has no gain, and its Q is not edited here.",
+  shelf: "Web Audio shelves have no Q. goui keeps the Q from an AutoEQ file but does not play it.",
+  cut: "A cut has no gain. Q is not edited here.",
   pass: "This type has no gain.",
 };
 
