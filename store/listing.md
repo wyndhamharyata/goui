@@ -7,46 +7,26 @@ Everything to paste into the developer dashboard, field by field. The images are
 **Description** (the long description field, up to 16,000 characters)
 
 ```
-goui is a browser level equaliser. It runs the audio of one tab through a parametric EQ, so your
-headphone sounds the way you want on any site.
+goui is an equaliser for your browser. It runs the sound of one tab through a parametric EQ, tuned
+to your headphone and to your own ear.
 
-Most EQ tools stop at the headphone. goui joins two corrections that belong together:
+- Headphone: pick your model from AutoEQ for a neutral baseline.
+- My ear: an EQByEar hearing test adds what your ear still wants.
+- Bass, Vocals and Treble go on top as your taste.
 
-1. Headphone. AutoEQ measures your headphone and writes a profile that cancels its colour, which
-   gives a neutral baseline.
-2. My ear. An EQByEar hearing test measures what your ear still wants on top of that baseline.
+The two layers stay apart, each with its own switch, so a new headphone keeps your ear tuning. The
+preamp follows the largest boost, so the sound never clips.
 
-goui keeps the two apart, as two layers. The bands of both layers add up in dB, so the merge is
-exact. Each layer has its own switch, so you can hear the AutoEQ baseline alone in one press, then
-turn your ear tuning back on. A new headphone changes the headphone layer only, so your ear tuning
-stays.
+Drag points on the graph or type exact numbers. Save presets, import or paste ParametricEQ.txt, and
+export to other apps.
 
-Bass, Vocals and Treble go on top as your taste. The preamp follows the largest boost, so the sound
-never clips.
+Click the goui icon on a tab to start. The side panel opens, and the icon shows a green ON.
 
-TUNE BY EAR OR BY NUMBER
-- Drag a point on the graph to set a band's frequency and gain.
-- Pull the side handles, or scroll on a point, to change how wide a band is.
-- Double click empty space to make a new band.
-- The inspector edits one band with exact numbers. Solo plays that band alone.
-- All, Lows, Mids and Highs zoom the graph. Tall turns it so low notes run down the panel.
+ALSO ON THE MAC
+goui for the Mac EQs every sound the Mac plays, from the menu bar, with the same panel. It needs
+Apple silicon and macOS 26. Get it at goui.mwyndham.dev/mac.
 
-KEEP WHAT YOU LIKE
-- Save a headphone preset and an ear preset under their own names.
-- Search the AutoEQ headphones by model.
-- Import or paste a ParametricEQ.txt file into either layer.
-- Export one layer, or the whole sound, as an AutoEQ file for other apps.
-
-HOW IT WORKS
-- Click the goui icon on the tab you want to hear. The side panel opens and goui starts listening to
-  that tab.
-- Click the icon again to turn it off, or click it on another tab to move goui there.
-- The icon shows a green ON badge on the tab goui hears.
-
-goui changes audio inside the browser only. It collects no personal data, and nothing it reads goes
-out of your browser apart from the AutoEQ downloads.
-
-Free and open source, under the MIT licence.
+goui collects no personal data. Free and open source, under the MIT licence.
 ```
 
 **Category**: Productivity. The store has no audio or music category, and Productivity is the closest
