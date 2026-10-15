@@ -1,5 +1,5 @@
 // The Tune tab: the band chips, the inspector of the chosen band and the number table.
-import { bandTypeDetails, hasGain, newBandFrequencyHz, qStepRatio, setBandFrequency, setBandGain, setBandQ } from "../shared/bands.js";
+import { bandTypeDetails, hasGain, hasQ, newBandFrequencyHz, qStepRatio, setBandFrequency, setBandGain, setBandQ } from "../shared/bands.js";
 import { layerLabels, layerOrder } from "../shared/config.js";
 import { qToOctaves, semitonesToRatio } from "../shared/math.js";
 import { layerColor, typeColor } from "../graph/colors.js";
@@ -40,9 +40,21 @@ function renderChips() {
 
 function describeQ(band) {
   if (band.type === "PK") return `Q, ${qToOctaves(band.q).toFixed(1)} octaves wide`;
-  if (bandTypeDetails[band.type].node.endsWith("shelf")) return "Q, not used by a shelf yet";
+  if (bandTypeDetails[band.type].node.endsWith("shelf")) return "Q, not used by a shelf";
 
   return "Q";
+}
+
+// A value the band type does not use stays on show, with its field and its steps turned off.
+/**
+ * @param {string} step
+ * @param {string} inputId
+ * @param {boolean} isUsed
+ */
+function renderStepper(step, inputId, isUsed) {
+  byId(inputId).disabled = !isUsed;
+
+  for (const button of document.querySelectorAll(`[data-step="${step}"]`)) button.disabled = !isUsed;
 }
 
 /** @returns {void} */
@@ -79,7 +91,8 @@ export function renderInspector() {
   setField("frequencyInput", Math.round(band.frequencyHz));
   setField("gainInput", formatDb(band.gainDb));
   setField("qInput", band.q.toFixed(2));
-  byId("gainInput").disabled = !hasGain(band.type);
+  renderStepper("gain", "gainInput", hasGain(band.type));
+  renderStepper("q", "qInput", hasQ(band.type));
   byId("qHint").textContent = describeQ(band);
 }
 

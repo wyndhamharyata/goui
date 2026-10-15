@@ -741,3 +741,36 @@ journey("given a chosen band chip, a second press unselects it and the inspector
   await expect(panel.locator("#inspectorBody")).toBeHidden();
   await expect(panel.locator("#inspectorEmpty")).toBeVisible();
 });
+
+/**
+ * @param {import("@playwright/test").Page} panel
+ * @param {string} name
+ * @returns {import("@playwright/test").Locator}
+ */
+function readStepButtons(panel, name) {
+  return panel.locator(`[data-step=${name}]`);
+}
+
+journey("given a peak turned into a low shelf, then a low cut, the inspector turns off Q, then gain and Q, and a peak turns both on again", async (context, port) => {
+  const { panel } = await startGouiOnTone(context, port, 1000);
+
+  await pasteInto(panel, "headphone", peakText);
+  await openTab(panel, "tune");
+  await chooseBand(panel, 0);
+
+  await panel.click("#bandSegments [data-type=LSC]");
+  await expect(panel.locator("#qInput")).toBeDisabled();
+  await expect(readStepButtons(panel, "q")).toHaveCount(2);
+  for (const button of await readStepButtons(panel, "q").all()) await expect(button).toBeDisabled();
+  await expect(panel.locator("#gainInput")).toBeEnabled();
+
+  await panel.click("#bandSegments [data-type=HP]");
+  await expect(panel.locator("#gainInput")).toBeDisabled();
+  await expect(panel.locator("#qInput")).toBeDisabled();
+  for (const button of await readStepButtons(panel, "gain").all()) await expect(button).toBeDisabled();
+
+  await panel.click("#bandSegments [data-type=PK]");
+  await expect(panel.locator("#gainInput")).toBeEnabled();
+  await expect(panel.locator("#qInput")).toBeEnabled();
+  for (const button of await readStepButtons(panel, "q").all()) await expect(button).toBeEnabled();
+});

@@ -1,5 +1,5 @@
 // EqGraph draws one EQ graph into a host element and turns presses on it into band edits.
-import { qStepRatio, responseDb, roundGainDb, setBandQ } from "../shared/bands.js";
+import { hasQ, qStepRatio, responseDb, roundGainDb, setBandQ } from "../shared/bands.js";
 import { drawLayerCurves, drawLoudness } from "./curves.js";
 import { moveBand, setQFromPointer } from "./drag.js";
 import { drawFrequencyLines, drawGainLines, drawRegions } from "./grid.js";
@@ -299,13 +299,12 @@ export class EqGraph {
 
   #stepQWithWheel(event) {
     const target = this.#findTarget(this.#readPointer(event));
+    const band = target && this.#bandAt(target.index);
 
-    if (!target) return;
+    // A band with no Q to change lets the wheel scroll the page.
+    if (!band || !hasQ(band.type)) return;
 
     event.preventDefault();
-
-    const band = this.#bandAt(target.index);
-
     setBandQ(band, band.q * (qStepRatio ** (event.deltaY < 0 ? 1 : -1)));
 
     this.#hooks.selectBand(target.index);

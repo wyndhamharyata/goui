@@ -12,21 +12,21 @@ import { clamp, linearToDb, logInterpolate } from "./math.js";
  * @property {number} q
  */
 
-/** @typedef {{ label: string, node: string, hasGain: boolean }} BandTypeDetail */
+/** @typedef {{ label: string, node: string, hasGain: boolean, hasQ: boolean }} BandTypeDetail */
 
-// A Web Audio shelf takes no Q, so LSC and LSF build the same node.
+// A Web Audio shelf takes no Q, so LSC and LSF build the same node. A cut keeps the Q it came with.
 /** @type {Record<BandType, BandTypeDetail>} */
 export const bandTypeDetails = {
-  PK: { label: "Peak", node: "peaking", hasGain: true },
-  LSC: { label: "Low shelf", node: "lowshelf", hasGain: true },
-  HSC: { label: "High shelf", node: "highshelf", hasGain: true },
-  LSF: { label: "Low shelf (slope)", node: "lowshelf", hasGain: true },
-  HSF: { label: "High shelf (slope)", node: "highshelf", hasGain: true },
-  LP: { label: "High cut", node: "lowpass", hasGain: false },
-  HP: { label: "Low cut", node: "highpass", hasGain: false },
-  BP: { label: "Band pass", node: "bandpass", hasGain: false },
-  NO: { label: "Notch", node: "notch", hasGain: false },
-  AP: { label: "All pass", node: "allpass", hasGain: false },
+  PK: { label: "Peak", node: "peaking", hasGain: true, hasQ: true },
+  LSC: { label: "Low shelf", node: "lowshelf", hasGain: true, hasQ: false },
+  HSC: { label: "High shelf", node: "highshelf", hasGain: true, hasQ: false },
+  LSF: { label: "Low shelf (slope)", node: "lowshelf", hasGain: true, hasQ: false },
+  HSF: { label: "High shelf (slope)", node: "highshelf", hasGain: true, hasQ: false },
+  LP: { label: "High cut", node: "lowpass", hasGain: false, hasQ: false },
+  HP: { label: "Low cut", node: "highpass", hasGain: false, hasQ: false },
+  BP: { label: "Band pass", node: "bandpass", hasGain: false, hasQ: true },
+  NO: { label: "Notch", node: "notch", hasGain: false, hasQ: true },
+  AP: { label: "All pass", node: "allpass", hasGain: false, hasQ: true },
 };
 
 export const bandTypes = Object.keys(bandTypeDetails);
@@ -37,6 +37,14 @@ export const bandTypes = Object.keys(bandTypeDetails);
  */
 export function hasGain(type) {
   return bandTypeDetails[type].hasGain;
+}
+
+/**
+ * @param {BandType} type
+ * @returns {boolean}
+ */
+export function hasQ(type) {
+  return bandTypeDetails[type].hasQ;
 }
 
 // Every place that sets a Q uses these, so a typed Q and a dragged Q keep the same range.
