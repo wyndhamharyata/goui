@@ -1,6 +1,6 @@
 # goui
 
-Browser level EQ to show how easy and significant it is to adjust EQ for your headphone against
+An EQ for a browser tab or the whole Mac, to show how easy and significant it is to adjust EQ for your headphone against
 your own ear. It all comes down to a very simple mantra: **different ear, different head, different
 sound.**
 
@@ -15,7 +15,8 @@ EQByEar. AutoEQ will give you a good neutral baseline against the headphone you 
 use EQByEar to adjust the fine details that are specific to the interaction between your headphone /
 IEM and your hearing. Add flavour on top of that, based on your taste.
 
-goui runs the sound of one tab through a parametric EQ. It keeps the headphone profile and your ear
+goui runs the sound of one browser tab, or with the Mac app every sound the Mac plays, through a
+parametric EQ. It keeps the headphone profile and your ear
 profile apart, as two layers. The bands of both layers add up in dB, so the merge is exact. Bass,
 Vocals and Treble sit on top as your taste. The preamp follows the largest boost, so the sound never
 clips.
@@ -87,9 +88,35 @@ has no Start button.
 - The icon shows a green ON badge on the tab goui hears.
 - Closing that tab turns goui off.
 
+## goui for the Mac
+
+The Mac app EQs every sound the Mac plays, from the menu bar, with the same panel. It needs a Mac with
+Apple silicon and macOS 26 or newer. Paste this in Terminal:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh
+```
+
+The installer checks your Mac and asks before it installs. It needs no admin password. It puts goui
+in `~/Applications`, starts it at login, and opens the panel under the menu bar item. The first time,
+macOS asks to let goui record the audio of this Mac. Press **Allow**. goui EQs the sound on its way to
+you and keeps none of it.
+
+- Click the menu bar item to open and close the panel. Right-click it for **Wide panel**, **Restart
+  engine**, **Reload panel** and **Quit goui**.
+- goui follows the Mac's default output. Another system EQ, such as eqMac or SoundSource, stacks its
+  curve on goui's, so run one at a time.
+- Spatial Audio and head tracking on AirPods and Beats drop out while goui plays.
+- goui is not signed by Apple yet, so each update asks for that permission again. Your settings stay
+  in `~/Library/Application Support/goui`.
+- Run the same line again to update. The `goui` command in Terminal takes `start`, `stop`, `restart`,
+  `logs` and `uninstall`.
+
+[goui.mwyndham.dev/mac](https://goui.mwyndham.dev/mac) has more, with troubleshooting.
+
 ## Use it
 
-The header is on every tab. It shows the title of the tab goui hears, or what to click when goui hears
+The panel is the same in the browser and on the Mac. The header is on every tab. It shows the title of the tab goui hears, or what to click when goui hears
 nothing. Hold **A/B** to hear the sound without the EQ. The switch turns the EQ
 on or off. The level is the output in dB. Its light turns red when the EQ can clip.
 
@@ -97,7 +124,7 @@ on or off. The level is the output in dB. Its light turns red when the EQ can cl
 
 - The stack at the top holds a **Headphone** layer and a **My ear** layer. Each row has its own switch,
   so AutoEQ alone compares against AutoEQ plus your ear with one press. **Change** opens that layer in
-  the Library, and the ear row has an **×** to take it off.
+  the Library. A row with bands has an **×**, which plays that layer flat.
 - A headphone from AutoEQ shows its **Target**, the sound AutoEQ tunes it toward. Pick another one to
   hear the headphone tuned to it. The list holds only the targets made for the rig that measured your
   headphone. A change of target loads the headphone again, so edits to its bands are lost.
@@ -143,9 +170,11 @@ own Save, Import, Paste and Export.
 - **Measure my ear with EQByEar** is in the ear section. It turns My ear off, so the test hears the
   headphone alone, and opens EQByEar in a new tab.
 - The ear list starts with **No ear tuning**, which turns the ear layer off.
-- **Export the whole sound** at the bottom writes both layers and the sliders as one AutoEQ file.
+- **Export the whole sound** at the bottom writes both layers and the sliders as one AutoEQ file. A
+  second press puts the text away.
 
-On a panel 900 px or wider, the three tabs show side by side.
+On a panel 900 px or wider, the three tabs show side by side. At 1300 px and wider, Listen, Tune,
+Headphone and My ear each take a column.
 
 ## Measure your ear
 
@@ -169,8 +198,7 @@ wants, and goui keeps the two apart.
 - The targets come from AutoEQ itself. AutoEQ's file tunes a headphone to the first target of its
   rig. Another target puts in a few bands that move the sound from that target to the one you pick, up
   to 12 kHz.
-- The extension can only change audio inside the browser. For system audio, use a tool such as
-  SoundSource.
+- The extension can only change audio inside the browser. For the whole Mac, use goui for the Mac.
 
 ## Credits
 
@@ -208,7 +236,7 @@ npx playwright install chromium
 | `npm run icons`             | Rebuild the icon files.                                   |
 | `npm run readme-images`     | Rebuild the pictures in `docs/images`.                    |
 | `npm run dependencies-file` | Rebuild `DEPENDENCIES.md` from the installed packages.    |
-| `npm run zip`               | Build `dist/goui-<version>.zip`, the file a release uses. |
+| `npm run zip`               | Build the release zip and the Chrome Web Store zip.       |
 
 The pictures in `docs/images` are drawn by `scripts/make-readme-images.mjs`. Each one is written as an
 SVG and as a PNG. Edit the SVG by hand, or edit the script and run `npm run readme-images`.
@@ -217,9 +245,16 @@ The release zip is built by `scripts/make-extension-zip.mjs`. It holds the `mani
 `src` folder, the `icons` folder, the licence and the notices, all inside one `goui` folder. A person
 who unzips it gets a folder to point Chrome at.
 
+`npm run zip` also writes `dist/goui-<version>-store.zip`, with `manifest.json` at its root, for the
+Chrome Web Store.
+
 To cut a release, raise `version` in `manifest.json`, then run `npm run readme-images` and `npm run zip`.
-Commit and push, then attach `dist/goui-<version>.zip` to a new release named after the version.
-Past releases stay as they are, and GitHub marks the newest one as Latest.
+Build the Mac app with `cd mac/engine && App/make-tarball.sh`, which takes the same version. Commit and
+push, then attach `dist/goui-<version>.zip` and `mac/engine/.build/goui-mac.tar.gz` to a new release
+named after the version. The curl line installs the tarball of the release GitHub marks as Latest.
+
+The Mac app lives in `mac/`. `mac/engine/README.md` covers its engine and how to build it, and
+`mac/PLAN.md` records how it came together.
 
 The homepage at [goui.mwyndham.dev](https://goui.mwyndham.dev) lives in `site/`, with its own
 packages. `site/README.md` covers how to run and deploy it.
