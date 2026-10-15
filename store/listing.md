@@ -12,9 +12,9 @@ to your headphone and to your own ear.
 
 - Headphone: pick your model from AutoEQ for a neutral baseline.
 - My ear: an EQByEar hearing test adds what your ear still wants.
-- Bass, Vocals and Treble go on top as your taste.
+- Taste: your own bands on top, with Bass, Vocals and Treble.
 
-The two layers stay apart, each with its own switch, so a new headphone keeps your ear tuning. The
+The layers stay apart, each with its own switch, so a new headphone keeps your ear tuning. The
 preamp follows the largest boost, so the sound never clips.
 
 Drag points on the graph or type exact numbers. Save presets, import or paste ParametricEQ.txt, and
@@ -66,8 +66,8 @@ optional. To set it later, verify `mwyndham.dev` in Search Console, then pick it
 
 ```
 goui runs the audio of one browser tab through a parametric EQ. It joins an AutoEQ headphone profile
-with an EQByEar ear-correction profile, keeps them as two layers, and adds Bass, Vocals and Treble on
-top.
+with an EQByEar ear-correction profile, keeps them as separate layers with a Taste layer of your own
+bands, and adds Bass, Vocals and Treble on top.
 ```
 
 **Permission justifications**
