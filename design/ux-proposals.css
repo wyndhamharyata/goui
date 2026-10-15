@@ -921,7 +921,7 @@ main {
   align-items: center;
   gap: var(--space-3);
   min-width: 0;
-  padding: 7px var(--space-3);
+  padding: var(--space-4) var(--space-3);
   border: none;
   border-radius: inherit;
   background: none;
@@ -977,15 +977,14 @@ button.ui-list-row__main {
   background: var(--accent-soft);
 }
 
+/* The bar is an inset shadow on a copy of the row, so it runs the full height and follows the row's corners. */
 .ui-list-row.is-selected::before {
   content: "";
   position: absolute;
-  top: 6px;
-  bottom: 6px;
-  left: 0;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--accent);
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 3px 0 0 var(--accent);
+  pointer-events: none;
 }
 
 .ui-list-row.is-muted,
@@ -1052,7 +1051,7 @@ button.ui-list-row__main {
   gap: var(--space-3);
   min-width: 0;
   min-height: 46px;
-  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-3);
+  padding: var(--space-4) var(--space-2) var(--space-4) var(--space-3);
   border-radius: var(--radius-2);
   background: var(--ink-2);
 }
@@ -1061,22 +1060,21 @@ button.ui-list-row__main {
   padding-left: var(--space-4);
 }
 
+/* The bar is an inset shadow on a copy of the row, so it runs the full height and follows the row's corners. */
 .ui-stack-row.has-bar::before {
   content: "";
   position: absolute;
-  top: 7px;
-  bottom: 7px;
-  left: 0;
-  width: 3px;
-  border-radius: 0 2px 2px 0;
-  background: var(--tone);
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 3px 0 0 var(--tone);
+  pointer-events: none;
 }
 
 .ui-stack-row__body {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 1px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -1127,8 +1125,13 @@ button.ui-list-row__main {
   font-weight: 500;
 }
 
+/* A control in the name takes the height of a chip and a small button, so the trail can share its line. */
 .ui-stack-row__name .ui-field {
-  margin-top: var(--space-1);
+  height: var(--control-height-small);
+}
+
+.ui-stack-row:has(> .ui-stack-row__body > .ui-stack-row__name > .ui-field) > .ui-stack-row__trail {
+  align-self: flex-end;
 }
 
 /* The chain: rows stacked flush, as the sound passes from one layer to the next. */
@@ -1194,7 +1197,7 @@ button.ui-list-row__main {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 1px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -1204,8 +1207,10 @@ button.ui-list-row__main {
   letter-spacing: -0.01em;
 }
 
+/* The title line is as tall as the step badge, so the badge centres on it whatever the line height of the page. */
 .ui-section-header--section .ui-section-header__title {
   color: var(--tone, var(--text-1));
+  line-height: 20px;
 }
 
 .ui-section-header__caption {
@@ -1966,22 +1971,25 @@ button.ui-chip:hover {
 .pn-pane {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   min-width: 0;
   padding: var(--space-4);
 }
 
-.pn-pane > [data-region$="-head"]:not([data-region="library-head"]) {
-  margin-top: var(--space-3);
+/* These hold whole blocks of a pane, so they keep the pane's rhythm. */
+.pn-pane > [data-region="chips"] > .ui-stack,
+.pn-pane > [data-region="library-results"] {
+  gap: var(--space-4);
 }
 
-.pn-pane > [data-region="nudge-head"],
-.pn-pane > [data-region="output-head"] {
-  margin-top: var(--space-4);
+.pn-pane > [data-region="library-results"] {
+  display: flex;
+  flex-direction: column;
 }
 
+.pn-pane > [data-region$="-head"]:not([data-region="library-head"]),
 .pn-pane > [data-region="whole"] {
-  margin-top: var(--space-5);
+  margin-top: var(--space-3);
 }
 
 .pn-panes--wide {
@@ -2023,7 +2031,7 @@ button.ui-chip:hover {
 .pn-chip-row {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .pn-empty {
