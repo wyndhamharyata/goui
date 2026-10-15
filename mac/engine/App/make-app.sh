@@ -14,6 +14,7 @@ plutil -insert CFBundleVersion -string "$version" "$app/Contents/Info.plist"
 cp .build/release/goui "$app/Contents/MacOS/goui"
 cp -R ../../src "$app/Contents/Resources/web/src"
 cp -R ../web "$app/Contents/Resources/web/mac/web"
+cp -R ../../icons "$app/Contents/Resources/web/icons"
 # npm run icons draws these from scripts/icon-geometry.mjs, as it draws the extension icons.
 iconutil -c icns ../icons/AppIcon.iconset -o "$app/Contents/Resources/AppIcon.icns"
 cp ../icons/menu-bar.png ../icons/menu-bar@2x.png "$app/Contents/Resources/"

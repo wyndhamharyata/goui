@@ -53,6 +53,11 @@ body {
   color: var(--muted);
 }
 
+/* A closed details still holds a slot for its content, and the card's gap would push the summary up. */
+details.card {
+  gap: 0;
+}
+
 .hint {
   color: var(--muted);
   margin: 0;
@@ -177,8 +182,16 @@ textarea {
 }
 
 .brand {
+  display: flex;
   flex: 1;
-  font-weight: 700;
+  align-items: center;
+  gap: 7px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.brand img {
+  border-radius: 6px;
 }
 
 .hold {
@@ -517,6 +530,12 @@ textarea {
   gap: 6px;
 }
 
+/* A line between the layers' rows, so each layer's bands read as one group. */
+.chip-row + .chip-row {
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
 /* The chips wrap onto more lines instead of scrolling sideways, so every band stays in view. */
 .chip-track {
   display: flex;
@@ -633,6 +652,7 @@ textarea {
 
 .band-table {
   width: 100%;
+  margin-top: 6px;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
 }
