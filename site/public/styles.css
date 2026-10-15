@@ -65,22 +65,43 @@ a.name {
   text-decoration: none;
 }
 
+/* The hero sits near the top and fits one screen, so the page starts higher and the panel padding is smaller. */
+main {
+  padding-top: var(--space-5);
+}
+
+.pn-hero {
+  padding: var(--space-6) var(--space-7);
+}
+
 .hero {
-  margin-top: var(--space-6);
+  margin-top: var(--space-4);
   border: 1px solid var(--line-1);
   border-radius: var(--radius-3);
 }
 
-/* A short window, such as a laptop with the page zoomed, shows the whole panel and its caption. */
-@media (max-height: 1020px) and (min-width: 981px) {
+/* The panel scales to the window, so the hero and its caption fit one screen on a laptop. */
+@media (max-height: 1080px) and (min-width: 981px) {
   .demo {
-    zoom: 0.88;
+    zoom: 0.9;
   }
 }
 
-@media (max-height: 918px) and (min-width: 981px) {
+@media (max-height: 980px) and (min-width: 981px) {
   .demo {
-    zoom: 0.78;
+    zoom: 0.82;
+  }
+}
+
+@media (max-height: 900px) and (min-width: 981px) {
+  .demo {
+    zoom: 0.74;
+  }
+}
+
+@media (max-height: 820px) and (min-width: 981px) {
+  .demo {
+    zoom: 0.66;
   }
 }
 
