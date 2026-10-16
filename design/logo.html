@@ -640,8 +640,56 @@
       .ship-table td:first-child { font-weight: 600; white-space: nowrap; }
       .ship-table td { color: var(--text-2); }
 
+      /* Round two */
+      .concept-grid--four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .concept-grid--four .concept__stage { height: 150px; }
+      .concept-grid--four .concept h3 { font-size: 16px; }
+
+      .pick__stage--two {
+        flex-direction: column;
+        padding: 20px;
+      }
+
+      .pick__stage--two > * + * { margin-left: 0; margin-top: 16px; }
+
+      .pick__stage--two .pick__row {
+        display: flex;
+        align-items: center;
+      }
+
+      .pick__stage--two .pick__row > * + * { margin-left: 20px; }
+
+      .record {
+        margin-top: 88px;
+        border-top: 1px solid var(--line-1);
+      }
+
+      .record > summary {
+        padding: 24px 0;
+        color: var(--text-2);
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .record > summary::-webkit-details-marker { display: none; }
+
+      .record > summary::before {
+        content: "+";
+        display: inline-block;
+        width: 24px;
+        color: var(--accent);
+        font: 700 16px / 1 var(--font-number);
+      }
+
+      .record[open] > summary::before { content: "\2013"; }
+      .record > summary small { margin-left: 12px; color: var(--text-3); font-weight: 400; font-size: 13px; }
+      .record .doc-section:first-of-type { padding-top: 24px; }
+
       @media (max-width: 1000px) {
-        .concept-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .concept-grid, .concept-grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .size-table, .size-head { grid-template-columns: 1fr; }
         .context-row { grid-template-columns: 1fr; }
         .doc-intro { grid-template-columns: 1fr; }
@@ -731,35 +779,274 @@
         <path d="M21 56C9 48 7 15 30 9C50 4 60 25 50 37C45 43 40 44 39 53" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
         <path d="M25 34C26 24 39 22 41 30" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" />
       </symbol>
+
+      <!-- Round two. Each glyph-* is one g in currentColor on the 64 grid. mark-* puts it on the acid tile, mono-* crops it for the bar. -->
+      <!-- G1. The peak bowl. The bowl is one peak band on its flat line, and the stem stands at the right foot. -->
+      <symbol id="glyph-g1" viewBox="0 0 64 64">
+        <g fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M40 37H11C17 37 18 13.5 28 13.5C38 13.5 39 37 40 37" />
+          <path d="M40 15V43C40 51.5 35 55 27 55H19" />
+        </g>
+      </symbol>
+      <symbol id="mark-g1" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-g1" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-g1" viewBox="3 3 58 58"><use href="#glyph-g1" /></symbol>
+
+      <!-- G2. Bars in the counter. The ring is the frame of the plot and three bars stand inside it. -->
+      <symbol id="glyph-g2" viewBox="0 0 64 64">
+        <circle cx="27" cy="26" r="13.5" fill="none" stroke="currentColor" stroke-width="8" />
+        <g fill="currentColor">
+          <rect x="20.5" y="23" width="3" height="8" rx="1.5" />
+          <rect x="25.5" y="18.5" width="3" height="15" rx="1.5" />
+          <rect x="30.5" y="21" width="3" height="10" rx="1.5" />
+        </g>
+        <path d="M40.5 13V43C40.5 51.5 35 55 27 55H19" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="mark-g2" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-g2" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-g2" viewBox="3 3 58 58"><use href="#glyph-g2" /></symbol>
+
+      <!-- G3. The fader stem. The stem is a thin track with a fat handle on it, and the tail runs out of the track's end. -->
+      <symbol id="glyph-g3" viewBox="0 0 64 64">
+        <circle cx="27" cy="27" r="12" fill="none" stroke="currentColor" stroke-width="9" />
+        <path d="M40 11V44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+        <rect x="32.5" y="28.5" width="15" height="9.5" rx="3.5" fill="currentColor" />
+        <path d="M40 44C40 51.5 35 55 27 55H19" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="mark-g3" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-g3" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-g3" viewBox="3 3 58 58"><use href="#glyph-g3" /></symbol>
+
+      <!-- G4. The point on the tail. The tail is the curve and it ends in the chosen band's point, a light dot in a ring. -->
+      <symbol id="glyph-g4" viewBox="0 0 64 64">
+        <circle cx="28" cy="26" r="12" fill="none" stroke="currentColor" stroke-width="9" />
+        <path d="M40 14V41C40 49.5 36 54 29 54.5C26 54.7 24 54 21 53" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="17.5" cy="51.5" r="8" fill="currentColor" />
+        <circle cx="17.5" cy="51.5" r="3.6" fill="#f2f3f5" />
+      </symbol>
+      <symbol id="glyph-g4-mono" viewBox="0 0 64 64">
+        <circle cx="28" cy="26" r="12" fill="none" stroke="currentColor" stroke-width="9" />
+        <path d="M40 14V41C40 49.5 36 54 29 54.5C26 54.7 24 54 21 53" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="17.5" cy="51.5" r="8.5" fill="currentColor" />
+      </symbol>
+      <symbol id="mark-g4" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-g4" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-g4" viewBox="3 3 58 58"><use href="#glyph-g4-mono" /></symbol>
+
+      <!-- G5. The shelf bowl. The top of the bowl is a low shelf's rise, the stem is the drop after it. -->
+      <symbol id="glyph-g5" viewBox="0 0 64 64">
+        <g fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M40 38H21C16 38 13.5 36 13.5 32.5C13.5 26 21 15 33 15H40" />
+          <path d="M40 15V43C40 51.5 35 55 27 55H19" />
+        </g>
+      </symbol>
+      <symbol id="mark-g5" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-g5" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-g5" viewBox="3 3 58 58"><use href="#glyph-g5" /></symbol>
+
+      <!-- G6. The g over a spectrum. A smaller g stands on a row of six bars. -->
+      <symbol id="glyph-g6" viewBox="0 0 64 64">
+        <circle cx="28" cy="21" r="10" fill="none" stroke="currentColor" stroke-width="8" />
+        <path d="M38 10V32C38 39 34.5 42.5 28 42.5H21" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+        <g fill="currentColor">
+          <rect x="10" y="51" width="5" height="6" rx="2.5" />
+          <rect x="18" y="46" width="5" height="11" rx="2.5" />
+          <rect x="26" y="49" width="5" height="8" rx="2.5" />
+          <rect x="34" y="44" width="5" height="13" rx="2.5" />
+          <rect x="42" y="48" width="5" height="9" rx="2.5" />
+          <rect x="50" y="52" width="5" height="5" rx="2.5" />
+        </g>
+      </symbol>
+      <symbol id="mark-g6" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-g6" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-g6" viewBox="3 3 58 58"><use href="#glyph-g6" /></symbol>
+
+      <!-- G7. The wave tail. The tail runs on to the left edge as one cut band, so the g stands on its own curve. -->
+      <symbol id="glyph-g7" viewBox="0 0 64 64">
+        <circle cx="31" cy="22.5" r="11.5" fill="none" stroke="currentColor" stroke-width="9" />
+        <path d="M42.5 11V39C42.5 46 39 49.5 33 49.5C27 49.5 27 56.5 20.5 56.5C14.5 56.5 14 49.5 8 49.5" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="mark-g7" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-g7" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-g7" viewBox="3 3 58 58"><use href="#glyph-g7" /></symbol>
+
+      <!-- G8. The bowl of bars. Three bars rise toward the stem and stand in for the bowl. -->
+      <symbol id="glyph-g8" viewBox="0 0 64 64">
+        <g fill="currentColor">
+          <rect x="12.5" y="29" width="5.5" height="13.5" rx="2.75" />
+          <rect x="20.5" y="22" width="5.5" height="20.5" rx="2.75" />
+          <rect x="28.5" y="16.5" width="5.5" height="26" rx="2.75" />
+        </g>
+        <path d="M40 13V43C40 51.5 35 55 27 55H19" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="mark-g8" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-g8" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-g8" viewBox="3 3 58 58"><use href="#glyph-g8" /></symbol>
     </svg>
 
     <main>
       <header class="doc-intro">
         <div>
-          <p class="doc-eyebrow">goui design · logo proposal</p>
-          <h1>One mark.<br /><em>Six ways to draw it.</em></h1>
+          <p class="doc-eyebrow">goui design · logo proposal · round two</p>
+          <h1>The letter g.<br /><em>Eight ways to make it hear.</em></h1>
           <p>
-            The icon that ships is a blue to purple tile with four white bars. It is the one blue left in
-            goui. This page tries six marks in the acid accent and the ink steps. Each one is shown at the
-            four extension sizes, on a light toolbar and a dark one, with a pixel view of the 16 px icon as
-            Chrome would draw it. Each one is also drawn in one colour for the Mac menu bar, and placed in
-            the menu bar, the store tile, the site header, the Dock and a browser tab. Section 05 picks one
-            and lists what has to change to ship it.
+            Round one tried six marks and picked the letter g, since it is the only one that still reads at
+            16 px. The owner agreed with the direction and said a plain letter loses the identity of an EQ
+            app at once. This round keeps the g and fuses an EQ idea into it, eight times. Each fusion is a
+            different idea, not a different detail. Each mark is shown at the four extension sizes, on a
+            light toolbar and a dark one, with a pixel view of the 16 px icon, in one colour for the Mac
+            menu bar, and in the store tile, the site header, the Dock and a browser tab. Section 05 picks
+            one and names the trade. Round one is folded at the end, as the record.
           </p>
         </div>
         <ol class="doc-index-list">
-          <li><a href="#concepts"><b>01</b>Six concepts</a></li>
-          <li><a href="#sizes"><b>02</b>At the real sizes</a></li>
-          <li><a href="#mono"><b>03</b>One colour, for the menu bar</a></li>
-          <li><a href="#context"><b>04</b>In context</a></li>
-          <li><a href="#pick"><b>05</b>The recommendation</a></li>
-          <li><a href="#palette"><b>06</b>Palette note</a></li>
+          <li><a href="#concepts-2"><b>01</b>Eight fusions</a></li>
+          <li><a href="#sizes-2"><b>02</b>At the real sizes</a></li>
+          <li><a href="#mono-2"><b>03</b>One colour, for the menu bar</a></li>
+          <li><a href="#context-2"><b>04</b>In context</a></li>
+          <li><a href="#pick-2"><b>05</b>The pick, and the trade</a></li>
+          <li><a href="#record"><b>--</b>Round one, the record</a></li>
         </ol>
       </header>
 
-      <section class="doc-section" id="concepts">
+      <section class="doc-section" id="concepts-2">
         <header class="doc-head">
           <span class="doc-head__index">01</span>
+          <div>
+            <h2>Eight fusions</h2>
+            <p>
+              The g of round one is the base. Each mark below takes one part of the letter, the bowl, the
+              counter, the stem or the tail, and draws it as one thing from the panel: a peak, a shelf, a
+              fader, the chosen band's point, a spectrum. The ink on acid polarity stays, since it is what
+              made the g read on both toolbars. Beside each is its one colour form on a light bar and a
+              dark bar.
+            </p>
+          </div>
+        </header>
+        <div class="concept-grid concept-grid--four" id="concept-grid-2"></div>
+      </section>
+
+      <section class="doc-section" id="sizes-2">
+        <header class="doc-head">
+          <span class="doc-head__index">02</span>
+          <div>
+            <h2>At the real sizes</h2>
+            <p>
+              The same strips as round one. The tile in the 16 px icon is 12 px wide, so a stroke of 9
+              units is 1.7 px and a bar of 3 units is half a pixel. The pixel view on the right is the
+              test. Look at the 16 px square and ask two things. Is it a g? Is there anything in it a plain
+              g does not have?
+            </p>
+          </div>
+        </header>
+        <div class="size-head"><span>Mark</span><span>Light toolbar</span><span>Dark toolbar</span><span>Pixels, 16 and 32 px</span></div>
+        <div id="size-rows-2"></div>
+      </section>
+
+      <section class="doc-section" id="mono-2">
+        <header class="doc-head">
+          <span class="doc-head__index">03</span>
+          <div>
+            <h2>One colour, for the menu bar</h2>
+            <p>
+              Each mark's one colour form is the same glyph with the tile gone, cropped a little tighter so
+              the strokes come out near 10 units of 64, the weight round one used. G4 is the one mark with
+              a second colour in it, the light point on the tail, so its bar form fills that point in.
+            </p>
+          </div>
+        </header>
+        <div id="mono-rows-2" class="menubar-set"></div>
+      </section>
+
+      <section class="doc-section" id="context-2">
+        <header class="doc-head">
+          <span class="doc-head__index">04</span>
+          <div>
+            <h2>In context</h2>
+            <p>
+              The store tile, the site header, the Dock and a browser tab, as in round one. The site header
+              shows the one colour form in the accent next to the wordmark. This is where a fused g has to
+              read as one letter and not as a letter with a thing stuck to it.
+            </p>
+          </div>
+        </header>
+        <div id="context-rows-2"></div>
+      </section>
+
+      <section class="doc-section" id="pick-2">
+        <header class="doc-head">
+          <span class="doc-head__index">05</span>
+          <div>
+            <h2>The pick, and the trade</h2>
+            <p>G7, the wave tail. Below is the reasoning, the runner up, and a table of how much EQ each mark still says at 16 px.</p>
+          </div>
+        </header>
+        <div class="pick">
+          <div class="pick__stage pick__stage--two">
+            <div class="pick__row">
+              <svg width="128" height="128" viewBox="0 0 64 64"><use href="#mark-g7" /></svg>
+              <svg width="40" height="40" viewBox="0 0 64 64" style="color: #f2f3f5"><use href="#mono-g7" /></svg>
+              <svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark-g7" /></svg>
+            </div>
+            <div class="pick__row">
+              <svg width="64" height="64" viewBox="0 0 64 64"><use href="#mark-g1" /></svg>
+              <svg width="24" height="24" viewBox="0 0 64 64" style="color: #f2f3f5"><use href="#mono-g1" /></svg>
+              <svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark-g1" /></svg>
+            </div>
+          </div>
+          <div class="doc-notes">
+            <h3>G7. The wave tail, with G1 as the runner up</h3>
+            <ul>
+              <li><b>The cue is in the one part of a g that is free to move.</b> A bowl has to stay round or the letter breaks. A stem has to stay straight. The tail is the one stroke a g lets you draw any way you like, so the curve goes there. The g stays a g and the tail becomes the plot.</li>
+              <li><b>At 16 px it is still a g, and its tail is wider and wavy.</b> In the pixel view the ring and the stem are the same two things round one had. The tail is a 2 px line that dips and comes back. A stranger sees a g with a wave under it. A person who has seen the panel sees a cut band. That is as much as 12 px of tile can carry.</li>
+              <li><b>At 32 px and above the wave reads as a band.</b> In the Dock and on the store tile the tail is a one band curve under the letter, which is the plot at its smallest. The wave says sound before the tagline does.</li>
+              <li><b>The one colour form is one stroke.</b> In the menu bar it is a g with a long wavy tail. Nothing fills in and nothing goes to a dot. The site header reads as one letter next to the wordmark.</li>
+              <li><b>Runner up, G1, the peak bowl.</b> It carries the most EQ at 128 px, since the bowl is a bell on a line and the eye reads the band first and the g second. At 16 px the bell closes to a bowl, so the cue is gone. The letter pays for it at every size. The bowl is pointed, and in the 18 px bar form it is near an A with a tail. If the owner wants the loudest statement on the store page and accepts that, G1 is the pick.</li>
+              <li><b>The one with the most cue at 16 px is G4.</b> The light point on its tail is still a speck in the 16 px pixel view, and it is the panel's own chosen band point. It does not say EQ to a stranger. It says it to anyone who has used goui once. G4 is the pick if the toolbar matters more than the store page.</li>
+              <li><b>What is given up.</b> The wave tail is quieter than bars or a bell. The cue is a dip of 7 units. A person who does not know EQ plots sees a flourish. G7 trades a loud cue at 128 for a cue that is still there at 32 and does not cost the letter anything at 16.</li>
+              <li><b>Calls made on this page.</b> The first draft had the tail rise into a peak. Its top touched the bowl and the 16 px view closed into an 8, so the band is a cut, not a peak. The dip is 7 units deep and the tail runs to 8 units from the left edge. The ring is 11.5 units, a half unit under E's, and moved up and right so the tail has room. The stroke stays at 9 units. The crop for the bar form is 58 of 64, so the stroke is 9.9 units there.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="doc-sub"><h3>The trade, mark by mark</h3><p>How much EQ each mark says at 128 px and at 16 px, and what it costs the letter.</p></div>
+        <table class="ship-table">
+          <thead><tr><th>Mark</th><th>EQ idea</th><th>At 128 px</th><th>At 16 px</th><th>Cost to the g</th></tr></thead>
+          <tbody>
+            <tr><td>G1. The peak bowl</td><td>The bowl is a peak band on its line.</td><td>Loud. The band reads first.</td><td>None. The bell closes to a bowl.</td><td>Real. The bowl is pointed and the bar form is near an A.</td></tr>
+            <tr><td>G2. Bars in the counter</td><td>Three bars inside the ring.</td><td>Clear. A plot in a frame.</td><td>None. The counter fills to grey.</td><td>Real. The counter is the g's one hole and it goes.</td></tr>
+            <tr><td>G3. The fader stem</td><td>The stem is a fader with a handle.</td><td>Clear, as a fader.</td><td>A knob on the stem, no more.</td><td>Real. The thin stem fades and the handle reads as a q's or a 9's flag.</td></tr>
+            <tr><td>G4. The point on the tail</td><td>The tail is the curve and ends in the chosen band's point.</td><td>Clear to someone who knows the panel.</td><td>A light speck in the tail, still there.</td><td>Small. A ball terminal is a letter thing too.</td></tr>
+            <tr><td>G5. The shelf bowl</td><td>The bowl's top is a low shelf's rise.</td><td>Quiet. Reads as a swept bowl.</td><td>None.</td><td>None. It is a fine g.</td></tr>
+            <tr><td>G6. The g over a spectrum</td><td>Six bars under a smaller g.</td><td>Loud. Letter plus picture.</td><td>A grey line under a small g.</td><td>Real. The g is 70 percent of the size and two things share the tile.</td></tr>
+            <tr><td>G7. The wave tail</td><td>The tail runs on as one cut band.</td><td>Clear. The g stands on its curve.</td><td>A wider tail with a dip in it.</td><td>None. The ring and the stem are unchanged.</td></tr>
+            <tr><td>G8. The bowl of bars</td><td>Three bars stand in for the bowl.</td><td>Loud. A bar chart with a hook.</td><td>A block with a hook.</td><td>Real. With no counter it is a mass, not a g.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <details class="record" id="record">
+        <summary>Round one, the record<small>six concepts, the sizes, the menu bar, the contexts, the pick and the palette note</small></summary>
+
+      <section class="doc-section" id="concepts">
+        <header class="doc-head">
+          <span class="doc-head__index">06</span>
           <div>
             <h2>Six concepts</h2>
             <p>
@@ -775,7 +1062,7 @@
 
       <section class="doc-section" id="sizes">
         <header class="doc-head">
-          <span class="doc-head__index">02</span>
+          <span class="doc-head__index">07</span>
           <div>
             <h2>At the real sizes</h2>
             <p>
@@ -798,7 +1085,7 @@
 
       <section class="doc-section" id="mono">
         <header class="doc-head">
-          <span class="doc-head__index">03</span>
+          <span class="doc-head__index">08</span>
           <div>
             <h2>One colour, for the menu bar</h2>
             <p>
@@ -815,7 +1102,7 @@
 
       <section class="doc-section" id="context">
         <header class="doc-head">
-          <span class="doc-head__index">04</span>
+          <span class="doc-head__index">09</span>
           <div>
             <h2>In context</h2>
             <p>
@@ -831,7 +1118,7 @@
 
       <section class="doc-section" id="pick">
         <header class="doc-head">
-          <span class="doc-head__index">05</span>
+          <span class="doc-head__index">10</span>
           <div>
             <h2>The recommendation</h2>
             <p>Concept E, the letter g on an acid tile. Below it is the reasoning, then the list of what has to change to ship it.</p>
@@ -902,7 +1189,7 @@
 
       <section class="doc-section" id="palette">
         <header class="doc-head">
-          <span class="doc-head__index">06</span>
+          <span class="doc-head__index">11</span>
           <div>
             <h2>Palette note</h2>
             <p>
@@ -928,6 +1215,7 @@
           </ul>
         </div>
       </section>
+      </details>
     </main>
 
     <script>
@@ -956,10 +1244,21 @@
         return letter.toLowerCase();
       }
 
-      function renderConcepts() {
-        const grid = document.getElementById("concept-grid");
+      const fusions = [
+        { letter: "G1", name: "The peak bowl", idea: "The bowl is one peak band on its flat line. The stem stands at the band's right foot and the tail hooks under." },
+        { letter: "G2", name: "Bars in the counter", idea: "The ring is the frame of the plot and three bars stand inside it. The stem and tail are round one's." },
+        { letter: "G3", name: "The fader stem", idea: "The stem is a thin fader track with a fat handle on it. The tail runs out of the track's end." },
+        { letter: "G4", name: "The point on the tail", idea: "The tail swoops like the curve and ends in the chosen band's point, a light dot in an ink ring." },
+        { letter: "G5", name: "The shelf bowl", idea: "The top of the bowl is a low shelf's rise, from the left at mid height up to the stem. The stem is the drop after it." },
+        { letter: "G6", name: "The g over a spectrum", idea: "A smaller g stands over a row of six bars, the way the panel's spectrum stands under the curve." },
+        { letter: "G7", name: "The wave tail", idea: "The tail runs on to the left edge as one cut band, a dip and a return. The g stands on its own curve." },
+        { letter: "G8", name: "The bowl of bars", idea: "Three bars rise toward the stem and stand in for the bowl. The stem and tail finish the letter." },
+      ];
 
-        grid.innerHTML = concepts.map(({ letter, name, idea }) => `
+      function renderConcepts(gridId, list) {
+        const grid = document.getElementById(gridId);
+
+        grid.innerHTML = list.map(({ letter, name, idea }) => `
           <article class="concept">
             <div class="concept__stage">${iconSvg(`mark-${lower(letter)}`, 128)}</div>
             <span class="concept__letter">${letter}</span>
@@ -978,10 +1277,10 @@
         return `<div class="size-strip ${tone}">${figures}</div>`;
       }
 
-      function renderSizes() {
-        const rows = document.getElementById("size-rows");
+      function renderSizes(rowsId, list) {
+        const rows = document.getElementById(rowsId);
 
-        rows.innerHTML = concepts.map(({ letter, name }) => `
+        rows.innerHTML = list.map(({ letter, name }) => `
           <div class="size-table">
             <div class="size-table__name">${letter}. ${name}<small>tile at 12, 24, 36 and 96 px</small></div>
             ${sizeStrip(letter, "on-light")}
@@ -1009,10 +1308,10 @@
           </div>`;
       }
 
-      function renderMono() {
-        const rows = document.getElementById("mono-rows");
+      function renderMono(rowsId, list) {
+        const rows = document.getElementById(rowsId);
 
-        rows.innerHTML = concepts.map(({ letter, name }) => `
+        rows.innerHTML = list.map(({ letter, name }) => `
           <div>
             <h4>${letter}. ${name}<small>18 pt template image, black on a light bar and white on a dark one</small></h4>
             <div class="menubar-grid">
@@ -1065,10 +1364,10 @@
           </div>`;
       }
 
-      function renderContext() {
-        const rows = document.getElementById("context-rows");
+      function renderContext(rowsId, list) {
+        const rows = document.getElementById(rowsId);
 
-        rows.innerHTML = concepts.map(({ letter, name }) => `
+        rows.innerHTML = list.map(({ letter, name }) => `
           <div class="context-row">
             <h4>${letter}. ${name}<small>store tile, site header, Dock and favicon</small></h4>
             ${storeTile(letter)}
@@ -1079,12 +1378,29 @@
           </div>`).join("");
       }
 
+      // A data URL image cannot follow a use into this page, so each use is replaced by a copy of what it points at.
+      function inlineUses(node) {
+        node.querySelectorAll("use").forEach((use) => {
+          const target = document.getElementById(use.getAttribute("href").slice(1));
+          const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+          for (const attribute of use.attributes) {
+            if (attribute.name !== "href") group.setAttribute(attribute.name, attribute.value);
+          }
+          for (const child of target.childNodes) group.appendChild(child.cloneNode(true));
+          use.replaceWith(group);
+        });
+      }
+
       // Paints the symbol into a canvas at its real pixel size, so the page shows what a 1x screen shows.
       function paintPixels(canvas) {
-        const symbol = document.getElementById(canvas.dataset.mark);
+        const symbol = document.getElementById(canvas.dataset.mark).cloneNode(true);
         const size = Number(canvas.dataset.size);
         const isMono = canvas.dataset.mono === "true";
-        const viewBox = isMono ? "0 0 64 64" : storeView;
+        const monoView = symbol.getAttribute("viewBox");
+        const viewBox = isMono ? monoView : storeView;
+
+        inlineUses(symbol);
         const inner = new XMLSerializer().serializeToString(symbol).replace(/<\/?symbol[^>]*>/g, "");
         const markup = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${viewBox}" style="color: #000">${inner}</svg>`;
         const image = new Image();
@@ -1100,10 +1416,14 @@
         image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`;
       }
 
-      renderConcepts();
-      renderSizes();
-      renderMono();
-      renderContext();
+      renderConcepts("concept-grid-2", fusions);
+      renderSizes("size-rows-2", fusions);
+      renderMono("mono-rows-2", fusions);
+      renderContext("context-rows-2", fusions);
+      renderConcepts("concept-grid", concepts);
+      renderSizes("size-rows", concepts);
+      renderMono("mono-rows", concepts);
+      renderContext("context-rows", concepts);
       document.querySelectorAll("canvas[data-mark]").forEach(paintPixels);
     </script>
   </body>
