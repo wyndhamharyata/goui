@@ -12,5 +12,8 @@ public/images/
 public/panel.css
 public/panel.js
 public/sprite.svg
+public/guide.css
+public/intro.css
+public/version.js
 
 public/fonts/

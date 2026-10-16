@@ -10,6 +10,10 @@ The site shows the icons, four pictures from `docs/images` and the live panel mo
 `design/ux-proposals.html`. Every dev and deploy command runs it first. The copies stay out of git,
 so the site always matches the repo.
 
+The Mac page is the Mac app's help, so it wears the design of the built-in help. `npm run assets`
+copies `src/guide.css` and `src/intro.css` beside it, and writes `public/version.js` with the
+version from `manifest.json`.
+
 The panel mock is `design/ux-proposals.js` as it is. It mounts each part only where that part's
 markup is on the page. On the site it mounts nothing by itself. `public/site.js` mounts the hero
 copy into `#site-hero` and the narrow panel into `#site-panel`, with the Set picker on. It passes the

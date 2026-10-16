@@ -4,14 +4,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
-    <meta name="description" content="goui for the Mac: the same EQ, for every sound on the Mac." />
+    <meta name="description" content="goui for the Mac: the same EQ, for every sound on the Mac. How to install it, use it and fix it." />
     <link rel="icon" href="/icons/icon48.png" />
     <link rel="stylesheet" href="/panel.css" />
+    <link rel="stylesheet" href="/guide.css" />
+    <link rel="stylesheet" href="/intro.css" />
     <link rel="stylesheet" href="/styles.css" />
     <title>goui for the Mac</title>
   </head>
   <body>
-    <main>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="icon-headphones" viewBox="0 0 24 24"><path d="M12 2a9 9 0 0 0-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2a7 7 0 0 1 14 0v2h-4v8h3c1.66 0 3-1.34 3-3v-7a9 9 0 0 0-9-9z" /></symbol>
+      <symbol id="icon-laptop" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z" /></symbol>
+    </svg>
+
+    <main class="help">
       <header class="site-head">
         <div class="brand">
           <a href="/"><img src="/icons/icon128.png" alt="" width="30" height="30" /></a>
@@ -24,126 +31,340 @@
         </nav>
       </header>
 
-      <section class="block policy">
-        <h1>goui for the Mac</h1>
-        <p class="lead">
-          The same EQ as the extension, for every sound on the Mac. goui lives in the menu bar and
-          opens the same panel as the browser: Listen, Tune and Library, with AutoEQ and EQByEar.
-        </p>
-        <p>Install with one line in Terminal. No admin password. It asks before installing.</p>
-        <pre class="install-line"><code>curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh</code></pre>
+      <div class="doc">
+        <header class="intro-head">
+          <div class="intro-brand">
+            <img src="/icons/icon128.png" alt="" width="56" height="56" />
+            <h1>goui for the Mac</h1>
+            <span class="version" id="version"></span>
+          </div>
+          <p class="pitch">
+            goui runs every sound the Mac plays through an EQ, from the menu bar. It tunes the sound to
+            your headphone, then to your ear, then to your taste.
+            <b>Every ear hears differently.</b>
+          </p>
+        </header>
 
-        <h2 id="before">Before you install</h2>
-        <ul>
-          <li>Needs Apple silicon and macOS 26 or later.</li>
-          <li>
-            goui EQs every sound on the Mac. It follows the default output. One EQ covers every app.
-            Another system EQ (eqMac, SoundSource) stacks its curve on goui's. Run one at a time.
-          </li>
-          <li>
-            Spatial Audio and head tracking on AirPods and Beats stop while goui plays. See
-            troubleshooting below.
-          </li>
-          <li>
-            macOS asks to let goui record audio. goui EQs the sound on its way out and keeps none
-            of it.
-          </li>
-          <li>
-            goui is not signed by Apple yet. An engine update asks for that permission again.
-            Settings stay in <code>~/Library/Application Support/goui</code> through updates.
-          </li>
-        </ul>
+        <nav class="intro-nav" aria-label="On this page">
+          <div class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">On this page</span><span class="ui-section-header__rule"></span></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#what"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>What it is</span></span></span></a></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#before"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Before you install</span></span></span></a></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#start"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Get started</span></span></span></a></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#make-it-yours"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Make it yours</span></span></span></a></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#sets"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Sets</span></span></span></a></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#menu"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>The menu bar item</span></span></span></a></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#wide"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>The wide panel</span></span></span></a></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#terminal"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Terminal</span></span></span></a></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#ear"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Measure your ear</span></span></span></a></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#trouble"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Troubleshooting</span></span></span></a></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#privacy"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Privacy</span></span></span></a></div>
+          <div class="ui-list-row ui-list-row--dense"><a class="ui-list-row__main" href="#credits"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Credits</span></span></span></a></div>
+        </nav>
 
-        <h2>Get started</h2>
-        <ol>
-          <li><b>Turn goui on.</b> Click goui in the menu bar. Press the power button.</li>
-          <li>
-            <b>Allow audio.</b> macOS asks to let goui record audio the first time.
-            Press Allow. goui keeps none of it.
-          </li>
-          <li><b>Play something.</b> Any app. Music, a video, a call.</li>
-        </ol>
-        <p>
-          The panel works the same as in the browser. The
-          <a href="/#try">live panel on the homepage</a> shows each part.
-        </p>
+        <div class="intro-body">
+          <section id="what">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">What it is</span><span class="ui-section-header__rule"></span></h2>
+            <p class="lead">
+              goui for the Mac is the same EQ as the browser extension, for every sound on the Mac. The
+              extension changes one browser tab. The Mac app changes the whole output, so Music, Spotify,
+              calls and games all pass through it at once.
+            </p>
+            <div class="two-col">
+              <div class="ui-stack ui-stack--chain flow" aria-label="Every sound the Mac plays passes the headphone layer, then the ear layer, then the taste layer, then reaches you. Bass, Vocals and Treble are added after the three sound layers. The preamp keeps the sum from clipping.">
+                <div class="ui-stack-row"><svg class="ui-icon"><use href="#icon-laptop" /></svg><span class="ui-stack-row__body"><span class="ui-stack-row__caption">Music · Zoom · Safari</span><span class="ui-stack-row__name">Every sound the Mac plays</span></span></div>
+                <div class="ui-stack-row has-bar tone-headphone"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">1 · Headphone</span><span class="ui-stack-row__name">AutoEQ tunes the headphone to sound neutral</span></span></div>
+                <div class="ui-stack-row has-bar tone-ear"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">2 · My ear</span><span class="ui-stack-row__name">EQByEar tunes it to your hearing</span></span></div>
+                <div class="ui-stack-row has-bar tone-taste"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">3 · Taste</span><span class="ui-stack-row__name">Your own bands</span></span></div>
+                <div class="ui-stack-row has-bar tone-muted"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">Added after 3 sound layers</span><span class="ui-stack-row__name">Bass, Vocals and Treble</span></span></div>
+                <div class="ui-stack-row has-bar tone-muted"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">Preamp</span><span class="ui-stack-row__name">Keeps the sum from clipping</span></span></div>
+                <div class="ui-stack-row has-bar tone-accent"><svg class="ui-icon"><use href="#icon-headphones" /></svg><span class="ui-stack-row__body"><span class="ui-stack-row__caption">You</span><span class="ui-stack-row__name">Hear it</span></span></div>
+              </div>
+              <img src="/images/mac-panel.jpg" alt="The goui panel open under its menu bar item, over YouTube Music, with a Set picked, the Sennheiser HD 600 curve and the live spectrum." />
+            </div>
+            <p class="lead">
+              goui lives in the menu bar. One click opens the same panel as the browser, with Listen, Tune
+              and Library. The headphone, ear and taste layers carry over, with Bass, Vocals and Treble. So
+              do the AutoEQ search, the EQByEar test and the live spectrum. A native audio engine runs the
+              EQ on the Mac. goui keeps none of the audio.
+            </p>
+            <p class="lead">
+              goui joins two audio tools. AutoEQ gives you a neutral baseline for the headphone you use.
+              An EQByEar test tunes that baseline to your hearing. Your taste goes on top, as bands of
+              your own. Each layer has its own switch. The bands of every layer add up in dB. The preamp
+              works itself out from the sum, so a boost does not clip.
+            </p>
+          </section>
 
-        <h2>The menu bar item</h2>
-        <ul>
-          <li><b>Click</b> opens and closes the panel.</li>
-          <li><b>Right-click</b> opens the menu.</li>
-          <li><b>About goui</b> shows the version of goui.</li>
-          <li>
-            <b>Wide panel</b> widens the panel so Listen, Tune and Library stand side by side. You can
-            also drag the edge.
-          </li>
-          <li><b>Restart engine</b> rebuilds the audio path. The sound plays briefly without the EQ.</li>
-          <li><b>Reload panel</b> reloads the panel. The sound carries on.</li>
-          <li>
-            <b>Sets</b> lists saved Sets and ticks the active one. Pick a Set to load it with the panel
-            closed. The submenu appears after saving a Set.
-          </li>
-          <li><b>Check for Updates…</b> checks GitHub for a newer release.</li>
-          <li>
-            <b>Update to …</b> appears when a release changes the engine. One click installs it and
-            restarts goui.
-          </li>
-          <li><b>Automatic updates</b> checks twice a day.</li>
-          <li><b>Quit goui</b> stops it until the next login.</li>
-        </ul>
-        <p>
-          goui updates itself. A panel-only release applies on its own. An engine release waits for
-          <b>Update to …</b>. macOS asks again to record audio. goui checks GitHub for new versions
-          and sends nothing about you.
-        </p>
-        <p>
-          goui starts at login and restarts after a crash. If the sound stops, it rebuilds the
-          audio path.
-        </p>
+          <section id="before">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Before you install</span><span class="ui-section-header__rule"></span></h2>
+            <p class="lead">Install with one line in Terminal. No admin password. It checks the Mac and asks before installing.</p>
+            <pre class="install-line"><code>curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh</code></pre>
+            <ul class="intro-facts">
+              <li>goui needs Apple silicon and macOS 26 or later.</li>
+              <li>goui EQs every sound on the Mac. It follows the default output. One EQ covers every app.</li>
+              <li>Another system EQ, such as eqMac or SoundSource, stacks its curve on goui's. Run one at a time.</li>
+              <li>Spatial Audio and head tracking on AirPods and Beats stop while goui plays. <a href="#trouble">Troubleshooting</a> says why.</li>
+              <li>macOS asks to let goui record audio. goui EQs the sound on its way out and keeps none of it.</li>
+              <li>goui is not signed by Apple yet. An engine update asks for that permission again.</li>
+              <li>Settings stay in <code>~/Library/Application Support/goui</code>, through updates and after an uninstall.</li>
+            </ul>
+          </section>
 
-        <h2>From Terminal</h2>
-        <p>The installer puts a <code>goui</code> command in Terminal.</p>
-        <ul>
-          <li><code>goui set "name"</code> loads a Set, same as picking it from the menu.</li>
-          <li><code>goui start</code>, <code>goui stop</code>, <code>goui restart</code> control the app.</li>
-          <li><code>goui logs</code> tails the log.</li>
-          <li><code>goui rollback</code> restores the app from before the last update.</li>
-          <li>
-            <code>goui uninstall</code> removes the app. Settings stay in
-            <code>~/Library/Application Support/goui</code>.
-          </li>
-        </ul>
+          <section id="start">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Get started</span><span class="ui-section-header__rule"></span></h2>
+            <ol class="guide-steps intro-steps">
+              <li class="guide-step">
+                <div class="ui-section-header ui-section-header--section tone-accent">
+                  <span class="ui-badge ui-badge--step tone-accent">1</span>
+                  <span class="ui-section-header__text"><span class="ui-section-header__title">Turn goui on</span><span class="ui-section-header__caption">Click goui in the menu bar. Press the power button at the top of the panel. goui EQs every sound the Mac plays.</span></span>
+                </div>
+                <div class="guide-shot" aria-hidden="true">
+                  <span class="ui-button ui-button--small tone-good guide-press"><svg class="ui-icon"><use href="#icon-power" /></svg>OFF</span>
+                  <label class="ui-field ui-field--readonly"><input class="ui-field__control" value="goui is off" readonly tabindex="-1" /></label>
+                </div>
+              </li>
+              <li class="guide-step">
+                <div class="ui-section-header ui-section-header--section tone-accent">
+                  <span class="ui-badge ui-badge--step tone-accent">2</span>
+                  <span class="ui-section-header__text"><span class="ui-section-header__title">Allow the audio</span><span class="ui-section-header__caption">The first time, macOS asks to let goui record the audio of this Mac. Press Allow. goui EQs the sound on its way to you and keeps none of it.</span></span>
+                </div>
+                <div class="guide-shot" aria-hidden="true">
+                  <div class="guide-shot__menu guide-shot__dialog">
+                    <p class="ui-text-hint">goui would like to record the audio of this Mac.</p>
+                    <span class="ui-cluster"><span class="ui-button ui-button--small">Don't Allow</span><span class="ui-button ui-button--small ui-button--primary guide-press">Allow</span></span>
+                  </div>
+                </div>
+              </li>
+              <li class="guide-step">
+                <div class="ui-section-header ui-section-header--section tone-accent">
+                  <span class="ui-badge ui-badge--step tone-accent">3</span>
+                  <span class="ui-section-header__text"><span class="ui-section-header__title">Play something</span><span class="ui-section-header__caption">Any app works. Music, a video, a call. The panel works the same as in the browser. The <a href="/#try">live panel on the homepage</a> shows each part.</span></span>
+                </div>
+                <div class="guide-shot" aria-hidden="true">
+                  <div class="guide-shot__menu">
+                    <div class="ui-list-row ui-list-row--dense"><span class="ui-list-row__main"><svg class="ui-icon"><use href="#icon-speaker" /></svg><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Lofi radio</span></span><span class="ui-list-row__detail">Music</span></span></span></div>
+                    <div class="ui-list-row ui-list-row--dense"><span class="ui-list-row__main"><svg class="ui-icon"><use href="#icon-speaker" /></svg><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Weekly sync</span></span><span class="ui-list-row__detail">Zoom</span></span></span></div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+          </section>
 
-        <h2>Measure your ear</h2>
-        <p>
-          <b>Measure my ear with EQByEar</b> opens eqbyear.com in your browser. It turns My ear off so
-          the test hears only the AutoEQ profile. goui already processes the browser audio, so run
-          the test straight away. Copy the result. Press <b>Paste</b> in the My ear tab, paste it,
-          then press <b>Apply</b> and <b>Save</b>.
-        </p>
+          <section id="make-it-yours">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Make it yours</span><span class="ui-section-header__rule"></span></h2>
+            <ol class="guide-steps intro-steps">
+              <li class="guide-step">
+                <div class="ui-section-header ui-section-header--section tone-headphone">
+                  <span class="ui-badge ui-badge--step tone-headphone">4</span>
+                  <span class="ui-section-header__text"><span class="ui-section-header__title">Find your headphone</span><span class="ui-section-header__caption">Find your model in the Library, then press Save.</span></span>
+                </div>
+                <div class="guide-shot guide-shot--column" aria-hidden="true">
+                  <label class="ui-field ui-field--search"><svg class="ui-icon"><use href="#icon-search" /></svg><input class="ui-field__control" value="HD 600" readonly tabindex="-1" /></label>
+                  <div class="ui-list-row is-selected"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Sennheiser HD 600</span><span class="ui-badge tone-good"><span>AutoEQ's pick</span></span></span><span class="ui-list-row__detail">oratory1990 · over-ear</span></span></span></div>
+                  <span class="ui-button ui-button--primary ui-button--small guide-press">Save</span>
+                </div>
+              </li>
+              <li class="guide-step">
+                <div class="ui-section-header ui-section-header--section tone-ear">
+                  <span class="ui-badge ui-badge--step tone-ear">5</span>
+                  <span class="ui-section-header__text"><span class="ui-section-header__title">Tune it to your ear</span><span class="ui-section-header__caption">Take the EQByEar test. Paste the result into My ear, press Apply, then Save. This step is optional. <a href="#ear">Measure your ear</a> has the details.</span></span>
+                </div>
+                <div class="guide-shot" aria-hidden="true">
+                  <span class="ui-button ui-button--small"><svg class="ui-icon"><use href="#icon-external" /></svg><span>Measure my ear</span></span>
+                  <svg class="ui-icon intro-next"><use href="#icon-next" /></svg>
+                  <span class="ui-button ui-button--small"><span>Paste</span></span>
+                  <svg class="ui-icon intro-next"><use href="#icon-next" /></svg>
+                  <span class="ui-button ui-button--primary ui-button--small"><span>Apply</span></span>
+                  <svg class="ui-icon intro-next"><use href="#icon-next" /></svg>
+                  <span class="ui-button ui-button--primary ui-button--small guide-press"><span>Save</span></span>
+                </div>
+              </li>
+              <li class="guide-step">
+                <div class="ui-section-header ui-section-header--section tone-taste">
+                  <span class="ui-badge ui-badge--step tone-taste">6</span>
+                  <span class="ui-section-header__text"><span class="ui-section-header__title">Add your taste</span><span class="ui-section-header__caption">On Listen, press Add your taste on the Taste row. Drag its points in Tune, or paste AutoEQ text.</span></span>
+                </div>
+                <div class="guide-shot guide-shot--column" aria-hidden="true">
+                  <div class="ui-stack-row has-bar tone-taste is-empty"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">Taste</span><span class="ui-stack-row__name">Not added</span></span><span class="ui-stack-row__trail"><span class="ui-button ui-button--small guide-press"><svg class="ui-icon"><use href="#icon-plus" /></svg><span>Add your taste</span></span></span></div>
+                </div>
+              </li>
+              <li class="guide-step">
+                <div class="ui-section-header ui-section-header--section tone-accent">
+                  <span class="ui-badge ui-badge--step tone-accent">7</span>
+                  <span class="ui-section-header__text"><span class="ui-section-header__title">Save it as a Set</span><span class="ui-section-header__caption">Save each layer as a preset, then press Save as Set on Listen. The Set picker brings all three layers and the sliders back. On the Mac, the Set also shows in the menu bar item's menu.</span></span>
+                </div>
+                <div class="guide-shot guide-shot--column" aria-hidden="true">
+                  <div class="ui-stack-row has-bar tone-accent"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">Set</span><span class="ui-stack-row__name"><span class="ui-field ui-field--select"><span class="ui-field__control">HD 600 at home</span><svg class="ui-icon"><use href="#icon-chevron" /></svg></span></span></span><span class="ui-stack-row__trail"><span class="ui-button ui-button--small guide-press">Save as Set</span></span></div>
+                </div>
+              </li>
+            </ol>
+          </section>
 
-        <h2>Troubleshooting</h2>
-        <p><b>AirPods and Beats sound flat or lose head tracking.</b></p>
-        <p>
-          macOS applies Spatial Audio and head tracking only when an app plays straight to AirPods or
-          Beats. goui processes the audio in between, so the effect stops or can sound wrong. Turn off
-          Spatial Audio in Control Center, or quit goui while using them.
-        </p>
-        <p><b>No sound, or the sound plays without the EQ.</b></p>
-        <p>
-          Check that goui is allowed in System Settings, Privacy &amp; Security, Screen &amp; System Audio
-          Recording. Then pick <b>Restart engine</b> in the menu.
-        </p>
+          <section id="sets">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Sets</span><span class="ui-section-header__rule"></span></h2>
+            <ul class="intro-facts">
+              <li>A Set names one headphone preset, one ear preset and one taste preset, with Bass, Vocals and Treble.</li>
+              <li>Pick a Set in the picker at the top of Listen, or in the Sets tab of the Library.</li>
+              <li>Save as Set needs each layer with bands saved as a preset first. If a layer is not saved, goui names it and stops.</li>
+              <li>To change a Set, save under its name. The button reads Replace.</li>
+              <li>The × on a row in the Sets tab deletes that Set.</li>
+              <li>An empty ear or taste slot turns that layer off. An empty headphone slot plays Flat.</li>
+              <li>A Set points at its presets by name. An edit to a preset reaches every Set that names it.</li>
+              <li>A deleted preset reads as missing in the Set. It plays as an empty slot.</li>
+              <li><span class="ui-badge tone-accent"><span>Menu</span></span>Right-click the menu bar item. The Sets submenu lists your Sets and ticks the one that plays. Pick one to play it with the panel closed.</li>
+              <li><span class="ui-badge tone-accent"><span>Terminal</span></span><code>goui set "name"</code> plays a Set from Terminal, a shortcut or a login item. It is the same as a pick from the menu.</li>
+              <li>A Set with more than 32 bands on, counting the three sliders, does not play. The Sets tab says why.</li>
+            </ul>
+            <ol class="guide-steps intro-steps sets-pictures" aria-hidden="true">
+              <li class="guide-step">
+                <div class="guide-shot">
+                  <div class="guide-shot__menu">
+                    <div class="ui-list-row ui-list-row--dense is-selected"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>HD 600 at home</span></span></span></span></div>
+                    <div class="ui-list-row ui-list-row--dense"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Office speakers</span></span></span></span></div>
+                    <div class="ui-list-row ui-list-row--dense"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Wide panel</span></span></span></span></div>
+                  </div>
+                </div>
+              </li>
+              <li class="guide-step">
+                <div class="guide-shot">
+                  <label class="ui-field ui-field--readonly ui-field--code"><input class="ui-field__control" value='goui set "HD 600 at home"' readonly tabindex="-1" /></label>
+                </div>
+              </li>
+            </ol>
+          </section>
 
-        <h2 id="privacy">Privacy</h2>
-        <p>
-          goui reads the Mac's audio, runs it through the EQ and plays it back. It never records,
-          stores or sends it. Settings, presets and Sets stay in
-          <code>~/Library/Application Support/goui</code>. AutoEQ downloads work as in the extension.
-          See the <a href="/privacy">privacy policy</a>. goui checks GitHub for new releases twice a
-          day. That request carries nothing about you.
-        </p>
-      </section>
+          <section id="menu">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">The menu bar item</span><span class="ui-section-header__rule"></span></h2>
+            <p class="lead">A click on the menu bar item opens and closes the panel. A right-click opens the menu.</p>
+            <div class="ui-stack ui-stack--tight links">
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>About goui</span></span><span class="ui-list-row__detail">The version of goui, and the version the panel runs</span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Restart engine</span></span><span class="ui-list-row__detail">Rebuilds the audio path. The sound plays briefly without the EQ</span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Reload panel</span></span><span class="ui-list-row__detail">Loads the panel again. The sound carries on</span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Wide panel</span></span><span class="ui-list-row__detail">Widens the panel so Listen, Tune and Library stand side by side. A second pick takes it back</span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Sets</span></span><span class="ui-list-row__detail">Your saved Sets, with a tick on the one that plays. With no Sets, it says where to save one</span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Check for updates…</span></span><span class="ui-list-row__detail">Asks GitHub for a newer release and says what it found</span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Update to …</span></span><span class="ui-list-row__detail">Shows when a release changes the engine. One click installs it and restarts goui</span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Automatic updates</span></span><span class="ui-list-row__detail">A tick means goui checks twice a day. On by default</span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Quit goui</span></span><span class="ui-list-row__detail">Stops goui until the next login. The Mac plays the normal way again</span></span></span></div>
+            </div>
+            <p class="lead">
+              goui updates itself. The first check runs a minute after goui starts, then twice a day. A
+              release that changes only the panel applies on its own. A release that changes the engine
+              waits for <b>Update to …</b> in the menu. That update restarts goui. macOS then asks again to
+              let goui record audio. Check for updates… offers the same install in a dialog, with Update
+              and Later. goui checks GitHub for new versions and sends nothing about you.
+            </p>
+            <p class="lead">
+              goui starts at login and restarts after a crash. If the sound stops, it rebuilds the audio
+              path on its own. After an install or an update, goui opens its panel once, so the menu bar
+              item is easy to find.
+            </p>
+          </section>
+
+          <section id="wide">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">The wide panel</span><span class="ui-section-header__rule"></span></h2>
+            <p class="lead">
+              Pick <b>Wide panel</b> in the menu. Listen, Tune and Library stand side by side, as they do in
+              a wide browser side panel. A second pick takes the panel back to its narrow width. You can
+              also drag an edge of the panel to the width you want. The height follows the page.
+            </p>
+            <img class="wide-shot" src="/images/mac-wide.jpg" alt="The wide goui panel under its menu bar item, with Listen, Tune and Library in three columns and the Sets tab open." />
+          </section>
+
+          <section id="terminal">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Terminal</span><span class="ui-section-header__rule"></span></h2>
+            <p class="lead">One line installs goui, or updates it. It needs no admin password. It checks the Mac, says what to expect and asks before it installs.</p>
+            <pre class="install-line"><code>curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh</code></pre>
+            <p class="lead">The installer puts a <code>goui</code> command in Terminal.</p>
+            <div class="ui-stack ui-stack--tight links">
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span><code>goui set "name"</code></span></span><span class="ui-list-row__detail">Plays a Set, the same as a pick from the menu. It exits with 0 once the Set plays</span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span><code>goui start</code>, <code>goui stop</code>, <code>goui restart</code></span></span><span class="ui-list-row__detail">Start, stop or restart the app</span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span><code>goui logs</code></span></span><span class="ui-list-row__detail">Follows the log in <code>~/Library/Logs/goui.log</code></span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span><code>goui rollback</code></span></span><span class="ui-list-row__detail">Puts back the app from before the last update</span></span></span></div>
+              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span><code>goui uninstall</code></span></span><span class="ui-list-row__detail">Removes the app. Settings stay in <code>~/Library/Application Support/goui</code></span></span></span></div>
+            </div>
+          </section>
+
+          <section id="ear">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Measure your ear</span><span class="ui-section-header__rule"></span></h2>
+            <p class="lead">An AutoEQ profile tunes the headphone to sound neutral, not your ear. EQByEar measures what your ear still wants on top of it.</p>
+            <div class="ui-stack ui-stack--loose">
+              <div class="ui-section-header ui-section-header--section tone-ear">
+                <span class="ui-badge ui-badge--step tone-ear">1</span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">Turn My ear off</span><span class="ui-section-header__caption">In the Library, open My ear and press Measure my ear with EQByEar. My ear turns off so the test hears the headphone alone.</span></span>
+              </div>
+              <div class="ui-section-header ui-section-header--section tone-ear">
+                <span class="ui-badge ui-badge--step tone-ear">2</span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">Run the test</span><span class="ui-section-header__caption">eqbyear.com opens in your browser. goui already hears the browser, so run the test right away.</span></span>
+              </div>
+              <div class="ui-section-header ui-section-header--section tone-ear">
+                <span class="ui-badge ui-badge--step tone-ear">3</span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">Paste the result</span><span class="ui-section-header__caption">Copy the result and come back to goui. Press Paste in My ear, paste it in the box, then press Apply.</span></span>
+              </div>
+              <div class="ui-section-header ui-section-header--section tone-ear">
+                <span class="ui-badge ui-badge--step tone-ear">4</span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">Save it</span><span class="ui-section-header__caption">Press Save to keep it as an ear preset. Turn My ear on to hear the headphone with your ear.</span></span>
+              </div>
+              <div class="ui-cluster">
+                <a class="ui-button" href="https://github.com/jaakkopasanen/AutoEq" target="_blank" rel="noreferrer"><svg class="ui-icon"><use href="#icon-external" /></svg><span>AutoEQ</span></a>
+                <a class="ui-button" href="https://eqbyear.com/" target="_blank" rel="noreferrer"><svg class="ui-icon"><use href="#icon-external" /></svg><span>EQByEar</span></a>
+              </div>
+            </div>
+          </section>
+
+          <section id="trouble">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Troubleshooting</span><span class="ui-section-header__rule"></span></h2>
+            <div class="ui-stack ui-stack--loose">
+              <div class="ui-section-header ui-section-header--section tone-danger">
+                <span class="ui-badge ui-badge--step tone-danger">!</span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">AirPods and Beats sound flat or lose head tracking</span><span class="ui-section-header__caption">macOS applies Spatial Audio and head tracking only when an app plays straight to AirPods or Beats. goui plays in between, so the effect stops or can sound wrong. Turn off Spatial Audio for the headphone in Control Center, or quit goui while you use them.</span></span>
+              </div>
+              <div class="ui-section-header ui-section-header--section tone-danger">
+                <span class="ui-badge ui-badge--step tone-danger">!</span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">No sound, or the sound plays without the EQ</span><span class="ui-section-header__caption">Check that goui is allowed in System Settings, under Privacy &amp; Security, then Screen &amp; System Audio Recording. Then pick Restart engine in the menu. The panel's status line shows when the engine waits to try again, with its error.</span></span>
+              </div>
+              <div class="ui-section-header ui-section-header--section tone-danger">
+                <span class="ui-badge ui-badge--step tone-danger">!</span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">The sound is louder or quieter than it was</span><span class="ui-section-header__caption">Another system EQ, such as eqMac or SoundSource, stacks its curve on goui's. Quit one of them.</span></span>
+              </div>
+              <div class="ui-section-header ui-section-header--section tone-danger">
+                <span class="ui-badge ui-badge--step tone-danger">!</span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">goui set says goui is not running</span><span class="ui-section-header__caption">Run <code>goui start</code>, then try again. If the panel has not loaded yet, pick Reload panel in the menu.</span></span>
+              </div>
+              <div class="ui-section-header ui-section-header--section tone-danger">
+                <span class="ui-badge ui-badge--step tone-danger">!</span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">An update went wrong</span><span class="ui-section-header__caption"><code>goui rollback</code> puts back the app from before the last update. <code>goui logs</code> shows what happened.</span></span>
+              </div>
+            </div>
+          </section>
+
+          <section id="privacy">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Privacy</span><span class="ui-section-header__rule"></span></h2>
+            <ul class="intro-facts">
+              <li>goui reads the Mac's audio, runs it through the EQ and plays it back. It never records, stores or sends it.</li>
+              <li>Settings, presets and Sets stay in <code>~/Library/Application Support/goui</code>.</li>
+              <li>AutoEQ downloads work as in the extension. The <a href="/privacy">privacy policy</a> has the details.</li>
+              <li>goui checks GitHub for new releases twice a day. That request carries nothing about you.</li>
+            </ul>
+          </section>
+
+          <section id="credits">
+            <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Credits</span><span class="ui-section-header__rule"></span></h2>
+            <div class="ui-stack ui-stack--tight links">
+              <div class="ui-list-row"><a class="ui-list-row__main" href="https://github.com/jaakkopasanen/AutoEQ" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>AutoEQ</span></span><span class="ui-list-row__detail">Headphone profiles, the search index and the targets, by Jaakko Pasanen, under the MIT licence</span></span></a></div>
+              <div class="ui-list-row"><a class="ui-list-row__main" href="https://eqbyear.com" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>EQByEar</span></span><span class="ui-list-row__detail">The hearing test behind your My ear layer</span></span></a></div>
+              <div class="ui-list-row"><a class="ui-list-row__main" href="https://github.com/google/material-design-icons" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Material Icons</span></span><span class="ui-list-row__detail">Icon art by Google, under the Apache 2.0 licence</span></span></a></div>
+              <div class="ui-list-row"><a class="ui-list-row__main" href="https://github.com/googlefonts/atkinson-hyperlegible-next" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Atkinson Hyperlegible</span></span><span class="ui-list-row__detail">Text in Atkinson Hyperlegible Next and Mono, by the Braille Institute, under the SIL Open Font licence</span></span></a></div>
+            </div>
+            <a class="store" href="/#install"><img src="/chrome-web-store.png" alt="Available in the Chrome Web Store" width="165" height="50" /><span><b>For one browser tab, there is the extension.</b> goui for the Mac covers the whole output. The extension in Chrome or Brave changes one tab.</span></a>
+            <p class="fine">
+              goui is under the MIT licence. <a href="https://github.com/wyndhamharyata/goui/blob/main/LICENSE" target="_blank" rel="noreferrer">Read the licence</a>,
+              or the <a href="https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noreferrer">full notices</a>.
+              New to EQ? Wikipedia has a <a href="https://en.wikipedia.org/wiki/Equalization_(audio)" target="_blank" rel="noreferrer">primer on audio EQ</a>.
+            </p>
+          </section>
+        </div>
+      </div>
 
       <footer>
         <span>goui, by M Wyndham Haryata Permana.</span>
@@ -154,5 +375,6 @@
       </footer>
     </main>
     <script src="/site.js"></script>
+    <script src="/version.js"></script>
   </body>
 </html>

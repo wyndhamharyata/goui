@@ -416,6 +416,80 @@ main {
   margin-bottom: var(--space-3);
 }
 
+/* The Mac page wears the built-in help's design, under the site's own header. intro.css lays out the .doc column. */
+main.help {
+  max-width: 980px;
+}
+
+.help .doc {
+  margin-top: var(--space-7);
+  padding: 0;
+}
+
+.help .intro-body .two-col {
+  margin-top: var(--space-5);
+}
+
+.help .two-col img {
+  border: 1px solid var(--line-1);
+}
+
+.help .install-line {
+  margin-bottom: var(--space-5);
+}
+
+/* The help column is narrow, so the install line wraps instead of scrolling. */
+.help .install-line code {
+  font-family: var(--font-number);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.help .wide-shot {
+  margin-top: var(--space-5);
+  border: 1px solid var(--line-1);
+}
+
+.help .guide-shot__dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.help .guide-shot__dialog .ui-cluster {
+  justify-content: flex-end;
+}
+
+.help .sets-pictures {
+  margin-top: var(--space-5);
+}
+
+.help .sets-pictures .guide-shot {
+  margin-left: 0;
+}
+
+.help .links .ui-list-row__main {
+  cursor: default;
+}
+
+.help .links a.ui-list-row__main {
+  cursor: pointer;
+}
+
+/* A row in the panel keeps its detail on one line. On this page the detail is the explanation, so it wraps. */
+.help .links .ui-list-row__name > span:first-child,
+.help .links .ui-list-row__detail {
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+}
+
+.help .links code {
+  padding: 0 var(--space-1);
+  font-size: var(--size-small);
+}
+
 .not-found {
   display: flex;
   flex-direction: column;
