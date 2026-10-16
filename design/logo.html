@@ -688,8 +688,68 @@
       .record > summary small { margin-left: 12px; color: var(--text-3); font-weight: 400; font-size: 13px; }
       .record .doc-section:first-of-type { padding-top: 24px; }
 
+      /* Round three */
+      .readout-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin: -8px;
+      }
+
+      .readout {
+        display: flex;
+        flex-direction: column;
+        margin: 8px;
+        padding: 20px;
+        border: 1px solid var(--line-1);
+        border-radius: 14px;
+        background: var(--ink-1);
+      }
+
+      .readout h3 {
+        margin: 0 0 14px;
+        font-size: 16px;
+        letter-spacing: -0.02em;
+      }
+
+      .readout__stage {
+        position: relative;
+        width: 224px;
+        height: 224px;
+        margin: 0 auto;
+        border-radius: 8px;
+        background: var(--ink-2);
+      }
+
+      .readout__stage svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .readout table {
+        width: 100%;
+        margin-top: 16px;
+        border-collapse: collapse;
+        font: 500 12px / 1.5 var(--font-number);
+        color: var(--text-2);
+      }
+
+      .readout td {
+        padding: 4px 0;
+        border-bottom: 1px solid var(--line-1);
+      }
+
+      .readout td + td { text-align: right; color: var(--text-1); }
+      .readout .is-bad { color: var(--layer-taste); }
+      .readout .is-good { color: var(--accent); }
+      .ship-table td.is-bad { color: var(--layer-taste); }
+      .ship-table td.is-good { color: var(--accent); }
+
       @media (max-width: 1000px) {
-        .concept-grid, .concept-grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .concept-grid, .concept-grid--four, .readout-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .size-table, .size-head { grid-template-columns: 1fr; }
         .context-row { grid-template-columns: 1fr; }
         .doc-intro { grid-template-columns: 1fr; }
@@ -898,36 +958,258 @@
         <use href="#glyph-g8" color="#0b0c0e" />
       </symbol>
       <symbol id="mono-g8" viewBox="3 3 58 58"><use href="#glyph-g8" /></symbol>
+
+      <!-- Round three. Each glyph-h* is a circle bowl, a stem fused to its right side and a flat tail on a tight corner, at a stroke of 7.5 units. mono-* crops to the safe box, 8 to 56. -->
+      <!-- H1. The plot in the bowl. Three level bars stand on the counter's floor. -->
+      <symbol id="glyph-h1" viewBox="0 0 64 64">
+        <circle cx="32.25" cy="24.5" r="11.25" fill="none" stroke="currentColor" stroke-width="7.5" />
+        <path d="M43.5 24.5V44.25A4.5 4.5 0 0 1 39 48.75H18.5" fill="none" stroke="currentColor" stroke-width="7.5" stroke-linecap="round" />
+        <g fill="currentColor">
+          <rect x="27" y="24.5" width="2.5" height="5" rx="1.25" />
+          <rect x="31" y="19.5" width="2.5" height="10" rx="1.25" />
+          <rect x="35" y="22.5" width="2.5" height="7" rx="1.25" />
+        </g>
+      </symbol>
+      <symbol id="mark-h1" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-h1" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-h1" viewBox="8 8 48 48"><use href="#glyph-h1" /></symbol>
+
+      <!-- H2. The point on the tail. The tail ends in the chosen band's point under the bowl's left side. -->
+      <symbol id="glyph-h2" viewBox="0 0 64 64">
+        <circle cx="32.25" cy="24.25" r="11.25" fill="none" stroke="currentColor" stroke-width="7.5" />
+        <path d="M43.5 24.25V43.5A4.5 4.5 0 0 1 39 48H20" fill="none" stroke="currentColor" stroke-width="7.5" stroke-linecap="round" />
+        <circle cx="20" cy="48" r="5.25" fill="currentColor" />
+      </symbol>
+      <symbol id="mark-h2" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-h2" color="#0b0c0e" />
+        <circle cx="20" cy="48" r="2.3" fill="#f2f3f5" />
+      </symbol>
+      <symbol id="mono-h2" viewBox="8 8 48 48"><use href="#glyph-h2" /></symbol>
+
+      <!-- H3. The plot and the point. H1's bars in the counter and H2's point on the tail, in one g. -->
+      <symbol id="glyph-h3" viewBox="0 0 64 64">
+        <circle cx="32.25" cy="24.25" r="11.25" fill="none" stroke="currentColor" stroke-width="7.5" />
+        <path d="M43.5 24.25V43.5A4.5 4.5 0 0 1 39 48H20" fill="none" stroke="currentColor" stroke-width="7.5" stroke-linecap="round" />
+        <circle cx="20" cy="48" r="5.25" fill="currentColor" />
+        <g fill="currentColor">
+          <rect x="27" y="24.25" width="2.5" height="5" rx="1.25" />
+          <rect x="31" y="19.25" width="2.5" height="10" rx="1.25" />
+          <rect x="35" y="22.25" width="2.5" height="7" rx="1.25" />
+        </g>
+      </symbol>
+      <symbol id="mark-h3" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-h3" color="#0b0c0e" />
+        <circle cx="20" cy="48" r="2.3" fill="#f2f3f5" />
+      </symbol>
+      <symbol id="mono-h3" viewBox="8 8 48 48"><use href="#glyph-h3" /></symbol>
+
+      <!-- H4. The point in the bowl. The counter holds one dot, so the bowl is the band handle the panel draws. -->
+      <symbol id="glyph-h4" viewBox="0 0 64 64">
+        <circle cx="32.25" cy="24.5" r="11.25" fill="none" stroke="currentColor" stroke-width="7.5" />
+        <path d="M43.5 24.5V44.25A4.5 4.5 0 0 1 39 48.75H18.5" fill="none" stroke="currentColor" stroke-width="7.5" stroke-linecap="round" />
+        <circle cx="32.25" cy="24.5" r="3" fill="currentColor" />
+      </symbol>
+      <symbol id="mark-h4" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-h4" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-h4" viewBox="8 8 48 48"><use href="#glyph-h4" /></symbol>
+
+      <!-- H5. The cut bowl. The bowl is a solid disc and three bars are cut out of it, so the tile shows through as the levels. -->
+      <symbol id="glyph-h5" viewBox="0 0 64 64">
+        <path fill="currentColor" fill-rule="evenodd" d="M32.25 9.5A15 15 0 1 1 32.25 39.5A15 15 0 1 1 32.25 9.5ZM28.25 24.5A1.25 1.25 0 0 1 29.5 25.75V28.25A1.25 1.25 0 0 1 28.25 29.5A1.25 1.25 0 0 1 27 28.25V25.75A1.25 1.25 0 0 1 28.25 24.5ZM32.25 19.5A1.25 1.25 0 0 1 33.5 20.75V28.25A1.25 1.25 0 0 1 32.25 29.5A1.25 1.25 0 0 1 31 28.25V20.75A1.25 1.25 0 0 1 32.25 19.5ZM36.25 22.5A1.25 1.25 0 0 1 37.5 23.75V28.25A1.25 1.25 0 0 1 36.25 29.5A1.25 1.25 0 0 1 35 28.25V23.75A1.25 1.25 0 0 1 36.25 22.5Z" />
+        <path d="M43.5 24.5V44.25A4.5 4.5 0 0 1 39 48.75H18.5" fill="none" stroke="currentColor" stroke-width="7.5" stroke-linecap="round" />
+      </symbol>
+      <symbol id="mark-h5" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-h5" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-h5" viewBox="8 8 48 48"><use href="#glyph-h5" /></symbol>
+
+      <!-- H6. The peak window. The bowl is a solid disc and its window is one peak band on its flat line. -->
+      <symbol id="glyph-h6" viewBox="0 0 64 64">
+        <path fill="currentColor" fill-rule="evenodd" d="M32.25 9.5A15 15 0 1 1 32.25 39.5A15 15 0 1 1 32.25 9.5ZM26.25 28.5V26C29 26 30 19.5 32.25 19.5C34.5 19.5 35.5 26 38.25 26V28.5Z" />
+        <path d="M43.5 24.5V44.25A4.5 4.5 0 0 1 39 48.75H18.5" fill="none" stroke="currentColor" stroke-width="7.5" stroke-linecap="round" />
+      </symbol>
+      <symbol id="mark-h6" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <use href="#glyph-h6" color="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-h6" viewBox="8 8 48 48"><use href="#glyph-h6" /></symbol>
     </svg>
 
     <main>
       <header class="doc-intro">
         <div>
-          <p class="doc-eyebrow">goui design · logo proposal · round two</p>
-          <h1>The letter g.<br /><em>Eight ways to make it hear.</em></h1>
+          <p class="doc-eyebrow">goui design · logo proposal · round three</p>
+          <h1>The letter g,<br /><em>drawn for the tile.</em></h1>
           <p>
-            Round one tried six marks and picked the letter g, since it is the only one that still reads at
-            16 px. The owner agreed with the direction and said a plain letter loses the identity of an EQ
-            app at once. This round keeps the g and fuses an EQ idea into it, eight times. Each fusion is a
-            different idea, not a different detail. Each mark is shown at the four extension sizes, on a
-            light toolbar and a dark one, with a pixel view of the 16 px icon, in one colour for the Mac
-            menu bar, and in the store tile, the site header, the Dock and a browser tab. Section 05 picks
-            one and names the trade. Round one is folded at the end, as the record.
+            The owner kept the idea of the letter g and turned down the way rounds one and two drew it.
+            Three faults were named. The letter was a font glyph with things put in it. The marks were off
+            centre and lopsided. The marks ran out to the tile edge. Two seeds stay, the bars in the counter
+            of G2 and the point on the tail of G4. This round draws the g from its own geometry, a circle
+            bowl, a stem that is the bowl's right side carried straight down, and a flat tail on a tight
+            corner, at one stroke weight. Each mark is measured on the 64 unit grid against
+            the safe box of 8 to 56, with its four margins and its ink centre printed, and then shown at
+            the four extension sizes, in one colour, and in context. Rounds one and two are folded at the
+            end, as the record.
           </p>
         </div>
         <ol class="doc-index-list">
-          <li><a href="#concepts-2"><b>01</b>Eight fusions</a></li>
-          <li><a href="#sizes-2"><b>02</b>At the real sizes</a></li>
-          <li><a href="#mono-2"><b>03</b>One colour, for the menu bar</a></li>
-          <li><a href="#context-2"><b>04</b>In context</a></li>
-          <li><a href="#pick-2"><b>05</b>The pick, and the trade</a></li>
+          <li><a href="#marks-3"><b>01</b>Six marks</a></li>
+          <li><a href="#balance-3"><b>02</b>Safe area and balance</a></li>
+          <li><a href="#sizes-3"><b>03</b>At the real sizes</a></li>
+          <li><a href="#mono-3"><b>04</b>One colour, for the menu bar</a></li>
+          <li><a href="#context-3"><b>05</b>In context</a></li>
+          <li><a href="#pick-3"><b>06</b>The pick, and the runner up</a></li>
+          <li><a href="#record-2"><b>--</b>Round two, the record</a></li>
           <li><a href="#record"><b>--</b>Round one, the record</a></li>
         </ol>
       </header>
 
-      <section class="doc-section" id="concepts-2">
+      <section class="doc-section" id="marks-3">
         <header class="doc-head">
           <span class="doc-head__index">01</span>
+          <div>
+            <h2>Six marks</h2>
+            <p>
+              One letterform, six ideas. The bowl is a circle 30 units across with a counter of 15. The
+              stem is the bowl's right side carried straight down. The tail turns on a corner of 4.5 units,
+              tight enough to read as an L, and runs flat to 2.5 units past the bowl's left edge. Every
+              stroke is 7.5 units. Nothing is traced from a typeface. Three drafts came before this one and
+              are not shown. A wide rounded bowl with a soft corner read as the numeral 9 at every size, and
+              a small bowl with a long sweeping tail read as a 9 or an Arabic waw. The tight corner is what
+              makes this a g. The first three marks come straight from the two seeds. The last three move
+              the cue into the counter in a different way each time.
+            </p>
+          </div>
+        </header>
+        <div class="concept-grid" id="concept-grid-3"></div>
+      </section>
+
+      <section class="doc-section" id="balance-3">
+        <header class="doc-head">
+          <span class="doc-head__index">02</span>
+          <div>
+            <h2>Safe area and balance</h2>
+            <p>
+              The store tile keeps 16 px clear in 128, which is 8 units of 64, so the safe box is 8 to 56.
+              The dashed box below is that safe box. Each mark is drawn in the accent on the 64 unit grid,
+              and this page rasterises the glyph at ten samples per unit and reads the ink back. The thin
+              box is the ink's bounding box. The four numbers are the margins from the ink to the safe box
+              in grid units. The cross is the tile's centre and the dot is the ink's centre of mass, which is
+              the optical centre. A g's bowl and stem are on its right and its tail is thin and on its left,
+              so the ink centre of any g is right of its box centre. Each mark is placed where the two
+              disagree by the same amount, one unit each side of the axis. A mark passes when every margin
+              is at least one unit, both centres are within a unit of the middle, and the ink centre is not
+              below it. A g is taller than it is wide, so the side margins are larger than the top and
+              bottom ones. That is the letter, not an error.
+            </p>
+          </div>
+        </header>
+        <div class="readout-grid" id="readout-grid-3"></div>
+      </section>
+
+      <section class="doc-section" id="sizes-3">
+        <header class="doc-head">
+          <span class="doc-head__index">03</span>
+          <div>
+            <h2>At the real sizes</h2>
+            <p>
+              The same strips as before. The tile in the 16 px icon is 12 px wide, so a stroke of 7.5 units
+              is 1.4 px, the bowl is 5.6 px across and its counter is 2.8 px. The pixel view on the right is
+              the test. Look at the 16 px square and ask two things. Is it a g? Is there anything
+              in it a plain g does not have?
+            </p>
+          </div>
+        </header>
+        <div class="size-head"><span>Mark</span><span>Light toolbar</span><span>Dark toolbar</span><span>Pixels, 16 and 32 px</span></div>
+        <div id="size-rows-3"></div>
+      </section>
+
+      <section class="doc-section" id="mono-3">
+        <header class="doc-head">
+          <span class="doc-head__index">04</span>
+          <div>
+            <h2>One colour, for the menu bar</h2>
+            <p>
+              Each mark's one colour form is the same glyph with the tile gone, cropped to the safe box,
+              so the stroke comes out at 2.8 px in an 18 pt template image. H2 and H3 have a light centre
+              in the tail's point on the tile, and their bar form fills that point in.
+            </p>
+          </div>
+        </header>
+        <div id="mono-rows-3" class="menubar-set"></div>
+      </section>
+
+      <section class="doc-section" id="context-3">
+        <header class="doc-head">
+          <span class="doc-head__index">05</span>
+          <div>
+            <h2>In context</h2>
+            <p>
+              The store tile, the site header, the Dock and a browser tab. The site header shows the one
+              colour form in the accent next to the wordmark. The wide bowl has to read as a g next to the
+              word goui, which is set in a typeface with a round g.
+            </p>
+          </div>
+        </header>
+        <div id="context-rows-3"></div>
+      </section>
+
+      <section class="doc-section" id="pick-3">
+        <header class="doc-head">
+          <span class="doc-head__index">06</span>
+          <div>
+            <h2>The pick, and the runner up</h2>
+            <p>H2, the point on the tail, with H1 as the runner up. Below is the reasoning and a table of how each mark does on the three tests.</p>
+          </div>
+        </header>
+        <div class="pick">
+          <div class="pick__stage pick__stage--two">
+            <div class="pick__row">
+              <svg width="128" height="128" viewBox="0 0 64 64"><use href="#mark-h2" /></svg>
+              <svg width="40" height="40" viewBox="0 0 64 64" style="color: #f2f3f5"><use href="#mono-h2" /></svg>
+              <svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark-h2" /></svg>
+            </div>
+            <div class="pick__row">
+              <svg width="64" height="64" viewBox="0 0 64 64"><use href="#mark-h1" /></svg>
+              <svg width="24" height="24" viewBox="0 0 64 64" style="color: #f2f3f5"><use href="#mono-h1" /></svg>
+              <svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark-h1" /></svg>
+            </div>
+          </div>
+          <div class="doc-notes" id="pick-notes-3">
+            <h3>H2. The point on the tail, with H1 as the runner up</h3>
+            <ul>
+              <li><b>The cue is the one thing that still shows at 16 px.</b> The point is 10.5 units across, so it is 2 px in the toolbar icon and 8.5 px in the Dock. Bars in a counter of 15 units are a smudge at 32 px and gone at 16. A dot on a tail is not.</li>
+              <li><b>It is a letter first.</b> A ball at the end of a tail is a thing letters do, so a stranger reads g and does not see a thing stuck on. A person who has dragged a band in the panel sees the handle.</li>
+              <li><b>It is balanced and inside the box.</b> Section 02 has the numbers. The ink is 14.75 to 47.25 across and 9.25 to 53.25 down. The margins are 6.75 left, 8.75 right, 1.25 top and 2.75 bottom. The box centre is one unit left of the middle and the ink centre one unit right of it, which is the split the section describes. The ink centre is a quarter unit above the middle.</li>
+              <li><b>Runner up, H1, the plot in the bowl.</b> Three bars standing on the counter's floor is the clean reading of the seed the owner liked best. It is the strongest mark at 128 px and in the store tile. At 16 px the counter closes and it is a plain g. It is the pick if the store page matters more than the toolbar.</li>
+              <li><b>H3 is both, and it is one thing too many.</b> On the tile it is the richest mark. In the pixel view it is H2. In the menu bar the bars fill in and it is H2 again. The second cue costs the clean bowl and buys nothing below 48 px.</li>
+              <li><b>H5 and H6 fail the first test.</b> A solid bowl with a hole cut in it is a disc with a hook, not a letter. At 128 px a stranger sees a face or a mushroom before a g. At 16 px both are a blob with a tail. They are on the page as the record of the idea.</li>
+              <li><b>What the letterform changed.</b> The stem is not a stroke laid over a ring. It is the ring's right side carried down, so the outside of the letter is one line from the top of the bowl to the corner. The corner is tight, which is the one thing that separates a geometric g from a 9. The tail is flat and ends with a round cap or the point. The whole letter is 32.5 units wide and 43 tall. In rounds one and two the letter was 51 tall and ran to the tile's edge.</li>
+              <li><b>Calls made on this page.</b> The stroke is 7.5 of 64, down from 9, so the bowl keeps 5 units of clear tile between its bottom and the tail. The point is centred on the tail's line and its clearance to the bowl is more than 5. The light centre of the point is 4.6 units across. The one colour crop is the safe box itself, so the glyph fills 68 percent of the bar icon's width.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="doc-sub"><h3>The three tests, mark by mark</h3><p>Balance, the safe box, and what a stranger reads at 128 px and at 16 px.</p></div>
+        <table class="ship-table">
+          <thead><tr><th>Mark</th><th>Balance</th><th>Safe box</th><th>At 128 px</th><th>At 16 px</th></tr></thead>
+          <tbody id="pick-table-3"></tbody>
+        </table>
+      </section>
+
+      <details class="record" id="record-2">
+        <summary>Round two, the record<small>eight fusions of an EQ cue into the g, the sizes, the menu bar, the contexts and the pick</small></summary>
+
+      <section class="doc-section" id="concepts-2">
+        <header class="doc-head">
+          <span class="doc-head__index">07</span>
           <div>
             <h2>Eight fusions</h2>
             <p>
@@ -944,7 +1226,7 @@
 
       <section class="doc-section" id="sizes-2">
         <header class="doc-head">
-          <span class="doc-head__index">02</span>
+          <span class="doc-head__index">08</span>
           <div>
             <h2>At the real sizes</h2>
             <p>
@@ -961,7 +1243,7 @@
 
       <section class="doc-section" id="mono-2">
         <header class="doc-head">
-          <span class="doc-head__index">03</span>
+          <span class="doc-head__index">09</span>
           <div>
             <h2>One colour, for the menu bar</h2>
             <p>
@@ -976,7 +1258,7 @@
 
       <section class="doc-section" id="context-2">
         <header class="doc-head">
-          <span class="doc-head__index">04</span>
+          <span class="doc-head__index">10</span>
           <div>
             <h2>In context</h2>
             <p>
@@ -991,7 +1273,7 @@
 
       <section class="doc-section" id="pick-2">
         <header class="doc-head">
-          <span class="doc-head__index">05</span>
+          <span class="doc-head__index">11</span>
           <div>
             <h2>The pick, and the trade</h2>
             <p>G7, the wave tail. Below is the reasoning, the runner up, and a table of how much EQ each mark still says at 16 px.</p>
@@ -1040,13 +1322,14 @@
           </tbody>
         </table>
       </section>
+      </details>
 
       <details class="record" id="record">
         <summary>Round one, the record<small>six concepts, the sizes, the menu bar, the contexts, the pick and the palette note</small></summary>
 
       <section class="doc-section" id="concepts">
         <header class="doc-head">
-          <span class="doc-head__index">06</span>
+          <span class="doc-head__index">12</span>
           <div>
             <h2>Six concepts</h2>
             <p>
@@ -1062,7 +1345,7 @@
 
       <section class="doc-section" id="sizes">
         <header class="doc-head">
-          <span class="doc-head__index">07</span>
+          <span class="doc-head__index">13</span>
           <div>
             <h2>At the real sizes</h2>
             <p>
@@ -1085,7 +1368,7 @@
 
       <section class="doc-section" id="mono">
         <header class="doc-head">
-          <span class="doc-head__index">08</span>
+          <span class="doc-head__index">14</span>
           <div>
             <h2>One colour, for the menu bar</h2>
             <p>
@@ -1102,7 +1385,7 @@
 
       <section class="doc-section" id="context">
         <header class="doc-head">
-          <span class="doc-head__index">09</span>
+          <span class="doc-head__index">15</span>
           <div>
             <h2>In context</h2>
             <p>
@@ -1118,7 +1401,7 @@
 
       <section class="doc-section" id="pick">
         <header class="doc-head">
-          <span class="doc-head__index">10</span>
+          <span class="doc-head__index">16</span>
           <div>
             <h2>The recommendation</h2>
             <p>Concept E, the letter g on an acid tile. Below it is the reasoning, then the list of what has to change to ship it.</p>
@@ -1189,7 +1472,7 @@
 
       <section class="doc-section" id="palette">
         <header class="doc-head">
-          <span class="doc-head__index">11</span>
+          <span class="doc-head__index">17</span>
           <div>
             <h2>Palette note</h2>
             <p>
@@ -1416,6 +1699,164 @@
         image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`;
       }
 
+      const marks = [
+        { letter: "H1", name: "The plot in the bowl", idea: "Three level bars stand on the floor of the counter, the way the spectrum stands under the curve. The stem is the bowl's right side carried down to a flat tail." },
+        { letter: "H2", name: "The point on the tail", idea: "The tail runs flat under the bowl and ends in the chosen band's point, a light dot in an ink ring. The point is 10.5 units across, so it has real weight." },
+        { letter: "H3", name: "The plot and the point", idea: "H1's bars in the counter and H2's point on the tail, in one g. The richest mark on the tile and the busiest." },
+        { letter: "H4", name: "The point in the bowl", idea: "The counter holds one dot, so the bowl is the band handle as the panel draws it, a ring with a point inside." },
+        { letter: "H5", name: "The cut bowl", idea: "The bowl is a solid disc and three bars are cut out of it, so the tile shows through as the levels. The counter is the cue." },
+        { letter: "H6", name: "The peak window", idea: "The bowl is a solid disc and its window is one peak band on its flat line. The plot is the hole in the letter." },
+      ];
+      const verdicts = [
+        { letter: "H1", balance: "Passes. Both centres within a unit.", safe: "Inside.", large: "A g with a level meter in its bowl. Reads g, then audio.", small: "A g. The counter closes to a grey patch." },
+        { letter: "H2", balance: "Passes. Both centres within a unit.", safe: "Inside.", large: "A g with a ball on its tail, and the ball is the panel's handle.", small: "A g with a heavy tail end. The dot is still there." },
+        { letter: "H3", balance: "Passes. Both centres within a unit.", safe: "Inside.", large: "Both cues. The eye goes to the dot first.", small: "H2. The bars are gone." },
+        { letter: "H4", balance: "Passes. Both centres within a unit.", safe: "Inside.", large: "A g with a dot in its bowl. An eye, or a target.", small: "A bold g with a closed bowl." },
+        { letter: "H5", balance: "Passes on the numbers. The solid disc still outweighs the tail to the eye.", safe: "Inside.", large: "A face with a hook. Audio maybe, g last.", small: "A blob with a tail. Not a g." },
+        { letter: "H6", balance: "Passes on the numbers. The solid disc still outweighs the tail to the eye.", safe: "Inside.", large: "A face in a hat, or a mushroom. Not a g first.", small: "A blob with a tail. Not a g." },
+      ];
+      const safeBox = { first: 8, last: 56 };
+      // Ten samples per grid unit, so a margin reads to a tenth of a unit.
+      const inkSamples = 640;
+
+      function rasteriseGlyph(glyphId) {
+        const symbol = document.getElementById(glyphId).cloneNode(true);
+
+        inlineUses(symbol);
+        const inner = new XMLSerializer().serializeToString(symbol).replace(/<\/?symbol[^>]*>/g, "");
+        const markup = `<svg xmlns="http://www.w3.org/2000/svg" width="${inkSamples}" height="${inkSamples}" viewBox="0 0 64 64" style="color: #000">${inner}</svg>`;
+
+        return new Promise((resolve) => {
+          const image = new Image();
+
+          image.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = inkSamples;
+            canvas.height = inkSamples;
+            const context = canvas.getContext("2d");
+            context.drawImage(image, 0, 0);
+            resolve(context.getImageData(0, 0, inkSamples, inkSamples).data);
+          };
+          image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`;
+        });
+      }
+
+      function measureInk(data) {
+        const scale = inkSamples / 64;
+        let left = inkSamples;
+        let right = -1;
+        let top = inkSamples;
+        let bottom = -1;
+        let count = 0;
+        let sumX = 0;
+        let sumY = 0;
+
+        for (let y = 0; y < inkSamples; y += 1) {
+          for (let x = 0; x < inkSamples; x += 1) {
+            if (data[(y * inkSamples + x) * 4 + 3] < 128) continue;
+            if (x < left) left = x;
+            if (x > right) right = x;
+            if (y < top) top = y;
+            if (y > bottom) bottom = y;
+            count += 1;
+            sumX += x + 0.5;
+            sumY += y + 0.5;
+          }
+        }
+
+        return {
+          left: left / scale,
+          right: (right + 1) / scale,
+          top: top / scale,
+          bottom: (bottom + 1) / scale,
+          centerX: sumX / count / scale,
+          centerY: sumY / count / scale,
+        };
+      }
+
+      function signed(value) {
+        const text = Math.abs(value).toFixed(1);
+        if (Math.abs(value) < 0.05) return "0.0";
+        return value < 0 ? `-${text}` : `+${text}`;
+      }
+
+      function readoutOverlay(ink) {
+        const lines = [8, 16, 24, 32, 40, 48, 56].map((at) => `M${at} 0V64M0 ${at}H64`).join("");
+        const labelY = (ink.top + ink.bottom) / 2 + 1;
+        const labelX = (ink.left + ink.right) / 2;
+        return `
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <rect x="0.25" y="0.25" width="63.5" height="63.5" rx="14" fill="none" stroke="rgb(255 255 255 / 0.12)" stroke-width="0.5" />
+            <path d="${lines}" stroke="rgb(255 255 255 / 0.08)" stroke-width="0.2" />
+            <rect x="${safeBox.first}" y="${safeBox.first}" width="48" height="48" fill="none" stroke="#f2f3f5" stroke-width="0.4" stroke-dasharray="1.2 1" />
+            <rect x="${ink.left}" y="${ink.top}" width="${ink.right - ink.left}" height="${ink.bottom - ink.top}" fill="none" stroke="#ff8fb1" stroke-width="0.3" />
+            <path d="M29.5 32H34.5M32 29.5V34.5" stroke="#f2f3f5" stroke-width="0.35" />
+            <circle cx="${ink.centerX}" cy="${ink.centerY}" r="1" fill="#ff8fb1" />
+            <g fill="#f2f3f5" font-family="Atkinson Hyperlegible Mono, monospace" font-size="2.6" font-weight="700" text-anchor="middle">
+              <text x="${(safeBox.first + ink.left) / 2}" y="${labelY}">${(ink.left - safeBox.first).toFixed(1)}</text>
+              <text x="${(safeBox.last + ink.right) / 2}" y="${labelY}">${(safeBox.last - ink.right).toFixed(1)}</text>
+              <text x="${labelX}" y="${(safeBox.first + ink.top) / 2 + 1}">${(ink.top - safeBox.first).toFixed(1)}</text>
+              <text x="${labelX}" y="${(safeBox.last + ink.bottom) / 2 + 1}">${(safeBox.last - ink.bottom).toFixed(1)}</text>
+            </g>
+          </svg>`;
+      }
+
+      function readoutRows(ink) {
+        const margins = [ink.left - safeBox.first, safeBox.last - ink.right, ink.top - safeBox.first, safeBox.last - ink.bottom];
+        const isInside = margins.every((margin) => margin >= 0);
+        const hasRoom = margins.every((margin) => margin >= 1);
+        const boxCenterX = (ink.left + ink.right) / 2 - 32;
+        const boxCenterY = (ink.top + ink.bottom) / 2 - 32;
+        const opticalX = ink.centerX - 32;
+        const opticalY = ink.centerY - 32;
+        // A g's bowl and stem are on its right, so its ink centre is right of its box centre. The mark is placed where the two disagree by the same amount.
+        const isBoxCentred = Math.abs(boxCenterX) <= 1.05 && Math.abs(boxCenterY) <= 1.05;
+        const isInkCentred = Math.abs(opticalX) <= 1.05 && opticalY <= 0.5 && opticalY >= -1.5;
+        const tone = (isGood) => (isGood ? "is-good" : "is-bad");
+
+        return `
+          <tr><td>Ink box, x</td><td>${ink.left.toFixed(1)} to ${ink.right.toFixed(1)}</td></tr>
+          <tr><td>Ink box, y</td><td>${ink.top.toFixed(1)} to ${ink.bottom.toFixed(1)}</td></tr>
+          <tr><td>Margins, left right top bottom</td><td class="${tone(hasRoom)}">${margins.map((margin) => margin.toFixed(1)).join("  ")}</td></tr>
+          <tr><td>Inside 8 to 56</td><td class="${tone(isInside)}">${isInside ? "yes" : "no"}</td></tr>
+          <tr><td>Box centre, from the middle</td><td class="${tone(isBoxCentred)}">${signed(boxCenterX)}, ${signed(boxCenterY)}</td></tr>
+          <tr><td>Ink centre, from the middle</td><td class="${tone(isInkCentred)}">${signed(opticalX)}, ${signed(opticalY)}</td></tr>`;
+      }
+
+      async function renderReadouts(gridId, list) {
+        const grid = document.getElementById(gridId);
+        const cards = [];
+
+        for (const { letter, name } of list) {
+          const ink = measureInk(await rasteriseGlyph(`glyph-${lower(letter)}`));
+          cards.push(`
+            <article class="readout" data-mark="${letter}">
+              <h3>${letter}. ${name}</h3>
+              <div class="readout__stage">
+                ${iconSvg(`glyph-${lower(letter)}`, 224, "0 0 64 64", "#d4ff3f")}
+                ${readoutOverlay(ink)}
+              </div>
+              <table><tbody>${readoutRows(ink)}</tbody></table>
+            </article>`);
+        }
+
+        grid.innerHTML = cards.join("");
+      }
+
+      function renderVerdicts(bodyId, list) {
+        const body = document.getElementById(bodyId);
+        const named = Object.fromEntries(marks.map((mark) => [mark.letter, mark.name]));
+
+        body.innerHTML = list.map(({ letter, balance, safe, large, small }) => `
+          <tr><td>${letter}. ${named[letter]}</td><td>${balance}</td><td>${safe}</td><td>${large}</td><td>${small}</td></tr>`).join("");
+      }
+
+      renderConcepts("concept-grid-3", marks);
+      renderSizes("size-rows-3", marks);
+      renderMono("mono-rows-3", marks);
+      renderContext("context-rows-3", marks);
+      renderVerdicts("pick-table-3", verdicts);
+      renderReadouts("readout-grid-3", marks);
       renderConcepts("concept-grid-2", fusions);
       renderSizes("size-rows-2", fusions);
       renderMono("mono-rows-2", fusions);
