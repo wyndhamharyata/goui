@@ -355,7 +355,7 @@ mkdir -p "$HOME/Library/Application Support/goui"
 launchctl bootstrap "$domain" "$plist"
 passed "Started goui. It starts at login."
 
-printf '\n  %s%s♪ goui %s is in.%s\n' "$bold" "$green" "$new_version" "$reset"
+printf '\n  %s%sgoui %s installed.%s\n' "$bold" "$green" "$new_version" "$reset"
 printf '\n  1. The panel opens under the menu bar item. Press the power button.\n'
 printf '  2. macOS asks to record audio. Press %sAllow%s.\n' "$bold" "$reset"
 printf '  3. Play something.\n'

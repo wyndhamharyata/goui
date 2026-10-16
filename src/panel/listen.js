@@ -102,10 +102,8 @@ function readRowFacts(layer) {
 function renderLayers() {
   const layers = state.config.layers;
   const buildRows = () => layerOrder.map((role) => (layers[role] ? buildLayerRow(role, layers[role]) : buildEmptyLayerRow(role)));
-  const onCount = layerOrder.filter((role) => layers[role] && layers[role].on).length;
 
   renderChildren(byId("layers"), JSON.stringify(layerOrder.map((role) => readRowFacts(layers[role]))), buildRows);
-  byId("layerCount").textContent = `${onCount} of 3 on`;
 }
 
 function renderHeader() {

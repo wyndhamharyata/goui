@@ -344,7 +344,7 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
 
   // The name, icon and version come from the bundle. The credits add what goui is and where its guide lives.
   @objc private func showAbout() {
-    let credits = NSMutableAttributedString(string: "An EQ for every sound on your Mac. AutoEQ corrects your headphone. EQByEar tunes to your hearing.\n\n")
+    let credits = NSMutableAttributedString(string: "An EQ for every sound on your Mac. AutoEQ tunes your headphone to sound neutral. EQByEar tunes to your hearing.\n\n")
     let guideText = (guideURL.host() ?? "") + guideURL.path()
 
     if let webVersion = WebFolder.version, webVersion != appVersion {

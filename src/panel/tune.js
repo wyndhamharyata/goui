@@ -59,7 +59,7 @@ function describeQ(band) {
 
 // The line under the fields says why a field is missing for this type.
 const missingFieldNotes = {
-  shelf: "Web Audio shelves have no Q. goui keeps the Q from an AutoEQ file but does not play it.",
+  shelf: "Web Audio shelves have no Q. goui keeps the Q from an AutoEQ file but does not implement it.",
   cut: "A cut has no gain. Q is not edited here.",
   pass: "This type has no gain.",
 };

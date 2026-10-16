@@ -15,7 +15,7 @@ import { state } from "./state.js";
 // The words of each layer's section. The ear and taste lists end with a row that takes the layer off.
 const sectionWords = {
   headphone: {
-    caption: "Find your headphone in AutoEQ below. Save it as your own preset.",
+    caption: "AutoEQ tunes your headphone to sound neutral. Find your model below, then save it as your own preset.",
     pasted: "Pasted headphone",
     pasteTitle: "Paste AutoEQ text into the headphone layer",
     pastePlaceholder: "Paste AutoEQ text here",
