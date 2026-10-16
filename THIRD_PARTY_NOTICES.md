@@ -367,6 +367,20 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 The ear test is EQByEar, at https://eqbyear.com. goui opens the site in a new tab. You paste the
 result back by hand. The site is a service of its own authors, and its code is not part of goui.
 
+## Not in the extension
+
+### 魔王魂 (Maou Damashii)
+
+The demo video on the site plays 夜明けのHighway (Yoake no Highway), written and composed by Koichi
+Morita (森田交一), vocal by キクチマリコ, published by 魔王魂 at https://maou.audio. The track is
+trimmed, faded and filtered to follow the EQ on screen. Nothing from it ships in the extension or the
+Mac app.
+
+- Track: https://maou.audio/46_yoake_no_highway/
+- Licence: Creative Commons Attribution 4.0 International (CC BY 4.0),
+  https://creativecommons.org/licenses/by/4.0/ ; terms of use at https://maou.audio/rule/
+- Credit line, as the publisher asks: 音楽：魔王魂
+
 ## goui
 
 goui itself is under the MIT licence. See `LICENSE`.
