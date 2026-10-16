@@ -1,6 +1,6 @@
 // Builds the store images: 1280x800 screenshots of a real run, and two promo tiles drawn as SVG.
 import { execFileSync } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { cpSync, mkdirSync } from "node:fs";
 import { extensionId, openBrowser, pasteInto, pressIcon, saveAs } from "../tests/helpers.js";
 import { colors, drawGouiTile, frame, savePicture } from "./svg-parts.mjs";
 
@@ -111,7 +111,7 @@ function tiles() {
   savePicture(marquee, `${out}/promo-marquee.svg`, `${out}/promo-marquee-1400x560.png`, ["-w", "1400", "-h", "560"]);
 
   for (const name of ["promo-small-440x280.png", "promo-marquee-1400x560.png"]) {
-    execFileSync("convert", [`${out}/${name}`, "-background", colors["ink-1"], "-alpha", "remove", "-alpha", "off", `PNG24:${out}/${name}`]);
+    execFileSync("convert", [`${out}/${name}`, "-background", colors["ink-1"], "-alpha", "remove", "-alpha", "off", "-strip", `PNG24:${out}/${name}`]);
   }
 }
 
@@ -119,4 +119,13 @@ mkdirSync(out, { recursive: true });
 // store/icon-128.png is written by scripts/make-icons.mjs, with the store's clear band around the artwork.
 await screenshots();
 tiles();
-console.log("Wrote three screenshots and two promo tiles.");
+
+// The dashboard takes one file per field, so the six files are gathered into one folder to drag from.
+const uploadFolder = "dist/store";
+const uploadNames = ["icon-128.png", "screenshot-1-panel.png", "screenshot-2-tune.png", "screenshot-3-guide.png", "promo-small-440x280.png", "promo-marquee-1400x560.png"];
+
+mkdirSync(uploadFolder, { recursive: true });
+
+for (const name of uploadNames) cpSync(`${out}/${name}`, `${uploadFolder}/${name}`);
+
+console.log(`Wrote three screenshots and two promo tiles, and the upload set in ${uploadFolder}.`);
