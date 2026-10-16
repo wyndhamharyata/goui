@@ -84,6 +84,29 @@ main {
   padding-top: var(--space-5);
 }
 
+/* The landing page fills the window, so the hero card keeps one inset on all four sides and reaches the
+   bottom of the screen at any zoom. */
+main.landing {
+  max-width: none;
+  padding: var(--space-6);
+}
+
+main.landing .first-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - (2 * var(--space-6)));
+}
+
+main.landing .first-screen .hero {
+  flex: 1;
+  margin-top: var(--space-6);
+}
+
+/* The card fills the window now, so the text keeps the measure it was set to. */
+main.landing .hero-text {
+  max-width: 620px;
+}
+
 .pn-hero {
   padding: var(--space-6) var(--space-7);
 }
@@ -94,30 +117,7 @@ main {
   border-radius: var(--radius-3);
 }
 
-/* The panel scales to the window, so the hero and its caption fit one screen on a laptop. */
-@media (max-height: 1080px) and (min-width: 981px) {
-  .demo {
-    zoom: 0.9;
-  }
-}
 
-@media (max-height: 980px) and (min-width: 981px) {
-  .demo {
-    zoom: 0.82;
-  }
-}
-
-@media (max-height: 900px) and (min-width: 981px) {
-  .demo {
-    zoom: 0.74;
-  }
-}
-
-@media (max-height: 820px) and (min-width: 981px) {
-  .demo {
-    zoom: 0.66;
-  }
-}
 
 .hero-text {
   display: flex;
