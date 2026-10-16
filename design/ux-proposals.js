@@ -2061,7 +2061,7 @@ const startSteps = [
 
 function buildStart() {
   const steps = startSteps.map(([key, title, text], index) => `<div class="pn-step">${ui.sectionHeader({ variant: "section", step: index + 1, tone: "accent", label: title, caption: text })}${buildShot(key)}</div>`);
-  const head = ui.sectionHeader({ variant: "title", label: "Get started", caption: "Different ear, different head, different sound." });
+  const head = ui.sectionHeader({ variant: "title", label: "Get started", caption: "Every ear hears differently." });
 
   return `<div class="ui-stack ui-stack--loose">${head}${steps.join("")}${ui.button({ variant: "primary", isWide: true, label: "Open the guide", act: "help" })}</div>`;
 }
@@ -2092,7 +2092,7 @@ function buildMenu(view) {
 function buildTileCopy() {
   const rows = roles.map(buildCompactLayerRow);
 
-  return `<span class="pn-brand pn-brand--large"><img src="../icons/icon32.png" alt="" width="26" height="26" />goui</span><p class="pn-tile__line">Different ear, different head, different sound.</p><div class="ui-stack ui-stack--chain">${rows.join("")}</div>`;
+  return `<span class="pn-brand pn-brand--large"><img src="../icons/icon32.png" alt="" width="26" height="26" />goui</span><p class="pn-tile__line">Every ear hears differently.</p><div class="ui-stack ui-stack--chain">${rows.join("")}</div>`;
 }
 
 function buildHeroCopy(view) {
@@ -2104,7 +2104,7 @@ function buildHeroCopy(view) {
     ui.button({ label: "goui for the Mac", href: "https://goui.mwyndham.dev/mac" }),
   ];
 
-  return `<div class="ui-stack ui-stack--loose">${ui.sectionHeader({ label: "An EQ for your headphone, your ear and your taste" })}<h3 class="pn-hero__title">Different ear, different head, different sound.</h3><p class="pn-hero__lede">goui runs one browser tab through a parametric EQ. goui for the Mac runs every sound the Mac plays through the same one. AutoEQ makes your headphone neutral. EQByEar tunes it to your ear. Your taste goes on top.</p><div class="ui-cluster">${links.join("")}</div><div class="ui-cluster ui-cluster--fill">${ui.field({ kind: "code", amount: install, title: "The Mac install line" })}${copy}</div><div class="ui-cluster">${facts.join("")}</div></div>`;
+  return `<div class="ui-stack ui-stack--loose">${ui.sectionHeader({ label: "An EQ for your headphone, your ear and your taste" })}<h3 class="pn-hero__title">Every ear hears differently.</h3><p class="pn-hero__lede">goui runs one browser tab through a parametric EQ. goui for the Mac runs every sound the Mac plays through the same one. AutoEQ makes your headphone neutral. EQByEar tunes it to your ear. Your taste goes on top.</p><div class="ui-cluster">${links.join("")}</div><div class="ui-cluster ui-cluster--fill">${ui.field({ kind: "code", amount: install, title: "The Mac install line" })}${copy}</div><div class="ui-cluster">${facts.join("")}</div></div>`;
 }
 
 const legendKeys = [
@@ -3029,7 +3029,7 @@ const primitiveCards = [
     demo: () => `${ui.sectionHeader({ label: "AutoEQ headphones", count: 3 })}
       ${ui.sectionHeader({ variant: "section", step: 2, tone: "ear", label: "My ear", caption: "Tunes the sound to your own hearing, on top of the headphone." })}
       ${ui.sectionHeader({ variant: "section", step: 5, tone: "peak", label: "Peak", caption: "Headphone layer", trail: ui.button({ size: "small", label: "Solo" }) })}
-      ${ui.sectionHeader({ variant: "title", label: "Get started", caption: "Different ear, different head, different sound." })}`,
+      ${ui.sectionHeader({ variant: "title", label: "Get started", caption: "Every ear hears differently." })}`,
   },
   {
     name: "Tabs",
@@ -3363,7 +3363,7 @@ function renderGuide(sectionKey = "how") {
   byId("screen-guide").innerHTML = `<div class="pn-guide">
     <nav class="pn-guide__nav">${ui.sectionHeader({ label: "On this page" })}<div class="pn-menu">${nav.join("")}</div></nav>
     <article class="pn-guide__body">
-      <section data-guide="how" class="ui-stack ui-stack--loose">${ui.sectionHeader({ label: "How to use goui" })}<h3 class="pn-hero__title">Different ear, different head, different sound.</h3><p class="pn-hero__lede">goui keeps three layers apart. The sound of a tab passes the headphone layer, then your ear, then your taste, then reaches you. The bands of all three add up in dB, so the merge is exact.</p><div class="ui-stack ui-stack--chain">${chain}${ui.stackRow({ tone: "accent", caption: "You", name: "Hear it" })}</div></section>
+      <section data-guide="how" class="ui-stack ui-stack--loose">${ui.sectionHeader({ label: "How to use goui" })}<h3 class="pn-hero__title">Every ear hears differently.</h3><p class="pn-hero__lede">goui keeps three layers apart. The sound of a tab passes the headphone layer, then your ear, then your taste, then reaches you. The bands of all three add up in dB, so the merge is exact.</p><div class="ui-stack ui-stack--chain">${chain}${ui.stackRow({ tone: "accent", caption: "You", name: "Hear it" })}</div></section>
       <section data-guide="install" class="ui-stack ui-stack--loose">${ui.sectionHeader({ label: "Start" })}<div class="pn-guide__steps">${steps.join("")}</div></section>
       <section data-guide="switch" class="ui-stack">${ui.sectionHeader({ label: "The icon is the switch" })}<ul class="pn-facts">${switchFacts.join("")}</ul></section>
       <section data-guide="ear" class="ui-stack">${ui.sectionHeader({ label: "Measure your ear" })}${earSteps.join("")}<div class="ui-cluster">${links}</div></section>
