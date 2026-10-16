@@ -344,7 +344,7 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
 
   // The name, icon and version come from the bundle. The credits add what goui is and where its guide lives.
   @objc private func showAbout() {
-    let credits = NSMutableAttributedString(string: "An EQ for every sound on your Mac. AutoEQ tunes your headphone to sound neutral. EQByEar tunes to your hearing.\n\n")
+    let credits = NSMutableAttributedString(string: "An EQ for one browser tab, or for the whole Mac.\n\n")
     let guideText = (guideURL.host() ?? "") + guideURL.path()
 
     if let webVersion = WebFolder.version, webVersion != appVersion {
@@ -353,6 +353,10 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
 
     credits.append(NSAttributedString(string: guideText, attributes: [.link: guideURL]))
     credits.addAttributes([.font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize), .foregroundColor: NSColor.labelColor], range: NSRange(location: 0, length: credits.length))
+    // The panel centres the version and the copyright on its own, so the credits are centred here to match.
+    let centred = NSMutableParagraphStyle()
+    centred.alignment = .center
+    credits.addAttribute(.paragraphStyle, value: centred, range: NSRange(location: 0, length: credits.length))
     // A menu bar app is never in front on its own, so the About window would open behind other windows.
     NSApp.activate()
     NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])

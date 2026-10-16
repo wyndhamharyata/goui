@@ -1,7 +1,6 @@
 import js from "@eslint/js";
 import globals from "globals";
 import jsdoc from "eslint-plugin-jsdoc";
-import sonarjs from "eslint-plugin-sonarjs";
 import unicorn from "eslint-plugin-unicorn";
 
 export default [
@@ -22,7 +21,7 @@ export default [
   },
   {
     files: ["**/*.{js,mjs}"],
-    plugins: { jsdoc, sonarjs, unicorn },
+    plugins: { jsdoc, unicorn },
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -53,11 +52,9 @@ export default [
       "no-unneeded-ternary": "error",
       "one-var": ["error", "never"],
       "prefer-const": "error",
-      "sonarjs/cognitive-complexity": ["error", 15],
-      "sonarjs/no-collapsible-if": "error",
-      "sonarjs/no-inverted-boolean-check": "error",
       // Reads "Db" as "Database" and renames decibel names. That fights rule 5.
       "unicorn/name-replacements": "off",
+      "unicorn/no-negation-in-equality-check": "error",
       "unicorn/numeric-separators-style": "error",
       // Rule 10. Every export has a JSDoc block, and a block holds types alone, with no prose.
       "jsdoc/require-jsdoc": ["error", { publicOnly: true, require: { FunctionDeclaration: true } }],

@@ -30,7 +30,6 @@ A direct dependency is one named in `package.json`. The rest arrive with those.
 | `@keyv/serialize` | 1.1.1 | MIT |  |
 | `@playwright/test` | 1.64.0 | Apache-2.0 | yes |
 | `@sindresorhus/base62` | 1.0.0 | MIT |  |
-| `@sonarsource/analyzer-commons-configurations` | 2.31.0-5284 | LGPL-3.0-only |  |
 | `@types/esrecurse` | 4.3.1 | MIT |  |
 | `@types/estree` | 1.0.9 | MIT |  |
 | `@types/json-schema` | 7.0.15 | MIT |  |
@@ -50,8 +49,6 @@ A direct dependency is one named in `package.json`. The rest arrive with those.
 | `baseline-browser-mapping` | 2.11.28 | Apache-2.0 |  |
 | `brace-expansion` | 5.0.12 | MIT |  |
 | `browserslist` | 4.29.3 | MIT |  |
-| `builtin-modules` | 3.3.0 | MIT |  |
-| `bytes` | 3.1.2 | MIT |  |
 | `cacheable` | 2.5.0 | MIT |  |
 | `caniuse-lite` | 1.0.30001815 | CC-BY-4.0 |  |
 | `change-case` | 5.4.4 | MIT |  |
@@ -68,7 +65,6 @@ A direct dependency is one named in `package.json`. The rest arrive with those.
 | `escape-string-regexp` | 4.0.0 | MIT |  |
 | `eslint` | 10.12.0 | MIT | yes |
 | `eslint-plugin-jsdoc` | 65.3.1 | BSD-3-Clause | yes |
-| `eslint-plugin-sonarjs` | 4.2.2 | LGPL-3.0-only | yes |
 | `eslint-plugin-unicorn` | 77.0.0 | MIT | yes |
 | `eslint-scope` | 9.1.2 | BSD-2-Clause |  |
 | `eslint-visitor-keys` | 5.0.1 | Apache-2.0 |  |
@@ -86,7 +82,6 @@ A direct dependency is one named in `package.json`. The rest arrive with those.
 | `find-up-simple` | 1.0.1 | MIT |  |
 | `flat-cache` | 6.1.23 | MIT |  |
 | `flatted` | 3.4.4 | ISC |  |
-| `functional-red-black-tree` | 1.0.1 | MIT |  |
 | `glob-parent` | 6.0.2 | ISC |  |
 | `globals` | 17.13.0 | MIT | yes |
 | `hashery` | 1.5.1 | MIT |  |
@@ -104,11 +99,9 @@ A direct dependency is one named in `package.json`. The rest arrive with those.
 | `jsesc` | 3.1.0 | MIT |  |
 | `json-schema-traverse` | 0.4.1 | MIT |  |
 | `json-stable-stringify-without-jsonify` | 1.0.1 | MIT |  |
-| `jsx-ast-utils-x` | 0.1.0 | MIT |  |
 | `keyv` | 5.6.0 | MIT |  |
 | `levn` | 0.4.1 | MIT |  |
 | `locate-path` | 6.0.0 | MIT |  |
-| `lodash.merge` | 4.6.2 | MIT |  |
 | `mdn-data` | 2.35.0 | CC0-1.0 |  |
 | `minimatch` | 10.2.6 | BlueOak-1.0.0 |  |
 | `ms` | 2.1.3 | MIT |  |
@@ -131,11 +124,8 @@ A direct dependency is one named in `package.json`. The rest arrive with those.
 | `punycode` | 2.3.1 | MIT |  |
 | `qified` | 0.10.1 | MIT |  |
 | `quote-js-string` | 0.1.0 | MIT |  |
-| `refa` | 0.12.1 | MIT |  |
-| `regexp-ast-analysis` | 0.7.1 | MIT |  |
 | `regjsparser` | 0.13.4 | BSD-2-Clause |  |
 | `reserved-identifiers` | 1.2.0 | MIT |  |
-| `scslre` | 0.3.0 | MIT |  |
 | `semver` | 7.8.5 | ISC |  |
 | `shebang-command` | 2.0.0 | MIT |  |
 | `shebang-regex` | 3.0.0 | MIT |  |

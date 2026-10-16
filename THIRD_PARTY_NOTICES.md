@@ -5,7 +5,7 @@ extension.
 
 ## In the extension
 
-The release zip holds the manifest, the src folder, the icons, this file and the licence. Three parts
+The release zip holds the manifest, the src folder, the icons, this file and the licence. Four parts
 come from elsewhere.
 
 ### AutoEQ
@@ -366,15 +366,6 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
 The ear test is EQByEar, at https://eqbyear.com. goui opens the site in a new tab. You paste the
 result back by hand. The site is a service of its own authors, and its code is not part of goui.
-
-## Not in the extension
-
-The tools that lint, test and build goui are npm packages. `DEPENDENCIES.md` in the project
-repository lists every one with its licence. None of them travel in the extension, so their notices
-stay with their own packages.
-
-One carries a licence worth a word. `eslint-plugin-sonarjs` is under the LGPL 3.0, and it runs at
-lint time only.
 
 ## goui
 
