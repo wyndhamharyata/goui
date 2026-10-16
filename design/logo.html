@@ -318,8 +318,8 @@
 
       .pixel-row canvas {
         display: block;
-        width: 84px;
-        height: 84px;
+        width: 80px;
+        height: 80px;
         image-rendering: pixelated;
         border-radius: 4px;
         background: var(--toolbar-light);
@@ -802,6 +802,25 @@
         .space-row > * + * { margin-left: 0; margin-top: 16px; }
       }
 
+      /* Round six */
+      .weight-row figure .bars { background: var(--ink-2); }
+      .weight-row figure div.on-stage { border-radius: 8px; }
+
+      .figures {
+        width: 100%;
+        border-collapse: collapse;
+        font: 500 12px / 1.5 var(--font-number);
+        color: var(--text-2);
+      }
+
+      .figures td { padding: 4px 0; border-bottom: 1px solid var(--line-1); vertical-align: top; }
+      .figures td + td { padding-left: 12px; text-align: right; color: var(--text-1); }
+      .pixel-row canvas.is-zoomed { width: 96px; height: 96px; image-rendering: pixelated; }
+      .ship-table--figures td { font: 500 12px / 1.5 var(--font-number); }
+      .ship-table--figures td:first-child { font: 600 13px / 1.5 var(--font-ui); }
+      .pick__before { display: flex; flex-direction: column; align-items: center; color: var(--text-3); font: 600 10px / 1.6 var(--font-number); letter-spacing: 0.1em; text-transform: uppercase; }
+      .pick__before svg { margin-bottom: 6px; }
+
       @media (max-width: 1000px) {
         .concept-grid, .concept-grid--four, .readout-grid, .readout-grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .size-table, .size-head { grid-template-columns: 1fr; }
@@ -1099,35 +1118,206 @@
     <main>
       <header class="doc-intro">
         <div>
-          <p class="doc-eyebrow">goui design · logo proposal · round five</p>
-          <h1>The space under the bowl,<br /><em>drawn as the plot.</em></h1>
+          <p class="doc-eyebrow">goui design · logo proposal · round six</p>
+          <h1>One loop,<br /><em>eight weights.</em></h1>
           <p>
-            The owner corrected the brief. In their words, the question was never the form of the tail
-            but "the negative space between the tail and the circle of the g." Round four drew eight tails
-            and judged the tails. That was the wrong subject. The subject is the clear tile between the
-            bowl's lower arc and the tail's upper edge, the notch the tail cuts under the bowl. That notch
-            is where the graph lives. The tail is only the means of drawing its floor, and the bowl is its
-            roof. This round keeps round four's letterform, the circle bowl with the band point in its
-            counter, the stem down the right side, and the tail that ends in the chosen band's point, and
-            varies the notch alone. Eight notches, each drawn three times: filled on the tile, alone as a
-            region with its floor drawn as a response line, and beside a plot the panel's own filter math
-            draws, so the two can be compared at a glance. Rounds one to four are folded at the end.
+            The owner picked K6, the loop, and named one fault. In their words, "make the circle diameter
+            and the lower curve balanced, currently the tail is too heavy." K6's stroke is a flat 7 through
+            the whole letter, so the tail's long run under the bowl carries more ink than the bowl it
+            belongs to, and the point at its end, 10.5 across, is a third of the tail again. This round
+            holds K6's letterform and its teardrop region and varies the weight alone. The tail's upper
+            edge, which is the region's floor, is the same curve on every mark. The ink is hung under that
+            edge, so a lighter tail changes only the tail's lower edge and the region is untouched. Eight
+            weights, each with its bowl and tail ink counted from pixels and put on one scale, so the
+            balance is a figure and not an opinion. Rounds one to five are folded at the end.
           </p>
         </div>
         <ol class="doc-index-list">
-          <li><a href="#marks-5"><b>01</b>Eight notches</a></li>
-          <li><a href="#space-5"><b>02</b>The space itself, beside the panel's plot</a></li>
-          <li><a href="#balance-5"><b>03</b>Safe area and balance</a></li>
-          <li><a href="#sizes-5"><b>04</b>At the real sizes</a></li>
-          <li><a href="#mono-5"><b>05</b>One colour, for the menu bar</a></li>
-          <li><a href="#context-5"><b>06</b>In context</a></li>
-          <li><a href="#pick-5"><b>07</b>The pick, and what each notch costs</a></li>
+          <li><a href="#marks-6"><b>01</b>Eight weights</a></li>
+          <li><a href="#weight-6"><b>02</b>The weight, as numbers and as form</a></li>
+          <li><a href="#space-6"><b>03</b>The region, beside the panel's plot</a></li>
+          <li><a href="#balance-6"><b>04</b>Safe area and balance</a></li>
+          <li><a href="#sizes-6"><b>05</b>At the real sizes</a></li>
+          <li><a href="#mono-6"><b>06</b>One colour, for the menu bar</a></li>
+          <li><a href="#context-6"><b>07</b>In context</a></li>
+          <li><a href="#pick-6"><b>08</b>The pick, and what each weight costs</a></li>
+          <li><a href="#record-5"><b>--</b>Round five, the record</a></li>
           <li><a href="#record-4"><b>--</b>Round four, the record</a></li>
           <li><a href="#record-3"><b>--</b>Round three, the record</a></li>
           <li><a href="#record-2"><b>--</b>Round two, the record</a></li>
           <li><a href="#record"><b>--</b>Round one, the record</a></li>
         </ol>
       </header>
+
+      <section class="doc-section" id="marks-6">
+        <header class="doc-head">
+          <span class="doc-head__index">01</span>
+          <div>
+            <h2>Eight weights</h2>
+            <p>
+              One letterform, eight weights. The letter is K6. The bowl is a circle with the band point in
+              its counter, the stem is the bowl's right side carried down, and the tail dips under the bowl
+              and rises until the point stands beside the bowl's left side, so the region between them is a
+              closed teardrop. What differs is the weight. Most marks keep the bowl at 28 across with a 7
+              stroke and lighten the tail, by a flat thinner stroke or by a taper from the stem's 7 to a
+              thinner point. Two change the bowl instead, to 30 and to 26. One lightens the whole letter.
+              Read each card for the balance between the bowl and the tail, not for the curve.
+            </p>
+          </div>
+        </header>
+        <div class="concept-grid concept-grid--four" id="concept-grid-6"></div>
+      </section>
+
+      <section class="doc-section" id="weight-6">
+        <header class="doc-head">
+          <span class="doc-head__index">02</span>
+          <div>
+            <h2>The weight, as numbers and as form</h2>
+            <p>
+              Each row puts the balance on the page three ways. Left, the letter with its parts coloured,
+              the bowl in the accent, the stem grey, the tail blue and the point pink. Middle, the ink of
+              each part as a bar, in grid units squared, on one scale for all eight rows and for K6. Right,
+              the figures. The ink is counted from the rendered pixels, so an overlap between two parts is
+              counted once, for the part drawn first. The bowl is its ring and the dot. The stem is the
+              short run from the bowl's bottom to where the curve begins. The tail is the curve and the
+              point. The ratio is the bowl's ink over the tail's. K6 is at 1.5. The table under the rows
+              has every mark and K6 on one page.
+            </p>
+          </div>
+        </header>
+        <div class="space-rows" id="weight-rows-6"></div>
+        <div class="doc-sub"><h3>The figures, side by side</h3><p>Bowl as across, stroke, counter and dot. Tail as the stroke at the stem, under the bowl and at the point.</p></div>
+        <table class="ship-table ship-table--figures">
+          <thead><tr><th>Mark</th><th>Bowl</th><th>Tail</th><th>Point</th><th>Ink, bowl</th><th>Ink, tail</th><th>Bowl to tail</th><th>Verdict</th></tr></thead>
+          <tbody id="figure-table-6"></tbody>
+        </table>
+      </section>
+
+      <section class="doc-section" id="space-6">
+        <header class="doc-head">
+          <span class="doc-head__index">03</span>
+          <div>
+            <h2>The region, beside the panel's plot</h2>
+            <p>
+              The same three pictures as round five. Left, the mark with the region filled in the panel's
+              quieter blue. Middle, the region alone, with its floor drawn as a response line and its roof
+              dashed. Right, the plot the panel's own filter draws for the band the loop stands for. The
+              floor is read from the glyph's pixels. Since every weight hangs its ink under the same upper
+              edge, the floor should be the same curve in every row, and the depth figures should agree.
+              Where the point is smaller its top is lower, so the tip of the teardrop is a little deeper.
+            </p>
+          </div>
+        </header>
+        <div class="space-rows" id="space-rows-6"></div>
+      </section>
+
+      <section class="doc-section" id="balance-6">
+        <header class="doc-head">
+          <span class="doc-head__index">04</span>
+          <div>
+            <h2>Safe area and balance</h2>
+            <p>
+              The same readout as round five, with the weight figures under it. The safe box is 8 to 56,
+              the dashed square. The thin pink box is the ink's bounding box and the four numbers are its
+              margins to the safe box, in grid units. The cross is the tile's centre and the pink dot is
+              the ink's centre of mass. A mark passes when it is inside the safe box, every margin is at
+              least one unit, the left margin matches the right and the top matches the bottom within one
+              unit, the box centre is within 1.5 units of the middle, and the least clear tile between the
+              tail and the bowl is at least 3 units. Round five asked for all four margins within 3 of each
+              other. K6 passed that at 2.9 only on the width of its 10.5 point. With the point at 7 to 8.5
+              the letter is 36 wide and 43 tall, so the side margins are 6 against 2.4 above and below. A
+              g is taller than it is wide, and this round asks the margins to mirror and not to match.
+              Each letter is placed so its ink box is centred, so the bowl moves up to 1.3 units from where
+              K6 had it.
+            </p>
+          </div>
+        </header>
+        <div class="readout-grid readout-grid--four" id="readout-grid-6"></div>
+      </section>
+
+      <section class="doc-section" id="sizes-6">
+        <header class="doc-head">
+          <span class="doc-head__index">05</span>
+          <div>
+            <h2>At the real sizes</h2>
+            <p>
+              The tile in the 16 px icon is 12 px wide, so a stroke of 7 units is 1.3 px, a stroke of 4.5
+              is 0.8 px and a point of 8 across is 1.5 px. The pixel row is the test. The first canvas is
+              the 16 px icon at its real size, the second is the same pixels drawn six times larger with
+              no smoothing, so each pixel can be read. Look for whether the tail's rise is still a line
+              and whether the region is still a clear patch under the bowl. At 32 px look for whether the
+              teardrop still reads as a closed form.
+            </p>
+          </div>
+        </header>
+        <div class="size-head"><span>Mark</span><span>Light toolbar</span><span>Dark toolbar</span><span>Pixels, 16 and 32 px</span></div>
+        <div id="size-rows-6"></div>
+      </section>
+
+      <section class="doc-section" id="mono-6">
+        <header class="doc-head">
+          <span class="doc-head__index">06</span>
+          <div>
+            <h2>One colour, for the menu bar</h2>
+            <p>
+              Each mark's one colour form is the same glyph with the tile gone, cropped to the safe box.
+              In the bar a thin tail is the first thing to go, so this is where the light marks are judged.
+            </p>
+          </div>
+        </header>
+        <div id="mono-rows-6" class="menubar-set"></div>
+      </section>
+
+      <section class="doc-section" id="context-6">
+        <header class="doc-head">
+          <span class="doc-head__index">07</span>
+          <div>
+            <h2>In context</h2>
+            <p>The store tile, the site header, the Dock and a browser tab.</p>
+          </div>
+        </header>
+        <div id="context-rows-6"></div>
+      </section>
+
+      <section class="doc-section" id="pick-6">
+        <header class="doc-head">
+          <span class="doc-head__index">08</span>
+          <div>
+            <h2>The pick, and what each weight costs</h2>
+            <p>L2, the taper, with L5, the big bowl, as the runner up. K6 is beside the pick, so the change is on the page. Below is the reasoning and a table of what each weight costs.</p>
+          </div>
+        </header>
+        <div class="pick">
+          <div class="pick__stage pick__stage--two">
+            <div class="pick__row">
+              <span class="pick__before"><svg width="96" height="96" viewBox="0 0 64 64"><use href="#mark-k6" /></svg>K6, before</span>
+              <svg width="128" height="128" viewBox="0 0 64 64"><use href="#mark-l2" /></svg>
+              <svg width="40" height="40" viewBox="0 0 64 64" style="color: #f2f3f5"><use href="#mono-l2" /></svg>
+              <svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark-l2" /></svg>
+            </div>
+            <div class="pick__row">
+              <svg width="64" height="64" viewBox="0 0 64 64"><use href="#mark-l5" /></svg>
+              <svg width="24" height="24" viewBox="0 0 64 64" style="color: #f2f3f5"><use href="#mono-l5" /></svg>
+              <svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark-l5" /></svg>
+            </div>
+          </div>
+          <div class="doc-notes" id="pick-notes-6"></div>
+        </div>
+
+        <div class="doc-sub"><h3>What each weight costs</h3><p>The ratio, the verdict, how the mark reads and what the weight gives up.</p></div>
+        <table class="ship-table">
+          <thead><tr><th>Mark</th><th>Bowl to tail</th><th>Verdict</th><th>How it reads</th><th>The cost</th></tr></thead>
+          <tbody id="pick-table-6"></tbody>
+        </table>
+      </section>
+
+      <details class="record" id="record-5">
+        <summary>Round five, the record<small>eight notches under the bowl, each filled, alone as a region, and beside the panel's plot, with the readout, the sizes, the menu bar, the contexts and the pick</small></summary>
+        <p class="record__intro">
+          The owner said the subject was the negative space between the tail and the bowl. Round five drew
+          eight notches and picked K3, the shelf. The owner's answer was K6, the loop, with one fault, that
+          the tail is too heavy against the bowl. Round six follows that.
+        </p>
 
       <section class="doc-section" id="marks-5">
         <header class="doc-head">
@@ -1266,6 +1456,7 @@
           <tbody id="pick-table-5"></tbody>
         </table>
       </section>
+      </details>
 
       <details class="record" id="record-4">
         <summary>Round four, the record<small>eight tails drawn for the tile, the safe area readout with the curve, the sizes, the menu bar, the contexts and the pick</small></summary>
@@ -2089,6 +2280,11 @@
 
         inlineUses(symbol);
         const inner = new XMLSerializer().serializeToString(symbol).replace(/<\/?symbol[^>]*>/g, "");
+
+        return rasteriseMarkup(inner);
+      }
+
+      function rasteriseMarkup(inner) {
         const markup = `<svg xmlns="http://www.w3.org/2000/svg" width="${inkSamples}" height="${inkSamples}" viewBox="0 0 64 64" style="color: #000">${inner}</svg>`;
 
         return new Promise((resolve) => {
@@ -2315,11 +2511,15 @@
           <g fill="#9fb0ff">${squares}${dots}</g>`;
       }
 
-      function readoutRowsFour(ink, clearance) {
+      function isWithinThree(margins) {
+        return Math.max(...margins) - Math.min(...margins) <= 3;
+      }
+
+      function readoutRowsFour(ink, clearance, isEvenRule = isWithinThree) {
         const margins = [ink.left - safeBox.first, safeBox.last - ink.right, ink.top - safeBox.first, safeBox.last - ink.bottom];
         const isInside = margins.every((margin) => margin >= 0);
         const hasRoom = margins.every((margin) => margin >= 1);
-        const isEven = Math.max(...margins) - Math.min(...margins) <= 3;
+        const isEven = isEvenRule(margins);
         const boxCenterX = (ink.left + ink.right) / 2 - 32;
         const boxCenterY = (ink.top + ink.bottom) / 2 - 32;
         const isBoxCentred = Math.abs(boxCenterX) <= 1.5 && Math.abs(boxCenterY) <= 1.5;
@@ -2452,7 +2652,7 @@
 
       // Reads the region under the bowl from the glyph's pixels, one column per quarter unit from the point to the stem.
       function readRegion(data, mark) {
-        const { bowlX, bowlY, bowlRadius, stroke, stemX } = letterFour;
+        const { bowlX, bowlY, bowlRadius, stroke, stemX } = mark.geometry ?? letterFour;
         const shift = mark.shiftX ?? 0;
         const scale = inkSamples / 64;
         const outerRadius = bowlRadius + stroke / 2;
@@ -2644,6 +2844,398 @@
           <tr><td>${mark.letter}. ${mark.name}</td><td>${mark.region}</td><td>${mark.asPlot}</td><td>${mark.asG}</td><td>${mark.cost}</td></tr>`).join("");
       }
 
+      // Round six. K6 held, the weight varied. Every number is a grid unit of 64.
+      const loopBand = [{ type: "PK", frequencyHz: 400, gainDb: -9, q: 1.2 }];
+      const loopPlot = "A cut, back to zero at both ends. One peak band at minus 9 dB, Q 1.2. The same band for every weight, since the region is held.";
+      const taperNames = { none: "no taper", corner: "over the corner", bottom: "stem to the bottom", point: "stem to the point", rise: "on the rise" };
+      const weights = [
+        {
+          letter: "L1", name: "The thin tail", idea: "The bowl and stem stay at 7. The tail thins from 7 to 5 as it turns the corner under the stem and runs at 5 to the point. The point is 8.5 across.",
+          outerRadius: 14, bowlStroke: 7, dotRadius: 3, taper: "corner", endStroke: 5, pointRadius: 4.25,
+          reads: "Balanced, just. The tail is one weight the whole way, so it reads as a second stroke and not a flourish.", cost: "The step at the corner. At 128 px the eye finds where 7 becomes 5.",
+        },
+        {
+          letter: "L2", name: "The taper", idea: "The tail comes off the stem at 7 and thins evenly along its whole run to 4.5 at the point. The point is 8 across. A pen stroke that lifts as it finishes.",
+          outerRadius: 14, bowlStroke: 7, dotRadius: 3, taper: "point", endStroke: 4.5, pointRadius: 4,
+          reads: "Balanced. The bowl is the mass and the tail is the gesture. The thinning is too slow to notice as a step.", cost: "The under bowl run is still 6, so the floor's thickest part is where the region is deepest.",
+        },
+        {
+          letter: "L3", name: "The early taper", idea: "The tail thins from 7 to 4.5 between the stem and the lowest point of the curve, then runs at 4.5 up to the point. A short heavy run and a long light one. The point is 7.5 across.",
+          outerRadius: 14, bowlStroke: 7, dotRadius: 3, taper: "bottom", endStroke: 4.5, pointRadius: 3.75,
+          reads: "Balanced, and the lightest tail that still joins the stem without a step. The rise to the point is a line.", cost: "The rise is 4.5 for its whole length, so at 16 px the loop's left side is the first stroke to fade.",
+        },
+        {
+          letter: "L4", name: "The late taper", idea: "The tail holds 7 from the stem through the lowest point of the curve, then thins to 4 on the rise to the point. The mass stays under the bowl. The point is 7 across.",
+          outerRadius: 14, bowlStroke: 7, dotRadius: 3, taper: "rise", endStroke: 4, pointRadius: 3.5,
+          reads: "Still heavy under the bowl. The 7 run under the bowl is the part the eye weighs against the bowl, and it is unchanged from K6.", cost: "The light rise against the heavy bottom reads as a different stroke. Two weights, one letter.",
+        },
+        {
+          letter: "L5", name: "The big bowl", idea: "The bowl grows to 30 across, with a counter of 16 and a dot of 6.5. The tail tapers from 7 to 4.5 to the point, as L2. The bowl is given the mass instead of the tail losing it.",
+          outerRadius: 15, bowlStroke: 7, dotRadius: 3.25, taper: "point", endStroke: 4.5, pointRadius: 4,
+          reads: "Balanced, with the strongest bowl of the eight. The letter is 45 tall, so the top and bottom margins are 1.4.", cost: "The safe box. The margins at the top and bottom are 1.4, so the Dock icon and the store tile read as full.",
+        },
+        {
+          letter: "L6", name: "The small bowl", idea: "The bowl shrinks to 26 across, with a counter of 12 and a dot of 5.5. The tail tapers from 7 to 4 to the point. The point is 7 across. The wrong direction, drawn so the comparison is on the page.",
+          outerRadius: 13, bowlStroke: 7, dotRadius: 2.75, taper: "point", endStroke: 4, pointRadius: 3.5,
+          reads: "Tail heavy still. The bowl loses more ink than the tail does, so the ratio drops below L2 even with the thinner tail.", cost: "The counter closes at 32 px. A 12 unit counter is 6 px.",
+        },
+        {
+          letter: "L7", name: "The light pair", idea: "The whole letter is lighter. The bowl and stem are 6, the counter is 16, the dot is 5.5, the tail tapers from 6 to 3.5 to the point and the point is 6.5 across.",
+          outerRadius: 14, bowlStroke: 6, dotRadius: 2.75, taper: "point", endStroke: 3.5, pointRadius: 3.25,
+          reads: "Balanced in ratio and too thin in fact. The bowl's ring is 1.1 px at 16 px and the tail is under a pixel.", cost: "The 16 px icon. The loop's left side goes grey and the point is a smudge.",
+        },
+        {
+          letter: "L8", name: "The thread", idea: "The bowl and stem stay at 7. The tail thins to 4 as it turns the corner and runs at 4 the whole way. The point is 6 across. The far end of the range, drawn so the limit is on the page.",
+          outerRadius: 14, bowlStroke: 7, dotRadius: 3, taper: "corner", endStroke: 4, pointRadius: 3,
+          reads: "Too thin. A ball on a stick. The bowl is four times the tail's ink and the tail no longer belongs to the letter.", cost: "The tail. At 32 px it is a hairline and at 16 px it is gone.",
+        },
+      ];
+      const pickNotesSix = [
+        { title: "The fault, in figures.", text: "K6's bowl is 489 units of ink and its tail is 345, a ratio of 1.4. The tail's long run at 7 is the mass and the point at 10.5 across is a quarter of the tail on its own. Section 02 puts every weight on the same scale, as a bar for the bowl and a bar for the tail." },
+        { title: "The floor is held.", text: "Every weight keeps K6's floor, the tail's upper edge, which is the region's floor. The ink is hung under that edge, so a thinner tail only moves the tail's lower edge. The region in section 03 is the same teardrop on all eight, 12.4 to 13.6 deep at its most, and the plot beside it is the same band." },
+        { title: "L2, the taper.", text: "The tail comes off the stem at the bowl's 7 and thins evenly to 4.5 at the point, with the point at 8 across. The bowl is 489 and the tail is 264, a ratio of 1.85. The thinning is spread over the whole run, so there is no step for the eye to find. The bowl reads as the mass and the tail as the line that draws the region. It is the least change to K6 that fixes the fault." },
+        { title: "The runner up, L5.", text: "The other way to balance. The bowl grows to 30 across with the same taper, so the bowl is given the mass instead of the tail losing it. The ratio is 1.96 and at 128 px it is the strongest letter of the eight. It costs a top and bottom margin of 1.4 against L2's 2.4, so the Dock icon and the store tile read as full. If the owner would rather a bigger circle, L5 is the pick as it stands." },
+        { title: "L3 and L1, the siblings.", text: "L3 is L2 with the thinning finished by the bottom of the curve, so the rise is 4.5 for its whole length. It is the better balanced on paper, 2.17, and the lighter in the hand. At 16 px the rise is the first stroke to fade. L1 is a flat 5 with a step at the corner, 2.06, and the step is there to be found at 128 px." },
+        { title: "The ones that fail.", text: "L4 keeps the 7 under the bowl, which is the run the eye weighs against the bowl, so the fault is not fixed. L6 shrinks the bowl and loses more ink from the bowl than from the tail. L7 and L8 are balanced in ratio and too thin in fact, a 6 ring and a 4 tail, so the tail goes grey at 16 px and the letter is a ball on a stick." },
+        { title: "Balance and the safe box.", text: "Section 04 has the numbers. L2's ink is 14.1 to 49.9 across and 10.4 to 53.6 down, so the margins are 6.1, 6.1, 2.4 and 2.4. The box centre is on the middle. The bowl's clearance to the tail is 4.4 at its least. The point's top is 2 units under the bowl at the teardrop's tip." },
+        { title: "The 32 px reading.", text: "The tile is 24 px, so the bowl's stroke is 2.6 px and the tail is 2.6 px at the stem and 1.7 px at the point. The region is up to 5 px deep and the teardrop still reads as a closed form with the point at its tip. The point is 3 px across." },
+        { title: "The 16 px reading, plainly.", text: "The tile is 12 px. The bowl's ring is 1.3 px and holds. The tail is 1.3 px at the stem and 0.8 px at the point, so the rise is one grey pixel column and the point is a 1.5 px dot. The region is a clear patch of about 2 by 4 px under the bowl. The letter reads as a g with its tail curled back toward the bowl. The teardrop is a patch at this size and not a form, on every one of the eight." },
+        { title: "Calls made on this page.", text: "Bowls of 32 and 34 were not drawn. With the region held at K6's depth, a 32 bowl has a top margin of 0.4 and a 34 bowl runs past the safe box. The evenness rule changed from all four margins within 3 to left matching right and top matching bottom, since a g with a point of 8 is 36 wide and 43 tall. Each letter is placed so its ink box is centred on the tile, which moves the bowl up to 1.3 units from K6's position. The light in the point scales with the point, at 0.44 of its radius." },
+      ];
+      const inkScaleUnits = 520;
+      let referenceInk;
+
+      // The cosine ease between two weights, so the taper has no corner.
+      function easeStroke(from, to, part) {
+        const t = Math.min(1, Math.max(0, part));
+        return from + (to - from) * (1 - Math.cos(Math.PI * t)) / 2;
+      }
+
+      // The stem and K6's tail in a frame with the bowl's centre at 0 0, read from the bowl's outer radius.
+      function loopPath(mark) {
+        const R = mark.outerRadius;
+        const stemX = R - mark.bowlStroke / 2;
+        return `M${stemX} 0V${R + 3}C${stemX} ${R + 9} ${stemX - 4} ${R + 12.5} -2 ${R + 12.5}C-12 ${R + 12.5} ${-R - 5} ${R + 7.5} ${-R - 5} ${R - 0.5}`;
+      }
+
+      function taperSpan(mark, stemLength, bottomLength, totalLength) {
+        const spans = {
+          none: [0, 0],
+          corner: [stemLength - 2, stemLength + 8],
+          bottom: [stemLength, bottomLength],
+          point: [stemLength, totalLength],
+          rise: [bottomLength, totalLength],
+        };
+        return spans[mark.taper];
+      }
+
+      // Samples the centreline every quarter unit and hangs the ink under the floor, the tail's upper edge.
+      function sampleLoop(mark) {
+        const sheet = document.querySelector("body > svg");
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const step = 0.25;
+
+        path.setAttribute("d", loopPath(mark));
+        sheet.appendChild(path);
+        const totalLength = path.getTotalLength();
+        const centres = [];
+
+        for (let along = 0; along <= totalLength + step / 2; along += step) {
+          const at = path.getPointAtLength(Math.min(along, totalLength));
+          const before = path.getPointAtLength(Math.max(0, along - 0.05));
+          const after = path.getPointAtLength(Math.min(totalLength, along + 0.05));
+          const length = Math.hypot(after.x - before.x, after.y - before.y);
+          centres.push({ along: Math.min(along, totalLength), x: at.x, y: at.y, inX: -(after.y - before.y) / length, inY: (after.x - before.x) / length });
+        }
+        path.remove();
+
+        const stemLength = mark.outerRadius + 3;
+        const bottomLength = centres.reduce((best, centre) => (centre.y > best.y ? centre : best)).along;
+        const [taperFrom, taperTo] = taperSpan(mark, stemLength, bottomLength, totalLength);
+        const samples = centres.map((centre) => {
+          const width = easeStroke(mark.bowlStroke, mark.endStroke, (centre.along - taperFrom) / (taperTo - taperFrom));
+          const floorX = centre.x + (mark.bowlStroke / 2) * centre.inX;
+          const floorY = centre.y + (mark.bowlStroke / 2) * centre.inY;
+          return { along: centre.along, width, floorX, floorY, outerX: floorX - width * centre.inX, outerY: floorY - width * centre.inY };
+        });
+
+        return { samples, stemLength, bottomLength, totalLength };
+      }
+
+      function loopPolygon(samples) {
+        const spot = (x, y) => `${x.toFixed(2)} ${y.toFixed(2)}`;
+        const floor = samples.map((sample) => spot(sample.floorX, sample.floorY)).join("L");
+        const outer = [...samples].reverse().map((sample) => spot(sample.outerX, sample.outerY)).join("L");
+        return `M${floor}L${outer}Z`;
+      }
+
+      // Works out where each part of the letter goes, then places the whole letter so its ink box is centred.
+      function buildLoop(mark) {
+        const { samples, stemLength, bottomLength, totalLength } = sampleLoop(mark);
+        const R = mark.outerRadius;
+        const last = samples[samples.length - 1];
+        const point = { x: (last.floorX + last.outerX) / 2, y: (last.floorY + last.outerY) / 2 };
+        const left = Math.min(point.x - mark.pointRadius, ...samples.map((sample) => Math.min(sample.floorX, sample.outerX)));
+        const bottom = Math.max(point.y + mark.pointRadius, ...samples.map((sample) => sample.outerY));
+        const bowlX = 32 - (left + R) / 2;
+        const bowlY = 32 - (bottom - R) / 2;
+        const stemSamples = samples.filter((sample) => sample.along <= stemLength + 0.01);
+        const tailSamples = samples.filter((sample) => sample.along >= stemLength - 0.01);
+        const bottomSample = samples.reduce((best, sample) => (Math.abs(sample.along - bottomLength) < Math.abs(best.along - bottomLength) ? sample : best));
+        const clearance = Math.min(
+          Math.hypot(point.x, point.y) - R - mark.pointRadius,
+          ...tailSamples.filter((sample) => sample.floorX < R - mark.bowlStroke).map((sample) => Math.hypot(sample.floorX, sample.floorY) - R),
+        );
+
+        mark.geometry = { bowlX, bowlY, bowlRadius: R - mark.bowlStroke / 2, stroke: mark.bowlStroke, stemX: bowlX + R - mark.bowlStroke / 2, pointRadius: mark.pointRadius };
+        mark.point = [bowlX + point.x, bowlY + point.y];
+        mark.lightRadius = Math.round(mark.pointRadius * 0.44 * 20) / 20;
+        mark.clearance = clearance;
+        mark.strokes = { stem: mark.bowlStroke, bottom: bottomSample.width, point: last.width, totalLength: totalLength - stemLength };
+        mark.paths = { whole: loopPolygon(samples), stem: loopPolygon(stemSamples), tail: loopPolygon(tailSamples) };
+        mark.parts = {
+          bowl: `<circle r="${R - mark.bowlStroke / 2}" fill="none" stroke="currentColor" stroke-width="${mark.bowlStroke}" /><circle r="${mark.dotRadius}" fill="currentColor" />`,
+          stem: `<path d="${mark.paths.stem}" fill="currentColor" />`,
+          tail: `<path d="${mark.paths.tail}" fill="currentColor" /><circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="${mark.pointRadius}" fill="currentColor" />`,
+          point: `<circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="${mark.pointRadius}" fill="currentColor" />`,
+        };
+      }
+
+      function loopGroup(mark, inner) {
+        return `<g transform="translate(${mark.geometry.bowlX.toFixed(2)} ${mark.geometry.bowlY.toFixed(2)})">${inner}</g>`;
+      }
+
+      function glyphSix(mark) {
+        const { bowl, point } = mark.parts;
+        return loopGroup(mark, `${bowl}<path d="${mark.paths.whole}" fill="currentColor" />${point}`);
+      }
+
+      const partTones = { bowl: "#d4ff3f", stem: "#8a93a6", tail: "#4cc3ff", point: "#ff8fb1" };
+
+      function partsSix(mark) {
+        // The bowl is drawn over the stem, so the picture gives their overlap to the bowl as the count does.
+        const inner = ["stem", "tail", "bowl", "point"].map((part) => `<g style="color: ${partTones[part]}">${mark.parts[part]}</g>`).join("");
+        return loopGroup(mark, inner);
+      }
+
+      function buildSymbolsSix() {
+        const sheet = document.querySelector("body > svg");
+
+        weights.forEach(buildLoop);
+        const markup = weights.map((mark) => `
+          <symbol id="glyph-${lower(mark.letter)}" viewBox="0 0 64 64">${glyphSix(mark)}</symbol>
+          <symbol id="parts-${lower(mark.letter)}" viewBox="0 0 64 64">${partsSix(mark)}</symbol>
+          <symbol id="mark-${lower(mark.letter)}" viewBox="0 0 64 64">
+            <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+            <use href="#glyph-${lower(mark.letter)}" color="#0b0c0e" />
+            <circle cx="${mark.point[0].toFixed(2)}" cy="${mark.point[1].toFixed(2)}" r="${mark.lightRadius}" fill="#f2f3f5" />
+          </symbol>
+          <symbol id="mono-${lower(mark.letter)}" viewBox="8 8 48 48"><use href="#glyph-${lower(mark.letter)}" /></symbol>`).join("");
+
+        sheet.insertAdjacentHTML("beforeend", markup);
+      }
+
+      // Counts the ink of each part from pixels, so an overlap is counted once and the figure is what is drawn.
+      async function measureWeight(mark) {
+        const scale = (inkSamples / 64) ** 2;
+        const layers = {};
+
+        for (const part of ["bowl", "stem", "tail", "point"]) {
+          layers[part] = await rasteriseMarkup(loopGroup(mark, mark.parts[part]));
+        }
+        const isInk = (data, index) => data[index * 4 + 3] >= 128;
+        const counts = { bowl: 0, stem: 0, tail: 0, point: 0 };
+
+        for (let index = 0; index < inkSamples * inkSamples; index += 1) {
+          if (isInk(layers.bowl, index)) counts.bowl += 1;
+          else if (isInk(layers.stem, index)) counts.stem += 1;
+          else if (isInk(layers.tail, index)) counts.tail += 1;
+          if (isInk(layers.point, index) && !isInk(layers.bowl, index) && !isInk(layers.stem, index)) counts.point += 1;
+        }
+
+        mark.ink = { bowl: counts.bowl / scale, stem: counts.stem / scale, tail: counts.tail / scale, point: counts.point / scale };
+        mark.ink.ratio = mark.ink.bowl / mark.ink.tail;
+      }
+
+      function weightBars(mark) {
+        const rows = [["bowl", mark.ink.bowl], ["stem", mark.ink.stem], ["tail", mark.ink.tail]];
+        const bars = rows.map(([part, area], index) => {
+          const y = 34 + index * 40;
+          const width = Math.max(1, (area / inkScaleUnits) * 150);
+          return `
+            <text x="10" y="${y - 6}" fill="#8a93a6" font-size="9" font-weight="600" letter-spacing="1">${part.toUpperCase()}</text>
+            <rect x="10" y="${y}" width="${width.toFixed(1)}" height="14" rx="3" fill="${partTones[part]}" />
+            <text x="${(10 + width + 5).toFixed(1)}" y="${y + 11}" fill="#f2f3f5" font-size="10" font-weight="700">${Math.round(area)}</text>`;
+        }).join("");
+        const pointShare = Math.round((mark.ink.point / mark.ink.tail) * 100);
+
+        return `
+          <svg class="bars" viewBox="0 0 176 176" font-family="Atkinson Hyperlegible Mono, monospace" aria-hidden="true">
+            ${bars}
+            <text x="10" y="162" fill="#f2f3f5" font-size="20" font-weight="700">${mark.ink.ratio.toFixed(1)}<tspan font-size="9" font-weight="600" fill="#8a93a6" dx="6">BOWL TO TAIL</tspan></text>
+            <text x="10" y="146" fill="#8a93a6" font-size="9" font-weight="600" letter-spacing="1">POINT, ${pointShare}% OF THE TAIL</text>
+          </svg>`;
+      }
+
+      function weightRows(mark) {
+        const R = mark.outerRadius;
+        const bowl = `${2 * R} across, stroke ${mark.bowlStroke}, counter ${2 * R - 2 * mark.bowlStroke}, dot ${2 * mark.dotRadius}`;
+        const tail = `${mark.strokes.stem} at the stem, ${mark.strokes.bottom.toFixed(1)} under the bowl, ${mark.strokes.point.toFixed(1)} at the point`;
+        return `
+          <tr><td>Bowl</td><td>${bowl}</td></tr>
+          <tr><td>Tail</td><td>${tail}</td></tr>
+          <tr><td>Taper</td><td>${taperNames[mark.taper]}</td></tr>
+          <tr><td>Point</td><td>${2 * mark.pointRadius} across, light ${2 * mark.lightRadius}</td></tr>
+          <tr><td>Tail run</td><td>${mark.strokes.totalLength.toFixed(1)} long</td></tr>
+          <tr><td>Ink, bowl</td><td>${Math.round(mark.ink.bowl)}</td></tr>
+          <tr><td>Ink, tail with point</td><td>${Math.round(mark.ink.tail)}</td></tr>
+          <tr><td>Bowl to tail</td><td>${mark.ink.ratio.toFixed(2)}</td></tr>`;
+      }
+
+      async function renderWeights(rowsId, list) {
+        const rows = document.getElementById(rowsId);
+        const cards = [];
+
+        for (const mark of list) {
+          await measureWeight(mark);
+          cards.push(`
+            <article class="space-row weight-row" data-mark="${mark.letter}">
+              <div>
+                <span class="concept__letter">${mark.letter}</span>
+                <h3>${mark.name}</h3>
+                <p>${mark.idea}</p>
+                <p><b>How it reads.</b> ${mark.reads}</p>
+              </div>
+              <figure>
+                <svg class="on-stage" viewBox="0 0 64 64"><use href="#parts-${lower(mark.letter)}" /></svg>
+                <figcaption><b>The parts</b>bowl in the accent, stem grey, tail blue, point pink</figcaption>
+              </figure>
+              <figure>
+                <div class="on-stage">${weightBars(mark)}</div>
+                <figcaption><b>The ink</b>in grid units squared, on one scale for all eight</figcaption>
+              </figure>
+              <table class="figures"><tbody>${weightRows(mark)}</tbody></table>
+            </article>`);
+        }
+
+        rows.innerHTML = cards.join("");
+      }
+
+      function renderFigureTable(bodyId, list) {
+        const body = document.getElementById(bodyId);
+        const reference = { letter: "K6", name: "The loop, as it is", outerRadius: 14, bowlStroke: 7, dotRadius: 3, taper: "none", pointRadius: 5.25, lightRadius: 2.3, strokes: { stem: 7, bottom: 7, point: 7 }, ink: referenceInk };
+        const cell = (mark) => `
+          <td>${mark.letter}. ${mark.name}</td>
+          <td>${2 * mark.outerRadius} / ${mark.bowlStroke} / ${2 * mark.outerRadius - 2 * mark.bowlStroke} / ${2 * mark.dotRadius}</td>
+          <td>${mark.strokes.stem} / ${mark.strokes.bottom.toFixed(1)} / ${mark.strokes.point.toFixed(1)}, ${taperNames[mark.taper]}</td>
+          <td>${2 * mark.pointRadius}</td>
+          <td>${Math.round(mark.ink.bowl)}</td>
+          <td>${Math.round(mark.ink.tail)}</td>
+          <td>${mark.ink.ratio.toFixed(2)}</td>
+          <td class="${mark.verdict ? mark.verdict.tone : ""}">${mark.verdict ? mark.verdict.text : "the fault"}</td>`;
+
+        body.innerHTML = [reference, ...list].map((mark) => `<tr>${cell(mark)}</tr>`).join("");
+      }
+
+      // K6's own ink, counted the same way, so the table has the fault on the same scale.
+      async function measureReference() {
+        const stroke = letterFour.stroke;
+        const notch = notches.find((mark) => mark.letter === "K6");
+        const shift = notch.shiftX;
+        const bowl = `<g transform="translate(${shift} 0)"><circle cx="${letterFour.bowlX}" cy="${letterFour.bowlY}" r="${letterFour.bowlRadius}" fill="none" stroke="currentColor" stroke-width="${stroke}" /><circle cx="${letterFour.bowlX}" cy="${letterFour.bowlY}" r="${letterFour.dotRadius}" fill="currentColor" /></g>`;
+        const stem = `<g transform="translate(${shift} 0)"><path d="M${letterFour.stemX} ${letterFour.bowlY}V${notch.stemEnd}" fill="none" stroke="currentColor" stroke-width="${stroke}" /></g>`;
+        const tail = `<g transform="translate(${shift} 0)"><path d="M${letterFour.stemX} ${notch.stemEnd}${notch.tail}" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" /><circle cx="${notch.point[0]}" cy="${notch.point[1]}" r="${letterFour.pointRadius}" fill="currentColor" /></g>`;
+        const point = `<g transform="translate(${shift} 0)"><circle cx="${notch.point[0]}" cy="${notch.point[1]}" r="${letterFour.pointRadius}" fill="currentColor" /></g>`;
+        const fake = { parts: { bowl, stem, tail, point }, geometry: { bowlX: 0, bowlY: 0 } };
+
+        await measureWeight(fake);
+        referenceInk = fake.ink;
+      }
+
+      const verdictsSix = {
+        L1: { tone: "is-good", text: "balanced, just" },
+        L2: { tone: "is-good", text: "balanced, the pick" },
+        L3: { tone: "is-good", text: "balanced, the lighter sibling" },
+        L4: { tone: "is-bad", text: "still heavy under the bowl" },
+        L5: { tone: "is-good", text: "balanced, the runner up" },
+        L6: { tone: "is-bad", text: "still tail heavy" },
+        L7: { tone: "is-bad", text: "too thin at 16 px" },
+        L8: { tone: "is-bad", text: "too thin, a ball on a stick" },
+      };
+
+      function renderSizesSix(rowsId, list) {
+        const rows = document.getElementById(rowsId);
+
+        rows.innerHTML = list.map(({ letter, name }) => `
+          <div class="size-table">
+            <div class="size-table__name">${letter}. ${name}<small>tile at 12, 24, 36 and 96 px</small></div>
+            ${sizeStrip(letter, "on-light")}
+            ${sizeStrip(letter, "on-dark")}
+            <div class="pixel-row">
+              <figure><canvas data-mark="mark-${lower(letter)}" data-size="16" width="16" height="16"></canvas><figcaption>16 px</figcaption></figure>
+              <figure><canvas data-mark="mark-${lower(letter)}" data-size="16" width="16" height="16" class="is-zoomed"></canvas><figcaption>16 px, each pixel at 6</figcaption></figure>
+              <figure><canvas data-mark="mark-${lower(letter)}" data-size="32" width="32" height="32" class="on-dark"></canvas><figcaption>32 px</figcaption></figure>
+              <figure><canvas data-mark="mono-${lower(letter)}" data-size="18" width="18" height="18" data-mono="true"></canvas><figcaption>bar 18 px</figcaption></figure>
+            </div>
+          </div>`).join("");
+      }
+
+      // A g is taller than it is wide, so round six asks the left to match the right and the top the bottom.
+      function isMirrored([left, right, top, bottom]) {
+        return Math.abs(left - right) <= 1 && Math.abs(top - bottom) <= 1;
+      }
+
+      async function renderReadoutsSix(gridId, list) {
+        const grid = document.getElementById(gridId);
+        const cards = [];
+
+        for (const mark of list) {
+          const ink = measureInk(await rasteriseGlyph(`glyph-${lower(mark.letter)}`));
+          const readout = readoutRowsFour(ink, mark.clearance, isMirrored);
+          const extraRows = `
+            <tr><td>Depth, least and most</td><td>${mark.depth.least.toFixed(1)}  ${mark.depth.most.toFixed(1)}</td></tr>
+            <tr><td>Bowl, tail ink</td><td>${Math.round(mark.ink.bowl)}  ${Math.round(mark.ink.tail)}</td></tr>
+            <tr><td>Bowl to tail</td><td>${mark.ink.ratio.toFixed(2)}</td></tr>`;
+          const rows = readout.rows.replace("<tr><td>Verdict", `${extraRows}<tr><td>Verdict`);
+          cards.push(`
+            <article class="readout" data-mark="${mark.letter}" data-pass="${readout.isPass}">
+              <h3>${mark.letter}. ${mark.name}</h3>
+              <div class="readout__stage">
+                ${iconSvg(`glyph-${lower(mark.letter)}`, 224, "0 0 64 64", "#d4ff3f")}
+                <svg viewBox="0 0 64 64" style="color: #4cc3ff" aria-hidden="true"><use href="#space-${lower(mark.letter)}" opacity="0.5" /></svg>
+                ${readoutOverlay(ink)}
+              </div>
+              <table><tbody>${rows}</tbody></table>
+              <pre class="readout__curve"><small>the stroke at the stem, under the bowl, at the point</small>${mark.strokes.stem} to ${mark.strokes.bottom.toFixed(1)} to ${mark.strokes.point.toFixed(1)}, ${taperNames[mark.taper]}</pre>
+            </article>`);
+        }
+
+        grid.innerHTML = cards.join("");
+      }
+
+      function renderPickSix() {
+        document.getElementById("pick-notes-6").innerHTML = `
+          <h3>L2. The taper, with L5 as the runner up</h3>
+          <ul>${pickNotesSix.map(({ title, text }) => `<li><b>${title}</b> ${text}</li>`).join("")}</ul>`;
+        document.getElementById("pick-table-6").innerHTML = weights.map((mark) => `
+          <tr><td>${mark.letter}. ${mark.name}</td><td>${mark.ink.ratio.toFixed(1)}</td><td class="${mark.verdict.tone}">${mark.verdict.text}</td><td>${mark.reads}</td><td>${mark.cost}</td></tr>`).join("");
+      }
+
+      async function renderSix() {
+        buildSymbolsSix();
+        weights.forEach((mark) => Object.assign(mark, { bands: loopBand, plot: loopPlot, verdict: verdictsSix[mark.letter] }));
+        renderConcepts("concept-grid-6", weights);
+        renderSizesSix("size-rows-6", weights);
+        renderMono("mono-rows-6", weights);
+        renderContext("context-rows-6", weights);
+        await measureReference();
+        await renderWeights("weight-rows-6", weights);
+        renderFigureTable("figure-table-6", weights);
+        renderPickSix();
+        await renderSpaces("space-rows-6", weights);
+        await renderReadoutsSix("readout-grid-6", weights);
+      }
+
       async function renderFive() {
         buildSymbolsFive();
         renderConcepts("concept-grid-5", notches);
@@ -2655,6 +3247,7 @@
         await renderReadoutsFive("readout-grid-5", notches);
       }
 
+      renderSix();
       renderFive();
       buildSymbolsFour();
       renderConcepts("concept-grid-4", tails);
