@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>goui logo proposal</title>
+    <style>
+      /* Atkinson Hyperlegible Next and Mono, by the Braille Institute. SIL OFL 1.1, in ../src/fonts/OFL.txt. */
+      @font-face {
+        font-family: "Atkinson Hyperlegible Next";
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url("../src/fonts/atkinson-hyperlegible-next-latin.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Atkinson Hyperlegible Mono";
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url("../src/fonts/atkinson-hyperlegible-mono-latin.woff2") format("woff2");
+      }
+
+      /* The tokens of design/ux-proposals.css. The marks read only the accent and the ink steps. */
+      :root {
+        color-scheme: dark;
+        --ink-0: #07080a;
+        --ink-1: #0e1013;
+        --ink-2: #15181d;
+        --ink-3: #1d2128;
+        --ink-4: #282d36;
+        --line-1: #22262e;
+        --line-2: #363c48;
+        --text-1: #f2f3f5;
+        --text-2: #a2a9b6;
+        --text-3: #6a717e;
+        --accent: #d4ff3f;
+        --accent-ink: #0b0c0e;
+        --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+        --layer-headphone: #9fb0ff;
+        --layer-ear: #ffd166;
+        --layer-taste: #ff8fb1;
+        --font-ui: "Atkinson Hyperlegible Next", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-number: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+        --toolbar-light: #f1f3f4;
+        --toolbar-dark: #35363a;
+        --menubar-light: #e9e9ec;
+        --menubar-dark: #2b2b2e;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--ink-0);
+        color: var(--text-1);
+        font: 13px / 1.55 var(--font-ui);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      code {
+        font-family: var(--font-number);
+        font-size: 0.92em;
+        color: var(--text-2);
+      }
+
+      main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 24px 120px;
+      }
+
+      .doc-eyebrow {
+        margin: 0 0 12px;
+        color: var(--accent);
+        font: 700 10px / 1 var(--font-number);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .doc-intro {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        align-items: end;
+        padding: 40px 0 56px;
+        border-bottom: 1px solid var(--line-1);
+      }
+
+      .doc-intro h1 {
+        margin: 0;
+        font-size: 64px;
+        line-height: 0.95;
+        letter-spacing: -0.045em;
+        font-weight: 800;
+      }
+
+      .doc-intro h1 em { font-style: normal; color: var(--accent); }
+
+      .doc-intro p, .doc-head p, .doc-sub p {
+        max-width: 680px;
+        color: var(--text-2);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .doc-intro p { margin: 16px 0 0; }
+
+      .doc-index-list {
+        display: flex;
+        flex-direction: column;
+        margin: 0 0 0 40px;
+        padding: 0;
+        list-style: none;
+      }
+
+      .doc-index-list li + li { margin-top: 2px; }
+
+      .doc-index-list a {
+        display: flex;
+        padding: 4px 0;
+        border-bottom: 1px solid var(--line-1);
+        color: var(--text-2);
+        text-decoration: none;
+      }
+
+      .doc-index-list a:hover { color: var(--text-1); }
+
+      .doc-index-list b {
+        margin-right: 12px;
+        font: 600 11px / 1.8 var(--font-number);
+        color: var(--accent);
+      }
+
+      .doc-section { padding-top: 88px; }
+
+      .doc-head {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr);
+        margin-bottom: 24px;
+      }
+
+      .doc-head__index {
+        font: 700 40px / 1 var(--font-number);
+        color: var(--accent);
+        letter-spacing: -0.04em;
+      }
+
+      .doc-head h2 {
+        margin: 0 0 8px;
+        font-size: 30px;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        font-weight: 800;
+      }
+
+      .doc-head p { margin: 0; }
+      .doc-head > div { padding-left: 16px; }
+
+      .doc-sub {
+        display: flex;
+        align-items: baseline;
+        margin: 48px 0 16px;
+      }
+
+      .doc-sub h3 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+        font-weight: 700;
+      }
+
+      .doc-sub p { margin: 0 0 0 12px; font-size: 13px; }
+
+      .doc-caption {
+        margin: 12px 0 0;
+        color: var(--text-3);
+        font-size: 12px;
+      }
+
+      .doc-notes ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--text-2);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .doc-notes li { margin: 0 0 8px; }
+      .doc-notes b { color: var(--text-1); font-weight: 600; }
+
+      /* The concept cards */
+      .concept-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin: -8px;
+      }
+
+      .concept {
+        display: flex;
+        flex-direction: column;
+        margin: 8px;
+        padding: 20px;
+        border: 1px solid var(--line-1);
+        border-radius: 14px;
+        background: var(--ink-1);
+      }
+
+      .concept > * + * { margin-top: 12px; }
+
+      .concept__stage {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 180px;
+        border-radius: 8px;
+        background: var(--ink-2);
+      }
+
+      .concept__letter {
+        font: 700 11px / 1 var(--font-number);
+        color: var(--accent);
+        letter-spacing: 0.1em;
+      }
+
+      .concept h3 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: -0.02em;
+      }
+
+      .concept p {
+        margin: 0;
+        color: var(--text-2);
+        font-size: 13px;
+      }
+
+      .concept__mono {
+        display: flex;
+      }
+
+      .concept__mono span + span { margin-left: 8px; }
+
+      .concept__mono span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+      }
+
+      .concept__mono .on-light { background: var(--menubar-light); color: #000; }
+      .concept__mono .on-dark { background: var(--menubar-dark); color: #fff; }
+
+      /* The size rows */
+      .size-table {
+        display: grid;
+        grid-template-columns: 130px minmax(0, 1fr) minmax(0, 1fr) 320px;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line-1);
+      }
+
+      .size-table > * + *, .size-head > * + * { margin-left: 12px; }
+
+      .size-table__name { font-weight: 700; font-size: 14px; }
+      .size-table__name small { display: block; color: var(--text-3); font-weight: 400; font-size: 11px; }
+
+      .size-strip {
+        display: flex;
+        align-items: flex-end;
+        padding: 14px 12px;
+        border-radius: 8px;
+      }
+
+      .size-strip.on-light { background: var(--toolbar-light); }
+      .size-strip.on-dark { background: var(--toolbar-dark); }
+
+      .size-strip figure {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+      }
+
+      .size-strip figure + figure { margin-left: 16px; }
+
+      .size-strip figcaption {
+        margin-top: 6px;
+        font: 600 10px / 1 var(--font-number);
+        color: rgb(0 0 0 / 0.55);
+      }
+
+      .size-strip.on-dark figcaption { color: rgb(255 255 255 / 0.55); }
+
+      .size-strip svg { display: block; }
+
+      .pixel-row {
+        display: flex;
+        align-items: flex-end;
+      }
+
+      .pixel-row figure {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+      }
+
+      .pixel-row figure + figure { margin-left: 10px; }
+
+      .pixel-row figcaption {
+        margin-top: 6px;
+        font: 600 10px / 1 var(--font-number);
+        color: var(--text-3);
+      }
+
+      .pixel-row canvas {
+        display: block;
+        width: 84px;
+        height: 84px;
+        image-rendering: pixelated;
+        border-radius: 4px;
+        background: var(--toolbar-light);
+      }
+
+      .pixel-row canvas.on-dark { background: var(--toolbar-dark); }
+
+      .size-head {
+        display: grid;
+        grid-template-columns: 130px minmax(0, 1fr) minmax(0, 1fr) 300px;
+        padding: 0 0 8px;
+        color: var(--text-3);
+        font: 600 10px / 1 var(--font-number);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      /* The menu bars */
+      .menubar-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .menubar-grid > * + * { margin-left: 16px; }
+
+      .menubar {
+        display: flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 14px;
+        border-radius: 8px;
+        font: 600 13px / 1 var(--font-ui);
+      }
+
+      .menubar.on-light { background: var(--menubar-light); color: rgb(0 0 0 / 0.85); }
+      .menubar.on-dark { background: var(--menubar-dark); color: rgb(255 255 255 / 0.85); }
+
+      .menubar > * + * { margin-left: 18px; }
+      .menubar__apple { font-weight: 800; }
+
+      .menubar .menubar__right {
+        display: flex;
+        align-items: center;
+        margin-left: auto;
+      }
+
+      .menubar__right > * + * { margin-left: 14px; }
+
+      .menubar__item {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 22px;
+        padding: 0 5px;
+        border-radius: 5px;
+      }
+
+      .menubar__item.is-open { background: rgb(128 128 128 / 0.25); }
+      .menubar svg { display: block; }
+      .menubar__clock { font-weight: 500; }
+
+      .menubar-set > * + * { margin-top: 24px; }
+
+      .menubar-set h4 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        letter-spacing: -0.01em;
+      }
+
+      .menubar-set h4 small { color: var(--text-3); font-weight: 400; margin-left: 8px; }
+
+      /* The contexts */
+      .context-row {
+        display: grid;
+        grid-template-columns: 440px minmax(0, 1fr);
+        margin-bottom: 40px;
+      }
+
+      .context-row h4 {
+        grid-column: 1 / -1;
+        margin: 0 0 12px;
+        font-size: 16px;
+        letter-spacing: -0.01em;
+      }
+
+      .context-row h4 small { color: var(--text-3); font-weight: 400; margin-left: 8px; }
+
+      .tile {
+        display: grid;
+        grid-template-columns: 180px minmax(0, 1fr);
+        align-items: center;
+        width: 440px;
+        height: 280px;
+        padding: 28px;
+        border: 1px solid var(--line-1);
+        border-radius: 14px;
+        background:
+          radial-gradient(60% 60% at 100% 0%, var(--accent-soft), transparent 70%),
+          var(--ink-1);
+      }
+
+      .tile__brand { display: flex; align-items: center; }
+      .tile__brand .wordmark, .site-header .wordmark { margin-left: 10px; }
+      .tile__brand svg { display: block; }
+
+      .wordmark {
+        font-weight: 800;
+        letter-spacing: -0.045em;
+        line-height: 1;
+      }
+
+      .tile .wordmark { font-size: 26px; }
+
+      .tile__line {
+        margin: 12px 0 0;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .tile__layers {
+        display: flex;
+        flex-direction: column;
+        margin-top: 18px;
+      }
+
+      .tile__layer + .tile__layer { margin-top: 6px; }
+
+      .tile__layer {
+        display: flex;
+        align-items: center;
+        padding: 6px 8px;
+        border-left: 2px solid var(--tone);
+        border-radius: 0 6px 6px 0;
+        background: var(--ink-2);
+        font-size: 11px;
+      }
+
+      .tile__layer b { display: block; font: 700 9px / 1 var(--font-number); color: var(--tone); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 2px; }
+
+      .tile__plot {
+        height: 180px;
+        margin-left: 16px;
+        border: 1px solid var(--line-1);
+        border-radius: 10px;
+        background: var(--ink-0);
+      }
+
+      .tile__plot svg { display: block; width: 100%; height: 100%; }
+
+      .right-stack {
+        display: flex;
+        flex-direction: column;
+        margin-left: 16px;
+      }
+
+      .right-stack > * + * { margin-top: 16px; }
+
+      .site-header {
+        display: flex;
+        align-items: center;
+        height: 60px;
+        padding: 0 24px;
+        border: 1px solid var(--line-1);
+        border-radius: 14px;
+        background: var(--ink-0);
+      }
+
+      .site-header > * + * { margin-left: 28px; }
+      .site-header .brand { display: flex; align-items: center; }
+      .site-header .brand svg { display: block; }
+      .site-header .wordmark { font-size: 22px; }
+
+      .site-header nav {
+        display: flex;
+        color: var(--text-2);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .site-header nav span + span { margin-left: 20px; }
+
+      .site-header .cta {
+        display: inline-flex;
+        align-items: center;
+        height: 30px;
+        margin-left: auto;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-weight: 700;
+        font-size: 12px;
+      }
+
+      .dock {
+        display: flex;
+        align-items: flex-end;
+        height: 110px;
+        padding: 0 20px 10px;
+        border-radius: 14px;
+        background:
+          linear-gradient(180deg, #5c6a8a, #2e3344);
+      }
+
+      .dock > * + * { margin-left: 18px; }
+
+      .dock__app {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .dock__app i { margin-top: 6px; }
+
+      .dock__app svg { display: block; filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.4)); }
+
+      .dock__app i {
+        display: block;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: rgb(255 255 255 / 0.7);
+      }
+
+      .dock__fake {
+        width: 64px;
+        height: 64px;
+        border-radius: 14px;
+        background: linear-gradient(160deg, #d7dbe6, #8c93a8);
+        opacity: 0.6;
+      }
+
+      .dock .favicon-tab {
+        display: flex;
+        align-items: center;
+        height: 36px;
+        padding: 0 10px 0 14px;
+        border-radius: 10px 10px 0 0;
+        background: var(--toolbar-light);
+        color: rgb(0 0 0 / 0.85);
+        font-size: 12px;
+        width: 240px;
+      }
+
+      .favicon-tab svg { display: block; margin-right: 10px; }
+
+      .favicon-tab span { opacity: 0.4; margin-left: auto; }
+
+      /* The palette and recommendation */
+      .palette {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        margin: -6px;
+      }
+
+      .swatch {
+        margin: 6px;
+        padding: 10px;
+        border: 1px solid var(--line-1);
+        border-radius: 10px;
+        background: var(--ink-1);
+        font: 600 11px / 1.5 var(--font-number);
+      }
+
+      .swatch i {
+        display: block;
+        height: 56px;
+        margin-bottom: 8px;
+        border-radius: 6px;
+        border: 1px solid var(--line-2);
+      }
+
+      .swatch small { display: block; color: var(--text-3); font-weight: 400; }
+
+      .pick {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        padding: 24px;
+        border: 1px solid var(--accent);
+        border-radius: 14px;
+        background: var(--ink-1);
+      }
+
+      .pick > .doc-notes { margin-left: 24px; }
+
+      .pick__stage {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: var(--ink-2);
+      }
+
+      .pick__stage > * + * { margin-left: 20px; }
+      .pick h3 { margin: 0 0 8px; font-size: 22px; letter-spacing: -0.02em; }
+
+      .ship-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .ship-table th, .ship-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line-1);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .ship-table th {
+        color: var(--text-3);
+        font: 600 10px / 1 var(--font-number);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .ship-table td:first-child { font-weight: 600; white-space: nowrap; }
+      .ship-table td { color: var(--text-2); }
+
+      @media (max-width: 1000px) {
+        .concept-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .size-table, .size-head { grid-template-columns: 1fr; }
+        .context-row { grid-template-columns: 1fr; }
+        .doc-intro { grid-template-columns: 1fr; }
+        .pick { grid-template-columns: 1fr; }
+        .menubar-grid { grid-template-columns: 1fr; }
+        .palette { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Each concept is two symbols on a 64 unit grid. mark-* is the full icon, mono-* is the mark alone in currentColor. -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <!-- A. The bars, in the new palette. The same four bars the script draws today. -->
+      <symbol id="mark-a" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#0e1013" />
+        <rect x="9" y="27" width="8.5" height="22" rx="4.25" fill="#d4ff3f" />
+        <rect x="22" y="13" width="8.5" height="36" rx="4.25" fill="#d4ff3f" />
+        <rect x="35" y="22" width="8.5" height="27" rx="4.25" fill="#d4ff3f" />
+        <rect x="48" y="8" width="8.5" height="41" rx="4.25" fill="#d4ff3f" />
+      </symbol>
+      <symbol id="mono-a" viewBox="0 0 64 64">
+        <rect x="4" y="22" width="11" height="34" rx="5.5" fill="currentColor" />
+        <rect x="19" y="4" width="11" height="52" rx="5.5" fill="currentColor" />
+        <rect x="34" y="15" width="11" height="41" rx="5.5" fill="currentColor" />
+        <rect x="49" y="9" width="11" height="47" rx="5.5" fill="currentColor" />
+      </symbol>
+
+      <!-- B. The curve. One peak band on a flat line, with the chosen band's point on top. -->
+      <symbol id="mark-b" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#0e1013" />
+        <path d="M8 44C16 44 20 44 25 39C30 33 31 17 38 17C45 17 47 32 52 38C54 40 55 42 56 43" fill="none" stroke="#d4ff3f" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="38" cy="17" r="6.5" fill="#f2f3f5" />
+      </symbol>
+      <symbol id="mono-b" viewBox="0 0 64 64">
+        <path d="M4 48C13 48 18 48 23 42C29 35 29 14 37 14C45 14 46 34 52 41C55 44 57 46 60 47" fill="none" stroke="currentColor" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="37" cy="14" r="9" fill="currentColor" />
+      </symbol>
+
+      <!-- C. Three layers. Headphone, ear and taste as three stepped strips on an acid tile. -->
+      <symbol id="mark-c" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <rect x="9" y="13" width="30" height="9" rx="4.5" fill="#0b0c0e" />
+        <rect x="17" y="27.5" width="30" height="9" rx="4.5" fill="#0b0c0e" />
+        <rect x="25" y="42" width="30" height="9" rx="4.5" fill="#0b0c0e" />
+      </symbol>
+      <symbol id="mono-c" viewBox="0 0 64 64">
+        <rect x="2" y="8" width="38" height="12" rx="6" fill="currentColor" />
+        <rect x="13" y="26" width="38" height="12" rx="6" fill="currentColor" />
+        <rect x="24" y="44" width="38" height="12" rx="6" fill="currentColor" />
+      </symbol>
+
+      <!-- D. The waveform. Five pills centred on the midline, the way a recording shows its sound. -->
+      <symbol id="mark-d" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#0e1013" />
+        <rect x="7" y="25" width="7.5" height="14" rx="3.75" fill="#d4ff3f" />
+        <rect x="17.75" y="16" width="7.5" height="32" rx="3.75" fill="#d4ff3f" />
+        <rect x="28.25" y="9" width="7.5" height="46" rx="3.75" fill="#d4ff3f" />
+        <rect x="38.75" y="19" width="7.5" height="26" rx="3.75" fill="#d4ff3f" />
+        <rect x="49.5" y="27" width="7.5" height="10" rx="3.75" fill="#d4ff3f" />
+      </symbol>
+      <symbol id="mono-d" viewBox="0 0 64 64">
+        <rect x="2" y="24" width="9" height="16" rx="4.5" fill="currentColor" />
+        <rect x="15.25" y="13" width="9" height="38" rx="4.5" fill="currentColor" />
+        <rect x="28.5" y="4" width="9" height="56" rx="4.5" fill="currentColor" />
+        <rect x="41.75" y="17" width="9" height="30" rx="4.5" fill="currentColor" />
+        <rect x="55" y="26" width="7" height="12" rx="3.5" fill="currentColor" />
+      </symbol>
+
+      <!-- E. The letter g. A geometric single storey g, ink on acid, with the tail as a hook. -->
+      <symbol id="mark-e" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+        <circle cx="28" cy="27" r="12" fill="none" stroke="#0b0c0e" stroke-width="9" />
+        <path d="M40 15V43C40 51.5 35 55 27 55H19" fill="none" stroke="#0b0c0e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+      <symbol id="mono-e" viewBox="0 0 64 64">
+        <circle cx="27" cy="25" r="13.5" fill="none" stroke="currentColor" stroke-width="10" />
+        <path d="M40.5 12V43C40.5 52.5 35 57 26 57H16" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+      </symbol>
+
+      <!-- F. The ear. One outer curve from the lobe over the top, and a short inner curl. -->
+      <symbol id="mark-f" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="#0e1013" />
+        <path d="M23 51C13 44 12 17 31 12C48 8 56 25 48 35C44 40 40 41 39 48" fill="none" stroke="#d4ff3f" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M27 33C28 25 38 24 40 30" fill="none" stroke="#d4ff3f" stroke-width="6.5" stroke-linecap="round" />
+      </symbol>
+      <symbol id="mono-f" viewBox="0 0 64 64">
+        <path d="M21 56C9 48 7 15 30 9C50 4 60 25 50 37C45 43 40 44 39 53" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M25 34C26 24 39 22 41 30" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" />
+      </symbol>
+    </svg>
+
+    <main>
+      <header class="doc-intro">
+        <div>
+          <p class="doc-eyebrow">goui design · logo proposal</p>
+          <h1>One mark.<br /><em>Six ways to draw it.</em></h1>
+          <p>
+            The icon that ships is a blue to purple tile with four white bars. It is the one blue left in
+            goui. This page tries six marks in the acid accent and the ink steps. Each one is shown at the
+            four extension sizes, on a light toolbar and a dark one, with a pixel view of the 16 px icon as
+            Chrome would draw it. Each one is also drawn in one colour for the Mac menu bar, and placed in
+            the menu bar, the store tile, the site header, the Dock and a browser tab. Section 05 picks one
+            and lists what has to change to ship it.
+          </p>
+        </div>
+        <ol class="doc-index-list">
+          <li><a href="#concepts"><b>01</b>Six concepts</a></li>
+          <li><a href="#sizes"><b>02</b>At the real sizes</a></li>
+          <li><a href="#mono"><b>03</b>One colour, for the menu bar</a></li>
+          <li><a href="#context"><b>04</b>In context</a></li>
+          <li><a href="#pick"><b>05</b>The recommendation</a></li>
+          <li><a href="#palette"><b>06</b>Palette note</a></li>
+        </ol>
+      </header>
+
+      <section class="doc-section" id="concepts">
+        <header class="doc-head">
+          <span class="doc-head__index">01</span>
+          <div>
+            <h2>Six concepts</h2>
+            <p>
+              Each one comes from a different idea, not from a different detail. Four take the ink tile
+              with an acid mark, the way the panel reads. Two turn that round, an acid tile with an ink
+              mark, so a light toolbar and a dark one both show a clear edge. Beside each is its one
+              colour form on a light bar and a dark bar.
+            </p>
+          </div>
+        </header>
+        <div class="concept-grid" id="concept-grid"></div>
+      </section>
+
+      <section class="doc-section" id="sizes">
+        <header class="doc-head">
+          <span class="doc-head__index">02</span>
+          <div>
+            <h2>At the real sizes</h2>
+            <p>
+              Chrome draws the toolbar icon at 16 px and the store shows it at 128 px with 16 px clear on
+              every side. The script keeps that same clear band in every size, so the tile in the 16 px
+              icon is 12 px wide. The strips below draw each icon that way, as a vector. The pixel view on
+              the right rasterises the same SVG at 16 px and 32 px and blows it up, so it shows what a
+              screen at 1x would show. A mark that only reads at 128 is not a logo.
+            </p>
+          </div>
+        </header>
+        <div class="size-head"><span>Concept</span><span>Light toolbar</span><span>Dark toolbar</span><span>Pixels, 16 and 32 px</span></div>
+        <div id="size-rows"></div>
+        <p class="doc-caption">
+          The pixel view is drawn by this page into a canvas at the real size, then scaled up with no
+          smoothing. It is close to what the icon script's own sampler would write, which takes 16
+          samples per pixel.
+        </p>
+      </section>
+
+      <section class="doc-section" id="mono">
+        <header class="doc-head">
+          <span class="doc-head__index">03</span>
+          <div>
+            <h2>One colour, for the menu bar</h2>
+            <p>
+              The Mac menu bar icon is a template image. It is drawn in one colour at 18 points and the
+              menu bar paints it black or white to match itself. Each mark below is its own mono symbol,
+              not the colour one with the tile removed. The strokes are thicker and the tile is gone, since
+              the bar gives the mark no frame. The open state shows the item pressed, as it is while its
+              menu is open.
+            </p>
+          </div>
+        </header>
+        <div id="mono-rows" class="menubar-set"></div>
+      </section>
+
+      <section class="doc-section" id="context">
+        <header class="doc-head">
+          <span class="doc-head__index">04</span>
+          <div>
+            <h2>In context</h2>
+            <p>
+              The Chrome Web Store small tile at 440 by 280 px, the site header, the Mac Dock on Apple's
+              grid and a browser tab with the favicon. In the header and the tile the mark stands next to
+              the wordmark in Atkinson Hyperlegible Next at weight 800. The site header uses the mono
+              form in the accent, with no tile, the same way the menu bar does.
+            </p>
+          </div>
+        </header>
+        <div id="context-rows"></div>
+      </section>
+
+      <section class="doc-section" id="pick">
+        <header class="doc-head">
+          <span class="doc-head__index">05</span>
+          <div>
+            <h2>The recommendation</h2>
+            <p>Concept E, the letter g on an acid tile. Below it is the reasoning, then the list of what has to change to ship it.</p>
+          </div>
+        </header>
+        <div class="pick">
+          <div class="pick__stage">
+            <svg width="128" height="128" viewBox="0 0 64 64"><use href="#mark-e" /></svg>
+            <svg width="40" height="40" viewBox="0 0 64 64" style="color: #f2f3f5"><use href="#mono-e" /></svg>
+            <svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark-e" /></svg>
+          </div>
+          <div class="doc-notes">
+            <h3>E. The letter g, ink on acid</h3>
+            <ul>
+              <li><b>It reads at 16 px, and it is the only one that does without doubt.</b> In the pixel view the ring, the stem and the tail are three clear things at 12 px of tile. The bars hold up too, but as four grey sticks. The bell of B reads as a hill. The ear and the waveform go to a blob.</li>
+              <li><b>It is the loudest thing in the toolbar.</b> An acid tile with an ink letter has a clear edge on the light toolbar and the dark one. Every ink tile on this page is near the dark toolbar's grey, and the acid mark alone has to carry it there.</li>
+              <li><b>One mark, everywhere.</b> The same g is the favicon, the Dock icon, the menu bar glyph and the mark beside the wordmark. In the site header the g next to the word goui reads as one thing, where a curve or bars next to the word read as two.</li>
+              <li><b>The mono form is a letter, which the menu bar is used to.</b> The bars of A read fine there. The bell of B reads as a tent. The strips of C read as a menu glyph and the pills of D as a microphone.</li>
+              <li><b>What it gives up.</b> A letter says nothing about sound. The tagline, the plot and the panel say that instead. The g here is drawn in the spirit of Atkinson Hyperlegible, not from its outline, so the wordmark and the mark are cousins, not twins.</li>
+              <li><b>Runners up.</b> A is the cheapest change, since only the colours move, and it says equaliser at once. If the owner wants a picture of sound over a letter, A is the pick. B is the pick if the icon should be the plot, and its 16 px reading is close behind A.</li>
+              <li><b>Calls made on this page.</b> The g is single storey, with a round bowl and a tail that hooks left under it. The stroke is 9 of 64 units, so it is 1.7 px at 12 px of tile. The tile is the accent and the letter is accent-ink, so the icon reads as a pressed accent button, which is how the panel's primary button looks.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="doc-sub"><h3>What shipping E would touch</h3><p>All of it is in the two icon scripts and the files they write. Nothing in <code>src/</code> changes.</p></div>
+        <table class="ship-table">
+          <thead><tr><th>Where</th><th>Today</th><th>For concept E</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>scripts/icon-geometry.mjs</code></td>
+              <td><code>tileColors</code> is two blues. <code>layOutIcon</code> returns a tile and four bar rectangles from <code>barHeights</code>.</td>
+              <td>One tile colour, <code>#d4ff3f</code>, and one mark colour, <code>#0b0c0e</code>. <code>layOutIcon</code> returns the tile and the g as three strokes on the 64 unit grid scaled to the artwork: a ring with a centre, a radius and a width, a straight stem, and the tail as one cubic curve. The README and store pictures read the same layout, so they follow.</td>
+            </tr>
+            <tr>
+              <td><code>scripts/make-icons.mjs</code></td>
+              <td><code>sampleTileColor</code> tests each pixel against the rounded rectangles. <code>layOutMenuBarBars</code> scales the bars alone to 85 percent of the menu bar size.</td>
+              <td>Three tests take the place of the bar test. A pixel is on the ring when its distance from the centre is within half the stroke of the radius. It is on the stem when the existing rounded rectangle test says so. It is on the tail when its distance to the cubic is under half the stroke, which the code can get by flattening the cubic into about 24 line segments and taking the nearest one. The menu bar function lays out the mono g, thicker, with no tile.</td>
+            </tr>
+            <tr>
+              <td><code>icons/icon16.png</code> to <code>icon128.png</code></td>
+              <td>Blue tile, white bars, 16 px clear at 128.</td>
+              <td>Written again by <code>npm run icons</code>. Same sizes, same clear band.</td>
+            </tr>
+            <tr>
+              <td><code>mac/icons/AppIcon.iconset</code></td>
+              <td>Ten PNGs from 16 to 1024 px on the 824 of 1024 grid.</td>
+              <td>Written again by the same script. A second pass through <code>iconutil</code> makes the <code>.icns</code> the app bundles. The Dock row above shows the acid tile against a mid blue wallpaper. It is the brightest icon in the Dock, which is a call the owner should make with their own Dock open.</td>
+            </tr>
+            <tr>
+              <td><code>mac/icons/menu-bar.png</code>, <code>@2x</code></td>
+              <td>The four bars in black, alpha only.</td>
+              <td>The mono g in black, alpha only, at 18 and 36 px. The strokes in <code>mono-e</code> are 10 units of 64, which is 2.8 px at 18 px, and the bowl's hole is 17 units, which is 4.8 px. Both read in the pixel view.</td>
+            </tr>
+            <tr>
+              <td>The favicon and the panel header</td>
+              <td>The how-to page links <code>icons/icon128.png</code> as its favicon. The panel header in <code>src/panel.html</code> shows <code>icons/icon32.png</code> at 18 px beside the word goui. The site has no favicon link of its own.</td>
+              <td>Nothing to do once the icons are written again, since both read the files by path. The tab row above shows the 16 px icon in a tab. A favicon link for the site is a small separate change.</td>
+            </tr>
+            <tr>
+              <td>The design page</td>
+              <td><code>design/ux-proposals.js</code> shows <code>icons/icon32.png</code> in the panel header, the guide pictures, the menu bar mock and the store tile.</td>
+              <td>The mocks follow once the icons are written again. The menu bar mock would then show the colour tile where the real bar shows the mono g, so it should take the <code>mono-e</code> symbol from this page.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="doc-section" id="palette">
+        <header class="doc-head">
+          <span class="doc-head__index">06</span>
+          <div>
+            <h2>Palette note</h2>
+            <p>
+              Every mark on this page uses the accent and the ink steps, and nothing else. The current icon
+              is the one blue left in goui. Once it goes, the sky blue of a shelf band and the lavender of
+              the headphone layer are the only blues, and both are audio colours, not brand colours. No
+              concept here brings a new blue in.
+            </p>
+          </div>
+        </header>
+        <div class="palette">
+          <div class="swatch"><i style="background: #d4ff3f"></i>accent<small>#d4ff3f, the mark</small></div>
+          <div class="swatch"><i style="background: #0e1013"></i>ink-1<small>#0e1013, the tile</small></div>
+          <div class="swatch"><i style="background: #0b0c0e"></i>accent-ink<small>#0b0c0e, the mark on an acid tile</small></div>
+          <div class="swatch"><i style="background: #282d36"></i>ink-4<small>#282d36, the midline in B</small></div>
+          <div class="swatch"><i style="background: #f2f3f5"></i>text-1<small>#f2f3f5, the point in B</small></div>
+        </div>
+        <div class="doc-notes" style="margin-top: 24px">
+          <ul>
+            <li><b>Two polarities.</b> An ink tile with an acid mark matches the panel. An acid tile with an ink mark reads on any toolbar and is the loudest thing in it. The recommendation takes the acid tile. If the owner wants the quieter one, E inverts cleanly, as an ink tile with an acid g, and the Dock row shows how the ink tiles of A, B, D and F look there.</li>
+            <li><b>No gradient.</b> The current tile fades top to bottom. A flat tile matches the token set, which is flat ink in five steps, and a flat tile is one colour test in the icon script instead of a mix.</li>
+            <li><b>The menu bar takes no colour.</b> Only alpha counts there. The mono symbols are drawn in currentColor so this page can show them black and white, and the script writes black.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const concepts = [
+        { letter: "A", name: "The bars, in acid", idea: "The four bars the script draws today, on an ink tile in the accent. The cheapest change and the most familiar reading." },
+        { letter: "B", name: "The curve", idea: "One peak band on a flat line, with the chosen band's point on top of it. The panel's plot at its smallest." },
+        { letter: "C", name: "Three layers", idea: "Headphone, ear and taste as three stepped strips on an acid tile. The tagline as a picture." },
+        { letter: "D", name: "The waveform", idea: "Five pills centred on the midline, the way a recording shows its sound." },
+        { letter: "E", name: "The letter g", idea: "A geometric single storey g, ink on acid. A wordmark first and an icon second." },
+        { letter: "F", name: "The ear", idea: "One outer curve from the lobe over the top and a short inner curl. Every ear hears differently, drawn." },
+      ];
+      const sizes = [16, 32, 48, 128];
+      // The store wants 16 px clear in 128, so the tile is 64 units inside a box of 64 * 128 / 96.
+      const storeBox = 64 * 128 / 96;
+      const storeView = `${-(storeBox - 64) / 2} ${-(storeBox - 64) / 2} ${storeBox} ${storeBox}`;
+      // Apple's grid fills 824 of 1024 px.
+      const macBox = 64 * 1024 / 824;
+      const macView = `${-(macBox - 64) / 2} ${-(macBox - 64) / 2} ${macBox} ${macBox}`;
+
+      function iconSvg(id, size, viewBox = "0 0 64 64", color = "") {
+        const style = color ? ` style="color: ${color}"` : "";
+        return `<svg width="${size}" height="${size}" viewBox="${viewBox}"${style}><use href="#${id}" /></svg>`;
+      }
+
+      function lower(letter) {
+        return letter.toLowerCase();
+      }
+
+      function renderConcepts() {
+        const grid = document.getElementById("concept-grid");
+
+        grid.innerHTML = concepts.map(({ letter, name, idea }) => `
+          <article class="concept">
+            <div class="concept__stage">${iconSvg(`mark-${lower(letter)}`, 128)}</div>
+            <span class="concept__letter">${letter}</span>
+            <h3>${name}</h3>
+            <p>${idea}</p>
+            <div class="concept__mono">
+              <span class="on-light">${iconSvg(`mono-${lower(letter)}`, 20)}</span>
+              <span class="on-dark">${iconSvg(`mono-${lower(letter)}`, 20)}</span>
+            </div>
+          </article>`).join("");
+      }
+
+      function sizeStrip(letter, tone) {
+        const figures = sizes.map((size) => `
+          <figure>${iconSvg(`mark-${lower(letter)}`, size, storeView)}<figcaption>${size}</figcaption></figure>`).join("");
+        return `<div class="size-strip ${tone}">${figures}</div>`;
+      }
+
+      function renderSizes() {
+        const rows = document.getElementById("size-rows");
+
+        rows.innerHTML = concepts.map(({ letter, name }) => `
+          <div class="size-table">
+            <div class="size-table__name">${letter}. ${name}<small>tile at 12, 24, 36 and 96 px</small></div>
+            ${sizeStrip(letter, "on-light")}
+            ${sizeStrip(letter, "on-dark")}
+            <div class="pixel-row">
+              <figure><canvas data-mark="mark-${lower(letter)}" data-size="16" width="16" height="16"></canvas><figcaption>16 px</figcaption></figure>
+              <figure><canvas data-mark="mark-${lower(letter)}" data-size="32" width="32" height="32" class="on-dark"></canvas><figcaption>32 px</figcaption></figure>
+              <figure><canvas data-mark="mono-${lower(letter)}" data-size="18" width="18" height="18" data-mono="true"></canvas><figcaption>bar 18 px</figcaption></figure>
+            </div>
+          </div>`).join("");
+      }
+
+      function menubar(letter, tone, isOpen) {
+        const color = tone === "on-light" ? "#000" : "#fff";
+        const item = `<span class="menubar__item${isOpen ? " is-open" : ""}">${iconSvg(`mono-${lower(letter)}`, 18, "0 0 64 64", color)}</span>`;
+        return `
+          <div class="menubar ${tone}">
+            <span class="menubar__apple">&#63743;</span><span>Finder</span><span>File</span><span>Edit</span><span>View</span>
+            <span class="menubar__right">
+              ${item}
+              <svg width="16" height="12" viewBox="0 0 16 12" style="color: ${color}"><path d="M8 11.5 1 4.5a10 10 0 0 1 14 0z" fill="currentColor" opacity="0.9" /></svg>
+              <svg width="22" height="11" viewBox="0 0 22 11" style="color: ${color}"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" fill="none" stroke="currentColor" opacity="0.5" /><rect x="2" y="2" width="12" height="7" rx="1" fill="currentColor" /><rect x="20" y="3.5" width="1.5" height="4" rx="0.5" fill="currentColor" opacity="0.5" /></svg>
+              <span class="menubar__clock">Fri 09:41</span>
+            </span>
+          </div>`;
+      }
+
+      function renderMono() {
+        const rows = document.getElementById("mono-rows");
+
+        rows.innerHTML = concepts.map(({ letter, name }) => `
+          <div>
+            <h4>${letter}. ${name}<small>18 pt template image, black on a light bar and white on a dark one</small></h4>
+            <div class="menubar-grid">
+              ${menubar(letter, "on-light", false)}
+              ${menubar(letter, "on-dark", true)}
+            </div>
+          </div>`).join("");
+      }
+
+      const plotPath = "M8 60C40 60 60 78 90 78S130 40 170 40S240 60 290 50S330 70 400 60";
+
+      function storeTile(letter) {
+        return `
+          <div class="tile">
+            <div>
+              <div class="tile__brand">${iconSvg(`mark-${lower(letter)}`, 32)}<span class="wordmark">goui</span></div>
+              <p class="tile__line">Every ear hears differently.</p>
+              <div class="tile__layers">
+                <div class="tile__layer" style="--tone: var(--layer-headphone)"><div><b>Headphone · AutoEQ</b>AKG N700NC M2</div></div>
+                <div class="tile__layer" style="--tone: var(--layer-ear)"><div><b>My ear · saved</b>Ear test, 12 Oct</div></div>
+                <div class="tile__layer" style="--tone: var(--layer-taste)"><div><b>Taste · saved</b>Warm and smooth</div></div>
+              </div>
+            </div>
+            <div class="tile__plot">
+              <svg viewBox="0 0 400 120" preserveAspectRatio="none">
+                <path d="M0 60H400" stroke="#282d36" stroke-width="1" />
+                <path d="${plotPath}" fill="none" stroke="#d4ff3f" stroke-width="2.5" stroke-linecap="round" />
+                <circle cx="170" cy="40" r="4" fill="#f2f3f5" />
+              </svg>
+            </div>
+          </div>`;
+      }
+
+      function siteHeader(letter) {
+        return `
+          <div class="site-header">
+            <div class="brand">${iconSvg(`mono-${lower(letter)}`, 24, "0 0 64 64", "#d4ff3f")}<span class="wordmark">goui</span></div>
+            <nav><span>How it works</span><span>Mac</span><span>Headphones</span><span>GitHub</span></nav>
+            <span class="cta">Add to Chrome</span>
+          </div>`;
+      }
+
+      function dockRow(letter) {
+        return `
+          <div class="dock">
+            <div class="dock__app"><span class="dock__fake"></span><i style="opacity: 0"></i></div>
+            <div class="dock__app">${iconSvg(`mark-${lower(letter)}`, 64, macView)}<i></i></div>
+            <div class="dock__app"><span class="dock__fake" style="background: linear-gradient(160deg, #ffd166, #ff8fb1)"></span><i style="opacity: 0"></i></div>
+            <div class="favicon-tab" style="margin-left: auto; align-self: flex-end">${iconSvg(`mark-${lower(letter)}`, 16, storeView)}goui, every ear hears differently<span>&times;</span></div>
+          </div>`;
+      }
+
+      function renderContext() {
+        const rows = document.getElementById("context-rows");
+
+        rows.innerHTML = concepts.map(({ letter, name }) => `
+          <div class="context-row">
+            <h4>${letter}. ${name}<small>store tile, site header, Dock and favicon</small></h4>
+            ${storeTile(letter)}
+            <div class="right-stack">
+              ${siteHeader(letter)}
+              ${dockRow(letter)}
+            </div>
+          </div>`).join("");
+      }
+
+      // Paints the symbol into a canvas at its real pixel size, so the page shows what a 1x screen shows.
+      function paintPixels(canvas) {
+        const symbol = document.getElementById(canvas.dataset.mark);
+        const size = Number(canvas.dataset.size);
+        const isMono = canvas.dataset.mono === "true";
+        const viewBox = isMono ? "0 0 64 64" : storeView;
+        const inner = new XMLSerializer().serializeToString(symbol).replace(/<\/?symbol[^>]*>/g, "");
+        const markup = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${viewBox}" style="color: #000">${inner}</svg>`;
+        const image = new Image();
+
+        image.onload = () => {
+          const context = canvas.getContext("2d");
+          if (isMono) {
+            context.fillStyle = "#e9e9ec";
+            context.fillRect(0, 0, size, size);
+          }
+          context.drawImage(image, 0, 0, size, size);
+        };
+        image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`;
+      }
+
+      renderConcepts();
+      renderSizes();
+      renderMono();
+      renderContext();
+      document.querySelectorAll("canvas[data-mark]").forEach(paintPixels);
+    </script>
+  </body>
+</html>
