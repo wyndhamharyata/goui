@@ -344,7 +344,7 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
 
   // The name, icon and version come from the bundle. The credits add what goui is and where its guide lives.
   @objc private func showAbout() {
-    let credits = NSMutableAttributedString(string: "An EQ for one browser tab, or for the whole Mac.\n\n")
+    let credits = NSMutableAttributedString(string: "Flexible, Fast, User Friendly Equalizer with AutoEQ and EQByEar\n\n")
     let guideText = (guideURL.host() ?? "") + guideURL.path()
 
     if let webVersion = WebFolder.version, webVersion != appVersion {
