@@ -44,7 +44,8 @@ function toNextVersion(current, step) {
   const [major, minor, patch] = current.split(".").map(Number);
 
   if (step === "major") return `${major + 1}.0.0`;
-  if (step === "minor") return `${major}.${minor + 1}.0`;
+  // The patch counts to nine, so the minor takes the step at ten and a version stays short.
+  if (step === "minor" || patch >= 9) return `${major}.${minor + 1}.0`;
 
   return `${major}.${minor}.${patch + 1}`;
 }

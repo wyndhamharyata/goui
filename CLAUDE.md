@@ -97,6 +97,12 @@ A function name starts with a verb, and each verb has one meaning.
 | `npm run lint` | ESLint, then the word and layout checks in `scripts/check-rules.mjs`. |
 | `npm test`     | Playwright journeys in Chromium with the extension loaded.           |
 
+## Versions
+
+A version holds three numbers, major, minor and patch. The patch counts to nine. When the next patch
+would be ten, the minor takes the step instead, so 0.1.9 goes to 0.2.0. `scripts/release.mjs` works
+this out from the step it is given.
+
 # Rules
 
 These rules govern every change. When a rule makes the code worse, keep the better code and give
