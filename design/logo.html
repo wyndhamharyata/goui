@@ -757,6 +757,51 @@
       .record__intro { max-width: 680px; margin: 0 0 8px; color: var(--text-2); font-size: 14px; line-height: 1.6; }
       .pick__stage--four { padding: 20px 20px 20px 0; }
 
+      /* Round five */
+      .space-rows > * + * { margin-top: 16px; }
+
+      .space-row {
+        display: grid;
+        grid-template-columns: 200px 176px 176px minmax(0, 1fr);
+        align-items: start;
+        padding: 20px;
+        border: 1px solid var(--line-1);
+        border-radius: 14px;
+        background: var(--ink-1);
+      }
+
+      .space-row > * + * { margin-left: 20px; }
+      .space-row h3 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.02em; }
+      .space-row .concept__letter { display: block; margin-bottom: 6px; }
+      .space-row p { margin: 0; color: var(--text-2); font-size: 13px; }
+      .space-row p + p { margin-top: 8px; }
+      .space-row p b { color: var(--text-1); font-weight: 600; }
+
+      .space-row figure {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+      }
+
+      .space-row figure svg { display: block; width: 176px; height: 176px; border-radius: 8px; }
+      .space-row figure .plot { background: var(--ink-0); border: 1px solid var(--line-1); }
+      .space-row figure .on-stage { background: var(--ink-2); }
+
+      .space-row figcaption {
+        margin-top: 8px;
+        color: var(--text-3);
+        font: 500 11px / 1.5 var(--font-number);
+      }
+
+      .space-row figcaption b { display: block; color: var(--text-2); font-weight: 600; }
+      .space-row .depth { display: block; margin-top: 10px; color: var(--text-3); font: 500 11px / 1.6 var(--font-number); }
+      .space-row .depth b { color: var(--accent); font-weight: 700; }
+
+      @media (max-width: 1000px) {
+        .space-row { grid-template-columns: 1fr 1fr; }
+        .space-row > * + * { margin-left: 0; margin-top: 16px; }
+      }
+
       @media (max-width: 1000px) {
         .concept-grid, .concept-grid--four, .readout-grid, .readout-grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .size-table, .size-head { grid-template-columns: 1fr; }
@@ -1054,36 +1099,185 @@
     <main>
       <header class="doc-intro">
         <div>
-          <p class="doc-eyebrow">goui design · logo proposal · round four</p>
-          <h1>The letter g,<br /><em>with a graph for a tail.</em></h1>
+          <p class="doc-eyebrow">goui design · logo proposal · round five</p>
+          <h1>The space under the bowl,<br /><em>drawn as the plot.</em></h1>
           <p>
-            The owner gave a direction. Merge H2 and H4, so one mark holds the band point in the bowl
-            and ends its tail in the point. Then, since the tail comes off the stem at an angle the way a
-            graph line does, draw its curve as a graph line and not as a hook, and do not fix on a
-            parabola. A graph can be many things. This round keeps round three's letterform, a circle
-            bowl with the stem as its right side carried down, at a stroke of 7 units. The bowl moves right
-            and the tail runs out past it, so the letter fills the safe box more evenly on both axes. The
-            eight marks differ in the tail alone. Each tail is a short list of path commands, printed under
-            its mark with its anchors and control points drawn, so the curve is on the record. Rounds one
-            to three are folded at the end.
+            The owner corrected the brief. In their words, the question was never the form of the tail
+            but "the negative space between the tail and the circle of the g." Round four drew eight tails
+            and judged the tails. That was the wrong subject. The subject is the clear tile between the
+            bowl's lower arc and the tail's upper edge, the notch the tail cuts under the bowl. That notch
+            is where the graph lives. The tail is only the means of drawing its floor, and the bowl is its
+            roof. This round keeps round four's letterform, the circle bowl with the band point in its
+            counter, the stem down the right side, and the tail that ends in the chosen band's point, and
+            varies the notch alone. Eight notches, each drawn three times: filled on the tile, alone as a
+            region with its floor drawn as a response line, and beside a plot the panel's own filter math
+            draws, so the two can be compared at a glance. Rounds one to four are folded at the end.
           </p>
         </div>
         <ol class="doc-index-list">
-          <li><a href="#marks-4"><b>01</b>Eight tails</a></li>
-          <li><a href="#balance-4"><b>02</b>Safe area, balance and the curve</a></li>
-          <li><a href="#sizes-4"><b>03</b>At the real sizes</a></li>
-          <li><a href="#mono-4"><b>04</b>One colour, for the menu bar</a></li>
-          <li><a href="#context-4"><b>05</b>In context</a></li>
-          <li><a href="#pick-4"><b>06</b>The pick, and what each tail costs</a></li>
+          <li><a href="#marks-5"><b>01</b>Eight notches</a></li>
+          <li><a href="#space-5"><b>02</b>The space itself, beside the panel's plot</a></li>
+          <li><a href="#balance-5"><b>03</b>Safe area and balance</a></li>
+          <li><a href="#sizes-5"><b>04</b>At the real sizes</a></li>
+          <li><a href="#mono-5"><b>05</b>One colour, for the menu bar</a></li>
+          <li><a href="#context-5"><b>06</b>In context</a></li>
+          <li><a href="#pick-5"><b>07</b>The pick, and what each notch costs</a></li>
+          <li><a href="#record-4"><b>--</b>Round four, the record</a></li>
           <li><a href="#record-3"><b>--</b>Round three, the record</a></li>
           <li><a href="#record-2"><b>--</b>Round two, the record</a></li>
           <li><a href="#record"><b>--</b>Round one, the record</a></li>
         </ol>
       </header>
 
-      <section class="doc-section" id="marks-4">
+      <section class="doc-section" id="marks-5">
         <header class="doc-head">
           <span class="doc-head__index">01</span>
+          <div>
+            <h2>Eight notches</h2>
+            <p>
+              One letterform, eight notches. The letter is round four's. The bowl is a circle 28 units
+              across with a dot of 6 in its counter, the stem is the bowl's right side carried down, and
+              the tail runs out under the bowl and past its left edge to the chosen band's point. Every
+              stroke is 7 units. What differs is the clear tile under the bowl, between the bowl's lower
+              arc and the tail's upper edge. Read each card for that region and not for the tail. The two
+              questions are the same for all eight. Does the region read as a plot, the area under a
+              response line? Does the letter still read as a g?
+            </p>
+          </div>
+        </header>
+        <div class="concept-grid concept-grid--four" id="concept-grid-5"></div>
+      </section>
+
+      <section class="doc-section" id="space-5">
+        <header class="doc-head">
+          <span class="doc-head__index">02</span>
+          <div>
+            <h2>The space itself, beside the panel's plot</h2>
+            <p>
+              Each row puts the region on the page three times. Left, the mark with the region filled in
+              the panel's quieter blue, so it is a visible form and not an implied one. Middle, the region
+              alone on a plot grid, with its floor drawn as a response line in the accent and its roof as
+              a dashed line. Right, a plot drawn with the same Web Audio filter the panel plays, with the
+              band named under it, so the region and a real plot can be compared at a glance. The region
+              is read from the point to the stem. Its roof is the bowl's outer arc where the bowl hangs
+              below the tile's midline, and the midline past that. Its floor is the tail's upper edge and
+              the top of the point. The floor is read from the glyph's own pixels, so it is the edge the
+              eye sees. The tail is read left to right, so the point end is the low frequencies and the
+              stem end is the high ones. Depth is the distance from roof to floor, in grid units.
+            </p>
+          </div>
+        </header>
+        <div class="space-rows" id="space-rows-5"></div>
+      </section>
+
+      <section class="doc-section" id="balance-5">
+        <header class="doc-head">
+          <span class="doc-head__index">03</span>
+          <div>
+            <h2>Safe area and balance</h2>
+            <p>
+              The same readout as round four. The safe box is 8 to 56, the dashed square. The thin pink
+              box is the ink's bounding box and the four numbers are its margins to the safe box, in grid
+              units. The cross is the tile's centre and the pink dot is the ink's centre of mass. The
+              region is drawn in blue over the glyph. A mark passes when it is inside the safe box, every
+              margin is at least one unit, the four margins are within 3 units of each other, the box
+              centre is within 1.5 units of the middle, and the least clear tile between the tail and the
+              bowl is at least 3 units. The depth row gives the region's least and most depth. The path
+              under each table is the tail from the stem, so the curve is on the record.
+            </p>
+          </div>
+        </header>
+        <div class="readout-grid readout-grid--four" id="readout-grid-5"></div>
+      </section>
+
+      <section class="doc-section" id="sizes-5">
+        <header class="doc-head">
+          <span class="doc-head__index">04</span>
+          <div>
+            <h2>At the real sizes</h2>
+            <p>
+              The tile in the 16 px icon is 12 px wide, so a stroke of 7 units is 1.3 px and the whole
+              region is about 2 px tall at its deepest. The pixel view on the right is the test. At 16 px,
+              look for whether any clear tile is left under the bowl at all. At 32 px, look for whether the
+              region's form, and not only its presence, can be read.
+            </p>
+          </div>
+        </header>
+        <div class="size-head"><span>Mark</span><span>Light toolbar</span><span>Dark toolbar</span><span>Pixels, 16 and 32 px</span></div>
+        <div id="size-rows-5"></div>
+      </section>
+
+      <section class="doc-section" id="mono-5">
+        <header class="doc-head">
+          <span class="doc-head__index">05</span>
+          <div>
+            <h2>One colour, for the menu bar</h2>
+            <p>
+              Each mark's one colour form is the same glyph with the tile gone, cropped to the safe box.
+              In the bar the region is the bar's own colour, so it is as visible as the glyph is.
+            </p>
+          </div>
+        </header>
+        <div id="mono-rows-5" class="menubar-set"></div>
+      </section>
+
+      <section class="doc-section" id="context-5">
+        <header class="doc-head">
+          <span class="doc-head__index">06</span>
+          <div>
+            <h2>In context</h2>
+            <p>
+              The store tile, the site header, the Dock and a browser tab. The tile's own plot is right of
+              the mark, so the region and the plot can be read against each other at the size a store
+              page shows them.
+            </p>
+          </div>
+        </header>
+        <div id="context-rows-5"></div>
+      </section>
+
+      <section class="doc-section" id="pick-5">
+        <header class="doc-head">
+          <span class="doc-head__index">07</span>
+          <div>
+            <h2>The pick, and what each notch costs</h2>
+            <p>K3, the shelf, with K2, the trough, as the runner up. Below is the reasoning and a table of what each notch costs.</p>
+          </div>
+        </header>
+        <div class="pick">
+          <div class="pick__stage pick__stage--two">
+            <div class="pick__row">
+              <svg width="128" height="128" viewBox="0 0 64 64"><use href="#mark-k3" /></svg>
+              <svg width="40" height="40" viewBox="0 0 64 64" style="color: #f2f3f5"><use href="#mono-k3" /></svg>
+              <svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark-k3" /></svg>
+            </div>
+            <div class="pick__row">
+              <svg width="64" height="64" viewBox="0 0 64 64"><use href="#mark-k2" /></svg>
+              <svg width="24" height="24" viewBox="0 0 64 64" style="color: #f2f3f5"><use href="#mono-k2" /></svg>
+              <svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark-k2" /></svg>
+            </div>
+          </div>
+          <div class="doc-notes" id="pick-notes-5"></div>
+        </div>
+
+        <div class="doc-sub"><h3>What each notch costs</h3><p>Whether the region is a plot, whether the letter is still a g, and what the notch gives up.</p></div>
+        <table class="ship-table">
+          <thead><tr><th>Mark</th><th>The region</th><th>As a plot</th><th>As a g</th><th>The cost</th></tr></thead>
+          <tbody id="pick-table-5"></tbody>
+        </table>
+      </section>
+
+      <details class="record" id="record-4">
+        <summary>Round four, the record<small>eight tails drawn for the tile, the safe area readout with the curve, the sizes, the menu bar, the contexts and the pick</small></summary>
+        <p class="record__intro">
+          The owner asked for H2 and H4 merged and for the tail drawn as a graph line and not as a hook.
+          Round four drew eight tails and judged each as a line. The owner's answer was that the subject
+          was never the tail but the negative space between the tail and the bowl. Round five follows that.
+        </p>
+
+      <section class="doc-section" id="marks-4">
+        <header class="doc-head">
+          <span class="doc-head__index">08</span>
           <div>
             <h2>Eight tails</h2>
             <p>
@@ -1105,7 +1299,7 @@
 
       <section class="doc-section" id="balance-4">
         <header class="doc-head">
-          <span class="doc-head__index">02</span>
+          <span class="doc-head__index">09</span>
           <div>
             <h2>Safe area, balance and the curve</h2>
             <p>
@@ -1130,7 +1324,7 @@
 
       <section class="doc-section" id="sizes-4">
         <header class="doc-head">
-          <span class="doc-head__index">03</span>
+          <span class="doc-head__index">10</span>
           <div>
             <h2>At the real sizes</h2>
             <p>
@@ -1148,7 +1342,7 @@
 
       <section class="doc-section" id="mono-4">
         <header class="doc-head">
-          <span class="doc-head__index">04</span>
+          <span class="doc-head__index">11</span>
           <div>
             <h2>One colour, for the menu bar</h2>
             <p>
@@ -1163,7 +1357,7 @@
 
       <section class="doc-section" id="context-4">
         <header class="doc-head">
-          <span class="doc-head__index">05</span>
+          <span class="doc-head__index">12</span>
           <div>
             <h2>In context</h2>
             <p>
@@ -1178,7 +1372,7 @@
 
       <section class="doc-section" id="pick-4">
         <header class="doc-head">
-          <span class="doc-head__index">06</span>
+          <span class="doc-head__index">13</span>
           <div>
             <h2>The pick, and what each tail costs</h2>
             <p>J3, the shelf and the drop, with J6, the step, as the runner up. Below is the reasoning and a table of what each tail costs.</p>
@@ -1227,6 +1421,7 @@
           </tbody>
         </table>
       </section>
+      </details>
 
       <details class="record" id="record-3">
         <summary>Round three, the record<small>six marks drawn for the tile, the safe area readout, the sizes, the menu bar, the contexts and the pick</small></summary>
@@ -1242,7 +1437,7 @@
 
       <section class="doc-section" id="marks-3">
         <header class="doc-head">
-          <span class="doc-head__index">07</span>
+          <span class="doc-head__index">14</span>
           <div>
             <h2>Six marks</h2>
             <p>
@@ -1262,7 +1457,7 @@
 
       <section class="doc-section" id="balance-3">
         <header class="doc-head">
-          <span class="doc-head__index">08</span>
+          <span class="doc-head__index">15</span>
           <div>
             <h2>Safe area and balance</h2>
             <p>
@@ -1285,7 +1480,7 @@
 
       <section class="doc-section" id="sizes-3">
         <header class="doc-head">
-          <span class="doc-head__index">09</span>
+          <span class="doc-head__index">16</span>
           <div>
             <h2>At the real sizes</h2>
             <p>
@@ -1302,7 +1497,7 @@
 
       <section class="doc-section" id="mono-3">
         <header class="doc-head">
-          <span class="doc-head__index">10</span>
+          <span class="doc-head__index">17</span>
           <div>
             <h2>One colour, for the menu bar</h2>
             <p>
@@ -1317,7 +1512,7 @@
 
       <section class="doc-section" id="context-3">
         <header class="doc-head">
-          <span class="doc-head__index">11</span>
+          <span class="doc-head__index">18</span>
           <div>
             <h2>In context</h2>
             <p>
@@ -1332,7 +1527,7 @@
 
       <section class="doc-section" id="pick-3">
         <header class="doc-head">
-          <span class="doc-head__index">12</span>
+          <span class="doc-head__index">19</span>
           <div>
             <h2>The pick, and the runner up</h2>
             <p>H2, the point on the tail, with H1 as the runner up. Below is the reasoning and a table of how each mark does on the three tests.</p>
@@ -1379,7 +1574,7 @@
 
       <section class="doc-section" id="concepts-2">
         <header class="doc-head">
-          <span class="doc-head__index">13</span>
+          <span class="doc-head__index">20</span>
           <div>
             <h2>Eight fusions</h2>
             <p>
@@ -1396,7 +1591,7 @@
 
       <section class="doc-section" id="sizes-2">
         <header class="doc-head">
-          <span class="doc-head__index">14</span>
+          <span class="doc-head__index">21</span>
           <div>
             <h2>At the real sizes</h2>
             <p>
@@ -1413,7 +1608,7 @@
 
       <section class="doc-section" id="mono-2">
         <header class="doc-head">
-          <span class="doc-head__index">15</span>
+          <span class="doc-head__index">22</span>
           <div>
             <h2>One colour, for the menu bar</h2>
             <p>
@@ -1428,7 +1623,7 @@
 
       <section class="doc-section" id="context-2">
         <header class="doc-head">
-          <span class="doc-head__index">16</span>
+          <span class="doc-head__index">23</span>
           <div>
             <h2>In context</h2>
             <p>
@@ -1443,7 +1638,7 @@
 
       <section class="doc-section" id="pick-2">
         <header class="doc-head">
-          <span class="doc-head__index">17</span>
+          <span class="doc-head__index">24</span>
           <div>
             <h2>The pick, and the trade</h2>
             <p>G7, the wave tail. Below is the reasoning, the runner up, and a table of how much EQ each mark still says at 16 px.</p>
@@ -1499,7 +1694,7 @@
 
       <section class="doc-section" id="concepts">
         <header class="doc-head">
-          <span class="doc-head__index">18</span>
+          <span class="doc-head__index">25</span>
           <div>
             <h2>Six concepts</h2>
             <p>
@@ -1515,7 +1710,7 @@
 
       <section class="doc-section" id="sizes">
         <header class="doc-head">
-          <span class="doc-head__index">19</span>
+          <span class="doc-head__index">26</span>
           <div>
             <h2>At the real sizes</h2>
             <p>
@@ -1538,7 +1733,7 @@
 
       <section class="doc-section" id="mono">
         <header class="doc-head">
-          <span class="doc-head__index">20</span>
+          <span class="doc-head__index">27</span>
           <div>
             <h2>One colour, for the menu bar</h2>
             <p>
@@ -1555,7 +1750,7 @@
 
       <section class="doc-section" id="context">
         <header class="doc-head">
-          <span class="doc-head__index">21</span>
+          <span class="doc-head__index">28</span>
           <div>
             <h2>In context</h2>
             <p>
@@ -1571,7 +1766,7 @@
 
       <section class="doc-section" id="pick">
         <header class="doc-head">
-          <span class="doc-head__index">22</span>
+          <span class="doc-head__index">29</span>
           <div>
             <h2>The recommendation</h2>
             <p>Concept E, the letter g on an acid tile. Below it is the reasoning, then the list of what has to change to ship it.</p>
@@ -1642,7 +1837,7 @@
 
       <section class="doc-section" id="palette">
         <header class="doc-head">
-          <span class="doc-head__index">23</span>
+          <span class="doc-head__index">30</span>
           <div>
             <h2>Palette note</h2>
             <p>
@@ -2171,6 +2366,296 @@
         grid.innerHTML = cards.join("");
       }
 
+      // Round five. The same letter, eight notches. Each mark differs in the clear tile between the tail and the bowl.
+      const biquadTypes = { PK: "peaking", LSC: "lowshelf", HSC: "highshelf", HP: "highpass" };
+      const bandTypeNames = { PK: "peak", LSC: "low shelf", HSC: "high shelf", HP: "low cut" };
+      const bandTones = { PK: "#b48cff", LSC: "#4cc3ff", HSC: "#4cc3ff", HP: "#ffa24c" };
+      const notches = [
+        {
+          letter: "K1", name: "The wedge", idea: "The floor is one straight slope from the stem to the point, so the region is a wedge. It is 3 units deep where the tail passes under the bowl's bottom and opens to 13.5 at the point.",
+          stemEnd: 43, tail: "L16.25 49.75", point: [16.25, 49.75],
+          bands: [{ type: "LSC", frequencyHz: 1500, gainDb: -10 }], plot: "A tilt. A low shelf wide enough to slope across the whole window.",
+          region: "A wedge, thin at the stem and open at the point.", asPlot: "Yes, as a tilt. The area under a sloped line, which the panel draws for a wide shelf.", asG: "Yes. The straight descender is the plainest g of the eight.", cost: "The plainest region. A wedge is a plot only when the eye has the plot beside it.",
+        },
+        {
+          letter: "K2", name: "The trough", idea: "The floor dips under the bowl and rises to the point, so the region bulges where the bowl hangs lowest. It is 7 deep at the stem, 12 under the bowl's left side and 7 at the point.",
+          stemEnd: 41, tail: "C49.5 47 46.5 51.5 39 51.5 C31 51.5 25.5 44.5 16.25 44.5", point: [16.25, 44.5],
+          bands: [{ type: "PK", frequencyHz: 300, gainDb: -8, q: 0.6 }], plot: "A wide cut. One peak band at minus 8 dB, with the low end not quite back to zero.",
+          region: "A lobe under the bowl that narrows toward the point.", asPlot: "Yes. The one region that is a band's own lobe, the blue area the panel fills under a cut.", asG: "Yes. The tail curls, but less than a hook, and the point is high enough to stay off the bowl.", cost: "The tail rises into the point, which round four read as a hook. The region makes the case the tail could not.",
+        },
+        {
+          letter: "K3", name: "The shelf", idea: "The floor runs level under the bowl, drops over ten units where the bowl's arc climbs away, and runs level to the point. The region is a thin crescent, a wall, then a deep block. 3.5 deep under the bowl and 14 past it.",
+          stemEnd: 41, tail: "C49.5 43.2 47.7 45 45.5 45 L40 45 C34 45 36 49.5 30 49.5 L16.25 49.5", point: [16.25, 49.5],
+          bands: [{ type: "LSC", frequencyHz: 250, gainDb: -9 }], plot: "A low shelf. Level at zero on the right, a knee, and minus 9 dB on the left.",
+          region: "A crescent, a wall and a block. Two depths with one transition.", asPlot: "Yes. Two levels joined by a knee is the area under a shelf, and the knee is where the panel puts it.", asG: "Yes. The tail is round four's J3, a level run and a soft drop.", cost: "The wall lines up with the bowl's edge, so part of the step is the bowl's doing. At 16 px the two depths merge.",
+        },
+        {
+          letter: "K4", name: "The band", idea: "The floor is level the whole way, so the region is an even band with the bowl's bottom hanging 6 units into it. 6 deep at the stem, 4.5 under the bowl and 10.5 past it.",
+          stemEnd: 42, tail: "C49.5 44.2 47.7 46 45.5 46 L16.25 46", point: [16.25, 46],
+          bands: [{ type: "PK", frequencyHz: 1000, gainDb: 6, q: 0.6 }], plot: "A boost, read the other way up. The tail as the zero line and the bowl as a bell above it.",
+          region: "A level band with a bite out of its roof.", asPlot: "No. A flat floor is a zero line, and the bowl's bite is a circle, not a bell. The two do not agree.", asG: "Yes. It is H2 from round three, the most letter like of the eight.", cost: "Says nothing. The region is what any g with a flat tail has, and the short tail puts the box centre 1.4 units high, at the limit.",
+        },
+        {
+          letter: "K5", name: "The knee", idea: "The floor follows the bowl's arc at 3.5 units from the stem to the bowl's bottom, then falls straight to the point. The region is closed to a thread at the stem and opens only past the bowl's bottom, to 14 at the point.",
+          stemEnd: 42.2, tail: "A21 21 0 0 1 39 45 L16.25 49.75", point: [16.25, 49.75],
+          bands: [{ type: "HP", frequencyHz: 60, gainDb: 0, q: 0.7 }], plot: "A low cut. Level at zero across the window and falling only at the far left.",
+          region: "A thread along the bowl, then a wedge.", asPlot: "Partly. A line that hugs zero and dives at the end is a low cut, but the hug is the bowl's arc and not a line.", asG: "Yes, though the concentric run makes the bowl and tail read as one spiral at 128 px.", cost: "At 32 px the thread closes and the bowl and tail fuse. The region is only there at 48 px and up.",
+        },
+        {
+          letter: "K6", name: "The loop", idea: "The floor dips under the bowl and rises until the point stands beside the bowl's left side, so the region closes into a teardrop. 4 deep at the stem, 10 under the bowl, 12.7 at its widest and closed at the point.",
+          stemEnd: 41, tail: "C49.5 47 45.5 50.5 37 50.5 C27 50.5 20 45.5 20 37.5", point: [20, 37.5], shiftX: -1.9,
+          bands: [{ type: "PK", frequencyHz: 400, gainDb: -9, q: 1.2 }], plot: "A cut, back to zero at both ends. One peak band at minus 9 dB, Q 1.2.",
+          region: "A closed teardrop under the bowl.", asPlot: "Yes, the most complete. A lobe that returns to its baseline at both ends is exactly a band's area.", asG: "No. A closed loop under a bowl is a two storey g or an 8, and at 32 px it is a figure 8.", cost: "The letter. The whole glyph had to move 1.9 units left to balance, and the tail hooks back on itself.",
+        },
+        {
+          letter: "K7", name: "The step", idea: "The floor runs level under the bowl and past its edge, takes one hard step of 4 units down at the bowl's left edge, and runs level into the point. The region is a crescent, a corner and a block.",
+          stemEnd: 41.5, tail: "C49.5 43.7 47.7 45.5 45.5 45.5 L27.25 45.5 L25.75 49.5 L16.25 49.5", point: [16.25, 49.5],
+          bands: [{ type: "LSC", frequencyHz: 100, gainDb: -9 }], plot: "A low shelf at 100 Hz. The panel's knee is soft, so the plot has no corner to match the step.",
+          region: "A crescent, a corner and a block.", asPlot: "Partly. Two levels and a step is a shelf's area, but the panel never draws a corner.", asG: "Yes. The corner is past the bowl, so the letter is unchanged.", cost: "Mechanical. The corner is the one thing in the mark the panel does not draw. At 32 px the corner softens into K3.",
+        },
+        {
+          letter: "K8", name: "The saddle", idea: "The floor rises to 3.3 units from the bowl's bottom and falls away on both sides, so the region pinches in the middle and is two lobes. 8 deep at the stem, 3.3 under the bowl and 14 at the point.",
+          stemEnd: 45, tail: "C49.5 48.5 47 49.5 44 48 C41.5 46.75 40.5 44.75 38 44.75 C34 44.75 28 49.75 16.25 49.75", point: [16.25, 49.75],
+          bands: [{ type: "PK", frequencyHz: 50, gainDb: -7, q: 1 }, { type: "PK", frequencyHz: 6000, gainDb: -5, q: 1 }], plot: "Two cuts with zero between them. A peak band at 50 Hz and one at 6 kHz.",
+          region: "Two lobes with a pinch under the bowl.", asPlot: "Partly. Two lobes is two bands, and the pinch is where the tail nearly touches the bowl.", asG: "Yes, with a wavy tail. The hump under the bowl is round four's J4.", cost: "Busy. The pinch closes at 32 px and the two lobes become one.",
+        },
+      ];
+      const pickNotes = [
+        { title: "It is a g first.", text: "The tail is round four's J3, a level run under the bowl and a soft drop past it. The letter's corner at the stem and its clear band under the bowl are what H2 had. At every size the first reading is g." },
+        { title: "The region is the area under a shelf.", text: "Filled, the notch is a thin crescent under the bowl, a wall where the arc climbs away, and a deep block out to the point. Two depths joined by one transition is the area the panel fills under a low shelf, and the plot beside it in section 02 is the same picture. No other region has two clear levels." },
+        { title: "The wall is where the bowl ends.", text: "The floor's drop runs from x 40 to x 30 and the bowl's arc climbs from x 32. The two edges move apart together, so the step in the region is twice as tall as the step in the tail. The region does the work. That is the point of this round." },
+        { title: "Balance and the safe box.", text: "Section 03 has the numbers. The ink is 11 to 53 across and 10 to 54.7 down, so the letter is 42 wide and 44.7 tall. The margins are 3 left, 3 right, 2 top and 1.3 bottom. The box centre is on the middle across and 0.4 below it. The ink centre is 4.8 right and 1.4 below, which is the bowl and stem on the letter's right. The least clear tile between the tail and the bowl is 3.5 units. The region is 3.5 deep at its least and 14 at its most." },
+        { title: "The 32 px reading.", text: "The crescent under the bowl is 1.5 px and the block is 7 px, so the two depths are there and the wall between them is one pixel wide. The region reads as a shelf's area at 32 px and up. At 48 px the knee is round." },
+        { title: "The 16 px reading, plainly.", text: "The tile is 12 px. The crescent under the bowl is one anti-aliased pixel and the block past the bowl is 3 px by 3 px. The region is present as a clear patch left of the bowl and nothing more. No notch of the eight keeps its form at 16 px, so at that size the mark is a g with a heavy tail end, the same as round four." },
+        { title: "Runner up, K2, the trough.", text: "The one region that is a band's own lobe, the blue area under a cut. It is the better plot and the worse letter, since the tail rises into the point the way round four's hook did. If the owner weighs the plot over the letter, K2 is the pick." },
+        { title: "Calls made on this page.", text: "The region is read from the point to the stem and its roof is capped at the tile's midline, so the open tile left of the bowl does not swallow the notch. The floor is read from the rendered pixels, not from the path, so it is the edge the eye sees. K6 is the only mark moved, 1.9 units left, to bring its margins within 3 of each other." },
+      ];
+      const regionRoofY = 32;
+
+      function glyphFive(mark) {
+        return `<g transform="translate(${mark.shiftX ?? 0} 0)">${glyphFour(mark)}</g>`;
+      }
+
+      function buildSymbolsFive() {
+        const sheet = document.querySelector("body > svg");
+        const markup = notches.map((mark) => `
+          <symbol id="glyph-${lower(mark.letter)}" viewBox="0 0 64 64">${glyphFive(mark)}</symbol>
+          <symbol id="mark-${lower(mark.letter)}" viewBox="0 0 64 64">
+            <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+            <use href="#glyph-${lower(mark.letter)}" color="#0b0c0e" />
+            <circle cx="${mark.point[0] + (mark.shiftX ?? 0)}" cy="${mark.point[1]}" r="${letterFour.lightRadius}" fill="#f2f3f5" />
+          </symbol>
+          <symbol id="mono-${lower(mark.letter)}" viewBox="8 8 48 48"><use href="#glyph-${lower(mark.letter)}" /></symbol>`).join("");
+
+        sheet.insertAdjacentHTML("beforeend", markup);
+      }
+
+      // Reads the region under the bowl from the glyph's pixels, one column per quarter unit from the point to the stem.
+      function readRegion(data, mark) {
+        const { bowlX, bowlY, bowlRadius, stroke, stemX } = letterFour;
+        const shift = mark.shiftX ?? 0;
+        const scale = inkSamples / 64;
+        const outerRadius = bowlRadius + stroke / 2;
+        const stemInnerX = stemX - stroke / 2 + shift;
+        const columns = [];
+
+        for (let x = mark.point[0] + shift; x < stemInnerX; x += 0.25) {
+          const dx = x - bowlX - shift;
+          const arcY = Math.abs(dx) < outerRadius ? bowlY + Math.sqrt(outerRadius ** 2 - dx ** 2) : 0;
+          const roof = Math.max(regionRoofY, arcY);
+          const column = Math.min(inkSamples - 1, Math.round(x * scale));
+          let floor = 64;
+
+          for (let row = Math.ceil((roof + 0.3) * scale); row < inkSamples; row += 1) {
+            if (data[(row * inkSamples + column) * 4 + 3] < 128) continue;
+            floor = row / scale;
+            break;
+          }
+          columns.push({ x, roof, floor: Math.max(roof, floor) });
+        }
+
+        return columns;
+      }
+
+      function regionPaths(columns) {
+        const spot = ({ x }, y) => `${x.toFixed(2)} ${y.toFixed(2)}`;
+        const roof = columns.map((column) => spot(column, column.roof)).join("L");
+        const floor = columns.map((column) => spot(column, column.floor)).join("L");
+        const floorBack = [...columns].reverse().map((column) => spot(column, column.floor)).join("L");
+        const depths = columns.map((column) => column.floor - column.roof);
+
+        return { fill: `M${roof}L${floorBack}Z`, floor: `M${floor}`, roof: `M${roof}`, least: Math.min(...depths), most: Math.max(...depths) };
+      }
+
+      function buildSpaceSymbol(mark, paths) {
+        const sheet = document.querySelector("body > svg");
+
+        sheet.insertAdjacentHTML("beforeend", `
+          <symbol id="space-${lower(mark.letter)}" viewBox="0 0 64 64">
+            <path d="${paths.fill}" fill="#4cc3ff" opacity="0.55" />
+            <path d="${paths.roof}" fill="none" stroke="#4cc3ff" stroke-width="0.3" stroke-dasharray="0.8 0.6" />
+            <path d="${paths.floor}" fill="none" stroke="currentColor" stroke-width="0.9" stroke-linejoin="round" />
+          </symbol>`);
+      }
+
+      const plotBox = { width: 220, height: 220, left: 10, right: 210, top: 16, bottom: 204 };
+      const plotRangeDb = 15;
+      const plotLinesHz = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+      const strongPlotLinesHz = [100, 1000, 10000];
+      let plotContext;
+
+      function plotX(frequencyHz) {
+        return plotBox.left + (Math.log10(frequencyHz / 20) / 3) * (plotBox.right - plotBox.left);
+      }
+
+      function plotY(gainDb) {
+        const middle = (plotBox.top + plotBox.bottom) / 2;
+        return middle - (gainDb / plotRangeDb) * ((plotBox.bottom - plotBox.top) / 2);
+      }
+
+      // The same Web Audio filters the panel plays, so the plot is the panel's.
+      function plotResponseDb(bands, frequencies) {
+        plotContext ??= new OfflineAudioContext(1, 1, 48_000);
+        const totalsDb = new Float32Array(frequencies.length);
+        const magnitudes = new Float32Array(frequencies.length);
+        const phases = new Float32Array(frequencies.length);
+
+        for (const band of bands) {
+          const node = plotContext.createBiquadFilter();
+          node.type = biquadTypes[band.type];
+          node.frequency.value = band.frequencyHz;
+          node.gain.value = band.gainDb;
+          if (band.q) node.Q.value = band.type === "HP" ? 20 * Math.log10(band.q) : band.q;
+          node.getFrequencyResponse(frequencies, magnitudes, phases);
+
+          for (let index = 0; index < totalsDb.length; index += 1) {
+            totalsDb[index] += 20 * Math.log10(magnitudes[index]);
+          }
+        }
+
+        return totalsDb;
+      }
+
+      function plotArea(frequencies, curveDb, pickDb) {
+        const along = Array.from(frequencies, (frequencyHz, index) => `${plotX(frequencyHz).toFixed(1)} ${plotY(pickDb(curveDb[index])).toFixed(1)}`).join("L");
+        return `M${plotX(frequencies[0]).toFixed(1)} ${plotY(0)}L${along}L${plotX(frequencies[frequencies.length - 1]).toFixed(1)} ${plotY(0)}Z`;
+      }
+
+      function plotSvg(mark) {
+        const frequencies = Float32Array.from({ length: 160 }, (_, index) => 20 * 10 ** ((3 * index) / 159));
+        const curveDb = plotResponseDb(mark.bands, frequencies);
+        const line = Array.from(frequencies, (frequencyHz, index) => `${plotX(frequencyHz).toFixed(1)} ${plotY(curveDb[index]).toFixed(1)}`).join("L");
+        const lines = plotLinesHz.map((frequencyHz) => `<path d="M${plotX(frequencyHz).toFixed(1)} ${plotBox.top}V${plotBox.bottom}" stroke="${strongPlotLinesHz.includes(frequencyHz) ? "#363c48" : "#22262e"}" stroke-width="1" />`).join("");
+        const gains = [-10, -5, 5, 10].map((gainDb) => `<path d="M${plotBox.left} ${plotY(gainDb)}H${plotBox.right}" stroke="#22262e" stroke-width="1" />`).join("");
+        const points = mark.bands.map((band) => `<circle cx="${plotX(band.frequencyHz).toFixed(1)}" cy="${plotY(band.gainDb).toFixed(1)}" r="4.5" fill="${bandTones[band.type]}" stroke="#07080a" stroke-width="1.5" />`).join("");
+
+        return `
+          <svg class="plot" viewBox="0 0 ${plotBox.width} ${plotBox.height}" aria-hidden="true">
+            ${lines}${gains}
+            <path d="M${plotBox.left} ${plotY(0)}H${plotBox.right}" stroke="#363c48" stroke-width="1" />
+            <path d="${plotArea(frequencies, curveDb, (valueDb) => Math.max(valueDb, 0))}" fill="rgb(255 110 140 / 0.24)" />
+            <path d="${plotArea(frequencies, curveDb, (valueDb) => Math.min(valueDb, 0))}" fill="rgb(76 195 255 / 0.18)" />
+            <path d="M${line}" fill="none" stroke="#d4ff3f" stroke-width="2.25" stroke-linejoin="round" />
+            ${points}
+          </svg>`;
+      }
+
+      function bandCaption(band) {
+        const gain = band.gainDb ? `, ${band.gainDb > 0 ? "+" : "-"}${Math.abs(band.gainDb)} dB` : "";
+        const frequency = band.frequencyHz >= 1000 ? `${band.frequencyHz / 1000} kHz` : `${band.frequencyHz} Hz`;
+        const q = band.q ? `, Q ${band.q}` : "";
+        return `${bandTypeNames[band.type]} at ${frequency}${gain}${q}`;
+      }
+
+      async function renderSpaces(rowsId, list) {
+        const rows = document.getElementById(rowsId);
+        const cards = [];
+
+        for (const mark of list) {
+          const columns = readRegion(await rasteriseGlyph(`glyph-${lower(mark.letter)}`), mark);
+          const paths = regionPaths(columns);
+          const id = lower(mark.letter);
+
+          buildSpaceSymbol(mark, paths);
+          mark.depth = { least: paths.least, most: paths.most };
+          cards.push(`
+            <article class="space-row" data-mark="${mark.letter}">
+              <div>
+                <span class="concept__letter">${mark.letter}</span>
+                <h3>${mark.name}</h3>
+                <p>${mark.idea}</p>
+                <p><b>The plot beside it.</b> ${mark.plot}</p>
+                <span class="depth">depth, least to most <b>${paths.least.toFixed(1)}</b> to <b>${paths.most.toFixed(1)}</b></span>
+              </div>
+              <figure>
+                <svg viewBox="0 0 64 64" style="color: #0b0c0e"><use href="#mark-${id}" /><use href="#space-${id}" /></svg>
+                <figcaption><b>On the tile</b>the region filled in the panel's quieter blue</figcaption>
+              </figure>
+              <figure>
+                <svg class="on-stage" viewBox="0 0 64 64" style="color: #d4ff3f">
+                  <path d="M8 0V64M16 0V64M24 0V64M40 0V64M48 0V64M56 0V64M0 8H64M0 16H64M0 24H64M0 40H64M0 48H64M0 56H64" stroke="#22262e" stroke-width="0.25" />
+                  <path d="M32 0V64M0 32H64" stroke="#363c48" stroke-width="0.25" />
+                  <use href="#space-${id}" />
+                  <circle cx="${mark.point[0] + (mark.shiftX ?? 0)}" cy="${columns[0].floor}" r="1.5" fill="#f2f3f5" stroke="#07080a" stroke-width="0.5" />
+                </svg>
+                <figcaption><b>The region alone</b>its floor as the response line, its roof dashed</figcaption>
+              </figure>
+              <figure>
+                ${plotSvg(mark)}
+                <figcaption><b>The panel's plot</b>${mark.bands.map(bandCaption).join(" and ")}</figcaption>
+              </figure>
+            </article>`);
+        }
+
+        rows.innerHTML = cards.join("");
+      }
+
+      async function renderReadoutsFive(gridId, list) {
+        const grid = document.getElementById(gridId);
+        const cards = [];
+
+        for (const mark of list) {
+          const ink = measureInk(await rasteriseGlyph(`glyph-${lower(mark.letter)}`));
+          const clearance = measureClearance(mark);
+          const readout = readoutRowsFour(ink, clearance);
+          const depthRow = `<tr><td>Depth, least and most</td><td>${mark.depth.least.toFixed(1)}  ${mark.depth.most.toFixed(1)}</td></tr>`;
+          const rows = readout.rows.replace("<tr><td>Verdict", `${depthRow}<tr><td>Verdict`);
+          cards.push(`
+            <article class="readout" data-mark="${mark.letter}" data-pass="${readout.isPass}">
+              <h3>${mark.letter}. ${mark.name}</h3>
+              <div class="readout__stage">
+                ${iconSvg(`glyph-${lower(mark.letter)}`, 224, "0 0 64 64", "#d4ff3f")}
+                <svg viewBox="0 0 64 64" style="color: #4cc3ff" aria-hidden="true"><use href="#space-${lower(mark.letter)}" opacity="0.5" /></svg>
+                ${readoutOverlay(ink)}
+              </div>
+              <table><tbody>${rows}</tbody></table>
+              <pre class="readout__curve"><small>the tail, from the stem</small>${tailPath(mark)}</pre>
+            </article>`);
+        }
+
+        grid.innerHTML = cards.join("");
+      }
+
+      function renderPickFive() {
+        document.getElementById("pick-notes-5").innerHTML = `
+          <h3>K3. The shelf, with K2 as the runner up</h3>
+          <ul>${pickNotes.map(({ title, text }) => `<li><b>${title}</b> ${text}</li>`).join("")}</ul>`;
+        document.getElementById("pick-table-5").innerHTML = notches.map((mark) => `
+          <tr><td>${mark.letter}. ${mark.name}</td><td>${mark.region}</td><td>${mark.asPlot}</td><td>${mark.asG}</td><td>${mark.cost}</td></tr>`).join("");
+      }
+
+      async function renderFive() {
+        buildSymbolsFive();
+        renderConcepts("concept-grid-5", notches);
+        renderSizes("size-rows-5", notches);
+        renderMono("mono-rows-5", notches);
+        renderContext("context-rows-5", notches);
+        renderPickFive();
+        await renderSpaces("space-rows-5", notches);
+        await renderReadoutsFive("readout-grid-5", notches);
+      }
+
+      renderFive();
       buildSymbolsFour();
       renderConcepts("concept-grid-4", tails);
       renderSizes("size-rows-4", tails);
