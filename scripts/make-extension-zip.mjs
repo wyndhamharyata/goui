@@ -8,7 +8,8 @@ const releaseZip = `goui-${version}.zip`;
 const storeZip = `goui-${version}-store.zip`;
 const contents = ["src", "icons", "LICENSE", "THIRD_PARTY_NOTICES.md"];
 
-rmSync("dist", { recursive: true, force: true });
+// Only the staging folder goes, so the store assets that npm run store-images writes to dist stay.
+rmSync(staging, { recursive: true, force: true });
 mkdirSync(staging, { recursive: true });
 
 // The licence and the notices travel with the extension, as the MIT licence asks.
