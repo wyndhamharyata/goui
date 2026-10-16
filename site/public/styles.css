@@ -31,11 +31,23 @@ code {
   gap: var(--space-4);
 }
 
-.site-head img {
-  border-radius: var(--radius-2);
+/* The mark's tail bottom is 56 of the tile's 64 units, and the g's tail end hangs 6.15 px under
+   the name's baseline at 30 px. The tile drops by both, so the two tails end on one line. */
+.site-head .brand {
+  --icon-drop: calc(44px * (1 - 56 / 64) + 6.15px);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding-bottom: var(--icon-drop);
 }
 
-/* As tall as the icon's bars, so the name and the icon read as one mark. */
+.site-head .brand img {
+  position: relative;
+  border-radius: var(--radius-2);
+  top: var(--icon-drop);
+}
+
+/* As tall as the icon, so the name and the icon read as one mark. */
 .site-head .name {
   margin: 0;
   font-size: var(--size-display);

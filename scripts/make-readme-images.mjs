@@ -14,6 +14,17 @@ function escapeText(text) {
   return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
+// The mark's tail bottom is 56 of the tile's 64 units, and the g's tail end hangs 0.205 of the name's size under its baseline.
+/**
+ * @param {number} tileY
+ * @param {number} tileSize
+ * @param {number} nameSize
+ * @returns {number}
+ */
+function nameBaseline(tileY, tileSize, nameSize) {
+  return tileY + ((tileSize * 56) / 64) - (nameSize * 0.205);
+}
+
 /**
  * @param {{ x?: number, y?: number, width: number, height: number, fill?: string, stroke?: string, radius?: number, strokeWidth?: number }} options
  * @returns {string}
@@ -164,7 +175,7 @@ function extensionsMenu(x, y, { highlight = "" } = {}) {
   const rowRing = highlight === "row" ? rect({ x: x + 6, y: rowY, width: width - 12, height: 34, radius: 8, fill: "none", stroke: colors.accent, strokeWidth: 2 }) : "";
 
   parts.push(rowRing + drawGouiTile(x + 14, rowY + 5, 24));
-  parts.push(text({ x: x + 48, y: rowY + 22, content: "goui", size: 13, fill: chromeText }));
+  parts.push(text({ x: x + 48, y: nameBaseline(rowY + 5, 24, 13), content: "goui", size: 13, fill: chromeText }));
   parts.push(pinGlyph(x + width - 30, rowY + 8, 16, highlight === "pin" ? colors.accent : "#9aa0a6"));
 
   return { svg: parts.join(""), width, height };
@@ -178,7 +189,7 @@ function compactExtensionsMenu(x, y, { highlight = "" } = {}) {
   const rowRing = highlight === "row" ? rect({ x: x + 5, y: y + 5, width: width - 10, height: 36, radius: 8, fill: "none", stroke: colors.accent, strokeWidth: 2 }) : "";
 
   parts.push(rowRing + drawGouiTile(x + 12, y + 11, 22));
-  parts.push(text({ x: x + 44, y: y + 29, content: "goui", size: 12, fill: chromeText }));
+  parts.push(text({ x: x + 44, y: nameBaseline(y + 11, 22, 12), content: "goui", size: 12, fill: chromeText }));
   parts.push(pinGlyph(x + width - 26, y + 14, 15, highlight === "pin" ? colors.accent : "#9aa0a6"));
 
   return parts.join("");
@@ -280,7 +291,7 @@ function sidePanel(x, y, width) {
   const height = 168;
   const parts = [rect({ x, y, width, height, radius: 12, fill: colors["ink-1"], stroke: colors["line-1"] })];
 
-  parts.push(drawGouiTile(x + 12, y + 13, 16) + text({ x: x + 32, y: y + 26, content: "goui", size: 14, weight: 700 }));
+  parts.push(drawGouiTile(x + 12, y + 13, 16) + text({ x: x + 32, y: nameBaseline(y + 13, 16, 14), content: "goui", size: 14, weight: 700 }));
   parts.push(rect({ x: x + width - 84, y: y + 11, width: 34, height: 20, radius: 6, fill: colors["ink-3"], stroke: colors["line-2"] }));
   parts.push(text({ x: x + width - 67, y: y + 25, content: "A/B", size: 9, weight: 700, font: monoFont, anchor: "middle" }));
   parts.push(rect({ x: x + width - 42, y: y + 12, width: 30, height: 18, radius: 9, fill: colors.accent }));

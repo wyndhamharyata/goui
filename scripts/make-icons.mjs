@@ -1,6 +1,6 @@
 import { deflateSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { layOutIcon, macPaddingRatio, tileColors } from "./icon-geometry.mjs";
+import { layOutIcon, layOutMark, lightColor, macPaddingRatio, markColor, markInkBox, storePaddingRatio, tileColor } from "./icon-geometry.mjs";
 
 const extensionSizes = [16, 32, 48, 128];
 // iconutil takes each size at 1x and at 2x, and makes the Mac app icon from them.
@@ -69,16 +69,6 @@ function encodePng(width, height, rgba) {
   ]);
 }
 
-function mixColor(start, end, at) {
-  return start.map((value, index) => value + (end[index] - value) * at);
-}
-
-/**
- * @param {number} x
- * @param {number} y
- * @param {{ left: number, top: number, right: number, bottom: number, radius: number }} rect
- * @returns {boolean}
- */
 function isInsideRoundedRect(x, y, rect) {
   const nearX = Math.min(Math.max(x, rect.left + rect.radius), rect.right - rect.radius);
   const nearY = Math.min(Math.max(y, rect.top + rect.radius), rect.bottom - rect.radius);
@@ -89,6 +79,57 @@ function isInsideRoundedRect(x, y, rect) {
 }
 
 /**
+ * @param {number} x
+ * @param {number} y
+ * @param {import("./icon-geometry.mjs").Ring} ring
+ * @returns {boolean}
+ */
+function isInsideRing(x, y, { cx, cy, outerRadius, innerRadius }) {
+  const distance = Math.hypot(x - cx, y - cy);
+
+  return distance <= outerRadius && distance >= innerRadius;
+}
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {import("./icon-geometry.mjs").Circle} circle
+ * @returns {boolean}
+ */
+function isInsideCircle(x, y, { cx, cy, radius }) {
+  return Math.hypot(x - cx, y - cy) <= radius;
+}
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {import("./icon-geometry.mjs").Segment} segment
+ * @returns {boolean}
+ */
+function isInsideSegment(x, y, { x1, y1, x2, y2, radius }) {
+  const runX = x2 - x1;
+  const runY = y2 - y1;
+  const runSquared = (runX * runX) + (runY * runY);
+  const along = Math.min(1, Math.max(0, (((x - x1) * runX) + ((y - y1) * runY)) / runSquared));
+
+  return Math.hypot(x - (x1 + (along * runX)), y - (y1 + (along * runY))) <= radius;
+}
+
+// The tail runs down the stem's line and then across, so it tests as its two round capped segments.
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {import("./icon-geometry.mjs").Segment} tail
+ * @returns {boolean}
+ */
+function isInsideTail(x, y, { x1, y1, x2, y2, radius }) {
+  const stem = { x1, y1, x2: x1, y2, radius };
+  const run = { x1, y1: y2, x2, y2, radius };
+
+  return isInsideSegment(x, y, stem) || isInsideSegment(x, y, run);
+}
+
+/**
  * @param {string} hex
  * @returns {number[]}
  */
@@ -96,46 +137,40 @@ function readRgb(hex) {
   return [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16));
 }
 
-// A coloured tile with white bars reads on a light toolbar and on a dark one.
+// The acid tile with its ink mark reads on a light toolbar and on a dark one.
 /**
  * @param {number} x
  * @param {number} y
- * @param {{ tile: import("./icon-geometry.mjs").RoundedRect, bars: import("./icon-geometry.mjs").RoundedRect[] }} layout
+ * @param {import("./icon-geometry.mjs").IconLayout} layout
  * @returns {number[]}
  */
-function sampleTileColor(x, y, { tile, bars }) {
+function sampleTileColor(x, y, { tile, bowl, dot, tail, point, light }) {
   if (!isInsideRoundedRect(x, y, tile)) return [0, 0, 0, 0];
-  if (bars.some((bar) => isInsideRoundedRect(x, y, bar))) return [255, 255, 255, 255];
+  if (isInsideCircle(x, y, light)) return [...readRgb(lightColor), 255];
 
-  const tileColor = mixColor(readRgb(tileColors[0]), readRgb(tileColors[1]), (y - tile.top) / (tile.bottom - tile.top));
-  // The tile keeps alpha 255. A three-value colour would write alpha 0 and the icon would be invisible.
+  const isInk = isInsideRing(x, y, bowl) || isInsideCircle(x, y, dot) || isInsideTail(x, y, tail) || isInsideCircle(x, y, point);
+  // Every colour keeps alpha 255. A three-value colour would write alpha 0 and the icon would be invisible.
 
-  return [...tileColor, 255];
+  return isInk ? [...readRgb(markColor), 255] : [...readRgb(tileColor), 255];
 }
 
-// macOS colours a menu bar icon itself, so the bars are black and only their alpha counts.
-function sampleBarColor(x, y, bars) {
-  return bars.some((bar) => isInsideRoundedRect(x, y, bar)) ? [0, 0, 0, 255] : [0, 0, 0, 0];
+// macOS colours a menu bar icon itself, so the mark is black and only its alpha counts.
+function sampleMarkColor(x, y, { bowl, dot, tail, point }) {
+  const isInk = isInsideRing(x, y, bowl) || isInsideCircle(x, y, dot) || isInsideTail(x, y, tail) || isInsideCircle(x, y, point);
+
+  return isInk ? [0, 0, 0, 255] : [0, 0, 0, 0];
 }
 
-// The menu bar shows the bars alone, filling the icon, as other menu bar icons do.
-function layOutMenuBarBars(size) {
-  const { bars } = layOutIcon(0, 0, 1);
-  const left = bars[0].left;
-  const top = Math.min(...bars.map((bar) => bar.top));
-  const width = bars.at(-1).right - left;
-  const height = bars[0].bottom - top;
-  const scale = (size * menuBarFillRatio) / Math.max(width, height);
-  const offsetX = (size - (width * scale)) / 2;
-  const offsetY = (size - (height * scale)) / 2;
+// The menu bar shows the mark alone, its ink box centred and 85 per cent of the icon.
+function layOutMenuBarMark(size) {
+  const markWidth = markInkBox.right - markInkBox.left;
+  const markHeight = markInkBox.bottom - markInkBox.top;
+  const scale = (size * menuBarFillRatio) / Math.max(markWidth, markHeight);
+  const originX = ((size - (markWidth * scale)) / 2) - (markInkBox.left * scale);
+  const originY = ((size - (markHeight * scale)) / 2) - (markInkBox.top * scale);
+  const { bowl, dot, tail, point } = layOutMark(originX, originY, scale);
 
-  return bars.map((bar) => ({
-    left: offsetX + ((bar.left - left) * scale),
-    top: offsetY + ((bar.top - top) * scale),
-    right: offsetX + ((bar.right - left) * scale),
-    bottom: offsetY + ((bar.bottom - top) * scale),
-    radius: bar.radius * scale,
-  }));
+  return { bowl, dot, tail, point };
 }
 
 function samplePixel(x, y, readColor) {
@@ -173,12 +208,18 @@ function writeIcon(path, size, readColor) {
 
 mkdirSync("icons", { recursive: true });
 mkdirSync(macIconFolder, { recursive: true });
+mkdirSync("store", { recursive: true });
 
 for (const size of extensionSizes) {
   const layout = layOutIcon(0, 0, size);
 
   writeIcon(`icons/icon${size}.png`, size, (x, y) => sampleTileColor(x, y, layout));
 }
+
+// The store listing asks for 96 px of artwork in a 128 px icon, so 16 px stays clear on every side.
+const storeLayout = layOutIcon(0, 0, 128, storePaddingRatio);
+
+writeIcon("store/icon-128.png", 128, (x, y) => sampleTileColor(x, y, storeLayout));
 
 for (const size of macIconSizes) {
   for (const [scale, suffix] of [[1, ""], [2, "@2x"]]) {
@@ -189,9 +230,9 @@ for (const size of macIconSizes) {
 }
 
 for (const [index, size] of menuBarSizes.entries()) {
-  const bars = layOutMenuBarBars(size);
+  const mark = layOutMenuBarMark(size);
 
-  writeIcon(`mac/icons/menu-bar${index === 0 ? "" : "@2x"}.png`, size, (x, y) => sampleBarColor(x, y, bars));
+  writeIcon(`mac/icons/menu-bar${index === 0 ? "" : "@2x"}.png`, size, (x, y) => sampleMarkColor(x, y, mark));
 }
 
-console.log("Wrote the extension icons at 16, 32, 48 and 128 px, the Mac app icon set and the menu bar icon.");
+console.log("Wrote the acid tile icons at 16, 32, 48 and 128 px, the store icon, the Mac app icon set and the menu bar mark.");

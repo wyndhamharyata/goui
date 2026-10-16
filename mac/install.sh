@@ -29,9 +29,14 @@ else
   bold="" dim="" red="" green="" yellow="" blue="" magenta="" cyan="" reset="" icon_blue="" shimmer=""
 fi
 
-# The icon's tile fades from #4a7ae0 to #8f52d8, as scripts/icon-geometry.mjs draws it. One colour per pixel row.
-tile_rgb="74;122;224 82;118;223 89;113;222 97;109;221 105;104;220 112;100;220 120;95;219 128;91;218 135;86;217 143;82;216"
-tile_256="68 68 62 62 62 62 98 98 98 98"
+# The icon's tile is one acid, #d4ff3f, its mark is ink, #0b0c0e, and the light in the point is #f2f3f5,
+# as scripts/icon-geometry.mjs draws them.
+tile_rgb="212;255;63"
+tile_256="191"
+ink_rgb="11;12;14"
+ink_256="232"
+light_rgb="242;243;245"
+light_256="255"
 
 # The logo in lowercase block letters, five lines tall, one variable per letter and line.
 g1="      " g2="▄█▀▀██" g3="██  ██" g4="▀█▄▄██" g5=" ▄▄▄█▀"
@@ -88,37 +93,39 @@ ask() {
   esac
 }
 
-# The icon is 17 by 10 pixels, as wide as a terminal's tall cells need to look square: a tile with
-# rounded corners and four white bars, two pixels wide, that stand on row 8.
-# Sets kind to 0 for no pixel, 1 for the tile and 2 for a bar.
+# The icon is 17 by 10 pixels, as wide as a terminal's tall cells need to look square: the acid tile with
+# rounded corners, and the ink mark on it, a ring with the dot in its counter, the stem down the right,
+# the level tail and the point with its light.
+# Sets kind to 0 for no pixel, 1 for the tile, 2 for the mark and 3 for the light in the point.
 find_icon_pixel() {
   kind=1
   case "$2" in
   0 | 9) if [ "$1" -le 2 ] || [ "$1" -ge 14 ]; then kind=0; fi ;;
   1 | 8) if [ "$1" = 0 ] || [ "$1" = 16 ]; then kind=0; fi ;;
+  2) if [ "$1" -ge 6 ] && [ "$1" -le 10 ]; then kind=2; fi ;;
+  3 | 4) case "$1" in
+    5 | 6 | 10 | 11) kind=2 ;;
+    8) if [ "$2" = 3 ]; then kind=2; fi ;;
+    esac ;;
+  5) if [ "$1" -ge 6 ] && [ "$1" -le 11 ]; then kind=2; fi ;;
+  6) if [ "$1" -ge 10 ] && [ "$1" -le 11 ]; then kind=2; fi ;;
+  7) case "$1" in
+    5) kind=3 ;;
+    6 | 7 | 8 | 9 | 10 | 11) kind=2 ;;
+    esac ;;
+  8) if [ "$1" -ge 5 ] && [ "$1" -le 6 ]; then kind=2; fi ;;
   esac
-  case "$1" in
-  3 | 4) bar=$bar1 ;;
-  6 | 7) bar=$bar2 ;;
-  9 | 10) bar=$bar3 ;;
-  12 | 13) bar=$bar4 ;;
-  *) return 0 ;;
-  esac
-  if [ "$kind" = 1 ] && [ "$2" -ge $((8 - bar)) ] && [ "$2" -lt 8 ]; then kind=2; fi
 }
 
 # The colour of one pixel, as a foreground (38) or a background (48).
 print_pixel_colour() {
-  row=$2 layer=$3
-  if [ "$1" = 2 ]; then
-    [ "$colour_mode" = 24 ] && printf '%s[%s;2;255;255;255m' "$esc" "$layer" || printf '%s[%s;5;231m' "$esc" "$layer"
-    return
-  fi
-
-  # The row's colour is item row + 1 of the list.
-  set -- $([ "$colour_mode" = 24 ] && echo "$tile_rgb" || echo "$tile_256")
-  shift "$row"
-  [ "$colour_mode" = 24 ] && printf '%s[%s;2;%sm' "$esc" "$layer" "$1" || printf '%s[%s;5;%sm' "$esc" "$layer" "$1"
+  layer=$2
+  case "$1" in
+  2) rgb=$ink_rgb ansi=$ink_256 ;;
+  3) rgb=$light_rgb ansi=$light_256 ;;
+  *) rgb=$tile_rgb ansi=$tile_256 ;;
+  esac
+  [ "$colour_mode" = 24 ] && printf '%s[%s;2;%sm' "$esc" "$layer" "$rgb" || printf '%s[%s;5;%sm' "$esc" "$layer" "$ansi"
 }
 
 # One line of the icon, two pixel rows to a character: ▀ in the top colour on the bottom colour.
@@ -133,22 +140,22 @@ draw_icon_line() {
     bottom=$kind
     if [ "$colour_mode" = none ]; then
       case "$top$bottom" in
-      11) printf '█' ;;
-      1?) printf '▀' ;;
-      ?1) printf '▄' ;;
-      *) printf ' ' ;;
+      00) printf ' ' ;;
+      0?) printf '▄' ;;
+      ?0) printf '▀' ;;
+      *) printf '█' ;;
       esac
     elif [ "$top" = 0 ] && [ "$bottom" = 0 ]; then
       printf ' '
     elif [ "$top" = 0 ]; then
-      print_pixel_colour "$bottom" "$bottom_row" 38
+      print_pixel_colour "$bottom" 38
       printf '▄%s' "$reset"
     elif [ "$bottom" = 0 ]; then
-      print_pixel_colour "$top" "$top_row" 38
+      print_pixel_colour "$top" 38
       printf '▀%s' "$reset"
     else
-      print_pixel_colour "$top" "$top_row" 38
-      print_pixel_colour "$bottom" "$bottom_row" 48
+      print_pixel_colour "$top" 38
+      print_pixel_colour "$bottom" 48
       printf '▀%s' "$reset"
     fi
     column=$((column + 1))
@@ -182,7 +189,6 @@ draw_logo() {
 show_logo() {
   printf '\n'
   if [ ! -t 1 ] || [ -z "$icon_blue" ]; then
-    set_icon_bars
     draw_logo 4 0
     return
   fi
@@ -191,25 +197,17 @@ show_logo() {
   printf '%s[?25l' "$esc"
   trap 'printf "%s[?25h" "$esc"' EXIT
   trap 'exit 130' INT
-  # Each frame: the letters shown, the lighter letter, and the four bar heights. The bars bounce, then settle.
-  for frame in "1 0 1 1 1 1" "2 0 2 3 2 3" "3 0 3 5 4 5" "4 0 5 6 6 7" \
-    "4 1 6 4 7 5" "4 2 3 7 5 6" "4 3 5 5 3 7" "4 4 7 3 6 4" "4 0 4 6 4 6" \
-    "4 1 6 5 7 5" "4 2 3 7 4 7" "4 3 5 4 6 5" "4 4 3 6 5 7"; do
+  # Each frame: the letters shown and the lighter letter. The icon stands still.
+  for frame in "1 0" "2 0" "3 0" "4 0" "4 1" "4 2" "4 3" "4 4" \
+    "4 0" "4 1" "4 2" "4 3" "4 4"; do
     set -- $frame
-    bar1=$3 bar2=$4 bar3=$5 bar4=$6
     draw_logo "$1" "$2"
     sleep 0.07
     printf '%s[5A' "$esc"
   done
 
-  set_icon_bars
   draw_logo 4 0
   printf '%s[?25h' "$esc"
-}
-
-# The bar heights of the icon itself, 0.4, 0.62, 0.48 and 0.7 of its 10 pixels.
-set_icon_bars() {
-  bar1=4 bar2=6 bar3=5 bar4=7
 }
 
 # Prints -1, 0 or 1 as the first version is older, the same or newer.

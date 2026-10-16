@@ -1932,20 +1932,27 @@ button.ui-chip:hover {
   background: var(--ink-0);
 }
 
+/* The mark's tail bottom is 56 of the tile's 64 units, and the g's tail end hangs 0.205 of the
+   name's size under its baseline. The tile drops by both, so the two tails end on one line. */
 .pn-brand {
+  --icon-drop: calc(18px * (1 - 56 / 64) + 17px * 0.205);
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-2);
+  padding-bottom: var(--icon-drop);
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.04em;
 }
 
 .pn-brand img {
+  position: relative;
   border-radius: 5px;
+  top: var(--icon-drop);
 }
 
 .pn-brand--large {
+  --icon-drop: calc(26px * (1 - 56 / 64) + 28px * 0.205);
   font-size: 28px;
   gap: var(--space-3);
 }

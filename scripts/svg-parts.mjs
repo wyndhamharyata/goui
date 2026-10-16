@@ -1,7 +1,7 @@
 // The parts the README and store pictures share: the colours of src/base.css, the goui tile and the frame.
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
-import { layOutIcon, tileColors } from "./icon-geometry.mjs";
+import { layOutIcon, lightColor, markColor, tileColor } from "./icon-geometry.mjs";
 
 function readColors(source) {
   const found = {};
@@ -22,11 +22,6 @@ function readColors(source) {
 /** @type {Record<string, string>} */
 export const colors = readColors(readFileSync("src/base.css", "utf8"));
 
-/**
- * @param {import("./icon-geometry.mjs").RoundedRect} box
- * @param {string} fill
- * @returns {string}
- */
 function drawIconBox(box, fill) {
   return `<rect x="${box.left}" y="${box.top}" width="${box.right - box.left}" height="${box.bottom - box.top}" rx="${box.radius}" fill="${fill}"/>`;
 }
@@ -39,12 +34,18 @@ function drawIconBox(box, fill) {
  * @returns {string}
  */
 export function drawGouiTile(x, y, size) {
-  const { tile, bars } = layOutIcon(x, y, size);
+  const { tile, bowl, dot, tail, point, light } = layOutIcon(x, y, size);
+  const strokeWidth = bowl.outerRadius - bowl.innerRadius;
+  const ring = `<circle cx="${bowl.cx}" cy="${bowl.cy}" r="${(bowl.outerRadius + bowl.innerRadius) / 2}" fill="none" stroke="${markColor}" stroke-width="${strokeWidth}"/>`;
+  const dotCircle = `<circle cx="${dot.cx}" cy="${dot.cy}" r="${dot.radius}" fill="${markColor}"/>`;
+  const tailPath = `<path d="M${tail.x1} ${tail.y1}V${tail.y2}L${tail.x2} ${tail.y2}" fill="none" stroke="${markColor}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const pointCircle = `<circle cx="${point.cx}" cy="${point.cy}" r="${point.radius}" fill="${markColor}"/>`;
+  const lightCircle = `<circle cx="${light.cx}" cy="${light.cy}" r="${light.radius}" fill="${lightColor}"/>`;
 
-  return drawIconBox(tile, "url(#tile)") + bars.map((bar) => drawIconBox(bar, "#ffffff")).join("");
+  return drawIconBox(tile, tileColor) + ring + dotCircle + tailPath + pointCircle + lightCircle;
 }
 
-// The tile gradient is always defined. A picture passes more defs, such as a glow, when it needs them.
+// A picture passes more defs, such as a glow, when it needs them.
 /**
  * @param {number} width
  * @param {number} height
@@ -54,10 +55,9 @@ export function drawGouiTile(x, y, size) {
  */
 export function frame(width, height, content, options = {}) {
   const { background = colors["ink-1"], defs = "" } = options;
-  const tile = `<linearGradient id="tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tileColors[0]}"/><stop offset="1" stop-color="${tileColors[1]}"/></linearGradient>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img">`
-    + `<defs>${tile}${defs}</defs>`
+    + `<defs>${defs}</defs>`
     + `<rect width="${width}" height="${height}" fill="${background}"/>`
     + content
     + "</svg>";

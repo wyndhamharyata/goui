@@ -116,7 +116,7 @@ function tiles() {
 }
 
 mkdirSync(out, { recursive: true });
-execFileSync("cp", ["icons/icon128.png", `${out}/icon-128.png`]);
+// store/icon-128.png is written by scripts/make-icons.mjs, with the store's clear band around the artwork.
 await screenshots();
 tiles();
-console.log("Wrote store/icon-128.png, three screenshots and two promo tiles.");
+console.log("Wrote three screenshots and two promo tiles.");
