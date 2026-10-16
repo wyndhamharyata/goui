@@ -748,8 +748,17 @@
       .ship-table td.is-bad { color: var(--layer-taste); }
       .ship-table td.is-good { color: var(--accent); }
 
+      /* Round four */
+      .readout-grid--four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .readout-grid--four .readout { padding: 16px; }
+      .readout-grid--four .readout__stage { width: 100%; max-width: 224px; aspect-ratio: 1; height: auto; }
+      .readout__curve { margin: 0; padding: 10px 0 0; color: var(--layer-headphone); font: 500 11px / 1.6 var(--font-number); white-space: pre-wrap; word-break: break-all; }
+      .readout__curve small { display: block; color: var(--text-3); font-weight: 400; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+      .record__intro { max-width: 680px; margin: 0 0 8px; color: var(--text-2); font-size: 14px; line-height: 1.6; }
+      .pick__stage--four { padding: 20px 20px 20px 0; }
+
       @media (max-width: 1000px) {
-        .concept-grid, .concept-grid--four, .readout-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .concept-grid, .concept-grid--four, .readout-grid, .readout-grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .size-table, .size-head { grid-template-columns: 1fr; }
         .context-row { grid-template-columns: 1fr; }
         .doc-intro { grid-template-columns: 1fr; }
@@ -1045,35 +1054,195 @@
     <main>
       <header class="doc-intro">
         <div>
-          <p class="doc-eyebrow">goui design · logo proposal · round three</p>
-          <h1>The letter g,<br /><em>drawn for the tile.</em></h1>
+          <p class="doc-eyebrow">goui design · logo proposal · round four</p>
+          <h1>The letter g,<br /><em>with a graph for a tail.</em></h1>
           <p>
-            The owner kept the idea of the letter g and turned down the way rounds one and two drew it.
-            Three faults were named. The letter was a font glyph with things put in it. The marks were off
-            centre and lopsided. The marks ran out to the tile edge. Two seeds stay, the bars in the counter
-            of G2 and the point on the tail of G4. This round draws the g from its own geometry, a circle
-            bowl, a stem that is the bowl's right side carried straight down, and a flat tail on a tight
-            corner, at one stroke weight. Each mark is measured on the 64 unit grid against
-            the safe box of 8 to 56, with its four margins and its ink centre printed, and then shown at
-            the four extension sizes, in one colour, and in context. Rounds one and two are folded at the
-            end, as the record.
+            The owner gave a direction. Merge H2 and H4, so one mark holds the band point in the bowl
+            and ends its tail in the point. Then, since the tail comes off the stem at an angle the way a
+            graph line does, draw its curve as a graph line and not as a hook, and do not fix on a
+            parabola. A graph can be many things. This round keeps round three's letterform, a circle
+            bowl with the stem as its right side carried down, at a stroke of 7 units. The bowl moves right
+            and the tail runs out past it, so the letter fills the safe box more evenly on both axes. The
+            eight marks differ in the tail alone. Each tail is a short list of path commands, printed under
+            its mark with its anchors and control points drawn, so the curve is on the record. Rounds one
+            to three are folded at the end.
           </p>
         </div>
         <ol class="doc-index-list">
-          <li><a href="#marks-3"><b>01</b>Six marks</a></li>
-          <li><a href="#balance-3"><b>02</b>Safe area and balance</a></li>
-          <li><a href="#sizes-3"><b>03</b>At the real sizes</a></li>
-          <li><a href="#mono-3"><b>04</b>One colour, for the menu bar</a></li>
-          <li><a href="#context-3"><b>05</b>In context</a></li>
-          <li><a href="#pick-3"><b>06</b>The pick, and the runner up</a></li>
+          <li><a href="#marks-4"><b>01</b>Eight tails</a></li>
+          <li><a href="#balance-4"><b>02</b>Safe area, balance and the curve</a></li>
+          <li><a href="#sizes-4"><b>03</b>At the real sizes</a></li>
+          <li><a href="#mono-4"><b>04</b>One colour, for the menu bar</a></li>
+          <li><a href="#context-4"><b>05</b>In context</a></li>
+          <li><a href="#pick-4"><b>06</b>The pick, and what each tail costs</a></li>
+          <li><a href="#record-3"><b>--</b>Round three, the record</a></li>
           <li><a href="#record-2"><b>--</b>Round two, the record</a></li>
           <li><a href="#record"><b>--</b>Round one, the record</a></li>
         </ol>
       </header>
 
-      <section class="doc-section" id="marks-3">
+      <section class="doc-section" id="marks-4">
         <header class="doc-head">
           <span class="doc-head__index">01</span>
+          <div>
+            <h2>Eight tails</h2>
+            <p>
+              One letterform, eight tails. The bowl is a circle 28 units across with a counter of 14, and
+              a dot of 6 units stands in the counter, so the bowl is the band handle the panel draws. The
+              stem is the bowl's right side carried straight down. The tail runs out of the stem, under the
+              bowl and past its left edge, and ends in the chosen band's point, 10.5 units across with a
+              light centre. Every stroke is 7 units. Nothing is traced from a typeface. A g's tail is read
+              as a descender, from the stem down and out to the left. A graph line is read from left to
+              right. Each tail below has to be both at once, and the test is two questions. Is it still the
+              tail of a g? Is it a graph line, and not a hook or a bell? Not one of the eight is a symmetric
+              peak. The tails are a straight slope, a dip and a rise, a shelf and a drop, a peak off
+              centre, a shallow wide bell, a line with one step, a line that bends late, and a gentle S.
+            </p>
+          </div>
+        </header>
+        <div class="concept-grid concept-grid--four" id="concept-grid-4"></div>
+      </section>
+
+      <section class="doc-section" id="balance-4">
+        <header class="doc-head">
+          <span class="doc-head__index">02</span>
+          <div>
+            <h2>Safe area, balance and the curve</h2>
+            <p>
+              The safe box is 8 to 56, the dashed square. The thin pink box is the ink's bounding box and
+              the four numbers are its margins to the safe box, in grid units. The cross is the tile's
+              centre and the pink dot is the ink's centre of mass. The lavender dots are the tail's
+              anchors and the lavender squares are its control points, each joined to its anchor, and the
+              path commands are printed under the table. Round three's letter was 32.5 wide and 44 tall,
+              with side margins of 6.75 and 8.75 against 1.25 and 2.75 above and below. This round a mark
+              passes when it is inside the safe box, every margin is at least one unit, the four margins
+              are within 3 units of each other, and the box centre is within 1.5 units of the middle. The
+              ink centre is printed and not judged. A g's bowl and stem are on its right and its tail is
+              one stroke on its left, so the ink centre of this letter is right of its box centre, and the
+              box is what the eye reads against the tile's corners. Bowl clearance is the least clear tile
+              between the tail and the bowl. It has to be at least 3 units so the clear band under the
+              bowl stays open at 32 px.
+            </p>
+          </div>
+        </header>
+        <div class="readout-grid readout-grid--four" id="readout-grid-4"></div>
+      </section>
+
+      <section class="doc-section" id="sizes-4">
+        <header class="doc-head">
+          <span class="doc-head__index">03</span>
+          <div>
+            <h2>At the real sizes</h2>
+            <p>
+              The tile in the 16 px icon is 12 px wide, so a stroke of 7 units is 1.3 px, the bowl is
+              5.3 px across, the whole letter is about 8 px wide and the point is 2 px. The pixel view on
+              the right is the test. Is it a g and not a 9? A 9's tail never runs past the left of its
+              bowl, so look for the tail past the bowl. Then look for anything in it a plain g does not
+              have.
+            </p>
+          </div>
+        </header>
+        <div class="size-head"><span>Mark</span><span>Light toolbar</span><span>Dark toolbar</span><span>Pixels, 16 and 32 px</span></div>
+        <div id="size-rows-4"></div>
+      </section>
+
+      <section class="doc-section" id="mono-4">
+        <header class="doc-head">
+          <span class="doc-head__index">04</span>
+          <div>
+            <h2>One colour, for the menu bar</h2>
+            <p>
+              Each mark's one colour form is the same glyph with the tile gone, cropped to the safe box.
+              The light centre of the point fills in and the dot in the counter stays, so the bar form is
+              a g with a dot in its bowl and a ball on its tail.
+            </p>
+          </div>
+        </header>
+        <div id="mono-rows-4" class="menubar-set"></div>
+      </section>
+
+      <section class="doc-section" id="context-4">
+        <header class="doc-head">
+          <span class="doc-head__index">05</span>
+          <div>
+            <h2>In context</h2>
+            <p>
+              The store tile, the site header, the Dock and a browser tab. The site header shows the one
+              colour form in the accent next to the wordmark. The tile's own plot is right of the mark, so
+              the tail and the plot can be read against each other.
+            </p>
+          </div>
+        </header>
+        <div id="context-rows-4"></div>
+      </section>
+
+      <section class="doc-section" id="pick-4">
+        <header class="doc-head">
+          <span class="doc-head__index">06</span>
+          <div>
+            <h2>The pick, and what each tail costs</h2>
+            <p>J3, the shelf and the drop, with J6, the step, as the runner up. Below is the reasoning and a table of what each tail costs.</p>
+          </div>
+        </header>
+        <div class="pick">
+          <div class="pick__stage pick__stage--two">
+            <div class="pick__row">
+              <svg width="128" height="128" viewBox="0 0 64 64"><use href="#mark-j3" /></svg>
+              <svg width="40" height="40" viewBox="0 0 64 64" style="color: #f2f3f5"><use href="#mono-j3" /></svg>
+              <svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark-j3" /></svg>
+            </div>
+            <div class="pick__row">
+              <svg width="64" height="64" viewBox="0 0 64 64"><use href="#mark-j6" /></svg>
+              <svg width="24" height="24" viewBox="0 0 64 64" style="color: #f2f3f5"><use href="#mono-j6" /></svg>
+              <svg width="16" height="16" viewBox="0 0 64 64"><use href="#mark-j6" /></svg>
+            </div>
+          </div>
+          <div class="doc-notes">
+            <h3>J3. The shelf and the drop, with J6 as the runner up</h3>
+            <ul>
+              <li><b>It is a g first.</b> The tail comes off the stem, runs level under the bowl the way H2's did, and turns out past the bowl's left edge to the point. The step down is in the part of the tail that is already past the bowl, so the letter's own corner and its clear band under the bowl are unchanged. At every size the first reading is g.</li>
+              <li><b>The tail is a band the panel draws.</b> Read left to right it is a high shelf, one of the two band types in goui, drawn the way the graph draws it, with a soft transition over ten units and a level run on each side. It is not a peak and not a hook.</li>
+              <li><b>The drop reads at 32 px.</b> On the store tile and in the Dock the tail has a visible kink, and next to the tile's own plot it reads as a piece of the same line. At 16 px the drop goes and the tail is a 2 px line with a lump at its end, which is the same for all eight.</li>
+              <li><b>Balance and the safe box.</b> Section 02 has the numbers. The ink is 11 to 53 across and 10 to 54.7 down, so the letter is 42 wide and 44.7 tall. The margins are 3 left, 3 right, 2 top and 1.3 bottom. Round three's were 6.75, 8.75, 1.25 and 2.75. The box centre is on the middle across and 0.4 below it. The ink centre is 4.7 right of the middle, which is the letter's bowl and stem on the right. The least clear tile between the tail and the bowl is 3.5 units.</li>
+              <li><b>The 16 px reading, plainly.</b> The pixel view shows a bold ring with its counter closed, a tail that runs 4 px past the bowl's left edge, and a lump at the tail's end. It reads as a g and not a 9, since a 9's tail never clears the left of its bowl. The dot in the counter is gone at 16 px. It is there at 32 px as a dark centre in the ring, and it is clear from 48 px up.</li>
+              <li><b>Runner up, J6, the step.</b> The one tail that still says graph in the menu bar at 18 px, where the notch is visible. At 128 px it is the most mechanical of the eight, a trace on a circuit board more than a curve, and a hard step is a thing the panel's curve never draws. It is the pick if the toolbar and menu bar matter more than the store page.</li>
+              <li><b>J7 is the quiet fallback.</b> The late bend is H2 with the point dropped. It keeps the most of round three and says the least about graphs. If J3's step reads as a pipe to the owner, J7 is the safe move.</li>
+              <li><b>Calls made on this page.</b> The stroke is 7 of 64, a half unit under round three, so the point and the counter dot both have room. The bowl moved 6.75 units right and the tail runs 13 units past its left edge, so the letter is 42 wide against round three's 32.5. The corner at the stem is 4 units on the three level tails and a cubic on the rest. Every tail ends at x 16.25 and the point's height is the one thing that moves with the curve.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="doc-sub"><h3>What each tail costs</h3><p>Whether it is still a g, whether it is a graph line, and what the curve gives up.</p></div>
+        <table class="ship-table">
+          <thead><tr><th>Mark</th><th>The tail</th><th>As a g</th><th>As a graph line</th><th>The cost</th></tr></thead>
+          <tbody>
+            <tr><td>J1. The slope</td><td>One straight line, 11 degrees.</td><td>Yes, with a straight descender. The ring, the dot and the straight stick to a ball also read as a magnifier.</td><td>Barely. A line with no feature is a line, not a plot.</td><td>Says nothing about EQ. The clearance under the bowl is the tightest, 3.2.</td></tr>
+            <tr><td>J2. The dip and rise</td><td>A trough under the bowl.</td><td>Yes. The most letter like of the eight.</td><td>No. A round trough that climbs into the ball reads as a hook.</td><td>It is the hook the owner asked to move away from.</td></tr>
+            <tr><td>J3. The shelf and the drop</td><td>Level, a soft step down, level.</td><td>Yes. H2's tail with a turn in it.</td><td>Yes. A high shelf, as the panel draws one.</td><td>At 128 px the step can read as a pipe. At 16 px the step is gone.</td></tr>
+            <tr><td>J4. The peak off centre</td><td>A trough, a peak, a slow fall.</td><td>Yes, with a wavy tail.</td><td>Yes. A peak band to the right of centre.</td><td>Busiest tail. At 32 px the two turns blur into a thick wave. Reads as a snake at 128.</td></tr>
+            <tr><td>J5. The wide bell</td><td>A hump of two and a half units.</td><td>Yes. Near H2.</td><td>Barely. The hump is a wobble, not a band.</td><td>Too quiet. The cue is gone at 48 px.</td></tr>
+            <tr><td>J6. The step</td><td>Level, a hard step up, level.</td><td>Yes. The notch does not hurt the letter.</td><td>Yes, and the one that holds at 18 px.</td><td>Mechanical. A hard step is not a curve the panel draws.</td></tr>
+            <tr><td>J7. The late bend</td><td>Level, then a drop into the point.</td><td>Yes. The closest to H2.</td><td>Only just. A roll off at the end of a level line.</td><td>Says the least. The droop at the end can read as a sag.</td></tr>
+            <tr><td>J8. The S</td><td>Up under the bowl, down past it, level.</td><td>Yes, with a wavy tail.</td><td>Yes. A boost and a cut.</td><td>Twin of J4 at 32 px and below. The hump under the bowl is the one that crowds it.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <details class="record" id="record-3">
+        <summary>Round three, the record<small>six marks drawn for the tile, the safe area readout, the sizes, the menu bar, the contexts and the pick</small></summary>
+        <p class="record__intro">
+          The owner kept the idea of the letter g and turned down the way rounds one and two drew it.
+          Three faults were named. The letter was a font glyph with things put in it. The marks were off
+          centre and lopsided. The marks ran out to the tile edge. Two seeds stayed, the bars in the counter
+          of G2 and the point on the tail of G4. Round three drew the g from its own geometry, a circle
+          bowl, a stem that is the bowl's right side carried down, and a flat tail on a tight corner, at
+          one stroke weight. Each mark was measured against the safe box of 8 to 56. The owner's answer
+          to this round is the direction round four follows.
+        </p>
+
+      <section class="doc-section" id="marks-3">
+        <header class="doc-head">
+          <span class="doc-head__index">07</span>
           <div>
             <h2>Six marks</h2>
             <p>
@@ -1093,7 +1262,7 @@
 
       <section class="doc-section" id="balance-3">
         <header class="doc-head">
-          <span class="doc-head__index">02</span>
+          <span class="doc-head__index">08</span>
           <div>
             <h2>Safe area and balance</h2>
             <p>
@@ -1116,7 +1285,7 @@
 
       <section class="doc-section" id="sizes-3">
         <header class="doc-head">
-          <span class="doc-head__index">03</span>
+          <span class="doc-head__index">09</span>
           <div>
             <h2>At the real sizes</h2>
             <p>
@@ -1133,7 +1302,7 @@
 
       <section class="doc-section" id="mono-3">
         <header class="doc-head">
-          <span class="doc-head__index">04</span>
+          <span class="doc-head__index">10</span>
           <div>
             <h2>One colour, for the menu bar</h2>
             <p>
@@ -1148,7 +1317,7 @@
 
       <section class="doc-section" id="context-3">
         <header class="doc-head">
-          <span class="doc-head__index">05</span>
+          <span class="doc-head__index">11</span>
           <div>
             <h2>In context</h2>
             <p>
@@ -1163,7 +1332,7 @@
 
       <section class="doc-section" id="pick-3">
         <header class="doc-head">
-          <span class="doc-head__index">06</span>
+          <span class="doc-head__index">12</span>
           <div>
             <h2>The pick, and the runner up</h2>
             <p>H2, the point on the tail, with H1 as the runner up. Below is the reasoning and a table of how each mark does on the three tests.</p>
@@ -1203,13 +1372,14 @@
           <tbody id="pick-table-3"></tbody>
         </table>
       </section>
+      </details>
 
       <details class="record" id="record-2">
         <summary>Round two, the record<small>eight fusions of an EQ cue into the g, the sizes, the menu bar, the contexts and the pick</small></summary>
 
       <section class="doc-section" id="concepts-2">
         <header class="doc-head">
-          <span class="doc-head__index">07</span>
+          <span class="doc-head__index">13</span>
           <div>
             <h2>Eight fusions</h2>
             <p>
@@ -1226,7 +1396,7 @@
 
       <section class="doc-section" id="sizes-2">
         <header class="doc-head">
-          <span class="doc-head__index">08</span>
+          <span class="doc-head__index">14</span>
           <div>
             <h2>At the real sizes</h2>
             <p>
@@ -1243,7 +1413,7 @@
 
       <section class="doc-section" id="mono-2">
         <header class="doc-head">
-          <span class="doc-head__index">09</span>
+          <span class="doc-head__index">15</span>
           <div>
             <h2>One colour, for the menu bar</h2>
             <p>
@@ -1258,7 +1428,7 @@
 
       <section class="doc-section" id="context-2">
         <header class="doc-head">
-          <span class="doc-head__index">10</span>
+          <span class="doc-head__index">16</span>
           <div>
             <h2>In context</h2>
             <p>
@@ -1273,7 +1443,7 @@
 
       <section class="doc-section" id="pick-2">
         <header class="doc-head">
-          <span class="doc-head__index">11</span>
+          <span class="doc-head__index">17</span>
           <div>
             <h2>The pick, and the trade</h2>
             <p>G7, the wave tail. Below is the reasoning, the runner up, and a table of how much EQ each mark still says at 16 px.</p>
@@ -1329,7 +1499,7 @@
 
       <section class="doc-section" id="concepts">
         <header class="doc-head">
-          <span class="doc-head__index">12</span>
+          <span class="doc-head__index">18</span>
           <div>
             <h2>Six concepts</h2>
             <p>
@@ -1345,7 +1515,7 @@
 
       <section class="doc-section" id="sizes">
         <header class="doc-head">
-          <span class="doc-head__index">13</span>
+          <span class="doc-head__index">19</span>
           <div>
             <h2>At the real sizes</h2>
             <p>
@@ -1368,7 +1538,7 @@
 
       <section class="doc-section" id="mono">
         <header class="doc-head">
-          <span class="doc-head__index">14</span>
+          <span class="doc-head__index">20</span>
           <div>
             <h2>One colour, for the menu bar</h2>
             <p>
@@ -1385,7 +1555,7 @@
 
       <section class="doc-section" id="context">
         <header class="doc-head">
-          <span class="doc-head__index">15</span>
+          <span class="doc-head__index">21</span>
           <div>
             <h2>In context</h2>
             <p>
@@ -1401,7 +1571,7 @@
 
       <section class="doc-section" id="pick">
         <header class="doc-head">
-          <span class="doc-head__index">16</span>
+          <span class="doc-head__index">22</span>
           <div>
             <h2>The recommendation</h2>
             <p>Concept E, the letter g on an acid tile. Below it is the reasoning, then the list of what has to change to ship it.</p>
@@ -1472,7 +1642,7 @@
 
       <section class="doc-section" id="palette">
         <header class="doc-head">
-          <span class="doc-head__index">17</span>
+          <span class="doc-head__index">23</span>
           <div>
             <h2>Palette note</h2>
             <p>
@@ -1851,6 +2021,162 @@
           <tr><td>${letter}. ${named[letter]}</td><td>${balance}</td><td>${safe}</td><td>${large}</td><td>${small}</td></tr>`).join("");
       }
 
+      // Round four. One letter, eight tails. Every number is a grid unit of 64.
+      const letterFour = { bowlX: 39, bowlY: 24, bowlRadius: 10.5, stroke: 7, dotRadius: 3, stemX: 49.5, pointRadius: 5.25, lightRadius: 2.3 };
+      const tails = [
+        { letter: "J1", name: "The slope", idea: "One straight line from the stem down to the point. The plainest graph there is, a tilt of 11 degrees.", stemEnd: 43, tail: "L16.25 49.5", point: [16.25, 49.5] },
+        { letter: "J2", name: "The dip and rise", idea: "The tail drops out of the stem into a trough under the bowl and climbs back to the point. A cut band, read left to right.", stemEnd: 41, tail: "C49.5 47.5 46 50.5 39.5 50.5 C32 50.5 25 46 16.25 46", point: [16.25, 46] },
+        { letter: "J3", name: "The shelf and the drop", idea: "The tail runs level under the bowl, then steps down over ten units and runs level to the point. A high shelf, read left to right.", stemEnd: 41, tail: "C49.5 43.2 47.7 45 45.5 45 L35 45 C30 45 31 49.5 26 49.5 L16.25 49.5", point: [16.25, 49.5] },
+        { letter: "J4", name: "The peak off centre", idea: "A trough at the stem, a peak under the bowl's centre and a long slow fall to the point. A peak band pushed to the right.", stemEnd: 44, tail: "C49.5 48.5 47.5 50.5 44.5 49 C41.5 47.5 39.5 44.5 36 44.5 C31 44.5 27 49.25 16.25 49.25", point: [16.25, 49.25] },
+        { letter: "J5", name: "The wide bell", idea: "A shallow hump of two and a half units spread over the whole tail. The quietest curve of the eight.", stemEnd: 45, tail: "C49.5 48.5 47.5 49.5 44 49 C38 48 34 46.5 29 46.5 C25 46.5 21 48.5 16.25 48.5", point: [16.25, 48.5] },
+        { letter: "J6", name: "The step", idea: "The tail runs level, takes one step of three and a half units in three units of width, and runs level to the point.", stemEnd: 46.5, tail: "C49.5 48.4 47.9 50 46 50 L36 50 C34.5 50 34.5 46.5 33 46.5 L16.25 46.5", point: [16.25, 46.5] },
+        { letter: "J7", name: "The late bend", idea: "The tail comes off the stem level and stays level past the bowl, then bends down into the point. A roll off, read left to right.", stemEnd: 41.5, tail: "C49.5 43.7 47.7 45.5 45.5 45.5 L27 45.5 C22 45.5 21.5 49.5 16.25 49.5", point: [16.25, 49.5] },
+        { letter: "J8", name: "The S", idea: "Up under the bowl, down past its left edge, and a short level run into the point. A boost and a cut, in one line.", stemEnd: 44, tail: "C49.5 48 44 48.5 39 46.5 C34 44.5 31 51 25 50 C22.5 49.6 19.5 48.5 16.25 48.5", point: [16.25, 48.5] },
+      ];
+
+      function tailPath(mark) {
+        return `M${letterFour.stemX} ${letterFour.bowlY}V${mark.stemEnd}${mark.tail}`;
+      }
+
+      function glyphFour(mark) {
+        const { bowlX, bowlY, bowlRadius, stroke, dotRadius, pointRadius } = letterFour;
+        return `
+          <circle cx="${bowlX}" cy="${bowlY}" r="${bowlRadius}" fill="none" stroke="currentColor" stroke-width="${stroke}" />
+          <circle cx="${bowlX}" cy="${bowlY}" r="${dotRadius}" fill="currentColor" />
+          <path d="${tailPath(mark)}" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="${mark.point[0]}" cy="${mark.point[1]}" r="${pointRadius}" fill="currentColor" />`;
+      }
+
+      function buildSymbolsFour() {
+        const sheet = document.querySelector("body > svg");
+        const markup = tails.map((mark) => `
+          <symbol id="glyph-${lower(mark.letter)}" viewBox="0 0 64 64">${glyphFour(mark)}</symbol>
+          <symbol id="mark-${lower(mark.letter)}" viewBox="0 0 64 64">
+            <rect width="64" height="64" rx="14" fill="#d4ff3f" />
+            <use href="#glyph-${lower(mark.letter)}" color="#0b0c0e" />
+            <circle cx="${mark.point[0]}" cy="${mark.point[1]}" r="${letterFour.lightRadius}" fill="#f2f3f5" />
+          </symbol>
+          <symbol id="mono-${lower(mark.letter)}" viewBox="8 8 48 48"><use href="#glyph-${lower(mark.letter)}" /></symbol>`).join("");
+
+        sheet.insertAdjacentHTML("beforeend", markup);
+      }
+
+      // Reads the tail's anchors and control points back out of its path commands.
+      function parseTail(mark) {
+        const tokens = mark.tail.match(/[A-Z]|-?[\d.]+/g);
+        const anchors = [[letterFour.stemX, mark.stemEnd]];
+        const controls = [];
+        let index = 0;
+
+        while (index < tokens.length) {
+          const command = tokens[index];
+          const number = (offset) => Number(tokens[index + offset]);
+
+          if (command === "L") {
+            anchors.push([number(1), number(2)]);
+            index += 3;
+            continue;
+          }
+          const end = [number(5), number(6)];
+          controls.push({ anchor: anchors[anchors.length - 1], at: [number(1), number(2)] });
+          controls.push({ anchor: end, at: [number(3), number(4)] });
+          anchors.push(end);
+          index += 7;
+        }
+
+        return { anchors, controls };
+      }
+
+      // The least clear tile between the tail and the bowl, in grid units, sampled along the tail and at the point.
+      function measureClearance(mark) {
+        const { bowlX, bowlY, bowlRadius, stroke, stemX, pointRadius } = letterFour;
+        const sheet = document.querySelector("body > svg");
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const bowlEdge = bowlRadius + stroke / 2;
+        const distance = (x, y) => Math.hypot(x - bowlX, y - bowlY);
+        let least = distance(mark.point[0], mark.point[1]) - bowlEdge - pointRadius;
+
+        path.setAttribute("d", tailPath(mark));
+        sheet.appendChild(path);
+        const length = path.getTotalLength();
+
+        for (let along = 0; along <= length; along += 0.1) {
+          const at = path.getPointAtLength(along);
+          if (at.x > stemX - stroke / 2) continue;
+          least = Math.min(least, distance(at.x, at.y) - bowlEdge - stroke / 2);
+        }
+        path.remove();
+
+        return least;
+      }
+
+      function curveOverlay(mark) {
+        const { anchors, controls } = parseTail(mark);
+        const arms = controls.map(({ anchor, at }) => `M${anchor[0]} ${anchor[1]}L${at[0]} ${at[1]}`).join("");
+        const squares = controls.map(({ at }) => `<rect x="${at[0] - 0.6}" y="${at[1] - 0.6}" width="1.2" height="1.2" />`).join("");
+        const dots = anchors.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="0.7" />`).join("");
+        return `
+          <path d="${arms}" stroke="#9fb0ff" stroke-width="0.25" opacity="0.8" />
+          <g fill="#9fb0ff">${squares}${dots}</g>`;
+      }
+
+      function readoutRowsFour(ink, clearance) {
+        const margins = [ink.left - safeBox.first, safeBox.last - ink.right, ink.top - safeBox.first, safeBox.last - ink.bottom];
+        const isInside = margins.every((margin) => margin >= 0);
+        const hasRoom = margins.every((margin) => margin >= 1);
+        const isEven = Math.max(...margins) - Math.min(...margins) <= 3;
+        const boxCenterX = (ink.left + ink.right) / 2 - 32;
+        const boxCenterY = (ink.top + ink.bottom) / 2 - 32;
+        const isBoxCentred = Math.abs(boxCenterX) <= 1.5 && Math.abs(boxCenterY) <= 1.5;
+        const hasClearance = clearance >= 3;
+        const tone = (isGood) => (isGood ? "is-good" : "is-bad");
+        const isPass = isInside && hasRoom && isEven && isBoxCentred && hasClearance;
+
+        return {
+          isPass,
+          rows: `
+          <tr><td>Ink box, x</td><td>${ink.left.toFixed(1)} to ${ink.right.toFixed(1)}</td></tr>
+          <tr><td>Ink box, y</td><td>${ink.top.toFixed(1)} to ${ink.bottom.toFixed(1)}</td></tr>
+          <tr><td>Size</td><td>${(ink.right - ink.left).toFixed(1)} by ${(ink.bottom - ink.top).toFixed(1)}</td></tr>
+          <tr><td>Margins, l r t b</td><td class="${tone(hasRoom && isEven)}">${margins.map((margin) => margin.toFixed(1)).join("  ")}</td></tr>
+          <tr><td>Inside 8 to 56</td><td class="${tone(isInside)}">${isInside ? "yes" : "no"}</td></tr>
+          <tr><td>Box centre</td><td class="${tone(isBoxCentred)}">${signed(boxCenterX)}, ${signed(boxCenterY)}</td></tr>
+          <tr><td>Ink centre</td><td>${signed(ink.centerX - 32)}, ${signed(ink.centerY - 32)}</td></tr>
+          <tr><td>Bowl clearance</td><td class="${tone(hasClearance)}">${clearance.toFixed(1)}</td></tr>
+          <tr><td>Verdict</td><td class="${tone(isPass)}">${isPass ? "passes" : "fails"}</td></tr>`,
+        };
+      }
+
+      async function renderReadoutsFour(gridId, list) {
+        const grid = document.getElementById(gridId);
+        const cards = [];
+
+        for (const mark of list) {
+          const ink = measureInk(await rasteriseGlyph(`glyph-${lower(mark.letter)}`));
+          const clearance = measureClearance(mark);
+          const readout = readoutRowsFour(ink, clearance);
+          const overlay = readoutOverlay(ink).replace("</svg>", `${curveOverlay(mark)}</svg>`);
+          cards.push(`
+            <article class="readout" data-mark="${mark.letter}" data-pass="${readout.isPass}">
+              <h3>${mark.letter}. ${mark.name}</h3>
+              <div class="readout__stage">
+                ${iconSvg(`glyph-${lower(mark.letter)}`, 224, "0 0 64 64", "#d4ff3f")}
+                ${overlay}
+              </div>
+              <table><tbody>${readout.rows}</tbody></table>
+              <pre class="readout__curve"><small>the tail, from the stem</small>${tailPath(mark)}</pre>
+            </article>`);
+        }
+
+        grid.innerHTML = cards.join("");
+      }
+
+      buildSymbolsFour();
+      renderConcepts("concept-grid-4", tails);
+      renderSizes("size-rows-4", tails);
+      renderMono("mono-rows-4", tails);
+      renderContext("context-rows-4", tails);
+      renderReadoutsFour("readout-grid-4", tails);
       renderConcepts("concept-grid-3", marks);
       renderSizes("size-rows-3", marks);
       renderMono("mono-rows-3", marks);
