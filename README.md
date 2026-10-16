@@ -5,8 +5,8 @@ ear, then to your taste.
 
 ## Install
 
-> The pictures here show the panel on `main`. An install today gets release 0.1.7, which has the
-> older blue look and no Sets yet.
+> The pictures here show the panel on `main`. An install from the store today gets release 0.1.8,
+> which has the older blue icon and the earlier text.
 
 ### Chrome and Brave
 
