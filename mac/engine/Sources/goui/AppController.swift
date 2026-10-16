@@ -14,8 +14,6 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
   private static let widthKey = "panelWidth"
   // The click on the menu bar item that hides the panel would open it again straight away.
   private static let reopenDelaySeconds = 0.3
-  // The space between the menu bar item and the menu that opens under it.
-  private static let menuGapPx = 4.0
   // --ink-1 in src/base.css, the panel's own background, so the first frame shows no white flash before the page loads.
   private static let pageBackgroundColor = NSColor(srgbRed: 14 / 255, green: 16 / 255, blue: 19 / 255, alpha: 1)
 
@@ -238,7 +236,10 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
     let isMenuClick = event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true
 
     if isMenuClick {
-      menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + Self.menuGapPx), in: button)
+      // Attached for this click only, so the item places the menu itself and a left click still opens the panel.
+      statusItem.menu = menu
+      button.performClick(nil)
+      statusItem.menu = nil
     } else {
       togglePanel()
     }

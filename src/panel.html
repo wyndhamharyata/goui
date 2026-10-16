@@ -25,24 +25,32 @@
     </svg>
 
     <div class="app" id="app" data-showing="listen">
-      <header class="pn-head head">
-        <div class="ui-split">
-          <span class="pn-brand"><img src="../icons/icon32.png" alt="" width="18" height="18" />goui</span>
-          <span class="ui-cluster">
-            <button id="power" class="ui-button ui-button--small tone-good" aria-pressed="false" hidden><svg class="ui-icon" aria-hidden="true"><use href="#icon-power" /></svg><span id="powerText">OFF</span></button>
-            <button id="help" class="ui-button ui-button--quiet ui-button--small" title="How to use goui">?</button>
-            <button id="compare" class="ui-button ui-button--hold" title="Hold to hear the sound without the EQ">A/B</button>
-            <label class="ui-switch switch" title="Turn the EQ on or off">
-              <input type="checkbox" id="enabled" aria-label="EQ on" />
-              <span class="ui-switch__knob"></span>
-            </label>
-          </span>
-        </div>
-        <div class="ui-split">
-          <span class="pn-hearing" id="hearing"><small id="hearingCaption">Hearing</small><b id="status"></b></span>
-          <span class="ui-badge ui-badge--dot tone-muted pn-level" id="meter"><i class="ui-badge__mark"></i><span><span id="level">--</span> dB</span></span>
-        </div>
-      </header>
+      <div class="pn-top">
+        <header class="pn-head head">
+          <div class="ui-split">
+            <span class="pn-brand"><img src="../icons/icon32.png" alt="" width="18" height="18" />goui</span>
+            <span class="ui-cluster">
+              <button id="power" class="ui-button ui-button--small tone-good" aria-pressed="false" hidden><svg class="ui-icon" aria-hidden="true"><use href="#icon-power" /></svg><span id="powerText">OFF</span></button>
+              <button id="help" class="ui-button ui-button--quiet ui-button--small" title="How to use goui">?</button>
+              <button id="compare" class="ui-button ui-button--hold" title="Hold to hear the sound without the EQ">A/B</button>
+              <label class="ui-switch switch" title="Turn the EQ on or off">
+                <input type="checkbox" id="enabled" aria-label="EQ on" />
+                <span class="ui-switch__knob"></span>
+              </label>
+            </span>
+          </div>
+          <div class="ui-split">
+            <span class="pn-hearing" id="hearing"><small id="hearingCaption">Hearing</small><b id="status"></b></span>
+            <span class="ui-badge ui-badge--dot tone-muted pn-level" id="meter"><i class="ui-badge__mark"></i><span><span id="level">--</span> dB</span></span>
+          </div>
+        </header>
+
+        <nav class="ui-tabs ui-tabs--large pn-tabs" id="tabs" role="tablist">
+          <button class="ui-tabs__item" role="tab" data-tab="listen">Listen</button>
+          <button class="ui-tabs__item" role="tab" data-tab="tune">Tune</button>
+          <button class="ui-tabs__item" role="tab" data-tab="library">Library</button>
+        </nav>
+      </div>
 
       <section class="pn-start ui-stack ui-stack--loose" id="start">
         <div class="ui-section-header ui-section-header--title">
@@ -54,12 +62,6 @@
         <ol class="guide-steps" id="guideSteps"></ol>
         <button id="guide" class="ui-button ui-button--primary ui-button--wide">Open the guide</button>
       </section>
-
-      <nav class="ui-tabs ui-tabs--large pn-tabs" id="tabs" role="tablist">
-        <button class="ui-tabs__item" role="tab" data-tab="listen">Listen</button>
-        <button class="ui-tabs__item" role="tab" data-tab="tune">Tune</button>
-        <button class="ui-tabs__item" role="tab" data-tab="library">Library</button>
-      </nav>
 
       <div class="pn-panes">
         <section class="pn-pane" data-pane="listen">

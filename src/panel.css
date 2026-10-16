@@ -1218,6 +1218,24 @@ button.ui-chip:hover {
 }
 
 /* The panel's own layout. Blocks put primitives in place and add no control of their own. */
+
+/* The panel scrolls as a page, without a bar over its right edge. */
+html {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+/* The header and the three tabs stay in view while the pane under them scrolls. */
+.pn-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--ink-1);
+}
+
 .pn-head {
   display: flex;
   flex-direction: column;

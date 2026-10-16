@@ -378,7 +378,8 @@ Mac app.
 
 - Track: https://maou.audio/46_yoake_no_highway/
 - Licence: Creative Commons Attribution 4.0 International (CC BY 4.0),
-  https://creativecommons.org/licenses/by/4.0/ ; terms of use at https://maou.audio/rule/
+  https://creativecommons.org/licenses/by/4.0/
+- Terms of use: https://maou.audio/rule/
 - Credit line, as the publisher asks: 音楽：魔王魂
 
 ## goui
