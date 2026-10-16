@@ -66,6 +66,7 @@
   --radius-bar: 2px;
   --control-height: 28px;
   --control-height-small: 24px;
+  --control-height-wide: 34px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 

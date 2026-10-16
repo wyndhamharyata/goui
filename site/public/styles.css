@@ -32,12 +32,13 @@ code {
 }
 
 /* The mark's tail bottom is 56 of the tile's 64 units, and the g's tail end hangs 6.15 px under
-   the name's baseline at 30 px. The tile drops by both, so the two tails end on one line. */
+   the name's baseline at 30 px. The tile drops by both, so the two tails end on one line, and
+   the tile's top lands on the cap height. */
 .site-head .brand {
-  --icon-drop: calc(44px * (1 - 56 / 64) + 6.15px);
+  --icon-drop: calc(30px * (1 - 56 / 64) + 6.15px);
   display: flex;
   align-items: baseline;
-  gap: var(--space-4);
+  gap: var(--space-3);
   padding-bottom: var(--icon-drop);
 }
 
@@ -179,6 +180,47 @@ main {
 @media (prefers-reduced-motion: reduce) {
   .store-badge,
   .store-badge::before {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* The store button in the hero keeps the glow and the lift the old badge had, in the accent alone. */
+#site-hero .ui-button--primary {
+  position: relative;
+  isolation: isolate;
+  height: var(--control-height-wide);
+  padding: 0 var(--space-5);
+  font-size: var(--size-name);
+  font-weight: 700;
+  box-shadow: 0 10px 30px -8px var(--accent-line);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+#site-hero .ui-button--primary::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  border-radius: calc(var(--radius-2) + 3px);
+  background: conic-gradient(from var(--spin), var(--accent), var(--accent-soft), var(--accent-line), var(--accent));
+  filter: blur(var(--space-3));
+  opacity: 0.55;
+  animation: spin 6s linear infinite;
+}
+
+#site-hero .ui-button--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px -8px var(--accent);
+}
+
+#site-hero .ui-button--primary:hover::before {
+  opacity: 0.9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #site-hero .ui-button--primary,
+  #site-hero .ui-button--primary::before {
     transition: none;
     animation: none;
   }
