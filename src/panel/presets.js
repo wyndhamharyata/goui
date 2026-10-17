@@ -3,7 +3,7 @@ import { cleanBands } from "../shared/bands.js";
 import { emptyLayerNames, layerOrder, layerSources, sanitizeConfig } from "../shared/config.js";
 import { storageKeys } from "../shared/storage.js";
 import { buildListRow, partOf, renderPlayingRows, sectionOf } from "./dom.js";
-import { describeBandCount, describeLayerName } from "./items.js";
+import { describeLayerName } from "./items.js";
 import { onRefresh, renderPresetList } from "./refresh.js";
 import { commit, replaceLayer } from "./sound.js";
 import { state } from "./state.js";
@@ -34,11 +34,11 @@ export function isSavedPreset(role) {
 function renderPresetCard(role) {
   const layer = state.config.layers[role];
   const isSaved = isSavedPreset(role);
-  let caption = "Nothing yet";
+  let title = "Nothing yet";
 
-  if (layer) caption = isSaved ? "Your preset" : `${layer.source}, not saved yet`;
+  if (layer) title = isSaved ? "Preset" : `${layer.source}, not saved yet`;
 
-  partOf(role, "current-caption").textContent = caption;
+  partOf(role, "current").title = title;
   partOf(role, "current-name").textContent = layer ? describeLayerName(layer) : emptyLayerNames[role];
 
   const save = partOf(role, "save");
@@ -88,7 +88,6 @@ export function buildPresetItem(role, name, onPlaced) {
 
   return buildListRow({
     name,
-    detail: describeBandCount(bands),
     isPlaying: () => isPresetInLayer(role, name),
     onPick: place,
     onRemove: () => deletePreset(role, name),

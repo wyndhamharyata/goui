@@ -39,9 +39,8 @@
               </label>
             </span>
           </div>
-          <div class="ui-split">
-            <span class="pn-hearing" id="hearing"><small id="hearingCaption">Hearing</small><b id="status"></b></span>
-            <span class="ui-badge ui-badge--dot tone-muted pn-level" id="meter"><i class="ui-badge__mark"></i><span><span id="level">--</span> dB</span></span>
+          <div class="ui-split pn-hearing-row">
+            <span class="pn-hearing" id="hearing"><small id="hearingCaption"></small><b id="status"></b></span>
           </div>
         </header>
 
@@ -66,9 +65,8 @@
       <div class="pn-panes">
         <section class="pn-pane" data-pane="listen">
           <div class="ui-section-header ui-section-header--column pn-column-title"><span class="ui-section-header__text"><span class="ui-section-header__title">Listen</span></span></div>
-          <div class="ui-stack-row has-bar tone-accent pn-set-picker">
+          <div class="ui-stack-row has-bar tone-accent pn-set-picker ui-stack-row--single" title="The Set that plays: one headphone, one ear and one taste preset, with the sliders">
             <span class="ui-stack-row__body">
-              <span class="ui-stack-row__caption">Set</span>
               <span class="ui-stack-row__name">
                 <label class="ui-field ui-field--select" title="Pick a Set to play">
                   <select class="ui-field__control" id="setSelect" aria-label="Set"></select>
@@ -78,46 +76,38 @@
             </span>
             <span class="ui-stack-row__trail"><button id="saveSet" class="ui-button ui-button--small" title="Save the layers and sliders as a Set">Save as Set</button></span>
           </div>
-          <div class="ui-section-header ui-section-header--eyebrow">
-            <span>Your tuning</span><span class="ui-section-header__rule"></span>
-          </div>
           <div class="ui-stack ui-stack--chain" id="layers"></div>
           <div class="ui-plot graph" id="listenGraph"></div>
           <div class="ui-stack" id="sliders">
-            <div class="ui-section-header ui-section-header--eyebrow">
-              <span>Basic tuning</span><span class="ui-section-header__rule"></span><span class="ui-badge ui-badge--pill tone-muted">Added after 3 sound layers</span>
+            <div class="ui-section-header ui-section-header--eyebrow" title="Added after the 3 sound layers, as Bass, Vocals and Treble">
+              <span>Basic tuning</span><span class="ui-section-header__rule"></span>
             </div>
-            <label class="ui-slider-row">
-              <span class="ui-slider-row__label"><span>Bass</span><small>Below 120 Hz</small></span>
+            <label class="ui-slider-row" title="Bass, below 120 Hz">
+              <span class="ui-slider-row__label"><span>Bass</span></span>
               <input type="range" class="ui-slider-row__range" id="bass" step="0.5" value="0" />
               <output class="ui-slider-row__value" id="bassValue">0.0 dB</output>
             </label>
-            <label class="ui-slider-row">
-              <span class="ui-slider-row__label"><span>Vocals</span><small>Around 1.5 kHz</small></span>
+            <label class="ui-slider-row" title="Vocals, around 1.5 kHz">
+              <span class="ui-slider-row__label"><span>Vocals</span></span>
               <input type="range" class="ui-slider-row__range" id="vocals" step="0.5" value="0" />
               <output class="ui-slider-row__value" id="vocalsValue">0.0 dB</output>
             </label>
-            <label class="ui-slider-row">
-              <span class="ui-slider-row__label"><span>Treble</span><small>Above 3.5 kHz</small></span>
+            <label class="ui-slider-row" title="Treble, above 3.5 kHz">
+              <span class="ui-slider-row__label"><span>Treble</span></span>
               <input type="range" class="ui-slider-row__range" id="treble" step="0.5" value="0" />
               <output class="ui-slider-row__value" id="trebleValue">0.0 dB</output>
             </label>
-            <div class="ui-section-header ui-section-header--eyebrow">
-              <span>Output</span><span class="ui-section-header__rule"></span>
-            </div>
             <div class="ui-slider-row ui-slider-row--trail">
-              <span class="ui-slider-row__label"><span>Preamp</span><small id="preampNote">Auto</small></span>
+              <span class="ui-slider-row__label"><span>Preamp</span></span>
               <input type="range" class="ui-slider-row__range" id="preamp" step="0.1" value="0" aria-label="Preamp" />
               <output class="ui-slider-row__value" id="preampValue">0.0 dB</output>
               <span class="ui-slider-row__trail"><button id="autoPreamp" class="ui-button ui-button--small" title="Set the preamp from the largest boost">Auto</button></span>
             </div>
-            <label class="ui-stack-row" title="A/B keeps the preamp at its current level">
-              <span class="ui-switch"><input type="checkbox" id="levelMatch" /><span class="ui-switch__knob"></span></span>
-              <span class="ui-stack-row__body">
-                <span class="ui-stack-row__caption">Maintain preamp level during A/B testing</span>
-                <span class="ui-stack-row__name">Level match</span>
-              </span>
-            </label>
+            <div class="ui-stack-row ui-stack-row--single" id="levelMatchRow" title="Maintain the preamp level while A/B is held, so both sides play at the same level">
+              <label class="ui-switch"><input type="checkbox" id="levelMatch" aria-label="Level match" /><span class="ui-switch__knob"></span></label>
+              <label class="ui-stack-row__body" for="levelMatch"><span class="ui-stack-row__name">Level match</span></label>
+              <span class="ui-stack-row__trail"><span class="ui-badge ui-badge--dot tone-muted pn-level" id="meter"><i class="ui-badge__mark"></i><span><span id="level">--</span> dB</span></span></span>
+            </div>
           </div>
         </section>
 
@@ -138,12 +128,6 @@
             <span class="ui-badge ui-badge--key ui-badge--key-fill tone-spectrum"><i class="ui-badge__mark"></i><span>Live sound</span></span>
             <span class="ui-badge ui-badge--key ui-badge--key-fill tone-louder"><i class="ui-badge__mark"></i><span>Louder</span></span>
             <span class="ui-badge ui-badge--key ui-badge--key-fill tone-quieter"><i class="ui-badge__mark"></i><span>Quieter</span></span>
-            <span class="ui-badge ui-badge--key ui-badge--key-dot tone-peak"><i class="ui-badge__mark"></i><span>Peak</span></span>
-            <span class="ui-badge ui-badge--key ui-badge--key-dot tone-shelf"><i class="ui-badge__mark"></i><span>Shelf</span></span>
-            <span class="ui-badge ui-badge--key ui-badge--key-dot tone-cut"><i class="ui-badge__mark"></i><span>Cut</span></span>
-            <span class="ui-badge ui-badge--key ui-badge--key-dash tone-headphone"><i class="ui-badge__mark"></i><span>Headphone</span></span>
-            <span class="ui-badge ui-badge--key ui-badge--key-dash tone-ear"><i class="ui-badge__mark"></i><span>My ear</span></span>
-            <span class="ui-badge ui-badge--key ui-badge--key-dash tone-taste"><i class="ui-badge__mark"></i><span>Taste</span></span>
           </div>
           <div class="ui-stack" id="chips"></div>
           <div id="inspector">
@@ -206,15 +190,14 @@
           </div>
           <div class="pn-library" id="library" data-showing="headphone">
             <div class="pn-section preset-section ui-stack" data-role="sets">
-              <div class="ui-section-header ui-section-header--section tone-accent">
+              <div class="ui-section-header ui-section-header--section tone-accent" title="Your headphone, your ear and your taste in one press. A Set points at three presets by name, with the sliders.">
                 <span class="ui-badge ui-badge--step tone-accent">S</span>
                 <span class="ui-section-header__text">
                   <span class="ui-section-header__title">Sets</span>
-                  <span class="ui-section-header__caption">One headphone, one ear and one taste preset, with the sliders. An edit to a preset reaches every Set that names it.</span>
                 </span>
               </div>
               <div class="ui-stack-row has-bar tone-accent current">
-                <span class="ui-stack-row__body"><span class="ui-stack-row__caption current-caption"></span><span class="ui-stack-row__name current-name"></span></span>
+                <span class="ui-stack-row__body"><span class="ui-stack-row__name current-name"></span></span>
                 <span class="ui-stack-row__trail">
                   <button class="ui-button ui-button--primary ui-button--small save-set" title="Save the layers and sliders as a Set">Save as Set</button>
                 </span>
@@ -232,9 +215,7 @@
           </div>
 
           <div class="ui-stack pn-whole">
-            <div class="ui-section-header ui-section-header--eyebrow"><span>Whole sound</span><span class="ui-section-header__rule"></span></div>
-            <p class="ui-text-hint">All three layers and the sliders as one AutoEQ file.</p>
-            <button id="exportAll" class="ui-button ui-button--wide">Export the whole sound</button>
+            <button id="exportAll" class="ui-button ui-button--wide" title="All three layers and the sliders as one AutoEQ file, for other apps">Export</button>
             <textarea id="wholeText" class="ui-field ui-field--area" spellcheck="false" readonly hidden></textarea>
           </div>
 

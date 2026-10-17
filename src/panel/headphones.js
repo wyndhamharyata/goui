@@ -3,7 +3,7 @@ import { butterworthQ } from "../shared/bands.js";
 import { emptyLayerNames, layerSources } from "../shared/config.js";
 import { describeMeasurement, fetchHeadphone, findTargetSet, loadAutoEqIndex, newAutoEqItem } from "../autoeq.js";
 import { buildElement, buildListRow, partOf, showTab } from "./dom.js";
-import { appendSection, describeBandCount } from "./items.js";
+import { appendSection } from "./items.js";
 import { buildPresetItem, renderPresetCards } from "./presets.js";
 import { onPresetsChange } from "./refresh.js";
 import { replaceLayer } from "./sound.js";
@@ -106,7 +106,7 @@ async function findHeadphones(query, hint) {
  */
 function showHeadphoneList(list, sections) {
   list.replaceChildren();
-  appendSection(list, "Your headphone presets", sections.saved);
+  appendSection(list, "Headphone presets", sections.saved);
   appendSection(list, "AutoEQ headphones", sections.autoEq);
   appendSection(list, "Starter sounds", sections.starter);
   renderPresetCards();
@@ -161,7 +161,7 @@ export async function renderHeadphoneList() {
       endHeadphoneSearch();
     };
 
-    return buildListRow({ name: preset.name, detail: describeBandCount(preset.bands), isPlaying: () => isStarterInLayer(preset), onPick: place });
+    return buildListRow({ name: preset.name, isPlaying: () => isStarterInLayer(preset), onPick: place });
   });
 
   // Your presets and the starter sounds show at once. The AutoEQ list joins once it loads.

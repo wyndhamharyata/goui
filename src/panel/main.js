@@ -14,7 +14,7 @@ import { readPresets } from "./presets.js";
 import { refresh } from "./refresh.js";
 import { setMacSets, wireSets } from "./sets.js";
 import { commit, sendAudio, setComparing } from "./sound.js";
-import { isPopup, state } from "./state.js";
+import { isMac, isPopup, state } from "./state.js";
 import { wireTune } from "./tune.js";
 
 // The keys startPanel reads, with the older names it still loads.
@@ -56,6 +56,8 @@ function wireHeader() {
 }
 
 async function startPanel() {
+  document.documentElement.classList.toggle("mac", isMac);
+
   // The band type grid holds the common types. The select under More holds the rest.
   const rareTypes = bandTypes.filter((type) => !byId("bandSegments").querySelector(`[data-type="${type}"]`));
   const placeholder = buildElement("option", { value: "", text: "Pick a rarer type", disabled: true });

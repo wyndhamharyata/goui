@@ -4,9 +4,9 @@ import { storageKeys } from "../shared/storage.js";
 
 /** @typedef {{ variant?: "plain" | "primary" | "quiet" | "danger", isSmall?: boolean, icon?: string, label?: string, title?: string, onClick: (event: Event) => void }} ButtonParts */
 
-/** @typedef {{ tone?: string, lead?: Node, caption: string, name: string, extra?: Node[], trail?: Node[], isOff?: boolean, isEmpty?: boolean, hook?: string }} StackRowParts */
+/** @typedef {{ tone?: string, lead?: Node, caption: string, name: string, extra?: Node[], trail?: Node[], isOff?: boolean, isEmpty?: boolean, hook?: string, title?: string }} StackRowParts */
 
-/** @typedef {{ name: string, detail: string, badge?: Node, isPlaying?: () => boolean, onPick: () => void, onRemove?: () => void }} ListRowParts */
+/** @typedef {{ name: string, detail?: string, badge?: Node, isPlaying?: () => boolean, onPick: () => void, onRemove?: () => void }} ListRowParts */
 
 // A Library section is a layer role or "sets".
 /** @typedef {string} SectionName */
@@ -89,7 +89,7 @@ export function buildButton({ variant = "plain", isSmall = false, icon = "", lab
  * @param {StackRowParts} parts
  * @returns {HTMLElement}
  */
-export function buildStackRow({ tone = "", lead, caption, name, extra = [], trail = [], isOff = false, isEmpty = false, hook = "" }) {
+export function buildStackRow({ tone = "", lead, caption, name, extra = [], trail = [], isOff = false, isEmpty = false, hook = "", title = "" }) {
   const classNames = ["ui-stack-row"];
   const children = [];
 
@@ -99,13 +99,17 @@ export function buildStackRow({ tone = "", lead, caption, name, extra = [], trai
   if (hook) classNames.push(hook);
   if (lead) children.push(lead);
 
-  const texts = [buildElement("span", { className: "ui-stack-row__caption", text: caption }), buildElement("span", { className: "ui-stack-row__name", text: name })];
+  const texts = [];
+
+  if (caption) texts.push(buildElement("span", { className: "ui-stack-row__caption", text: caption }));
+
+  texts.push(buildElement("span", { className: "ui-stack-row__name", text: name }));
 
   children.push(buildElement("span", { className: "ui-stack-row__body" }, [...texts, ...extra]));
 
   if (trail.length > 0) children.push(buildElement("span", { className: "ui-stack-row__trail" }, trail));
 
-  return buildElement("div", { className: classNames.join(" ") }, children);
+  return buildElement("div", { className: classNames.join(" "), title }, children);
 }
 
 // Each list row that can play keeps its own test, so a redraw marks the rows in place.
@@ -121,10 +125,11 @@ export function buildListRow({ name, detail, badge, isPlaying, onPick, onRemove 
 
   if (badge) nameParts.push(badge);
 
-  const text = buildElement("span", { className: "ui-list-row__text" }, [
-    buildElement("span", { className: "ui-list-row__name" }, nameParts),
-    buildElement("span", { className: "ui-list-row__detail", text: detail }),
-  ]);
+  const texts = [buildElement("span", { className: "ui-list-row__name" }, nameParts)];
+
+  if (detail) texts.push(buildElement("span", { className: "ui-list-row__detail", text: detail }));
+
+  const text = buildElement("span", { className: "ui-list-row__text" }, texts);
   const main = buildElement("button", { type: "button", className: "ui-list-row__main item", dataset: { name }, on: { click: onPick } }, [text]);
   const children = [main];
 
@@ -134,7 +139,8 @@ export function buildListRow({ name, detail, badge, isPlaying, onPick, onRemove 
     children.push(buildElement("span", { className: "ui-list-row__trail" }, [remove]));
   }
 
-  const row = buildElement("div", { className: "ui-list-row" }, children);
+  const classNames = detail ? "ui-list-row" : "ui-list-row ui-list-row--single";
+  const row = buildElement("div", { className: classNames }, children);
 
   if (isPlaying) playingTests.set(row, isPlaying);
 
@@ -186,17 +192,13 @@ export function renderChildren(container, drawnKey, buildChildren) {
   if (focused && focused !== container) focused.focus();
 }
 
-// The eyebrow that names a group, with its count and a hairline.
+// The eyebrow that names a group, with a hairline.
 /**
- * @param {{ label: string, count?: number, tone?: string }} parts
+ * @param {{ label: string, tone?: string }} parts
  * @returns {HTMLElement}
  */
-export function buildSectionHeader({ label, count, tone = "" }) {
-  const children = [buildElement("span", { text: label })];
-
-  if (count !== undefined) children.push(buildElement("span", { className: "ui-section-header__count", text: String(count) }));
-
-  children.push(buildElement("span", { className: "ui-section-header__rule" }));
+export function buildSectionHeader({ label, tone = "" }) {
+  const children = [buildElement("span", { text: label }), buildElement("span", { className: "ui-section-header__rule" })];
 
   return buildElement("div", { className: `ui-section-header ui-section-header--eyebrow ${tone}` }, children);
 }

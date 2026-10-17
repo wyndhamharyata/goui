@@ -43,7 +43,7 @@ function renderChips() {
       buildIcon("plus"),
       buildElement("span", { text: "Add band" }),
     ]);
-    const head = buildSectionHeader({ label: layerLabels[role], count: chips.length, tone: layerTone[role] });
+    const head = buildSectionHeader({ label: layerLabels[role], tone: layerTone[role] });
 
     return buildElement("div", { className: "pn-chip-row" }, [head, buildElement("div", { className: "ui-cluster" }, [...chips, add])]);
   });
@@ -110,7 +110,8 @@ export function renderInspector() {
   if (!isChosen) return;
 
   byId("bandHead").className = `ui-section-header ui-section-header--section ${typeTone[band.type]}`;
-  byId("bandTitle").textContent = `${layerLabels[readSelectedRole()]} · ${index + 1}. ${bandTypeDetails[band.type].label}`;
+  byId("bandHead").title = `${layerLabels[readSelectedRole()]} layer`;
+  byId("bandTitle").textContent = `${index + 1}. ${bandTypeDetails[band.type].label}`;
   renderTypeChoice(band);
 
   byId("bandOn").textContent = band.on ? "On" : "Off";

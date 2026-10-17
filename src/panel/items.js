@@ -13,7 +13,7 @@ export function describeBandCount(bands) {
   return bands.length === 1 ? "1 band" : `${bands.length} bands`;
 }
 
-// A group counts its rows. A hint in their place, such as "Nothing saved yet", does not count. No items build no group.
+// A group shows its rows under an eyebrow. A hint in their place, such as "Nothing saved yet", does not stop the group. No items build no group.
 /**
  * @param {string} title
  * @param {HTMLElement[]} items
@@ -22,9 +22,7 @@ export function describeBandCount(bands) {
 export function buildListGroup(title, items) {
   if (items.length === 0) return [];
 
-  const count = items.filter((item) => item.classList.contains("ui-list-row")).length;
-
-  return [buildElement("div", { className: "ui-stack ui-stack--tight" }, [buildSectionHeader({ label: title, count }), ...items])];
+  return [buildElement("div", { className: "ui-stack ui-stack--tight" }, [buildSectionHeader({ label: title }), ...items])];
 }
 
 /**

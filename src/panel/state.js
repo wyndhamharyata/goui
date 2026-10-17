@@ -32,3 +32,4 @@ export const state = {
 // A window with no side panel, such as an installed app, opens this page as the popup of one tab.
 export const popupTabId = Number(new URLSearchParams(location.search).get("tab"));
 export const isPopup = Number.isInteger(popupTabId) && popupTabId > 0;
+export const isMac = new URLSearchParams(location.search).has("mac");

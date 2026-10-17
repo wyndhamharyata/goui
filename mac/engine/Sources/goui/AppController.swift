@@ -5,8 +5,8 @@ import WebKit
 // Owns the engine, the menu bar item, the panel and its page.
 @MainActor
 final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
-  // The panel opens as the popup of one stand-in tab, so it shows its power button.
-  nonisolated static let panelPagePath = "src/panel.html?tab=1"
+  // The panel opens as the popup of one stand-in tab, with the Mac flag, so it shows its power button and names no tab.
+  nonisolated static let panelPagePath = "src/panel.html?tab=1&mac=1"
   private static let chromePath = "mac/web/chrome.js"
   private static let panelHeightPx = 600.0
   // Wide panel opens at a width a Chrome side panel can take too, so both show the same three columns.

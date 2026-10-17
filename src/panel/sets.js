@@ -270,7 +270,7 @@ function renderSetCard(playing) {
 
   if (!playing) name = hasSets ? "Pick a Set below" : "No Sets yet";
 
-  partOf("sets", "current-caption").textContent = playing ? "The Set that plays" : "No Set plays now";
+  partOf("sets", "current").title = playing ? "The Set that plays" : "No Set plays now";
   partOf("sets", "current-name").textContent = name;
 }
 
@@ -289,7 +289,7 @@ function renderSetList() {
 
     if (rows.length === 0) rows.push(buildElement("p", { className: "ui-text-hint", text: "Nothing saved yet. Save a Set from the layers and sliders." }));
 
-    return buildListGroup("Your Sets", rows);
+    return buildListGroup("Sets", rows);
   };
 
   renderChildren(list, JSON.stringify([names, details]), buildRows);

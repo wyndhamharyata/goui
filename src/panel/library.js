@@ -25,7 +25,7 @@ const sectionWords = {
     pasted: "Pasted ear tuning",
     pasteTitle: "Paste AutoEQ text, such as an EQByEar result, into the ear layer",
     pastePlaceholder: "Paste the EQByEar result here",
-    heading: "Your ear presets",
+    heading: "Ear presets",
     empty: "Nothing saved yet. Run the test, paste the result, then press Save.",
     offCaption: "Headphone only",
   },
@@ -34,7 +34,7 @@ const sectionWords = {
     pasted: "Pasted taste",
     pasteTitle: "Paste AutoEQ text into the taste layer",
     pastePlaceholder: "Paste AutoEQ text here",
-    heading: "Your taste presets",
+    heading: "Taste presets",
     empty: "Nothing saved yet. Add bands in Tune, or paste AutoEQ text, then press Save.",
     offCaption: "Headphone and ear only",
   },
@@ -52,11 +52,11 @@ function buildActionButton(action, label, { className = "", title = "" } = {}) {
 }
 
 function buildMeasureButton() {
-  const title = "Open eqbyear.com with My ear off";
+  const title = "Open eqbyear.com in a new tab, with My ear off, to measure your ear";
 
   return buildElement("button", { type: "button", id: "eqbyear", className: "ui-button ui-button--wide", title, dataset: { action: "measure" } }, [
     buildIcon("external"),
-    buildElement("span", { text: "Measure my ear with EQByEar" }),
+    buildElement("span", { text: "Measure my ear" }),
   ]);
 }
 
@@ -71,20 +71,16 @@ function buildSectionHead(role) {
   const tone = `tone-${role}`;
   const text = buildElement("span", { className: "ui-section-header__text" }, [
     buildElement("span", { className: "ui-section-header__title", text: layerLabels[role] }),
-    buildElement("span", { className: "ui-section-header__caption", text: sectionWords[role].caption }),
   ]);
 
-  return buildElement("div", { className: `ui-section-header ui-section-header--section ${tone}` }, [
+  return buildElement("div", { className: `ui-section-header ui-section-header--section ${tone}`, title: sectionWords[role].caption }, [
     buildElement("span", { className: `ui-badge ui-badge--step ${tone}`, text: layerOrder.indexOf(role) + 1 }),
     text,
   ]);
 }
 
 function buildCurrentRow(role) {
-  const body = buildElement("span", { className: "ui-stack-row__body" }, [
-    buildElement("span", { className: "ui-stack-row__caption current-caption" }),
-    buildElement("span", { className: "ui-stack-row__name current-name" }),
-  ]);
+  const body = buildElement("span", { className: "ui-stack-row__body" }, [buildElement("span", { className: "ui-stack-row__name current-name" })]);
   const trail = buildElement("span", { className: "ui-stack-row__trail" }, [
     buildActionButton("save", "Save", { className: "ui-button--primary save" }),
     buildActionButton("saveAs", "Save as new", { className: "save-as", title: "Save as a new preset under another name" }),

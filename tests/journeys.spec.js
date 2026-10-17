@@ -199,11 +199,11 @@ journey("given an AutoEQ pick, Save keeps it under its headphone name, and picki
 
   await openTab(panel, "library");
   await expect(headphone.locator(".search")).toHaveValue("");
-  await expect(headphone.locator(".current")).toContainText("AutoEQ, not saved yet");
+  await expect(headphone.locator(".current")).toHaveAttribute("title", "AutoEQ, not saved yet");
   await headphone.locator("[data-action=save]").click();
   await expect(headphone.locator(".save-name")).toHaveValue("Fixture Phone (ANC On)");
   await headphone.locator(".confirm-save").click();
-  await expect(headphone.locator(".current")).toContainText("Your preset");
+  await expect(headphone.locator(".current")).toHaveAttribute("title", "Preset");
 
   await pick(panel, "headphone", "Flat");
   expectChangeDb(await readSteadyLevel(panel), flat, 0);
@@ -579,7 +579,7 @@ journey("given nothing selected, a double click on the graph puts a band in the 
   const plot = await panel.locator("#tuneGraph").boundingBox();
 
   await panel.mouse.dblclick(plot.x + (plot.width * 0.6), plot.y + (plot.height * 0.5));
-  await expect(panel.locator("#bandTitle")).toContainText("Headphone ·");
+  await expect(panel.locator("#bandHead")).toHaveAttribute("title", "Headphone layer");
   await panel.fill("#frequencyInput", "1000");
   await panel.fill("#gainInput", "6");
   expectChangeDb(await readSteadyLevel(panel), flat, 6);
@@ -594,7 +594,7 @@ journey("given the Add band chip under My ear, a new 6 dB band at 1 kHz plays in
 
   await openTab(panel, "tune");
   await panel.click("#chips [data-add=ear]");
-  await expect(panel.locator("#bandTitle")).toContainText("My ear ·");
+  await expect(panel.locator("#bandHead")).toHaveAttribute("title", "My ear layer");
   await expect(layerRow(panel, "My ear")).toHaveCount(1);
   await panel.fill("#gainInput", "6");
   expectChangeDb(await readSteadyLevel(panel), flat, 6);
@@ -799,7 +799,7 @@ journey("given a chosen band chip, a second press unselects it and the inspector
   await pasteInto(panel, "headphone", peakText);
   await openTab(panel, "tune");
   await chooseBand(panel, 0);
-  await expect(panel.locator("#bandTitle")).toContainText("Headphone · 1.");
+  await expect(panel.locator("#bandHead")).toHaveAttribute("title", "Headphone layer");
 
   await chooseBand(panel, 0);
   await expect(panel.locator("#inspectorBody")).toBeHidden();

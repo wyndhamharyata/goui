@@ -296,6 +296,12 @@ button.ui-list-row__main {
   cursor: pointer;
 }
 
+/* A list row with no detail is one row of text, so it takes a shorter height. */
+.ui-list-row--single .ui-list-row__main {
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
 .ui-list-row:has(button.ui-list-row__main):hover {
   background: var(--ink-3);
 }
@@ -381,9 +387,30 @@ button.ui-list-row__main {
   gap: var(--space-3);
   min-width: 0;
   min-height: 46px;
-  padding: var(--space-4) var(--space-2) var(--space-4) var(--space-3);
+  padding: var(--space-4) var(--space-3);
   border-radius: var(--radius-2);
   background: var(--ink-2);
+}
+
+/* A stack row with no caption is one row of text, so it takes an even padding and a shorter height. */
+.ui-stack-row--single {
+  min-height: 0;
+  padding: var(--space-3);
+}
+
+/* The current row stacks its name over its buttons, so a long name is never squeezed by them. */
+.ui-stack-row.current {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.ui-stack-row.current > .ui-stack-row__trail {
+  gap: var(--space-2);
+}
+
+.ui-stack-row.current > .ui-stack-row__trail > * {
+  flex: 1;
 }
 
 .ui-stack-row.has-bar {
@@ -505,12 +532,6 @@ button.ui-list-row__main {
   font: 700 var(--size-micro) / 1 var(--font-number);
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-
-.ui-section-header__count {
-  color: var(--text-3);
-  font-weight: 500;
-  letter-spacing: 0.04em;
 }
 
 .ui-section-header__rule {
@@ -1228,6 +1249,15 @@ html::-webkit-scrollbar {
   display: none;
 }
 
+/* The extension's side panel has no frame of its own, so it fills the window and closes with a line. */
+html:not(.mac) .app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  min-width: 320px;
+  border-bottom: 1px solid var(--line-1);
+}
+
 /* The header and the three tabs stay in view while the pane under them scrolls. */
 .pn-top {
   position: sticky;
@@ -1297,6 +1327,11 @@ html::-webkit-scrollbar {
   font-variant-numeric: tabular-nums;
 }
 
+/* The Mac app hears every sound, so its header names no tab and holds no hearing line. */
+.mac .pn-hearing-row {
+  display: none;
+}
+
 .pn-tabs {
   padding: 0 var(--space-4);
 }
@@ -1316,6 +1351,15 @@ html::-webkit-scrollbar {
   gap: var(--space-4);
 }
 
+/* The sliders take the height left in the Listen column, so Level match rests at its bottom. */
+#sliders {
+  flex: 1;
+}
+
+#levelMatchRow {
+  margin-top: auto;
+}
+
 .pn-pane > .ui-section-header--eyebrow:not(:first-child),
 .pn-pane .ui-stack > .ui-section-header--eyebrow:not(:first-child) {
   margin-top: var(--space-3);
@@ -1331,6 +1375,17 @@ html::-webkit-scrollbar {
   .app[data-showing="library"] .pn-pane:not([data-pane="library"]) {
     display: none;
   }
+
+  /* The extension's side panel is one column, so the open pane takes the height left in the window. */
+  html:not(.mac) .pn-panes {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  html:not(.mac) .pn-pane {
+    flex: 1;
+  }
 }
 
 /* From 900 px the three tabs become three columns. A small space keeps each column apart. */
@@ -1343,7 +1398,12 @@ html::-webkit-scrollbar {
     display: grid;
     grid-template-columns: 300px minmax(0, 1fr) 320px;
     gap: var(--space-1);
-    align-items: start;
+    align-items: stretch;
+  }
+
+  /* The extension's side panel is fixed, so the three columns share the height left in the window. */
+  html:not(.mac) .pn-panes {
+    flex: 1;
   }
 
   .pn-panes > .pn-pane + .pn-pane {

@@ -57,12 +57,13 @@ function buildLayerRow(role, layer) {
   return buildStackRow({
     tone: layerTone[role],
     lead: toggle,
-    caption: `${layerLabels[role]} · ${layer.source}`,
+    caption: layerLabels[role],
     name: describeLayerName(layer),
     extra,
     trail,
     isOff: !layer.on,
     hook: "layer",
+    title: `${layerLabels[role]} · ${layer.source}`,
   });
 }
 
@@ -109,7 +110,7 @@ function renderLayers() {
 function renderHeader() {
   byId("enabled").checked = state.config.enabled;
   byId("compare").classList.toggle("is-held", state.isComparing);
-  byId("hearingCaption").textContent = state.isComparing ? "A/B held, EQ off" : "Hearing";
+  byId("hearingCaption").textContent = state.isComparing ? "A/B held, EQ off" : "";
 }
 
 function renderSliders() {
@@ -129,7 +130,6 @@ function renderPreamp() {
   renderSliderFill("preamp", preampDb);
   byId("preampValue").textContent = `${formatDb(preampDb)} dB`;
   byId("autoPreamp").classList.toggle("is-on", state.config.autoPreamp);
-  byId("preampNote").textContent = state.config.autoPreamp ? "Auto" : "Manual";
 }
 
 // A dB slider fills from 0 dB to its value, so a cut and a boost read apart at a glance.
