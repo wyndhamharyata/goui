@@ -112,8 +112,10 @@
             <h2>The panel</h2>
             <p>
               Listen, Tune and Library, the header in its three states, the start screen, the narrow and
-              wide forms, and Sets. One renderer paints them all from regions, and each region is a few
-              primitives. No frame has a control of its own.
+              wide forms, and Sets. The frames are mounted as the app ships them: the header names the tab
+              alone, the meter lives on the Level match row, and the legend keeps four keys. One renderer
+              paints them all from regions, and each region is a few primitives. No frame has a control of
+              its own.
             </p>
           </div>
         </header>
@@ -128,13 +130,13 @@
             <h4>How each tab is put together</h4>
             <dl class="doc-recipe">
               <dt>Header</dt>
-              <dd>Button quiet for <code>?</code>, Button hold for <code>A/B</code>, a Switch, the title, and a Badge dot for the level and the clip light.</dd>
+              <dd>Button quiet for <code>?</code>, Button hold for <code>A/B</code>, a Switch, and the tab name alone. No Hearing label and no meter.</dd>
               <dt>Listen</dt>
-              <dd>A Stack row for the Set picker. A Section header, then three Stack rows in a chain. The plot. Four Slider rows, with a Button in the preamp's slot. A Stack row with a Switch for Level match.</dd>
+              <dd>A Stack row for the Set picker, with no caption. Three Stack rows in a chain, with no eyebrow. The plot. A Section header for Basic tuning, then three Slider rows. A Slider row for the preamp, with a Button in its slot. A Stack row with a Switch for Level match, with the level meter at its right.</dd>
               <dt>Tune</dt>
-              <dd>Segmented and a Button for Tall. The plot. Badge keys. A Section header and Chips for each layer. For the band, a Section header with Buttons, a Segmented grid and Field steppers. An Expander of List rows for the table.</dd>
+              <dd>Segmented and a Button for Tall. The plot. Four Badge keys: EQ curve, Live sound, Louder and Quieter. A Section header and Chips for each layer, with no band counts. For the band, a Section header reading 1 Peak, with the layer name in its tooltip, Buttons, a Segmented grid and Field steppers. An Expander of List rows for the table.</dd>
               <dt>Library</dt>
-              <dd>Tabs. A Section header with a step. A Stack row with Save. An Expander with a Field and a Button for each action. A Field search. List rows under Section headers, with a Badge for AutoEQ's pick.</dd>
+              <dd>Tabs. A Section header with a step and no caption. A Stack row with the name over its buttons. An Expander with a Field and a Button for each action. A Field search. List rows under Section headers with no counts. A preset or starter row is its name alone. AutoEQ's pick wears a Badge.</dd>
             </dl>
             <h4>Try it</h4>
             <ul>
@@ -146,14 +148,45 @@
             </ul>
             <h4>What changed from today</h4>
             <ul>
-              <li><b>No cards.</b> An eyebrow and a hairline name each group. Listen is about 60 px shorter.</li>
+              <li><b>No cards.</b> Listen drops the Tuning and Output eyebrows. Only Basic tuning keeps an eyebrow and hairline. Listen is about 60 px shorter.</li>
               <li><b>The chain.</b> The three layers stack flush, each with a bar in its colour. A layer you have not added keeps its place as an empty row with its add button, so the order never changes.</li>
               <li><b>dB sliders fill from 0 dB,</b> so a cut and a boost read apart at a glance.</li>
               <li><b>The band type is a 3 by 2 grid.</b> More is the sixth cell and opens a select of the rare types.</li>
-              <li><b>The inspector shows only the fields a type uses.</b> Today a shelf shows its Q greyed out. Here it shows none, with the reason under the fields.</li>
-              <li><b>One list row.</b> Presets, AutoEQ results, starter sounds, Sets and the table rows are one primitive.</li>
+              <li><b>The inspector names the band alone and shows only the fields a type uses.</b> The header reads 1 Peak, with the layer name in its tooltip. Today a shelf shows its Q greyed out. Here it shows none, with the reason under the fields.</li>
+              <li><b>One list row.</b> Presets, AutoEQ results, starter sounds, Sets and the table rows are one primitive. A preset or starter row is its name alone, with no band count.</li>
             </ul>
           </div>
+        </div>
+
+        <div class="doc-sub"><h3>Less labelling, three levels</h3><p>The same narrow panel three times, each level keeping what the last kept and trimming more. Every panel is live, and all three play the one sound, so a switch in one moves them all. The text taken off the panel moves into its <code>title</code>, so a hover still shows it. <b>Level 3 is the choice</b>, with the adjustments below.</p></div>
+        <div class="doc-trim-grid">
+          <div><p class="pn-frame-label">Level 1 · the safe six</p><div class="pn-frame" id="trim-1"></div></div>
+          <div><p class="pn-frame-label">Level 2 · trim and regroup</p><div class="pn-frame" id="trim-2"></div></div>
+          <div><p class="pn-frame-label">Level 3 · bold, chosen</p><div class="pn-frame" id="trim-3"></div></div>
+        </div>
+        <p class="doc-caption">Open <b>Tune</b> and <b>Library</b> in any panel for the rest: level 2 moves the three Library captions onto their titles, and level 3 cuts the legend from ten keys to four.</p>
+        <div class="doc-notes">
+          <h4>What each level cuts, or moves to a tooltip</h4>
+          <ul>
+            <li><b>Level 1, the safe six.</b> The Level match caption and the Basic tuning pill become tooltips. The Preamp's Auto note goes, since the Auto button shows it. Whole sound: the sentence becomes a tooltip and the button reads Export. Measure my ear with EQByEar reads Measure my ear.</li>
+            <li><b>Level 2</b> also: the Tuning, Output and Whole sound eyebrows, and the Set caption, go. The layer source word, the three slider sub-captions and the three Library captions become tooltips.</li>
+            <li><b>Level 3, the choice.</b> The legend drops from ten keys to four, with the adjustments below on top.</li>
+          </ul>
+          <h4>The adjustments on level 3</h4>
+          <ul>
+            <li><b>No Hearing label.</b> The header names the tab alone. The level meter moves out of the header, to the right of the Level match row on Listen.</li>
+            <li><b>On the Mac, the whole hearing row goes.</b> With no hearing line and no meter, the header is one short row.</li>
+            <li><b>An even Level match row.</b> The switch, the name and the meter sit on one centre line, with the same 8 px padding on all four sides and the one-line height of the sliders.</li>
+            <li><b>No "x layer" under a chosen band.</b> The inspector header reads "11 Peak", not "11 Peak / Taste layer". The layer name is the header's tooltip.</li>
+            <li><b>No "Your".</b> The Library groups read Headphone presets, Ear presets, Taste presets and Sets, and the current-sound row shows its name alone.</li>
+            <li><b>No count beside a group label.</b> "Sets", not "Sets 3", and the same on the Tune chip rows.</li>
+            <li><b>No band count on a row.</b> A preset row is its name alone, so the row takes a shorter height.</li>
+            <li><b>Credits keep the attribution.</b> The licence line stays beside the Credits button at every level.</li>
+          </ul>
+          <h4>Kept at every level</h4>
+          <ul>
+            <li>Every control's own name, the layer names, the state words such as Not added and Off, and the feedback hints that answer a press.</li>
+          </ul>
         </div>
 
         <div class="doc-sub"><h3>Header, three states</h3><p>The same header block with three settings. It never holds a Start or a capture button.</p></div>
@@ -223,6 +256,12 @@
               <li>Where is a Set renamed: its row, or a pencil beside the name?</li>
             </ol>
           </div>
+        </div>
+
+        <div class="doc-sub"><h3>The app, narrow and wide</h3><p>Two screenshots of the shipped panel: the side panel, and the Mac's wide panel. Both are live, and both read the one sound.</p></div>
+        <div class="ui-stack ui-stack--loose">
+          <div><p class="pn-frame-label">Side panel</p><div class="pn-frame" id="app-narrow"></div></div>
+          <div><p class="pn-frame-label">Wide, 1100 px</p><div class="pn-frame pn-frame--wide" id="app-wide"></div></div>
         </div>
       </section>
 

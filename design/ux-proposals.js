@@ -1207,6 +1207,11 @@ function classList(base, flags) {
   return names.join(" ");
 }
 
+// How much labelling a panel keeps. 0 is what ships today, and 1 to 3 trim more, each level keeping what the last kept.
+function trimOf(view) {
+  return view.trim || 0;
+}
+
 function actAttributes({ act, value, title, extra }) {
   const parts = [""];
 
@@ -1248,7 +1253,8 @@ const ui = {
   },
 
   listRow({ name = "", detail, lead = "", badge = "", cells, act, value, title, variant, isSelected, isMuted, isHead, trail = "" }) {
-    const className = classList("ui-list-row", { [`ui-list-row--${variant}`]: Boolean(variant), "is-selected": isSelected, "is-muted": isMuted, "is-head": isHead });
+    const isSingle = !detail && !cells && variant !== "dense";
+    const className = classList("ui-list-row", { [`ui-list-row--${variant}`]: Boolean(variant), "is-selected": isSelected, "is-muted": isMuted, "is-head": isHead, "ui-list-row--single": isSingle });
     const detailHtml = detail ? `<span class="ui-list-row__detail">${escapeHtml(detail)}</span>` : "";
     const text = cells
       ? cells.map((cell) => `<span class="ui-list-row__cell">${cell}</span>`).join("")
@@ -1260,26 +1266,30 @@ const ui = {
     return `<div class="${className}">${main}${trail ? `<span class="ui-list-row__trail">${trail}</span>` : ""}</div>`;
   },
 
-  stackRow({ tone, lead = "", caption = "", name = "", extra = "", trail = "", isOff, isEmpty }) {
-    const className = classList("ui-stack-row", { [`tone-${tone}`]: Boolean(tone), "has-bar": Boolean(tone), "is-off": isOff, "is-empty": isEmpty });
+  stackRow({ tone, lead = "", caption = "", name = "", extra = "", trail = "", isOff, isEmpty, title = "", isStacked }) {
+    const isSingle = caption === "" && !isStacked;
+    const className = classList("ui-stack-row", { [`tone-${tone}`]: Boolean(tone), "has-bar": Boolean(tone), "is-off": isOff, "is-empty": isEmpty, "ui-stack-row--single": isSingle, "ui-stack-row--stacked": isStacked });
     const leadHtml = lead ? `<span class="ui-stack-row__lead">${lead}</span>` : "";
     const trailHtml = trail ? `<span class="ui-stack-row__trail">${trail}</span>` : "";
+    const captionHtml = caption === "" ? "" : `<span class="ui-stack-row__caption">${caption}</span>`;
+    const titleAttr = title ? ` title="${escapeHtml(title)}"` : "";
 
-    return `<div class="${className}">${leadHtml}<span class="ui-stack-row__body"><span class="ui-stack-row__caption">${caption}</span><span class="ui-stack-row__name">${name}</span>${extra}</span>${trailHtml}</div>`;
+    return `<div class="${className}"${titleAttr}>${leadHtml}<span class="ui-stack-row__body">${captionHtml}<span class="ui-stack-row__name">${name}</span>${extra}</span>${trailHtml}</div>`;
   },
 
-  sectionHeader({ variant = "eyebrow", label, caption, step, tone, count, trail = "" }) {
+  sectionHeader({ variant = "eyebrow", label, caption, step, tone, count, trail = "", title = "" }) {
     const toneClass = tone ? ` tone-${tone}` : "";
+    const titleAttr = title ? ` title="${escapeHtml(title)}"` : "";
 
     if (variant === "eyebrow") {
       const counter = count === undefined ? "" : `<span class="ui-section-header__count">${escapeHtml(count)}</span>`;
-      return `<div class="ui-section-header ui-section-header--eyebrow${toneClass}"><span class="ui-section-header__label">${escapeHtml(label)}</span>${counter}<span class="ui-section-header__rule"></span>${trail}</div>`;
+      return `<div class="ui-section-header ui-section-header--eyebrow${toneClass}"${titleAttr}><span class="ui-section-header__label">${escapeHtml(label)}</span>${counter}<span class="ui-section-header__rule"></span>${trail}</div>`;
     }
 
     const mark = step === undefined ? "" : ui.badge({ kind: "step", label: step, tone });
     const captionHtml = caption ? `<span class="ui-section-header__caption">${escapeHtml(caption)}</span>` : "";
 
-    return `<div class="ui-section-header ui-section-header--${variant}${toneClass}">${mark}<span class="ui-section-header__text"><span class="ui-section-header__title">${escapeHtml(label)}</span>${captionHtml}</span>${trail}</div>`;
+    return `<div class="ui-section-header ui-section-header--${variant}${toneClass}"${titleAttr}>${mark}<span class="ui-section-header__text"><span class="ui-section-header__title">${escapeHtml(label)}</span>${captionHtml}</span>${trail}</div>`;
   },
 
   tabs({ items, current, act, size = "large" }) {
@@ -1304,8 +1314,9 @@ const ui = {
     const share = (number) => ((clampNumber(number, min, max) - min) / (max - min)) * 100;
     const fill = readSliderFill(share(0), share(amount));
     const trailHtml = trail ? `<span class="ui-slider-row__trail">${trail}</span>` : "";
+    const hintHtml = hint ? `<small>${escapeHtml(hint)}</small>` : "";
 
-    return `<div class="ui-slider-row${trail ? " ui-slider-row--trail" : ""}"><span class="ui-slider-row__label"><span>${escapeHtml(label)}</span><small>${escapeHtml(hint)}</small></span><input type="range" class="ui-slider-row__range" min="${min}" max="${max}" step="${step}" value="${amount}" style="${fill}" aria-label="${escapeHtml(label)}"${actAttributes({ act, value: key, title })} /><output class="ui-slider-row__value">${signedDb(amount)} dB</output>${trailHtml}</div>`;
+    return `<div class="ui-slider-row${trail ? " ui-slider-row--trail" : ""}"><span class="ui-slider-row__label"><span>${escapeHtml(label)}</span>${hintHtml}</span><input type="range" class="ui-slider-row__range" min="${min}" max="${max}" step="${step}" value="${amount}" style="${fill}" aria-label="${escapeHtml(label)}"${actAttributes({ act, value: key, title })} /><output class="ui-slider-row__value">${signedDb(amount)} dB</output>${trailHtml}</div>`;
   },
 
   chip({ label, number, tone, act, value, title, variant = "band", isOn, isMuted, icon }) {
@@ -1725,6 +1736,9 @@ function mountView(host, form, settings = {}) {
     isWholeOpen: false,
     isTableOpen: false,
     hasSetPicker: false,
+    // Level 3 is the shipped design, so a host that says nothing gets it. Only the frames that
+    // show the levels themselves pass a smaller trim.
+    trim: 3,
     ...settings,
   };
 
@@ -1771,18 +1785,21 @@ function paintView(view) {
   if (field) field.focus();
 }
 
-function buildCompactLayerRow(role) {
+function buildCompactLayerRow(role, view) {
   const layer = sound.layers[role];
 
   if (!layer) return "";
 
-  return ui.stackRow({ tone: role, isOff: !layer.on, lead: ui.switch({ isOn: layer.on, act: "layer-on", value: role, title: `${roleLabelsOf(role)} on or off` }), caption: escapeHtml(`${roleLabelsOf(role)} · ${layer.source}`), name: escapeHtml(describeLayerName(layer)) });
+  const source = `${roleLabelsOf(role)} · ${layer.source}`;
+  const isTrimmed = trimOf(view) >= 2;
+
+  return ui.stackRow({ tone: role, isOff: !layer.on, lead: ui.switch({ isOn: layer.on, act: "layer-on", value: role, title: `${roleLabelsOf(role)} on or off` }), caption: escapeHtml(isTrimmed ? roleLabelsOf(role) : source), name: escapeHtml(describeLayerName(layer)), title: isTrimmed ? source : "" });
 }
 
 function buildLayerRow(role, view) {
   const layer = sound.layers[role];
 
-  if (view.form === "hero") return buildCompactLayerRow(role);
+  if (view.form === "hero") return buildCompactLayerRow(role, view);
 
   if (!layer) {
     const words = { ear: "Add your ear tuning", taste: "Add your taste" };
@@ -1797,8 +1814,10 @@ function buildLayerRow(role, view) {
   if (role === "headphone" && layer.bands.length > 0) actions.push(ui.button({ variant: "quiet", size: "small", icon: "close", act: "flat", title: "Clear the headphone layer to Flat" }));
 
   const extra = layer.autoEq ? buildTargetChoice(layer.autoEq) : "";
+  const source = `${roleLabelsOf(role)} · ${layer.source}`;
+  const isTrimmed = trimOf(view) >= 2;
 
-  return ui.stackRow({ tone: role, isOff: !layer.on, lead: toggle, caption: escapeHtml(`${roleLabelsOf(role)} · ${layer.source}`), name: escapeHtml(describeLayerName(layer)), extra, trail: actions.join("") });
+  return ui.stackRow({ tone: role, isOff: !layer.on, lead: toggle, caption: escapeHtml(isTrimmed ? roleLabelsOf(role) : source), name: escapeHtml(describeLayerName(layer)), extra, trail: actions.join(""), title: isTrimmed ? source : "" });
 }
 
 function roleLabelsOf(role) {
@@ -1816,9 +1835,12 @@ function buildTargetChoice(autoEq) {
   return `<span class="pn-target">${ui.field({ kind: "select", label: "Target", amount: autoEq.target, options, act: "target", title: "The sound AutoEQ tunes your headphone toward" })}</span>`;
 }
 
-function buildSliderRegion(key) {
+function buildSliderRegion(key, view) {
   const spec = sliderSpecs.find((each) => each.key === key);
-  return ui.sliderRow({ label: spec.label, hint: spec.hint, amount: sound.sliders[key], min: sliderRangeDb[0], max: sliderRangeDb[1], step: 0.5, act: "slider", key });
+  const isTrimmed = trimOf(view) >= 2;
+  const title = isTrimmed ? `${spec.label}, ${spec.hint.charAt(0).toLowerCase()}${spec.hint.slice(1)}` : undefined;
+
+  return ui.sliderRow({ label: spec.label, hint: isTrimmed ? "" : spec.hint, amount: sound.sliders[key], min: sliderRangeDb[0], max: sliderRangeDb[1], step: 0.5, act: "slider", key, title });
 }
 
 function buildChipRow(role, entries) {
@@ -1830,7 +1852,7 @@ function buildChipRow(role, entries) {
   });
 
   const add = ui.chip({ variant: "add", icon: "plus", label: "Add band", act: "add-band", value: role, title: `Make a new band in ${roleLabelsOf(role)}` });
-  const head = ui.sectionHeader({ label: roleLabelsOf(role), tone: role, count: chips.length });
+  const head = ui.sectionHeader({ label: roleLabelsOf(role), tone: role });
 
   return `<div class="pn-chip-row">${head}<div class="ui-cluster">${chips.join("")}${add}</div></div>`;
 }
@@ -1863,7 +1885,7 @@ function buildInspector(view) {
     ui.button({ size: "small", label: "Solo", isOn: sound.soloBand === band, act: "band-solo", title: "Hear this band alone" }),
     ui.button({ variant: "danger", size: "small", label: "Delete", act: "band-delete", title: "Delete this band" }),
   ];
-  const head = ui.sectionHeader({ variant: "section", step: index + 1, tone: kind.tone, label: kind.label, caption: `${roleLabelsOf(entry.role)} layer`, trail: `<span class="ui-cluster">${controls.join("")}</span>` });
+  const head = ui.sectionHeader({ variant: "section", step: index + 1, tone: kind.tone, label: kind.label, title: `${roleLabelsOf(entry.role)} layer`, trail: `<span class="ui-cluster">${controls.join("")}</span>` });
   const isMoreShown = !kind.isCommon || view.isMoreOpen;
   const typeItems = [...commonTypes.map((type) => [type, bandKinds[type].label]), ["more", "More"]];
   const types = ui.segmented({ variant: "grid", items: typeItems, current: isMoreShown ? "more" : band.type, act: "band-type", title: "Band type" });
@@ -1905,7 +1927,7 @@ function buildPresetRows(role) {
   return Object.keys(sound.presets[role]).map((name) => {
     const remove = ui.button({ variant: "quiet", size: "small", icon: "close", act: "delete-preset", value: `${role}|${name}`, title: `Delete ${name}` });
     const isPlaying = Boolean(layer) && layer.source === "Saved" && layer.name === name;
-    return ui.listRow({ name, detail: describeBandCount(sound.presets[role][name]), act: "pick-preset", value: `${role}|${name}`, isSelected: isPlaying, trail: remove });
+    return ui.listRow({ name, act: "pick-preset", value: `${role}|${name}`, isSelected: isPlaying, trail: remove });
   });
 }
 
@@ -1914,7 +1936,7 @@ function buildGroup(label, rows, emptyText) {
 
   const body = rows.length > 0 ? rows.join("") : `<p class="ui-text-hint">${emptyText}</p>`;
 
-  return `<div class="ui-stack ui-stack--tight">${ui.sectionHeader({ label, count: rows.length })}${body}</div>`;
+  return `<div class="ui-stack ui-stack--tight">${ui.sectionHeader({ label })}${body}</div>`;
 }
 
 function buildHeadphoneResults(view) {
@@ -1931,11 +1953,11 @@ function buildHeadphoneResults(view) {
   });
   const starters = starterSounds.filter((starter) => matches(starter.name)).map((starter) => {
     const isPlaying = layer.source === "Starter sound" && layer.name === starter.name;
-    return ui.listRow({ name: starter.name, detail: describeBandCount(starter.bands), act: "pick-starter", value: starter.name, isSelected: isPlaying });
+    return ui.listRow({ name: starter.name, act: "pick-starter", value: starter.name, isSelected: isPlaying });
   });
   const isEmptyQuery = query === "";
   const groups = [
-    buildGroup("Your headphone presets", saved, isEmptyQuery ? "Nothing saved yet. Find your headphone below, then press Save." : ""),
+    buildGroup("Headphone presets", saved, isEmptyQuery ? "Nothing saved yet. Find your headphone below, then press Save." : ""),
     buildGroup("AutoEQ headphones", autoEqRows, ""),
     buildGroup("Starter sounds", starters, ""),
   ];
@@ -1945,8 +1967,8 @@ function buildHeadphoneResults(view) {
 }
 
 const layerListWords = {
-  ear: { heading: "Your ear presets", empty: "Nothing saved yet. Run the test, paste the result, then press Save.", off: "No ear tuning", offDetail: "Headphone only" },
-  taste: { heading: "Your taste presets", empty: "Nothing saved yet. Add bands in Tune, or paste AutoEQ text, then press Save.", off: "No taste", offDetail: "Headphone and ear only" },
+  ear: { heading: "Ear presets", empty: "Nothing saved yet. Run the test, paste the result, then press Save.", off: "No ear tuning", offDetail: "Headphone only" },
+  taste: { heading: "Taste presets", empty: "Nothing saved yet. Add bands in Tune, or paste AutoEQ text, then press Save.", off: "No taste", offDetail: "Headphone and ear only" },
 };
 
 function buildLayerResults(role) {
@@ -1963,7 +1985,7 @@ function buildSetResults() {
     return ui.listRow({ name: set.name, detail: describeSetParts(set), act: "apply-set", value: set.name, isSelected: set.name === playing, trail: remove });
   });
 
-  return buildGroup("Your Sets", rows, "Nothing saved yet. Save a Set from the layers and sliders.");
+  return buildGroup("Sets", rows, "Nothing saved yet. Save a Set from the layers and sliders.");
 }
 
 const libraryActionWords = [
@@ -2020,25 +2042,35 @@ function buildActionDrawer(view, role) {
   return "";
 }
 
-function buildHeader(view) {
+// The output level and the clip light. It lives on the Level match row on Listen, so the header holds no meter.
+function buildMeter(view) {
   const level = readLevelDb();
   const isClipping = canClip();
   const isHearing = view.isHearing !== false && !(view.isPopup && !sound.isPopupOn);
+
+  if (!isHearing) return ui.badge({ kind: "dot", tone: "muted", label: "-- dB", title: "goui hears nothing yet" });
+
+  const title = isClipping ? "The EQ can clip. Turn the preamp down or press Auto." : "Output level. No clipping.";
+
+  return `<span data-level>${ui.badge({ kind: "dot", tone: isClipping ? "danger" : "good", label: `${level.toFixed(1)} dB`, title })}</span>`;
+}
+
+function buildHeader(view) {
+  const isHearing = view.isHearing !== false && !(view.isPopup && !sound.isPopupOn);
   const title = view.heard || sound.heard;
-  const caption = sound.isComparing ? "A/B held, EQ off" : "Hearing";
+  const caption = sound.isComparing ? "A/B held, EQ off" : "";
+  const captionHtml = caption ? `<small>${caption}</small>` : "";
   const hearing = isHearing
-    ? `<span class="pn-hearing"><small>${caption}</small><b>${escapeHtml(title)}</b></span>`
+    ? `<span class="pn-hearing">${captionHtml}<b>${escapeHtml(title)}</b></span>`
     : `<span class="pn-hearing is-instruction"><b>${escapeHtml(view.instruction || "Click the goui icon on a tab with audio.")}</b></span>`;
-  const meterTitle = isClipping ? "The EQ can clip. Turn the preamp down or press Auto." : "Output level. No clipping.";
-  const meter = isHearing
-    ? `<span data-level>${ui.badge({ kind: "dot", tone: isClipping ? "danger" : "good", label: `${level.toFixed(1)} dB`, title: meterTitle })}</span>`
-    : ui.badge({ kind: "dot", tone: "muted", label: "-- dB", title: "goui hears nothing yet" });
+  // The Mac plays every sound, so it has no hearing line, and the row goes.
+  const hearingRow = view.isMac ? "" : `<div class="ui-split">${hearing}</div>`;
   const power = view.isPopup ? ui.button({ size: "small", icon: "power", label: sound.isPopupOn ? "ON" : "OFF", isOn: sound.isPopupOn, tone: "good", act: "popup-power", title: "Turn goui on or off for this window" }) : "";
   const help = ui.button({ variant: "quiet", size: "small", label: "?", act: "help", title: "How to use goui" });
   const hold = ui.button({ variant: "hold", label: "A/B", isHeld: sound.isComparing, extra: 'data-hold="panel"', title: "Hold to hear the sound with the EQ off" });
   const eqSwitch = ui.switch({ isOn: sound.isEnabled, act: "enabled", title: "Turn the EQ on or off" });
 
-  return `<div class="pn-head"><div class="ui-split"><span class="pn-brand"><img src="../icons/icon32.png" alt="" width="18" height="18" />goui</span><span class="ui-cluster">${power}${help}${hold}${eqSwitch}</span></div><div class="ui-split">${hearing}${meter}</div></div>`;
+  return `<div class="pn-head"><div class="ui-split"><span class="pn-brand"><img src="../icons/icon32.png" alt="" width="18" height="18" />goui</span><span class="ui-cluster">${power}${help}${hold}${eqSwitch}</span></div>${hearingRow}</div>`;
 }
 
 function buildShot(step) {
@@ -2089,8 +2121,8 @@ function buildMenu(view) {
   return `<div class="pn-menubar"><span>Finder</span><span>File</span><span>Edit</span><span class="pn-menubar__item is-open"><img src="../icons/icon32.png" alt="" width="14" height="14" /></span><span class="pn-menubar__clock">Thu 09:41</span></div><div class="pn-menu-pair">${main}${sub}</div><div class="ui-stack ui-stack--tight pn-menu-command">${ui.sectionHeader({ label: "From Terminal" })}${command}${hint}</div>`;
 }
 
-function buildTileCopy() {
-  const rows = roles.map(buildCompactLayerRow);
+function buildTileCopy(view) {
+  const rows = roles.map((role) => buildCompactLayerRow(role, view));
 
   return `<span class="pn-brand pn-brand--large"><img src="../icons/icon32.png" alt="" width="26" height="26" />goui</span><p class="pn-tile__line">Every ear hears differently.</p><div class="ui-stack ui-stack--chain">${rows.join("")}</div>`;
 }
@@ -2131,27 +2163,37 @@ const regionBuilders = {
     const picker = ui.field({ kind: "select", amount: playing, options, act: "set-pick", title: "Play a Set: one headphone, one ear and one taste preset, and the sliders" });
 
     const save = ui.button({ size: "small", label: "Save as Set", act: "save-set-listen", title: "Keep the three layers and the sliders as one Set" });
+    const isTrimmed = trimOf(view) >= 2;
+    const caption = isTrimmed ? "" : "Set";
+    const title = isTrimmed ? "The Set that plays: one headphone, one ear and one taste preset, with the sliders" : "";
 
-    return ui.stackRow({ tone: "accent", caption: "Set", name: picker, trail: save });
+    return ui.stackRow({ tone: "accent", caption, name: picker, trail: save, title });
   },
-  "layers-head": () => ui.sectionHeader({ label: "Your tuning" }),
+  "layers-head": (view) => (trimOf(view) >= 2 ? "" : ui.sectionHeader({ label: "Tuning" })),
   layers: (view) => `<div class="ui-stack ui-stack--chain">${roles.map((role) => buildLayerRow(role, view)).join("")}</div>`,
-  "nudge-head": () => ui.sectionHeader({ label: "Basic tuning", trail: ui.badge({ label: "Added after 3 sound layers", tone: "muted" }) }),
-  "slider-bass": () => buildSliderRegion("bass"),
-  "slider-vocals": () => buildSliderRegion("vocals"),
-  "slider-treble": () => buildSliderRegion("treble"),
-  "output-head": () => ui.sectionHeader({ label: "Output" }),
-  "slider-preamp": () => {
+  "nudge-head": (view) => ui.sectionHeader({ label: "Basic tuning", trail: trimOf(view) >= 1 ? "" : ui.badge({ label: "Added after 3 sound layers", tone: "muted" }), title: trimOf(view) >= 1 ? "Added after the 3 sound layers, as Bass, Vocals and Treble" : "" }),
+  "slider-bass": (view) => buildSliderRegion("bass", view),
+  "slider-vocals": (view) => buildSliderRegion("vocals", view),
+  "slider-treble": (view) => buildSliderRegion("treble", view),
+  "output-head": (view) => (trimOf(view) >= 2 ? "" : ui.sectionHeader({ label: "Output" })),
+  "slider-preamp": (view) => {
     const auto = ui.button({ size: "small", label: "Auto", isOn: sound.isAutoPreamp, act: "auto", title: "Set the preamp from the largest boost" });
-    return ui.sliderRow({ label: "Preamp", hint: sound.isAutoPreamp ? "Auto" : "Manual", amount: Number(readPreampDb().toFixed(1)), min: preampRangeDb[0], max: preampRangeDb[1], step: 0.1, act: "slider", key: "preamp", trail: auto });
+    const hint = trimOf(view) >= 1 ? "" : (sound.isAutoPreamp ? "Auto" : "Manual");
+
+    return ui.sliderRow({ label: "Preamp", hint, amount: Number(readPreampDb().toFixed(1)), min: preampRangeDb[0], max: preampRangeDb[1], step: 0.1, act: "slider", key: "preamp", trail: auto });
   },
-  "level-match": () => ui.stackRow({ lead: ui.switch({ isOn: sound.isLevelMatched, act: "level-match", title: "Level match" }), caption: "Maintain preamp level during A/B testing", name: "Level match" }),
+  "level-match": (view) => ui.stackRow({ lead: ui.switch({ isOn: sound.isLevelMatched, act: "level-match", title: "Level match" }), caption: trimOf(view) >= 1 ? "" : "Maintain preamp level during A/B testing", name: "Level match", title: "Maintain the preamp level while A/B is held, so both sides play at the same level", trail: buildMeter(view) }),
   zoom: (view) => {
     const zoom = ui.segmented({ items: [["all", "All"], ["lows", "Lows"], ["mids", "Mids"], ["highs", "Highs"]], current: view.zoom, act: "zoom", title: "Zoom" });
     const tall = ui.button({ size: "small", label: "Tall", isOn: view.isTall, act: "tall", title: "Turn the graph so frequency runs down the panel" });
     return `<div class="ui-split">${zoom}${tall}</div>`;
   },
-  legend: () => `<div class="ui-cluster ui-cluster--legend">${legendKeys.map(([key, tone, label]) => ui.badge({ kind: "key", key, tone, label })).join("")}</div>`,
+  legend: (view) => {
+    const kept = ["EQ curve", "Live sound", "Louder", "Quieter"];
+    const keys = trimOf(view) >= 3 ? legendKeys.filter(([, , label]) => kept.includes(label)) : legendKeys;
+
+    return `<div class="ui-cluster ui-cluster--legend">${keys.map(([key, tone, label]) => ui.badge({ kind: "key", key, tone, label })).join("")}</div>`;
+  },
   chips: () => {
     const entries = listEntries();
     return `<div class="ui-stack">${roles.map((role) => buildChipRow(role, entries)).join("")}</div>`;
@@ -2161,10 +2203,10 @@ const regionBuilders = {
   "library-tabs": (view) => ui.tabs({ items: libraryTabItems, current: view.libraryTab, act: "library-tab", size: "small" }),
   "library-head": (view) => {
     const role = readLibraryRole(view);
+    const isTrimmed = trimOf(view) >= 2;
+    const caption = role ? sectionCaptions[role] : "Your headphone, your ear and your taste in one press. A Set points at three presets by name, with the sliders.";
 
-    if (!role) return ui.sectionHeader({ variant: "section", step: "S", tone: "accent", label: "Sets", caption: "Your headphone, your ear and your taste in one press. A Set points at three presets by name, with the sliders." });
-
-    return ui.sectionHeader({ variant: "section", step: roles.indexOf(role) + 1, tone: role, label: roleLabelsOf(role), caption: sectionCaptions[role] });
+    return ui.sectionHeader({ variant: "section", step: role ? roles.indexOf(role) + 1 : "S", tone: role || "accent", label: role ? roleLabelsOf(role) : "Sets", caption: isTrimmed ? "" : caption, title: isTrimmed ? caption : "" });
   },
   "library-current": (view) => {
     const role = readLibraryRole(view);
@@ -2172,23 +2214,23 @@ const regionBuilders = {
     if (!role) {
       const playing = findPlayingSet();
       const save = ui.button({ variant: "primary", size: "small", label: "Save as Set", act: "save-set", isOn: view.open.sets === "save", title: "Keep the three layers and the sliders as one Set" });
-      return ui.stackRow({ tone: "accent", caption: playing ? "The Set that plays" : "No Set plays now", name: escapeHtml(playing || "Save your first Set"), trail: save });
+      return ui.stackRow({ tone: "accent", name: escapeHtml(playing || "Save your first Set"), trail: save, title: playing ? "The Set that plays" : "No Set plays now", isStacked: true });
     }
 
     const layer = sound.layers[role];
     const isSaved = isSavedPreset(role);
     const hasNothingNew = isSaved && !layer.isEdited;
-    let caption = "Nothing yet";
+    let title = "Nothing yet";
 
-    if (layer) caption = isSaved ? "Your preset" : `${layer.source}, not saved yet`;
+    if (layer) title = isSaved ? "Preset" : `${layer.source}, not saved yet`;
 
     const save = ui.button({ variant: "primary", size: "small", label: isSaved ? "Save changes" : "Save", act: "save", value: role, isDisabled: !layer || hasNothingNew });
     const saveAs = ui.button({ size: "small", label: "Save as new", act: "save-as", value: role, isDisabled: !layer, isOn: view.open[role] === "saveAs", title: "Keep this as a new preset under another name" });
 
-    return ui.stackRow({ tone: role, caption, name: escapeHtml(layer ? describeLayerName(layer) : emptyNames[role]), trail: save + saveAs });
+    return ui.stackRow({ tone: role, name: escapeHtml(layer ? describeLayerName(layer) : emptyNames[role]), trail: save + saveAs, title, isStacked: true });
   },
   "library-save": (view) => buildSaveDrawer(view, readLibraryRole(view)),
-  "library-measure": (view) => (view.libraryTab === "ear" ? ui.button({ isWide: true, icon: "external", label: "Measure my ear with EQByEar", act: "measure", title: "Open eqbyear.com in a new tab, with My ear off, to measure your ear" }) : ""),
+  "library-measure": (view) => (view.libraryTab === "ear" ? ui.button({ isWide: true, icon: "external", label: trimOf(view) >= 1 ? "Measure my ear" : "Measure my ear with EQByEar", act: "measure", title: "Open eqbyear.com in a new tab, with My ear off, to measure your ear" }) : ""),
   "library-actions": (view) => {
     const role = readLibraryRole(view);
 
@@ -2214,11 +2256,19 @@ const regionBuilders = {
     return buildLayerResults(view.libraryTab);
   },
   whole: (view) => {
-    const button = ui.button({ isWide: true, label: "Export the whole sound", isOn: view.isWholeOpen, act: "whole", title: "All three layers and the sliders as one AutoEQ file" });
+    const isTrimmed = trimOf(view) >= 1;
+    const button = ui.button({ isWide: true, label: isTrimmed ? "Export" : "Export the whole sound", isOn: view.isWholeOpen, act: "whole", title: "All three layers and the sliders as one AutoEQ file, for other apps" });
     const text = ui.field({ kind: "area", amount: readWholeText(), isReadOnly: true, rows: 6 });
-    return `<div class="ui-stack">${ui.sectionHeader({ label: "Whole sound" })}<p class="ui-text-hint">All three layers and the sliders in one AutoEQ file, for other apps.</p>${button}${ui.expander({ isOpen: view.isWholeOpen, body: text })}</div>`;
+    const head = trimOf(view) >= 2 ? "" : ui.sectionHeader({ label: "Whole sound" });
+    const hint = isTrimmed ? "" : `<p class="ui-text-hint">All three layers and the sliders in one AutoEQ file, for other apps.</p>`;
+
+    return `<div class="ui-stack">${head}${hint}${button}${ui.expander({ isOpen: view.isWholeOpen, body: text })}</div>`;
   },
-  credits: () => `<p class="ui-text-fine">Headphone profiles from AutoEQ by Jaakko Pasanen. Ear test from EQByEar. Icon art from Google Material Icons. goui is under the MIT licence. ${ui.button({ variant: "quiet", size: "small", label: "Credits", act: "credits", title: "Open the credits in the guide" })}</p>`,
+  credits: () => {
+    const button = ui.button({ variant: "quiet", size: "small", label: "Credits", act: "credits", title: "Open the credits in the guide" });
+
+    return `<p class="ui-text-fine">Headphone profiles from AutoEQ by Jaakko Pasanen. Ear test from EQByEar. Icon art from Google Material Icons. goui is under the MIT licence. ${button}</p>`;
+  },
   start: buildStart,
   menu: buildMenu,
   "tile-copy": buildTileCopy,
@@ -2999,7 +3049,7 @@ const primitiveCards = [
       const remove = ui.button({ variant: "quiet", size: "small", icon: "close", title: "Delete" });
       const rows = [
         ui.listRow({ name: "Sennheiser HD 600", badge: ui.badge({ label: "AutoEQ's pick", tone: "good" }), detail: "oratory1990 · Over-ear · GRAS 43AG-7 · Harman over-ear 2018", act: "pick", value: "Sennheiser HD 600", isSelected: gallery.pick === "Sennheiser HD 600" }),
-        ui.listRow({ name: "Ear test, 3 Sep", detail: "2 bands", act: "pick", value: "Ear test, 3 Sep", isSelected: gallery.pick === "Ear test, 3 Sep", trail: remove }),
+        ui.listRow({ name: "Ear test, 3 Sep", act: "pick", value: "Ear test, 3 Sep", isSelected: gallery.pick === "Ear test, 3 Sep", trail: remove }),
         ui.listRow({ name: "No ear tuning", detail: "Headphone only", isMuted: true }),
       ];
       const menu = `<div class="pn-menu">${ui.listRow({ variant: "dense", name: "HD 600 home", lead: `<span class="pn-menu__tick">${iconHtml("check")}</span>`, isSelected: true })}${ui.listRow({ variant: "dense", name: "Restart engine", lead: '<span class="pn-menu__tick"></span>' })}</div>`;
@@ -3016,8 +3066,8 @@ const primitiveCards = [
       const actions = ui.button({ variant: "quiet", size: "small", label: "Change" }) + ui.button({ variant: "quiet", size: "small", icon: "close", title: "Take it off" });
       const target = `<span class="pn-target">${ui.field({ kind: "select", label: "Target", amount: "Harman over-ear 2018", options: targetSets["GRAS 43AG-7"].map((name) => [name, name]) })}</span>`;
       return `<div class="ui-stack ui-stack--chain">
-        ${ui.stackRow({ tone: "headphone", lead: ui.switch({ isOn: true, title: "Headphone" }), caption: "Headphone · AutoEQ", name: "AKG N700NC M2", extra: target, trail: actions })}
-        ${ui.stackRow({ tone: "ear", isOff: !gallery.layerOn, lead: toggle, caption: "My ear · Saved", name: "Ear test, 12 Oct", trail: actions })}
+        ${ui.stackRow({ tone: "headphone", lead: ui.switch({ isOn: true, title: "Headphone" }), caption: "Headphone", name: "AKG N700NC M2", extra: target, trail: actions, title: "Headphone · AutoEQ" })}
+        ${ui.stackRow({ tone: "ear", isOff: !gallery.layerOn, lead: toggle, caption: "My ear", name: "Ear test, 12 Oct", trail: actions, title: "My ear · Saved" })}
         ${ui.stackRow({ tone: "taste", isEmpty: true, caption: "Taste", name: "Not added", trail: ui.button({ size: "small", icon: "plus", label: "Add your taste" }) })}
       </div>`;
     },
@@ -3026,9 +3076,9 @@ const primitiveCards = [
     name: "Section header",
     note: "Names a group. Eyebrow for a list, section with a step for a Library tab or a band, title for a screen, column for the wide panel.",
     usedBy: "every group heading, the inspector title, the Library steps, Get started, the wide columns",
-    demo: () => `${ui.sectionHeader({ label: "AutoEQ headphones", count: 3 })}
-      ${ui.sectionHeader({ variant: "section", step: 2, tone: "ear", label: "My ear", caption: "Tunes the sound to your own hearing, on top of the headphone." })}
-      ${ui.sectionHeader({ variant: "section", step: 5, tone: "peak", label: "Peak", caption: "Headphone layer", trail: ui.button({ size: "small", label: "Solo" }) })}
+    demo: () => `${ui.sectionHeader({ label: "AutoEQ headphones" })}
+      ${ui.sectionHeader({ variant: "section", step: 2, tone: "ear", label: "My ear", title: sectionCaptions.ear })}
+      ${ui.sectionHeader({ variant: "section", step: 5, tone: "peak", label: "Peak", title: "Headphone layer", trail: ui.button({ size: "small", label: "Solo" }) })}
       ${ui.sectionHeader({ variant: "title", label: "Get started", caption: "Every ear hears differently." })}`,
   },
   {
@@ -3045,9 +3095,9 @@ const primitiveCards = [
   },
   {
     name: "Slider row",
-    note: "A label and its hint, the rail, the value, and an optional action. A dB rail fills from 0 dB.",
+    note: "A label, the rail, the value, and an optional action. A dB rail fills from 0 dB, and a hint goes in the title.",
     usedBy: "Bass, Vocals, Treble, Preamp with Auto",
-    demo: () => `${ui.sliderRow({ label: "Bass", hint: "Below 120 Hz", amount: gallery.bassDb, min: -6, max: 6, step: 0.5, act: "bass" })}${ui.sliderRow({ label: "Preamp", hint: gallery.isAuto ? "Auto" : "Manual", amount: gallery.preampDb, min: -24, max: 12, step: 0.1, act: "preamp", trail: ui.button({ size: "small", label: "Auto", isOn: gallery.isAuto, act: "auto" }) })}`,
+    demo: () => `${ui.sliderRow({ label: "Bass", title: "Bass, below 120 Hz", amount: gallery.bassDb, min: -6, max: 6, step: 0.5, act: "bass" })}${ui.sliderRow({ label: "Preamp", amount: gallery.preampDb, min: -24, max: 12, step: 0.1, act: "preamp", trail: ui.button({ size: "small", label: "Auto", isOn: gallery.isAuto, act: "auto" }) })}`,
   },
   {
     name: "Chip",
@@ -3070,7 +3120,7 @@ const primitiveCards = [
   {
     name: "Expander",
     note: "Opens a small panel under the control that owns it. A drawer under a toggle, or a disclosure with its own summary.",
-    usedBy: "Save name, Paste, Export, Export the whole sound, Save as Set, the number table",
+    usedBy: "Save name, Paste, Export, the whole sound's Export, Save as Set, the number table",
     demo: () => `${ui.button({ size: "small", label: "Paste", isOn: gallery.isDrawerOpen, act: "drawer" })}${ui.expander({ isOpen: gallery.isDrawerOpen, body: `${ui.field({ kind: "area", amount: earText, rows: 3 })}<div class="ui-split"><span class="ui-text-fine">One ParametricEQ.txt, as text</span>${ui.button({ variant: "primary", size: "small", label: "Apply" })}</div>` })}${ui.expander({ variant: "disclosure", summary: "Number table", count: 11, isOpen: gallery.isTableOpen, act: "table", body: '<p class="ui-text-hint">The rows are list rows, in columns.</p>' })}`,
   },
   {
@@ -3079,7 +3129,7 @@ const primitiveCards = [
     usedBy: "AutoEQ's pick, the Popup and Mac notes of the guide, the level and clip light, the Library steps, band numbers, the graph legend",
     demo: () => `<div class="ui-cluster">${ui.badge({ label: "AutoEQ's pick", tone: "good" })}${ui.badge({ label: "Mac", tone: "accent" })}${ui.badge({ label: "Edited" })}${ui.badge({ label: "Can clip", tone: "danger" })}</div>
       <div class="ui-cluster">${ui.badge({ kind: "dot", tone: "good", label: "-14.2 dB" })}${ui.badge({ kind: "dot", tone: "danger", label: "-2.1 dB" })}${ui.badge({ kind: "step", label: 1, tone: "headphone" })}${ui.badge({ kind: "step", label: 2, tone: "ear" })}${ui.badge({ kind: "step", label: 3, tone: "taste" })}</div>
-      <div class="ui-cluster ui-cluster--legend">${legendKeys.slice(0, 5).map(([key, tone, label]) => ui.badge({ kind: "key", key, tone, label })).join("")}</div>`,
+      <div class="ui-cluster ui-cluster--legend">${legendKeys.slice(0, 4).map(([key, tone, label]) => ui.badge({ kind: "key", key, tone, label })).join("")}</div>`,
   },
 ];
 
@@ -3192,7 +3242,7 @@ const stateExamples = [
 
 function buildStateExample([label, className, note]) {
   const button = `<button type="button" class="ui-button ui-button--plain ui-button--small ${className}">Solo</button>`;
-  const row = ui.listRow({ name: "HD 600 home", detail: "3 presets", act: "none" }).replace('class="ui-list-row"', `class="ui-list-row ${className}"`);
+  const row = ui.listRow({ name: "HD 600 home", detail: "Sennheiser HD 600 · Ear test, 12 Oct · Warm and smooth", act: "none" }).replace('class="ui-list-row"', `class="ui-list-row ${className}"`);
   const segment = `<div class="ui-segmented"><button type="button" class="ui-segmented__item ${className}">Mids</button></div>`;
 
   return `<div class="doc-state"><h4>${label}</h4><div class="ui-cluster">${button}${segment}</div>${row}<p>${note || "Every control starts here."}</p></div>`;
@@ -3310,7 +3360,7 @@ const mappingRows = [
   ["#exportAll, #wholeText", "panel.html, listen.js", "Button + Expander + Field", "wide, on, area read-only"],
   ["#eqbyear", "panel.html", "Button", "wide, icon external"],
   ["input.search", "panel.html", "Field", "search"],
-  [".results h4", "items.js", "Section header", "eyebrow with a count"],
+  [".results h4", "items.js", "Section header", "eyebrow"],
   [".item, .item.on, .item.measurement", "items.js, headphones.js", "List row", "selected, detail line"],
   [".pick", "headphones.js", "Badge", "pill, tone good"],
   [".result-row .remove", "items.js", "List row + Button", "trail slot, quiet icon close"],
@@ -3347,7 +3397,7 @@ function renderGuide(sectionKey = "how") {
     ["The extension changes the sound of one browser tab. For every sound on the Mac, use goui for the Mac.", "Mac"],
   ].map(([text, badge]) => `<li>${badge ? ui.badge({ label: badge, tone: "accent" }) : ""}${text}</li>`);
   const earSteps = [
-    ["Turn My ear off", "In the Library, press Measure my ear with EQByEar. My ear turns off, so the test hears the headphone alone."],
+    ["Turn My ear off", "In the Library, press Measure my ear. My ear turns off, so the test hears the headphone alone."],
     ["Run the test", "EQByEar opens in a new tab. Click the goui icon on that tab, then run the test."],
     ["Paste the result", "Copy the result, come back, and Paste it into My ear."],
     ["Save it", "Press Save, then turn My ear on to hear the headphone plus your ear."],
@@ -3399,14 +3449,19 @@ if (byId("token-palette")) {
 
 // The site mounts its demo and its hero itself, with mountView, so it can pass handlers such as onHelp.
 const viewHosts = [
-  ["panel-narrow", "narrow", { hasSetPicker: true }],
+  ["panel-narrow", "narrow", { hasSetPicker: true, trim: 3 }],
+  ["trim-1", "narrow", { hasSetPicker: true, trim: 1 }],
+  ["trim-2", "narrow", { hasSetPicker: true, trim: 2 }],
+  ["trim-3", "narrow", { hasSetPicker: true, trim: 3 }],
   ["panel-start", "start", { isHearing: false }],
   ["header-tab", "header"],
   ["header-nothing", "header", { isHearing: false }],
   ["header-popup", "header", { isPopup: true, heard: "YT Music", instruction: "goui is off for this window. Press ON to hear it again." }],
-  ["panel-wide", "wide", { heard: "Every sound on this Mac", libraryTab: "sets" }],
-  ["sets-picker", "setsPicker", { hasSetPicker: true }],
-  ["sets-library", "setsLibrary", { libraryTab: "sets" }],
+  ["panel-wide", "wide", { heard: "Every sound on this Mac", libraryTab: "sets", isMac: true, trim: 3 }],
+  ["sets-picker", "setsPicker", { hasSetPicker: true, trim: 3 }],
+  ["sets-library", "setsLibrary", { libraryTab: "sets", trim: 3 }],
+  ["app-narrow", "narrow", { hasSetPicker: true, trim: 3 }],
+  ["app-wide", "wide", { heard: "Every sound on this Mac", libraryTab: "sets", isMac: true, trim: 3 }],
   ["screen-menu", "menu"],
   ["screen-tile", "tile"],
   ["screen-site", "hero", { heard: "Every sound on this Mac" }],

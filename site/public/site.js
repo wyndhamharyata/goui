@@ -22,6 +22,8 @@ if (hero) mountView(hero, "heroCopy");
 if (demo) {
   mountView(demo, "narrow", {
     hasSetPicker: true,
+    // The demo shows the shipped design, which is level 3.
+    trim: 3,
     onHelp: () => scrollToSection("how"),
     onCredits: () => scrollToSection("credits"),
     onMeasure: () => window.open("https://eqbyear.com", "_blank", "noopener"),
