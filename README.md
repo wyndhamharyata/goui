@@ -191,11 +191,11 @@ Import, Paste and Export.
   **AutoEQ's pick** marks the recommended one.
 - **Import** loads a `ParametricEQ.txt` file. **Paste** opens a text box. **Export** writes that
   layer as AutoEQ text.
-- **Measure my ear with EQByEar** is in the ear tab. [Measure your ear](#measure-your-ear) has the
-  steps.
+- **Measure my ear** opens the EQByEar test in the ear tab. [Measure your ear](#measure-your-ear)
+  has the steps.
 - The ear list ends with **No ear tuning**. The taste list ends with **No taste**. Each removes its
   layer.
-- **Export the whole sound** writes all three layers and sliders as one AutoEQ file.
+- **Export** writes the whole sound: all three layers and the sliders as one AutoEQ file.
 
 At 900 px or wider, Listen, Tune and Library show side by side. The Mac's **Wide panel** opens at
 1100 px.
@@ -221,7 +221,7 @@ One press loads all of it.
 An AutoEQ profile corrects the headphone, not your ear. An EQByEar test measures what your ear
 still needs. goui keeps the two apart.
 
-1. In the Library, open the My ear tab and press **Measure my ear with EQByEar**. The ear layer
+1. In the Library, open the My ear tab and press **Measure my ear**. The ear layer
    turns off so the test hears only the headphone.
 2. EQByEar opens in a new tab. In the browser, click the goui icon on that tab first, then run the
    test. On the Mac, goui already hears the browser, so run the test straight away.
