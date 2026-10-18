@@ -1,21 +1,21 @@
 # Third party notices
 
-goui stands on other people's work. This file names each part, and says which of them travel in the
+goui builds on other people's work. This file lists each part and notes which ones ship in the
 extension.
 
 ## In the extension
 
-The release zip holds the manifest, the src folder, the icons, this file and the licence. Four parts
-come from elsewhere.
+The release zip holds `manifest.json`, `src/`, `icons/`, this file and `LICENSE`. Four parts come
+from elsewhere.
 
 ### AutoEQ
 
-The headphone profiles and the search index come from AutoEQ, by Jaakko Pasanen. goui reads the
-published files over the network. It does not copy AutoEQ code.
+The headphone profiles and search index come from AutoEQ by Jaakko Pasanen. goui fetches the
+published files over the network. It does not bundle AutoEQ code.
 
-The target curves in `src/targets.json` are copied from AutoEQ. `npm run targets` builds the file
-from the AutoEQ web app's target list and the AutoEQ targets folder. It keeps each curve at 121
-points from 20 Hz to 20 kHz.
+The target curves in `src/targets.json` come from AutoEQ. `npm run targets` builds the file from
+the AutoEQ web app's target list and the AutoEQ targets folder, sampled at 121 points from 20 Hz to
+20 kHz.
 
 - Project: https://github.com/jaakkopasanen/AutoEQ
 - Licence: MIT
@@ -46,8 +46,8 @@ SOFTWARE.
 
 ### Google Material Icons
 
-The panel and the guide draw five icons from Google Material Icons: extension, push_pin, volume_up,
-headset and near_me. The paths are in `src/panel.html` and `src/intro.html`.
+The panel and guide use five icons from Google Material Icons: `extension`, `push_pin`,
+`volume_up`, `headset` and `near_me`. Their SVG paths are in `src/panel.html` and `src/intro.html`.
 
 - Project: https://github.com/google/material-design-icons
 - Licence: Apache License 2.0
@@ -258,9 +258,8 @@ Apache License
 
 ### Atkinson Hyperlegible Next and Mono
 
-The panel, the guide and the site set their text in Atkinson Hyperlegible Next and Atkinson
-Hyperlegible Mono, by the Braille Institute of America. The two font files are in `src/fonts/`,
-beside their licence in `src/fonts/OFL.txt`.
+The panel, guide and site use Atkinson Hyperlegible Next and Atkinson Hyperlegible Mono by the
+Braille Institute of America. The font files and `OFL.txt` live in `src/fonts/`.
 
 - Project: https://github.com/googlefonts/atkinson-hyperlegible-next
 - Licence: SIL Open Font License 1.1
@@ -364,8 +363,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
 ### EQByEar
 
-The ear test is EQByEar, at https://eqbyear.com. goui opens the site in a new tab. You paste the
-result back by hand. The site is a service of its own authors, and its code is not part of goui.
+The ear test is EQByEar at https://eqbyear.com. goui opens the site in a new tab and reads the
+result you paste back. EQByEar is a separate service. Its code is not part of goui.
 
 ## Not in the extension
 
@@ -373,15 +372,15 @@ result back by hand. The site is a service of its own authors, and its code is n
 
 The demo video on the site plays 夜明けのHighway (Yoake no Highway), written and composed by Koichi
 Morita (森田交一), vocal by キクチマリコ, published by 魔王魂 at https://maou.audio. The track is
-trimmed, faded and filtered to follow the EQ on screen. Nothing from it ships in the extension or the
+trimmed, faded and filtered to follow the EQ on screen. None of it ships in the extension or the
 Mac app.
 
 - Track: https://maou.audio/46_yoake_no_highway/
 - Licence: Creative Commons Attribution 4.0 International (CC BY 4.0),
   https://creativecommons.org/licenses/by/4.0/
 - Terms of use: https://maou.audio/rule/
-- Credit line, as the publisher asks: 音楽：魔王魂
+- Credit line: 音楽：魔王魂
 
 ## goui
 
-goui itself is under the MIT licence. See `LICENSE`.
+goui is under the MIT licence. See `LICENSE`.

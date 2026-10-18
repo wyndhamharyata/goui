@@ -32,8 +32,8 @@
           <span class="version" id="version"></span>
         </div>
         <p class="pitch">
-          goui runs the sound of one browser tab through an EQ. It tunes the sound to your headphone,
-          then to your ear, then to your taste.
+          Parametric EQ for one browser tab. Tune the sound to your headphone, then to your ear,
+          then to your taste.
           <b>Every ear hears differently.</b>
         </p>
       </header>
@@ -54,16 +54,16 @@
           <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">How it works</span><span class="ui-section-header__rule"></span></h2>
           <div class="ui-stack ui-stack--chain flow" aria-label="The tab's audio passes the headphone layer, then the ear layer, then the taste layer, then reaches you. Bass, Vocals and Treble are added after the three sound layers.">
             <div class="ui-stack-row"><svg class="ui-icon"><use href="#icon-speaker" /></svg><span class="ui-stack-row__body"><span class="ui-stack-row__caption">radio.example.com</span><span class="ui-stack-row__name">The tab you hear</span></span></div>
-            <div class="ui-stack-row has-bar tone-headphone"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">1 · Headphone</span><span class="ui-stack-row__name">AutoEQ tunes the headphone to sound neutral</span></span></div>
+            <div class="ui-stack-row has-bar tone-headphone"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">1 · Headphone</span><span class="ui-stack-row__name">AutoEQ tunes your headphone to sound neutral</span></span></div>
             <div class="ui-stack-row has-bar tone-ear"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">2 · My ear</span><span class="ui-stack-row__name">EQByEar tunes it to your hearing</span></span></div>
             <div class="ui-stack-row has-bar tone-taste"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">3 · Taste</span><span class="ui-stack-row__name">Your own bands</span></span></div>
-            <div class="ui-stack-row has-bar tone-muted"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">Added after 3 sound layers</span><span class="ui-stack-row__name">Bass, Vocals and Treble</span></span></div>
+            <div class="ui-stack-row has-bar tone-muted"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">Basic tuning</span><span class="ui-stack-row__name">Bass, Vocals and Treble</span></span></div>
             <div class="ui-stack-row has-bar tone-accent"><svg class="ui-icon"><use href="#icon-headphones" /></svg><span class="ui-stack-row__body"><span class="ui-stack-row__caption">You</span><span class="ui-stack-row__name">Hear it</span></span></div>
           </div>
           <p class="lead">
-            goui joins two audio tools. AutoEQ gives you a neutral baseline for the headphone you use.
-            An EQByEar test tunes that baseline to your hearing. Your taste goes on top, as bands of
-            your own. Each layer has its own switch. The bands of every layer add up in dB.
+            AutoEQ gives your headphone a neutral baseline. EQByEar tunes that baseline to your
+            hearing. Taste lets you add your own bands on top. Each layer has its own switch, and all
+            active bands sum in dB.
           </p>
         </section>
 
@@ -78,7 +78,7 @@
             <li class="guide-step">
               <div class="ui-section-header ui-section-header--section tone-headphone">
                 <span class="ui-badge ui-badge--step tone-headphone">4</span>
-                <span class="ui-section-header__text"><span class="ui-section-header__title">Find your headphone</span><span class="ui-section-header__caption">Find your model in the Library, then press Save.</span></span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">Find your headphone</span><span class="ui-section-header__caption">Search your model in Library, pick it, then press Save.</span></span>
               </div>
               <div class="guide-shot guide-shot--column" aria-hidden="true">
                 <label class="ui-field ui-field--search"><svg class="ui-icon"><use href="#icon-search" /></svg><input class="ui-field__control" value="HD 600" readonly tabindex="-1" /></label>
@@ -89,7 +89,7 @@
             <li class="guide-step">
               <div class="ui-section-header ui-section-header--section tone-ear">
                 <span class="ui-badge ui-badge--step tone-ear">5</span>
-                <span class="ui-section-header__text"><span class="ui-section-header__title">Tune it to your ear</span><span class="ui-section-header__caption">Take the EQByEar test. Paste the result into My ear, press Apply, then Save. This step is optional. <a href="#ear">Measure your ear</a> has the details.</span></span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">Tune it to your ear</span><span class="ui-section-header__caption">Optional. Run the EQByEar test, paste the result into My ear, press Apply, then Save. See <a href="#ear">Measure your ear</a>.</span></span>
               </div>
               <div class="guide-shot" aria-hidden="true">
                 <span class="ui-button ui-button--small"><svg class="ui-icon"><use href="#icon-external" /></svg><span>Measure my ear</span></span>
@@ -104,7 +104,7 @@
             <li class="guide-step">
               <div class="ui-section-header ui-section-header--section tone-taste">
                 <span class="ui-badge ui-badge--step tone-taste">6</span>
-                <span class="ui-section-header__text"><span class="ui-section-header__title">Add your taste</span><span class="ui-section-header__caption">On Listen, press Add your taste on the Taste row. Drag its points in Tune, or paste AutoEQ text.</span></span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">Add your taste</span><span class="ui-section-header__caption">Press Add your taste on Listen. Drag points in Tune or paste AutoEQ text.</span></span>
               </div>
               <div class="guide-shot guide-shot--column" aria-hidden="true">
                 <div class="ui-stack-row has-bar tone-taste is-empty"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">Taste</span><span class="ui-stack-row__name">Not added</span></span><span class="ui-stack-row__trail"><span class="ui-button ui-button--small guide-press"><svg class="ui-icon"><use href="#icon-plus" /></svg><span>Add your taste</span></span></span></div>
@@ -113,7 +113,7 @@
             <li class="guide-step">
               <div class="ui-section-header ui-section-header--section tone-accent">
                 <span class="ui-badge ui-badge--step tone-accent">7</span>
-                <span class="ui-section-header__text"><span class="ui-section-header__title">Save it as a Set</span><span class="ui-section-header__caption">Save each layer as a preset, then press Save as Set on Listen. The Set picker brings all three layers and the sliders back.</span></span>
+                <span class="ui-section-header__text"><span class="ui-section-header__title">Save it as a Set</span><span class="ui-section-header__caption">Save each layer as a preset, then press Save as Set on Listen to load everything in one click.</span></span>
               </div>
               <div class="guide-shot guide-shot--column" aria-hidden="true">
                 <div class="ui-stack-row has-bar tone-accent"><span class="ui-stack-row__body"><span class="ui-stack-row__caption">Set</span><span class="ui-stack-row__name"><span class="ui-field ui-field--select"><span class="ui-field__control">HD 600 at home</span><svg class="ui-icon"><use href="#icon-chevron" /></svg></span></span></span><span class="ui-stack-row__trail"><span class="ui-button ui-button--small guide-press">Save as Set</span></span></div>
@@ -125,50 +125,42 @@
         <section id="sets">
           <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Sets</span><span class="ui-section-header__rule"></span></h2>
           <ul class="intro-facts">
-            <li>A Set names one headphone preset, one ear preset and one taste preset, with Bass, Vocals and Treble.</li>
-            <li>Pick a Set in the picker at the top of Listen, or in the Sets tab of the Library.</li>
-            <li>Save as Set needs each layer with bands saved as a preset first. If a layer is not saved, goui names it and stops.</li>
-            <li>To change a Set, save under its name. The button reads Replace.</li>
-            <li>The × on a row in the Sets tab deletes that Set.</li>
-            <li>An empty ear or taste slot turns that layer off. An empty headphone slot plays Flat.</li>
-            <li>A Set points at its presets by name. An edit to a preset reaches every Set that names it.</li>
-            <li>A deleted preset reads as missing in the Set. It plays as an empty slot.</li>
-            <li><span class="ui-badge ui-badge--pill tone-accent"><span>Mac</span></span>goui for the Mac lists your Sets in the menu bar item's right-click menu. <code>goui set "name"</code> plays one from Terminal.</li>
+            <li>A Set links a headphone preset, ear preset and taste preset with the Bass, Vocals and Treble sliders.</li>
+            <li>Pick a Set on Listen or in Library under Sets.</li>
+            <li>Save each active layer as a preset first before saving a Set.</li>
+            <li>Save under an existing Set name to replace it.</li>
+            <li>Editing a preset updates every Set that uses it.</li>
+            <li><span class="ui-badge ui-badge--pill tone-accent"><span>Mac</span></span>Switch Sets from the Mac menu bar or with <code>goui set "name"</code> in Terminal.</li>
           </ul>
         </section>
 
         <section id="switch">
           <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">The icon is the switch</span><span class="ui-section-header__rule"></span></h2>
-          <p class="lead">Chrome lets an extension hear a tab only after a click on its icon. The panel has no Start button.</p>
+          <p class="lead">Chrome captures a tab's audio only when you click the extension icon.</p>
           <ul class="intro-facts">
-            <li>With the panel open, click the icon on the tab goui hears to turn goui off. With the panel closed, the same click only opens the panel.</li>
+            <li>Click the icon on the active tab to turn goui off (or to reopen a closed panel).</li>
             <li>Click the icon on another tab to move goui there.</li>
-            <li>The icon shows a green ON on the tab goui hears.</li>
-            <li>Closing the tab goui hears turns goui off.</li>
-            <li><span class="ui-badge ui-badge--pill tone-accent"><span>Popup</span></span>An installed app, such as YT Music, has no side panel. There the icon opens goui as a popup, with its own power button.</li>
-            <li><span class="ui-badge ui-badge--pill tone-accent"><span>Mac</span></span>The extension changes the sound of one browser tab. For every sound on the Mac, use <a href="https://goui.mwyndham.dev/mac" target="_blank" rel="noreferrer">goui for the Mac</a>.</li>
+            <li>Closing the captured tab turns goui off.</li>
+            <li><span class="ui-badge ui-badge--pill tone-accent"><span>Popup</span></span>Installed web apps (like YT Music) open goui as a popup with a power button.</li>
+            <li><span class="ui-badge ui-badge--pill tone-accent"><span>Mac</span></span>To EQ all system audio on a Mac, use <a href="https://goui.mwyndham.dev/mac" target="_blank" rel="noreferrer">goui for the Mac</a>.</li>
           </ul>
         </section>
 
         <section id="ear">
           <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Measure your ear</span><span class="ui-section-header__rule"></span></h2>
-          <p class="lead">An AutoEQ profile tunes the headphone to sound neutral, not your ear. EQByEar measures what your ear still wants on top of it.</p>
+          <p class="lead">AutoEQ corrects the headphone. EQByEar measures what your ear still needs on top of it.</p>
           <div class="ui-stack ui-stack--loose">
             <div class="ui-section-header ui-section-header--section tone-ear">
               <span class="ui-badge ui-badge--step tone-ear">1</span>
-              <span class="ui-section-header__text"><span class="ui-section-header__title">Turn My ear off</span><span class="ui-section-header__caption">In the Library, open My ear and press Measure my ear. My ear turns off so the test hears the headphone alone.</span></span>
+              <span class="ui-section-header__text"><span class="ui-section-header__title">Open EQByEar</span><span class="ui-section-header__caption">In Library under My ear, press Measure my ear. goui turns My ear off for the test.</span></span>
             </div>
             <div class="ui-section-header ui-section-header--section tone-ear">
               <span class="ui-badge ui-badge--step tone-ear">2</span>
-              <span class="ui-section-header__text"><span class="ui-section-header__title">Run the test</span><span class="ui-section-header__caption">EQByEar opens in a new tab. Click the goui icon on that tab first so the test hears your headphone layer. Then run the test. With goui for the Mac, goui already hears the browser. Run the test right away.</span></span>
+              <span class="ui-section-header__text"><span class="ui-section-header__title">Run the test</span><span class="ui-section-header__caption">On the new EQByEar tab, click the goui icon so the test plays through your headphone layer. Then take the test.</span></span>
             </div>
             <div class="ui-section-header ui-section-header--section tone-ear">
               <span class="ui-badge ui-badge--step tone-ear">3</span>
-              <span class="ui-section-header__text"><span class="ui-section-header__title">Paste the result</span><span class="ui-section-header__caption">Copy the result and come back to goui. Press Paste in My ear, paste it in the box, then press Apply.</span></span>
-            </div>
-            <div class="ui-section-header ui-section-header--section tone-ear">
-              <span class="ui-badge ui-badge--step tone-ear">4</span>
-              <span class="ui-section-header__text"><span class="ui-section-header__title">Save it</span><span class="ui-section-header__caption">Press Save to keep it as an ear preset. Turn My ear on to hear the headphone with your ear.</span></span>
+              <span class="ui-section-header__text"><span class="ui-section-header__title">Paste and save</span><span class="ui-section-header__caption">Copy the result. Back in My ear, press Paste, paste the text, press Apply, then press Save.</span></span>
             </div>
             <div class="ui-cluster">
               <a class="ui-button" href="https://github.com/jaakkopasanen/AutoEq" target="_blank" rel="noreferrer"><svg class="ui-icon"><use href="#icon-external" /></svg><span>AutoEQ</span></a>
@@ -180,17 +172,17 @@
         <section id="credits">
           <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Credits</span><span class="ui-section-header__rule"></span></h2>
           <div class="ui-stack ui-stack--tight links">
-            <div class="ui-list-row"><a class="ui-list-row__main" href="https://github.com/jaakkopasanen/AutoEQ" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>AutoEQ</span></span><span class="ui-list-row__detail">Headphone profiles, the search index and the targets, by Jaakko Pasanen, under the MIT licence</span></span></a></div>
-            <div class="ui-list-row"><a class="ui-list-row__main" href="https://eqbyear.com" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>EQByEar</span></span><span class="ui-list-row__detail">The hearing test behind your My ear layer</span></span></a></div>
-            <div class="ui-list-row"><a class="ui-list-row__main" href="https://github.com/google/material-design-icons" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Material Icons</span></span><span class="ui-list-row__detail">Icon art by Google, under the Apache 2.0 licence</span></span></a></div>
-            <div class="ui-list-row"><a class="ui-list-row__main" href="https://github.com/googlefonts/atkinson-hyperlegible-next" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Atkinson Hyperlegible</span></span><span class="ui-list-row__detail">Text in Atkinson Hyperlegible Next and Mono, by the Braille Institute, under the SIL Open Font licence</span></span></a></div>
-            <div class="ui-list-row"><a class="ui-list-row__main" href="https://maou.audio/46_yoake_no_highway/" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>魔王魂</span></span><span class="ui-list-row__detail">The demo video plays 夜明けのHighway by 魔王魂 (Koichi Morita), vocal キクチマリコ, under CC BY 4.0</span></span></a></div>
+            <div class="ui-list-row"><a class="ui-list-row__main" href="https://github.com/jaakkopasanen/AutoEQ" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>AutoEQ</span></span><span class="ui-list-row__detail">Headphone profiles, search index and targets by Jaakko Pasanen (MIT)</span></span></a></div>
+            <div class="ui-list-row"><a class="ui-list-row__main" href="https://eqbyear.com" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>EQByEar</span></span><span class="ui-list-row__detail">Hearing test for the My ear layer</span></span></a></div>
+            <div class="ui-list-row"><a class="ui-list-row__main" href="https://github.com/google/material-design-icons" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Material Icons</span></span><span class="ui-list-row__detail">Icons by Google (Apache 2.0)</span></span></a></div>
+            <div class="ui-list-row"><a class="ui-list-row__main" href="https://github.com/googlefonts/atkinson-hyperlegible-next" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Atkinson Hyperlegible</span></span><span class="ui-list-row__detail">Atkinson Hyperlegible Next and Mono by the Braille Institute (SIL OFL)</span></span></a></div>
+            <div class="ui-list-row"><a class="ui-list-row__main" href="https://maou.audio/46_yoake_no_highway/" target="_blank" rel="noreferrer"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>魔王魂</span></span><span class="ui-list-row__detail">Demo video track 夜明けのHighway by 魔王魂 (Koichi Morita), vocal キクチマリコ (CC BY 4.0)</span></span></a></div>
           </div>
           <a class="store" href="https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap" target="_blank" rel="noreferrer"><img src="images/chrome-web-store.png" alt="Available in the Chrome Web Store" width="165" height="50" /><span><b>goui in the Chrome Web Store.</b> Rate it or share the link.</span></a>
           <p class="fine">
-            goui is under the MIT licence. <a href="https://github.com/wyndhamharyata/goui/blob/main/LICENSE" target="_blank" rel="noreferrer">Read the licence</a>,
-            or the <a href="https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noreferrer">full notices</a>.
-            New to EQ? Wikipedia has a <a href="https://en.wikipedia.org/wiki/Equalization_(audio)" target="_blank" rel="noreferrer">primer on audio EQ</a>.
+            goui is under the MIT licence. <a href="https://github.com/wyndhamharyata/goui/blob/main/LICENSE" target="_blank" rel="noreferrer">Read the licence</a>
+            or the <a href="https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noreferrer">third-party notices</a>.
+            New to EQ? Read Wikipedia's <a href="https://en.wikipedia.org/wiki/Equalization_(audio)" target="_blank" rel="noreferrer">audio EQ primer</a>.
           </p>
         </section>
 

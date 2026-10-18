@@ -33,16 +33,16 @@
           <div class="hero-text">
             <div id="site-hero"></div>
             <p class="fine">
-              Free and open source. The Mac app needs Apple silicon and macOS 26 or later.
-              <a href="/mac">goui for the Mac</a> covers common questions and troubleshooting.
+              Free and open source. The Mac app requires Apple silicon and macOS 26 or later.
+              See <a href="/mac">goui for the Mac</a> for setup and troubleshooting.
             </p>
           </div>
 
           <div class="demo" id="try">
             <div class="pn-frame" id="site-panel"></div>
             <p class="demo-caption">
-              The panel, live. Drag a point, hold A/B, or pick a Set. The spectrum and AutoEQ
-              results are samples, not real measurements.
+              Interactive demo. Drag a point, hold A/B, or switch Sets. Spectrum and AutoEQ data
+              shown here are samples.
             </p>
           </div>
         </section>
@@ -50,68 +50,70 @@
 
       <section class="block" id="mac">
         <h2>goui for the Mac</h2>
-        <p class="lead">The same EQ, for every sound on the Mac. Not one tab, the whole output.</p>
+        <p class="lead">The same parametric EQ for all system audio on your Mac.</p>
         <div class="two-col">
           <img src="/images/mac-panel.jpg" alt="The goui panel open under its menu bar item, over Apple Music, with a Set picked, the Sennheiser HD 600 curve and the live spectrum." />
           <div>
             <p>
-              goui lives in the menu bar. One click opens the same panel as the browser extension. It
-              covers Music, Spotify, calls and games at once.
+              goui runs from the menu bar and opens the same panel as the browser extension. One EQ
+              processes Apple Music, Spotify, calls and games at once.
             </p>
             <p>
-              The headphone, ear and taste layers carry over, with Bass, Vocals and Treble. So do the
-              AutoEQ search and the live spectrum. A native audio engine runs the EQ on the Mac. goui
-              keeps none of the audio.
+              Keep separate layers for your headphone, your ear and your taste, plus Bass, Vocals and
+              Treble sliders. Search the AutoEQ database and watch the live spectrum. A native C and
+              Swift engine processes the audio in real time and stores none of it.
             </p>
             <p>
-              Sets carry over too. Right-click the menu bar item to switch Sets without opening the
-              panel. <code>goui set "name"</code> does the same from Terminal.
+              Right-click the menu bar icon to switch Sets without opening the panel, or run
+              <code>goui set "name"</code> from Terminal.
             </p>
             <p>
-              It starts at login and restarts after a crash. If the sound stops, it rebuilds
-              the audio path.
+              goui starts at login, restarts automatically on crash, and rebuilds the audio path when
+              you switch output devices.
             </p>
           </div>
         </div>
         <h3>Wide panel</h3>
-        <p class="lead">Widen the panel, and Listen, Tune and Library stand side by side.</p>
+        <p class="lead">Widen the panel to view Listen, Tune and Library side by side.</p>
         <img class="wide-shot" src="/images/mac-wide.jpg" alt="The wide goui panel under its menu bar item, with Listen, Tune and Library in three columns and the Headphone tab open." />
         <h3>Install</h3>
-        <p class="lead">One line in Terminal. No admin password. It checks the Mac and asks before installing.</p>
+        <p class="lead">One command in Terminal. No admin password required.</p>
         <pre class="install-line"><code>curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh</code></pre>
         <p class="fine">
-          Needs Apple silicon and macOS 26 or later. goui is not signed by Apple yet. An engine
-          update asks to record audio again. <a href="/mac">Read more before installing</a>,
-          including what happens to Spatial Audio on AirPods.
+          Requires Apple silicon and macOS 26 or later. goui is not signed with an Apple Developer ID
+          yet, so engine updates prompt for audio permission again.
+          <a href="/mac">Read the Mac guide</a> before installing, including notes on AirPods Spatial
+          Audio.
         </p>
       </section>
 
       <section class="block" id="how">
         <h2>How it works</h2>
         <p class="lead">
-          Three layers. One for the headphone, one for your ear, one for your taste.
+          Three separate layers for your headphone, your hearing and your taste.
         </p>
         <div class="two-col">
           <img src="/images/how-it-works.png" alt="The sound of a tab passes the headphone layer, then the ear layer, then the taste layer, then reaches you. Bass, Vocals and Treble nudge the sound on top of all three layers." />
           <div>
             <p>
-              Every headphone colours the sound. AutoEQ measures that colour and writes a correction
-              profile. That is the headphone layer.
+              Every headphone colours the sound. AutoEQ measures that frequency response and builds a
+              correction profile to make it neutral. That is the Headphone layer.
             </p>
             <p>
-              Your hearing is your own. No profile can know it. An EQByEar test measures what
-              your ear still wants on top of the corrected sound. That is the ear layer.
+              Your ears have their own response on top of the headphone. An EQByEar test measures
+              what your hearing still needs. That is the My ear layer.
             </p>
             <p>
-              Taste is the third layer, with bands of your own. Bass, Vocals and Treble adjust the
-              sound on top of all three layers. Each layer has its own switch.
+              Taste is the third layer for your own custom bands, alongside Bass, Vocals and Treble
+              sliders. Toggle any layer independently.
             </p>
             <p>
-              The layers add up in dB. The preamp follows the largest boost to prevent clipping.
+              All active bands sum in dB, and the auto preamp offsets the highest boost to prevent
+              clipping.
             </p>
             <p>
-              A Set names one preset per layer, with the sliders. Pick it on Listen and the whole sound
-              loads at once. Editing a preset updates every Set that uses it.
+              Save a Set to link a headphone preset, ear preset, taste preset and slider values.
+              Updating a preset updates every Set that references it.
             </p>
           </div>
         </div>
@@ -119,64 +121,63 @@
 
       <section class="block" id="install">
         <h2>Install</h2>
-        <p class="lead">One click from the Chrome Web Store. Chrome keeps it up to date.</p>
+        <p class="lead">Install from the Chrome Web Store for automatic updates.</p>
         <a class="store-badge" href="https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap">
           <img src="/chrome-web-store.png" alt="Available in the Chrome Web Store" width="198" height="60" />
         </a>
-        <h3>Or load the folder by hand</h3>
-        <p class="lead">Four steps, one time. No build, no account.</p>
+        <h3>Or load unpacked</h3>
+        <p class="lead">Four steps. No build step or account required.</p>
         <div class="two-col">
           <ol class="steps">
             <li>
-              <b>Download the zip.</b> Open the
-              <a href="https://github.com/wyndhamharyata/goui/releases/latest">Releases page</a> and press
-              the newest zip. Unzip it.
+              <b>Download the zip.</b> Get the latest zip from the
+              <a href="https://github.com/wyndhamharyata/goui/releases/latest">Releases page</a> and
+              unzip it.
             </li>
             <li>
-              <b>Load the folder.</b> Open <code>chrome://extensions</code>, or
-              <code>brave://extensions</code>. Turn on Developer mode. Press Load unpacked and pick the
-              goui folder.
+              <b>Load the folder.</b> Open <code>chrome://extensions</code> or
+              <code>brave://extensions</code>, enable Developer mode, click Load unpacked, and select
+              the unzipped <code>goui</code> folder.
             </li>
             <li><b>Pin goui.</b> Click the puzzle piece in the toolbar and pin goui.</li>
-            <li><b>Click the icon.</b> Open a page with sound and click the goui icon on it.</li>
+            <li><b>Click the icon.</b> Open a tab playing audio and click the goui icon.</li>
           </ol>
           <img src="/images/install-flow.png" alt="Install goui in four steps: download the zip, load the folder, pin goui, click the icon." />
         </div>
         <p class="fine">
-          The <a href="https://github.com/wyndhamharyata/goui#add-the-extension-by-hand">README</a> has a picture for
-          each step and explains the developer mode warning.
+          See the <a href="https://github.com/wyndhamharyata/goui#add-the-extension-by-hand">README</a>
+          for step-by-step screenshots.
         </p>
       </section>
 
       <section class="block" id="credits">
         <h2>Credits</h2>
-        <p class="lead">goui builds on other people's work.</p>
+        <p class="lead">Built on open audio data, fonts and icons.</p>
         <div class="credits">
           <a class="credit" href="https://github.com/jaakkopasanen/AutoEQ">
             <b>AutoEQ</b>
-            <span>Headphone profiles by Jaakko Pasanen, under the MIT licence.</span>
+            <span>Headphone profiles and targets by Jaakko Pasanen (MIT).</span>
           </a>
           <a class="credit" href="https://eqbyear.com">
             <b>EQByEar</b>
-            <span>The hearing test behind the My ear layer.</span>
+            <span>Hearing test for the My ear layer.</span>
           </a>
           <a class="credit" href="https://github.com/google/material-design-icons">
             <b>Material Icons</b>
-            <span>Icons by Google, under the Apache 2.0 licence.</span>
+            <span>Icons by Google (Apache 2.0).</span>
           </a>
           <a class="credit" href="https://github.com/googlefonts/atkinson-hyperlegible-next">
             <b>Atkinson Hyperlegible</b>
-            <span>Text in Atkinson Hyperlegible Next and Mono, by the Braille Institute, under the SIL Open Font licence.</span>
+            <span>Atkinson Hyperlegible Next and Mono by the Braille Institute (SIL OFL).</span>
           </a>
           <a class="credit" href="https://maou.audio/46_yoake_no_highway/">
             <b>魔王魂</b>
-            <span>The demo video plays 夜明けのHighway by 魔王魂 (Koichi Morita), vocal キクチマリコ, under CC BY 4.0.</span>
+            <span>Demo video track 夜明けのHighway by 魔王魂 (Koichi Morita), vocal キクチマリコ (CC BY 4.0).</span>
           </a>
         </div>
         <p class="fine">
-          goui itself is under the MIT licence. The
-          <a href="https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md">full notices</a>
-          list every part that ships in the extension.
+          goui is MIT licensed. Read the
+          <a href="https://github.com/wyndhamharyata/goui/blob/main/THIRD_PARTY_NOTICES.md">third-party notices</a>.
         </p>
       </section>
 

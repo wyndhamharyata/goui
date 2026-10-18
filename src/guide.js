@@ -4,9 +4,9 @@ import { buildElement, buildIcon } from "./panel/dom.js";
 const iconPath = "../icons/icon32.png";
 
 const startSteps = [
-  ["pin", "Pin goui", "Press the puzzle piece in the toolbar. Pin goui so it stays one click away."],
-  ["play", "Play something", "Open any tab that plays audio."],
-  ["click", "Click the goui icon", "goui hears that tab. The icon shows a green ON."],
+  ["pin", "Pin goui", "Click the puzzle piece in the toolbar and pin goui."],
+  ["play", "Play something", "Open any tab playing audio."],
+  ["click", "Click the goui icon", "goui hears that tab and shows a green ON."],
 ];
 
 // A picture holds no real controls, so its buttons are spans with the Button look.

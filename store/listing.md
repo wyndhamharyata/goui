@@ -1,41 +1,37 @@
 # Chrome Web Store listing
 
-Everything to paste into the developer dashboard, field by field. The images are in this folder.
+Fields to paste into the developer dashboard. Assets are in this folder.
 
 ## Store listing tab
 
-**Description** (the long description field, up to 16,000 characters)
+**Description** (up to 16,000 characters)
 
 ```
 goui is a parametric EQ for a browser tab, tuned to your headphone and your hearing.
 
-- Headphone: pick your model from AutoEQ for a corrected baseline.
-- My ear: an EQByEar test measures what your ear still wants.
-- Taste: your own bands, with Bass, Vocals and Treble.
+- Headphone: pick your model from AutoEQ for a neutral baseline.
+- My ear: an EQByEar test measures what your ear still needs.
+- Taste: your own bands, plus Bass, Vocals and Treble sliders.
 
-Three layers, each with its own switch. A new headphone keeps your ear tuning. The preamp follows
-the largest boost to prevent clipping.
+Each layer has its own switch. Switching headphones keeps your ear tuning. Auto preamp offsets boosts to prevent clipping.
 
-Drag points on the graph or type exact values. Save presets, import or paste ParametricEQ.txt,
-export to other apps.
+Drag points on the curve or type exact values. Save presets and Sets, or import, paste and export ParametricEQ.txt files.
 
-Click the goui icon on a tab to start. The side panel opens and the icon turns green.
+Click the goui icon on any tab playing audio to start.
 
-ALSO ON THE MAC
-goui for the Mac EQs every sound on the Mac, from the menu bar, with the same panel. Needs Apple
-silicon and macOS 26. See goui.mwyndham.dev/mac.
+ALSO ON MAC
+goui for the Mac runs all system audio through the same panel from the menu bar. Requires Apple silicon and macOS 26. See goui.mwyndham.dev/mac.
 
-No personal data collected. Free and open source, MIT licence.
+No personal data collected. Free and open source (MIT licence).
 ```
 
-**Category**: Productivity. The store has no audio or music category, and Productivity is the closest
-one. Pick another if the dashboard offers a better fit.
+**Category**: Productivity.
 
 **Language**: English.
 
 **Store icon**: `store/icon-128.png` (128x128).
 
-**Screenshots**: all three, in this order.
+**Screenshots**:
 
 - `store/screenshot-1-panel.png` (1280x800)
 - `store/screenshot-2-tune.png` (1280x800)
@@ -43,15 +39,13 @@ one. Pick another if the dashboard offers a better fit.
 
 **Small promo tile**: `store/promo-small-440x280.png` (440x280).
 
-**Marquee promo tile**: `store/promo-marquee-1400x560.png` (1400x560). Optional, and only shown when
-the store features the item.
+**Marquee promo tile**: `store/promo-marquee-1400x560.png` (1400x560).
 
-**Global promo video**: leave empty. There is no video yet.
+**Global promo video**: leave empty.
 
 ## Additional fields
 
-**Official URL**: leave as None. It needs the site verified in Google Search Console first, which is
-optional. To set it later, verify `mwyndham.dev` in Search Console, then pick it here.
+**Official URL**: leave as None unless verified in Google Search Console.
 
 **Homepage URL**: `https://goui.mwyndham.dev`
 
@@ -64,41 +58,30 @@ optional. To set it later, verify `mwyndham.dev` in Search Console, then pick it
 **Single purpose**
 
 ```
-goui runs the audio of one browser tab through a parametric EQ. It combines an AutoEQ headphone
-profile with an EQByEar ear-correction profile in separate layers, plus a Taste layer of your own
-bands, with Bass, Vocals and Treble.
+goui runs the audio of one browser tab through a parametric EQ, combining an AutoEQ headphone profile, an EQByEar hearing profile and custom taste bands.
 ```
 
 **Permission justifications**
 
-- `activeTab`: Reads the address and title of the clicked tab to check it is a web page and show its
-  title. Reads no other tab.
-- `tabCapture`: Captures the audio of the clicked tab for the EQ. Chrome grants this for that tab
-  only.
-- `offscreen`: Runs the Web Audio graph in an offscreen document. A service worker has no audio
-  context.
-- `storage`: Keeps presets, sliders and settings on your device, plus the capture state for the
-  session.
-- `sidePanel`: Shows the EQ in the side panel.
-- `https://raw.githubusercontent.com/jaakkopasanen/AutoEq/*`: Downloads the AutoEQ headphone list and
-  the profile you pick. The only network requests goui makes.
+- `activeTab`: Reads the URL and title of the clicked tab to verify it is a web page and display its title.
+- `tabCapture`: Captures audio from the clicked tab for EQ processing.
+- `offscreen`: Runs the Web Audio graph in an offscreen document.
+- `storage`: Stores presets, Sets, sliders and capture state locally on the device.
+- `sidePanel`: Displays the EQ controls in the browser side panel.
+- `https://raw.githubusercontent.com/jaakkopasanen/AutoEq/*`: Downloads the AutoEQ headphone index and selected headphone profiles.
 
-**Remote code**: select "No, I am not using remote code." goui runs only the bundled files. AutoEQ
-downloads are text data, parsed as numbers.
+**Remote code**: select "No, I am not using remote code." AutoEQ downloads are plain text files parsed as numbers.
 
-**Data usage**: tick no "collected" boxes. goui collects no user data. Then tick all three
-certifications at the bottom of the section.
+**Data usage**: leave all data collection boxes unchecked. Check all three certifications at the bottom.
 
 **Privacy policy URL**: `https://goui.mwyndham.dev/privacy`
 
 ## Distribution tab
 
-- Not a paid item.
-- All regions, or pick your own.
-- Public visibility, or Private to trusted testers for a first look.
+- Free item.
+- All regions.
+- Public visibility.
 
 ## After the first upload
 
-The store hands out a public key. Copy it from the Package tab and replace the `key` field in
-`manifest.json`, so a local dev build uses the same extension ID as the published one. Then run
-`npm run zip` again for the next upload.
+Copy the public key from the Package tab into the `key` field of `manifest.json` so local builds match the published extension ID. Run `npm run zip` before the next upload.

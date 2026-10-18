@@ -2136,7 +2136,7 @@ function buildHeroCopy(view) {
     ui.button({ label: "goui for the Mac", href: "https://goui.mwyndham.dev/mac" }),
   ];
 
-  return `<div class="ui-stack ui-stack--loose">${ui.sectionHeader({ label: "An EQ for your headphone, your ear and your taste" })}<h3 class="pn-hero__title">Every ear hears differently.</h3><p class="pn-hero__lede">goui runs one browser tab through a parametric EQ. goui for the Mac runs every sound the Mac plays through the same one. AutoEQ makes your headphone neutral. EQByEar tunes it to your ear. Your taste goes on top.</p><div class="ui-cluster">${links.join("")}</div><div class="ui-cluster ui-cluster--fill">${ui.field({ kind: "code", amount: install, title: "The Mac install line" })}${copy}</div><div class="ui-cluster">${facts.join("")}</div></div>`;
+  return `<div class="ui-stack ui-stack--loose">${ui.sectionHeader({ label: "Parametric EQ for your headphone, your ear and your taste" })}<h3 class="pn-hero__title">Every ear hears differently.</h3><p class="pn-hero__lede">goui runs a browser tab or all Mac audio through a parametric EQ. AutoEQ makes your headphone neutral, EQByEar tunes it to your hearing, and Taste puts your own bands on top.</p><div class="ui-cluster">${links.join("")}</div><div class="ui-cluster ui-cluster--fill">${ui.field({ kind: "code", amount: install, title: "The Mac install line" })}${copy}</div><div class="ui-cluster">${facts.join("")}</div></div>`;
 }
 
 const legendKeys = [

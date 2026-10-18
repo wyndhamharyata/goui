@@ -15,27 +15,27 @@ import { state } from "./state.js";
 // The words of each layer's section. The ear and taste lists end with a row that takes the layer off.
 const sectionWords = {
   headphone: {
-    caption: "AutoEQ tunes your headphone to sound neutral. Find your model below, then save it as your own preset.",
+    caption: "AutoEQ tunes your headphone to sound neutral. Pick your model below, then press Save.",
     pasted: "Pasted headphone",
     pasteTitle: "Paste AutoEQ text into the headphone layer",
     pastePlaceholder: "Paste AutoEQ text here",
   },
   ear: {
-    caption: "Tunes the sound to your hearing, on top of the headphone. Run the EQByEar test, paste the result, then save it.",
+    caption: "Tunes the sound to your hearing. Run the EQByEar test, paste the result, then press Save.",
     pasted: "Pasted ear tuning",
-    pasteTitle: "Paste AutoEQ text, such as an EQByEar result, into the ear layer",
+    pasteTitle: "Paste an EQByEar result or AutoEQ text into the ear layer",
     pastePlaceholder: "Paste the EQByEar result here",
     heading: "Ear presets",
     empty: "Nothing saved yet. Run the test, paste the result, then press Save.",
     offCaption: "Headphone only",
   },
   taste: {
-    caption: "Your own sound, on top of your ear. Add bands in Tune, or paste AutoEQ text, then save it.",
+    caption: "Your own bands on top. Add bands in Tune or paste AutoEQ text, then press Save.",
     pasted: "Pasted taste",
     pasteTitle: "Paste AutoEQ text into the taste layer",
     pastePlaceholder: "Paste AutoEQ text here",
     heading: "Taste presets",
-    empty: "Nothing saved yet. Add bands in Tune, or paste AutoEQ text, then press Save.",
+    empty: "Nothing saved yet. Add bands in Tune or paste AutoEQ text, then press Save.",
     offCaption: "Headphone and ear only",
   },
 };

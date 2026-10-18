@@ -65,7 +65,7 @@
       <div class="pn-panes">
         <section class="pn-pane" data-pane="listen">
           <div class="ui-section-header ui-section-header--column pn-column-title"><span class="ui-section-header__text"><span class="ui-section-header__title">Listen</span></span></div>
-          <div class="ui-stack-row has-bar tone-accent pn-set-picker ui-stack-row--single" title="The Set that plays: one headphone, one ear and one taste preset, with the sliders">
+          <div class="ui-stack-row has-bar tone-accent pn-set-picker ui-stack-row--single" title="Active Set: one headphone, ear and taste preset, plus the sliders">
             <span class="ui-stack-row__body">
               <span class="ui-stack-row__name">
                 <label class="ui-field ui-field--select" title="Pick a Set to play">
@@ -79,7 +79,7 @@
           <div class="ui-stack ui-stack--chain" id="layers"></div>
           <div class="ui-plot graph" id="listenGraph"></div>
           <div class="ui-stack" id="sliders">
-            <div class="ui-section-header ui-section-header--eyebrow" title="Added after the 3 sound layers, as Bass, Vocals and Treble">
+            <div class="ui-section-header ui-section-header--eyebrow" title="Adjusts Bass, Vocals and Treble across all three layers">
               <span>Basic tuning</span><span class="ui-section-header__rule"></span>
             </div>
             <label class="ui-slider-row" title="Bass, below 120 Hz">
@@ -101,9 +101,9 @@
               <span class="ui-slider-row__label"><span>Preamp</span></span>
               <input type="range" class="ui-slider-row__range" id="preamp" step="0.1" value="0" aria-label="Preamp" />
               <output class="ui-slider-row__value" id="preampValue">0.0 dB</output>
-              <span class="ui-slider-row__trail"><button id="autoPreamp" class="ui-button ui-button--small" title="Set the preamp from the largest boost">Auto</button></span>
+              <span class="ui-slider-row__trail"><button id="autoPreamp" class="ui-button ui-button--small" title="Offset the highest boost to prevent clipping">Auto</button></span>
             </div>
-            <div class="ui-stack-row ui-stack-row--single" id="levelMatchRow" title="Maintain the preamp level while A/B is held, so both sides play at the same level">
+            <div class="ui-stack-row ui-stack-row--single" id="levelMatchRow" title="Keep the preamp active while holding A/B to compare at equal volume">
               <label class="ui-switch"><input type="checkbox" id="levelMatch" aria-label="Level match" /><span class="ui-switch__knob"></span></label>
               <label class="ui-stack-row__body" for="levelMatch"><span class="ui-stack-row__name">Level match</span></label>
               <span class="ui-stack-row__trail"><span class="ui-badge ui-badge--dot tone-muted pn-level" id="meter"><i class="ui-badge__mark"></i><span><span id="level">--</span> dB</span></span></span>
@@ -120,7 +120,7 @@
               <button class="ui-segmented__item" role="radio" data-zoom="mids">Mids</button>
               <button class="ui-segmented__item" role="radio" data-zoom="highs">Highs</button>
             </div>
-            <button id="tall" class="ui-button ui-button--small" title="Turn the graph so frequency runs down the panel">Tall</button>
+            <button id="tall" class="ui-button ui-button--small" title="Rotate the graph so frequency runs vertically">Tall</button>
           </div>
           <div class="ui-plot graph" id="tuneGraph"></div>
           <div class="ui-cluster ui-cluster--legend">
@@ -131,7 +131,7 @@
           </div>
           <div class="ui-stack" id="chips"></div>
           <div id="inspector">
-            <p class="ui-text-hint pn-empty" id="inspectorEmpty">Press a point or a chip to tune a band. Double-click the graph to add one.</p>
+            <p class="ui-text-hint pn-empty" id="inspectorEmpty">Click a point or chip to edit a band. Double-click the graph to add one.</p>
             <div class="ui-stack" id="inspectorBody" hidden>
               <div class="ui-section-header ui-section-header--section" id="bandHead">
                 <span class="ui-section-header__text"><span class="ui-section-header__title" id="bandTitle"></span></span>
@@ -190,7 +190,7 @@
           </div>
           <div class="pn-library" id="library" data-showing="headphone">
             <div class="pn-section preset-section ui-stack" data-role="sets">
-              <div class="ui-section-header ui-section-header--section tone-accent" title="Your headphone, your ear and your taste in one press. A Set points at three presets by name, with the sliders.">
+              <div class="ui-section-header ui-section-header--section tone-accent" title="Load your headphone, ear and taste presets plus sliders in one click.">
                 <span class="ui-badge ui-badge--step tone-accent">S</span>
                 <span class="ui-section-header__text">
                   <span class="ui-section-header__title">Sets</span>
@@ -215,7 +215,7 @@
           </div>
 
           <div class="ui-stack pn-whole">
-            <button id="exportAll" class="ui-button ui-button--wide" title="All three layers and the sliders as one AutoEQ file, for other apps">Export</button>
+            <button id="exportAll" class="ui-button ui-button--wide" title="Export all layers and sliders as one AutoEQ file">Export</button>
             <textarea id="wholeText" class="ui-field ui-field--area" spellcheck="false" readonly hidden></textarea>
           </div>
 

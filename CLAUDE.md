@@ -1,62 +1,63 @@
 # goui
 
-A Brave and Chromium extension that runs a tab's audio through a parametric EQ. You edit the EQ
-in the side panel by dragging points on the curve, the way eqbyear.com works. The extension reads
-and writes AutoEQ `ParametricEQ.txt` files. It can search the AutoEQ headphone list on GitHub.
+A Brave and Chromium extension that runs a tab's audio through a parametric EQ. Drag points on the
+curve in the side panel to tune the sound, like eqbyear.com. goui reads and writes AutoEQ
+`ParametricEQ.txt` files and searches the AutoEQ headphone list on GitHub.
 
 ## Stack
 
 - Manifest V3, plain JavaScript, no build step. Load the folder with "Load unpacked".
 - `chrome.tabCapture` takes the tab's audio. An offscreen document runs the Web Audio chain and
-  plays the result. Chrome allows the capture only after a click on the toolbar icon, so the icon is
-  the on and off switch and the panel has no Start button. With the panel closed, a click on the
-  tab goui hears only opens the panel.
+  plays the result. Chrome allows capture only after a click on the toolbar icon. The icon acts as
+  the on and off switch, so the panel has no Start button. With the panel closed, clicking the icon
+  on the active tab only opens the panel.
 - `sidePanel.open` on a window with no side panel, such as an installed app, crashes Brave. A tab
-  in such a window gets `src/panel.html?tab=<id>` as the popup of the icon. That popup starts goui
-  on its tab when it opens and has a power button that turns goui on and off.
-- `src/panel/` holds the panel, one file per tab or concern. `state.js` holds the one state object
-  every file shares, and `refresh.js` lets each view register its redraw.
-- The side panel has three tabs: Listen, Tune and Library. From 900 px wide they show as three
-  columns. The Library holds a tab for each layer and one for the Sets. `design/ux-proposals.html`
+  in such a window gets `src/panel.html?tab=<id>` as its popup. Opening the popup starts goui on
+  that tab and shows a power button to turn goui on and off.
+- `src/panel/` holds the panel, one file per tab or concern. `state.js` holds the shared state
+  object. `refresh.js` lets each view register its redraw.
+- The side panel has three tabs: Listen, Tune and Library. At 900 px or wider, they show as three
+  columns. The Library holds a tab for each layer and one for Sets. `design/ux-proposals.html`
   holds the mock the panel follows.
-- `src/graph/` draws the curve as SVG. `EqGraph` in `graph.js` holds the state and the pointer
-  events. Each other file draws one part from a view. The graph uses the same Web Audio filters the
-  engine plays, so the picture matches the sound.
-- Each layer has its own preset list, under `headphonePresets`, `earPresets` and `tastePresets`. A preset holds bands
-  only. The sliders and the preamp stay as they are when you pick one. A sound saved before the two
-  lists splits into a headphone preset and, when it holds ear bands, an ear preset under that name.
+- `src/graph/` draws the curve as SVG. `EqGraph` in `graph.js` holds the state and pointer events.
+  Each other file draws one part from a view. The graph uses the same Web Audio filters the engine
+  plays, so the picture matches the sound.
+- Each layer has its own preset list under `headphonePresets`, `earPresets` and `tastePresets`. A
+  preset holds bands only. Picking one keeps the sliders and preamp as they are. A sound saved in
+  an older build splits into a headphone preset and, when it holds ear bands, an ear preset under
+  the same name.
 - `src/targets.json` holds AutoEQ's target curves in target sets, built by `npm run targets`. A
-  headphone from AutoEQ plays AutoEQ's file, tuned to the first target of its target set. With another
-  target, goui also plays the bands `fitTargetChange` in `src/fit.js` fits to the difference between
-  the two targets.
+  headphone from AutoEQ plays AutoEQ's file, tuned to the first target of its target set. When you
+  pick another target, goui also plays the bands `fitTargetChange` in `src/fit.js` fits to the
+  difference between the two targets.
 - Playwright runs the tests at side panel width. `tests/journeys.spec.js` holds the journeys and
-  `tests/helpers.js` the steps they share. ESLint and `scripts/check-rules.mjs` run the lint.
+  `tests/helpers.js` holds their shared steps. ESLint and `scripts/check-rules.mjs` run the lint.
 
 ## Words
 
 | Word | Means |
 | --- | --- |
 | Band | One biquad: type, frequency, gain, Q, and an on switch. |
-| Layer | A list of bands with its own switch, name and source. The `headphone` layer is always there. The `ear` and `taste` layers are optional. |
+| Layer | A list of bands with its own switch, name and source. The `headphone` layer is always present. The `ear` and `taste` layers are optional. |
 | Preset | A saved band list for one layer. Each layer has its own list. |
-| Set | A named headphone preset, ear preset and taste preset, plus the three Listen sliders, applied in one press. It points at the presets by name, so an edit to a preset reaches every Set that uses it. |
+| Set | A named headphone preset, ear preset and taste preset, plus the three Listen sliders, applied in one press. It points at presets by name, so editing a preset updates every Set that uses it. |
 | Config | The stored sound: the main switch, the preamp, the three Listen sliders and the layers. |
-| Played sound | What the audio chain plays. `toPlayedSound` merges the bands of every layer that is on with the three sliders as fixed bands, and works out the auto preamp. Bands sum in dB, so the layers merge exactly. |
+| Played sound | What the audio chain plays. `toPlayedSound` merges the bands of every active layer with the three sliders as fixed bands, and works out the auto preamp. Bands sum in dB, so the layers merge exactly. |
 | A/B | Held down, it plays the sound with the EQ off. In code, `isComparing`. |
-| Level match | Keeps the preamp while A/B is held, so both sides play at the same level. In code, `isLevelMatched`. |
+| Level match | Keeps the preamp while A/B is held, so both sides play at the same volume. In code, `isLevelMatched`. |
 | Solo | Plays one band alone. The panel holds it as the band itself, `soloBand`. |
 | Chosen band | The band the Tune tab edits, `selectedBand`. Its Q handles are the two squares half its width out. |
 | Heard config | The config with A/B and Solo applied. The engine plays it and the graph draws it. |
 | Measurement | One AutoEQ result for a headphone: a source, a form such as over-ear, and a rig when the source names one. |
 | Target | The curve AutoEQ tunes a headphone toward, such as Harman over-ear 2018. |
-| Target set | The targets that suit a group of measurements, with AutoEQ's own target first. `TargetSet` in `src/autoeq.js`. |
+| Target set | The targets that suit a group of measurements, with AutoEQ's default target first. `TargetSet` in `src/autoeq.js`. |
 | AutoEQ's pick | The measurement AutoEQ recommends when a headphone has more than one. |
-| Tall view | The graph turned so frequency runs down the panel. In code, `isTall`. |
+| Tall view | The graph rotated so frequency runs down the panel. In code, `isTall`. |
 | Frequency lines, gain lines | The grid behind the curve. Strong lines mark 100 Hz, 1 kHz and 10 kHz. |
 
 ## Function verbs
 
-A function name starts with a verb, and each verb has one meaning.
+A function name starts with a verb. Each verb has one meaning.
 
 | Verb | Means | Examples |
 | --- | --- | --- |
@@ -77,13 +78,13 @@ A function name starts with a verb, and each verb has one meaning.
 
 ## From a click to the sound
 
-1. A click on the toolbar icon reaches `onClicked` in `src/service-worker.js`. It opens the side
-   panel and checks whether the tab is the one goui hears.
-2. For a new tab, the service worker opens the offscreen document, asks `tabCapture` for a stream
-   id, and sends `audio:start`. `src/offscreen.js` takes the stream and builds the chain.
+1. Clicking the toolbar icon runs `onClicked` in `src/service-worker.js`. It opens the side panel
+   and checks whether goui already hears the tab.
+2. For a new tab, the service worker opens the offscreen document, gets a stream id from
+   `tabCapture`, and sends `audio:start`. `src/offscreen.js` takes the stream and builds the chain.
 3. The service worker sends the stored config as `audio:config` and then `capture:state`. An open
-   panel answers `capture:state` with its own `audio:config`, which holds A/B and Solo.
-4. Each edit in the panel sends `audio:config`. The offscreen document moves the nodes it has, or
+   panel answers `capture:state` with its own `audio:config`, which includes A/B and Solo.
+4. Each edit in the panel sends `audio:config`. The offscreen document updates the nodes it has, or
    builds new ones when a band changes type or switch.
 5. The offscreen document sends `audio:level` 20 times a second. The panel shows the level and
    draws the spectrum.
@@ -99,8 +100,8 @@ A function name starts with a verb, and each verb has one meaning.
 
 ## Versions
 
-A version holds three numbers, major, minor and patch. The patch counts to nine. When the next patch
-would be ten, the minor takes the step instead, so 0.1.9 goes to 0.2.0. `scripts/release.mjs` works
+A version has three numbers: major, minor and patch. The patch counts to nine. When the next patch
+would be ten, the minor increments instead, so 0.1.9 becomes 0.2.0. `scripts/release.mjs` works
 this out from the step it is given.
 
 # Rules
@@ -217,7 +218,7 @@ Butterworth, gets a link to its explanation on the same line.
   more files by concern, as the panel does with `src/panel/`, `src/graph/`, `src/fit.js` and `src/autoeq.js`.
 - Markup is built with `buildElement` in the panel and `buildSvg` in the graph, never from HTML or SVG
   text. A style is an object of camelCase properties. A look the graph draws with is a named
-  style in `src/graph/styles.js`, and a colour is a named constant in `src/graph/colors.js`.
+  style in `src/graph/styles.js`. A colour is a named constant in `src/graph/colors.js`.
 - A function name's verb says what it does, as the Function verbs table lists.
 - Each formula is a named function in `src/shared/math.js`, even when one place uses it, as `clamp`
   is. `20 * Math.log10(x)` is `linearToDb(x)`.
@@ -263,7 +264,7 @@ Butterworth, gets a link to its explanation on the same line.
 - No prose in the block. No description after a name. The reason for the code stays in a `//`
   comment above the block (rule 3).
 - A type that two or more places use is a `@typedef` in the file that owns it.
-  `src/shared/bands.js` owns the band types, and `src/shared/config.js` owns the layer and config
+  `src/shared/bands.js` owns the band types. `src/shared/config.js` owns the layer and config
   types. Another file names them as `import("./shared/bands.js").Band`.
 - `npm run lint` checks that every export has a block, that each type parses and is known, that no
   block holds prose, and that each block is on a function this rule gives one to.

@@ -245,7 +245,7 @@ function renderSaveRow() {
   const sliderWords = `Bass ${formatDb(sliders.bassDb)}, Vocals ${formatDb(sliders.vocalsDb)} and Treble ${formatDb(sliders.trebleDb)} dB`;
 
   renderSaveLabel("sets", hasSet);
-  partOf("sets", "set-note").textContent = `Names ${describeSet(readCurrentSet())}, with ${sliderWords}.`;
+  partOf("sets", "set-note").textContent = `Includes ${describeSet(readCurrentSet())}, with ${sliderWords}.`;
 }
 
 // The picker is drawn again only when a name or the playing Set changes, so an open picker stays open.

@@ -28,72 +28,60 @@
         <h1>Privacy</h1>
         <p class="lead">
           goui collects no personal data. No account, no analytics, no ads. Nothing leaves your
-          browser or Mac except the AutoEQ downloads described below.
+          device except the AutoEQ and GitHub release requests described below.
         </p>
         <p class="fine">
-          Last updated 15 October 2026. This policy covers the goui extension, version 0.1.3 and later.
-          goui for the Mac follows the same rules. The <a href="/mac#privacy">privacy note on the Mac page</a>
-          covers what differs.
+          Last updated 15 October 2026. Covers the goui browser extension (v0.1.3 and later) and
+          <a href="/mac#privacy">goui for the Mac</a>.
         </p>
 
         <h2>What goui reads</h2>
         <ul>
           <li>
-            <b>The active tab.</b> goui reads its address (to check it is a web page) and its title
-            (to show in the panel). It reads no other tab.
+            <b>The active tab (extension).</b> goui reads the tab's URL (to verify it is a web page)
+            and title (to display in the panel). It reads no other tabs.
           </li>
           <li>
-            <b>The tab's audio.</b> The sound runs through the EQ in your browser and plays back.
-            goui never records, stores or sends it.
+            <b>Audio.</b> Audio runs through the EQ in memory and plays back immediately. goui never
+            records, stores or transmits audio.
           </li>
         </ul>
 
-        <h2>What goui keeps</h2>
-        <p>Everything stays in your browser's extension storage, on your device.</p>
+        <h2>What goui stores locally</h2>
+        <p>All settings stay on your device (in browser extension storage or <code>~/Library/Application Support/goui</code> on macOS).</p>
         <ul>
-          <li>EQ settings and slider values.</li>
-          <li>Headphone, ear and taste presets.</li>
-          <li>Sets, under the <code>sets</code> key. Each Set holds three preset names and slider values.</li>
-          <li>The last tab and graph view used. Whether goui has heard a tab yet.</li>
-          <li>A copy of the AutoEQ headphone list, cached for a week.</li>
-          <li>The title of the tab goui hears, until the browser closes.</li>
+          <li>EQ settings, presets and Sets.</li>
+          <li>The last active tab and graph view.</li>
+          <li>A cached copy of the AutoEQ headphone index (refreshed weekly).</li>
+          <li>The captured tab's title for the current browser session.</li>
         </ul>
-        <p>Removing the extension deletes all of it.</p>
 
-        <h2>What goui sends</h2>
+        <h2>Network requests</h2>
         <p>
-          goui makes one kind of request. When you search AutoEQ or pick a headphone, it downloads the
-          headphone list and profile from GitHub (<code>raw.githubusercontent.com</code>). GitHub sees
-          your IP address and the file name. The
-          <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub privacy statement</a>
-          covers those requests. goui sends no settings, presets, Sets, titles or audio.
+          When you search AutoEQ or pick a headphone, goui fetches the index and profile from GitHub
+          (<code>raw.githubusercontent.com</code>) under the
+          <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub privacy statement</a>.
+          goui sends no user data with these requests.
         </p>
         <p>
-          The <b>Measure my ear</b> button opens eqbyear.com in a new tab. That visit
-          falls under EQByEar's own policy. goui only reads the result you paste back.
+          Clicking <b>Measure my ear</b> opens eqbyear.com in a new tab under EQByEar's own policy.
+          goui only reads the text you paste back.
         </p>
-
-        <h2>goui for the Mac</h2>
         <p>
-          The Mac app reads all audio output instead of one tab. It keeps settings, presets and Sets
-          in <code>~/Library/Application Support/goui</code>. It checks GitHub for new releases twice
-          a day. That request carries nothing about you. <a href="/mac#privacy">Details on the Mac page</a>.
+          On macOS, goui checks GitHub Releases twice a day for updates without sending any user
+          data.
         </p>
-
-        <h2>What goui shares</h2>
-        <p>goui collects no data, so it has none to share or sell.</p>
 
         <h2>This website</h2>
         <p>
-          goui.mwyndham.dev runs on Cloudflare. No cookies, no analytics. Cloudflare handles each
-          request under its own privacy policy.
+          goui.mwyndham.dev is hosted on Cloudflare Workers with no cookies or analytics.
         </p>
 
         <h2>Questions</h2>
         <p>
-          Open an issue on <a href="https://github.com/wyndhamharyata/goui/issues">GitHub</a>. Changes
-          appear here with a new date and in the
-          <a href="https://github.com/wyndhamharyata/goui/commits/main/site/public/privacy.html">page history</a>.
+          Open an issue on <a href="https://github.com/wyndhamharyata/goui/issues">GitHub</a>.
+          Changes are tracked in the
+          <a href="https://github.com/wyndhamharyata/goui/commits/main/site/public/privacy.html">commit history</a>.
         </p>
       </section>
 

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "goui",
   "version": "0.2.4",
-  "description": "Browser level EQ joining AutoEQ and EQByEar. Different ear, different head, different sound.",
+  "description": "Parametric EQ for a browser tab, with AutoEQ and EQByEar. Every ear hears differently.",
   "homepage_url": "https://goui.mwyndham.dev",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4kSQjeEVP6CGDnI2Eft1Ae3jBxb9PbVHrqAefb0Fg6RH0Yeo8vDHhDgNtL+mdyhNi/ipANZySWF30hrptnl1UmoRhG7Xxu/iH2YONaQsTxpnKajmHcdw/Cn662GsnGjtsl+ZOTYQcwTZBS1hyI4UMDEJwslfy0kV1vOwTgKGj10b35VR5PmpCtbzeFwt1orcW/IDYPZNsq+S7cvKLzYyW8PMYMwC/GPls3dvW7w6Hi/IKyafU2uWZVSOO9WD1y3BrLDW1Uv1J2C5U9rIo8FY4H2SwHMa6or9UGqoTyY1T4u+Cwkf0Mmibdr5nxZTvWKQV6SCzeoeyw3Od9jyINmH4QIDAQAB",
   "permissions": ["tabCapture", "offscreen", "storage", "activeTab", "sidePanel"],

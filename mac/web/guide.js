@@ -80,10 +80,10 @@ function buildCommandShot() {
 /** @returns {void} */
 export function renderMacGuide() {
   document.getElementById("guideSteps").replaceChildren(
-    buildGuideStep(1, "Turn goui on", "Press the power button at the top of this panel. goui EQs every sound the Mac plays.", buildPowerShot()),
-    buildGuideStep(2, "Allow the audio", "The first time, macOS asks to let goui record the audio of this Mac. Press Allow. goui EQs the sound on its way to you and keeps none of it.", buildAllowShot()),
-    buildGuideStep(3, "Play something", "Any app works. Music, a video, a call.", buildPlayShot()),
-    buildGuideStep(4, "Right-click the menu bar item", "The menu holds your Sets, Wide panel, Restart engine and Reload panel. A pick from Sets plays it with the panel closed.", buildMenuShot()),
-    buildGuideStep(5, "Switch Sets from Terminal", `Save a Set under Library, then Sets. goui set "${exampleSetName}" plays it from Terminal, a shortcut or a login item.`, buildCommandShot()),
+    buildGuideStep(1, "Turn goui on", "Press the power button at the top of this panel.", buildPowerShot()),
+    buildGuideStep(2, "Allow the audio", "Press Allow when macOS asks to record audio. goui keeps none of it.", buildAllowShot()),
+    buildGuideStep(3, "Play something", "Play audio in any app.", buildPlayShot()),
+    buildGuideStep(4, "Right-click the menu bar item", "Switch Sets, widen the panel or restart the engine from the menu.", buildMenuShot()),
+    buildGuideStep(5, "Switch Sets from Terminal", `Run goui set "${exampleSetName}" from Terminal or a shortcut.`, buildCommandShot()),
   );
 }

@@ -19,10 +19,10 @@ if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
   esc=$(printf '\033')
   bold="$esc[1m" dim="$esc[2m" red="$esc[31m" green="$esc[32m" yellow="$esc[33m"
   blue="$esc[34m" magenta="$esc[35m" cyan="$esc[36m" reset="$esc[0m"
-  # A blue from the icon's tile, #5b8cff, for the letters, and a lighter one for the shimmer. A terminal without 24-bit colour takes the nearest of its 256.
+  # The icon's acid, #d4ff3f, for the letters, and a lighter one for the shimmer. A terminal without 24-bit colour takes the nearest of its 256.
   case "${COLORTERM:-}" in
-  truecolor | 24bit) colour_mode=24 icon_blue="$esc[1;38;2;91;140;255m" shimmer="$esc[1;38;2;190;212;255m" ;;
-  *) colour_mode=256 icon_blue="$esc[1;38;5;69m" shimmer="$esc[1;38;5;153m" ;;
+  truecolor | 24bit) colour_mode=24 icon_blue="$esc[1;38;2;212;255;63m" shimmer="$esc[1;38;2;242;243;245m" ;;
+  *) colour_mode=256 icon_blue="$esc[1;38;5;191m" shimmer="$esc[1;38;5;255m" ;;
   esac
 else
   colour_mode=none
@@ -291,11 +291,11 @@ fi
 printf '  %s→%s %s goui %s%s\n' "$blue" "$reset" "$plan" "$change" "$reset"
 
 heading "Before you install"
-note "goui EQs every sound on this Mac, from the menu bar." "One EQ covers every app. It follows the default output."
-note "Spatial Audio and head tracking on AirPods and Beats stop" "while goui plays. goui processes the audio before the output."
-note "macOS asks to let goui record audio. Press Allow." "goui EQs the sound on its way out and keeps none of it."
-note "goui is not signed by Apple yet, so a full update asks for" "that permission again."
-note "Settings stay in ~/Library/Application Support/goui," "through updates and after goui uninstall."
+note "goui EQs all audio on this Mac from the menu bar." "It follows the default output device."
+note "Spatial Audio and head tracking on AirPods and Beats pause" "while goui is active."
+note "macOS asks to record system audio on first start. Press Allow." "goui processes audio in real time and keeps none of it."
+note "goui is not signed with an Apple Developer ID yet, so engine" "updates ask for audio permission again."
+note "Settings stay in ~/Library/Application Support/goui" "across updates and uninstall."
 if ! ask "$plan goui $new_version now?" y; then
   printf '\n  %sNothing was installed.%s\n\n' "$dim" "$reset"
   exit 1
