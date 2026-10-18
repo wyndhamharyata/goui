@@ -83,6 +83,9 @@ final class FloatingPanel: NSPanel, NSWindowDelegate {
   func resize(toHeight height: Double) {
     let maxHeight = (screen.map { Double($0.visibleFrame.height) } ?? height) - (2 * Self.gapPx)
     let newHeight = min(height, maxHeight)
+
+    guard newHeight != frame.height else { return }
+
     var newFrame = frame
 
     newFrame.origin.y = frame.maxY - newHeight

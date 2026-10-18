@@ -130,15 +130,56 @@ async function storeItems(items) {
   await sendToMac("keepSound", { sound: toPlayedSound(items[storageKeys.config]) });
 }
 
+// One reading at a time, so a slow one is skipped rather than queued up behind the next.
+let isReadingMeters = false;
+
 async function sendLevel() {
-  if (document.visibilityState !== "visible" || macListeners.length === 0) return;
+  if (isReadingMeters || document.visibilityState !== "visible" || macListeners.length === 0) return;
 
-  const { messageTypes, silenceDb } = await importFromApp("src/shared/messages.js");
-  const { toLevel } = await importFromApp("mac/web/spectrum.js");
-  const meters = await sendToMac("meters");
-  const level = meters?.scope ? toLevel(meters.scope) : { levelDb: silenceDb, spectrumDb: [] };
+  isReadingMeters = true;
 
-  deliverToPanel({ type: messageTypes.audioLevel, ...level });
+  try {
+    const { messageTypes, silenceDb } = await importFromApp("src/shared/messages.js");
+    const { toLevel } = await importFromApp("mac/web/spectrum.js");
+    const meters = await sendToMac("meters");
+    const level = meters?.scope ? toLevel(meters.scope) : { levelDb: silenceDb, spectrumDb: [] };
+
+    deliverToPanel({ type: messageTypes.audioLevel, ...level });
+  } finally {
+    isReadingMeters = false;
+  }
+}
+
+// The meters are read only while the panel is on screen, so a panel put away reads nothing at all.
+let levelTimer = 0;
+
+function startLevelTimer() {
+  if (levelTimer) return;
+
+  levelTimer = setInterval(sendLevel, macLevelEveryMs);
+}
+
+function stopLevelTimer() {
+  clearInterval(levelTimer);
+  levelTimer = 0;
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopLevelTimer();
+    return;
+  }
+
+  startLevelTimer();
+  readStatus();
+});
+
+// A panel that shows again asks for the engine's status, so a change it missed while away never shows stale.
+async function readStatus() {
+  const { messageTypes } = await importFromApp("src/shared/messages.js");
+
+  macSession.capture = toCaptureState(await sendToMac("status"));
+  deliverToPanel({ type: messageTypes.captureState, state: macSession.capture });
 }
 
 // The panel's words for what goui hears, told for the whole Mac and not one tab.
@@ -204,6 +245,16 @@ window.chrome = {
   },
 };
 
-setInterval(sendLevel, macLevelEveryMs);
-// The page's own height. Its scrollHeight never drops below the window, so the panel could only grow.
-new ResizeObserver(() => sendToMac("size", { height: Math.ceil(document.documentElement.getBoundingClientRect().height) })).observe(document.documentElement);
+if (document.visibilityState === "visible") startLevelTimer();
+
+// The page's own height, sent only when it changes, so the window it resizes cannot ask for it again.
+let sentHeight = 0;
+
+new ResizeObserver(() => {
+  const height = Math.ceil(document.documentElement.getBoundingClientRect().height);
+
+  if (height === sentHeight) return;
+
+  sentHeight = height;
+  sendToMac("size", { height });
+}).observe(document.documentElement);

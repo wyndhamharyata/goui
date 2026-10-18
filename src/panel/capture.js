@@ -40,9 +40,26 @@ function renderMeter() {
 function clearLevel() {
   byId("level").textContent = "--";
   state.spectrumDb = [];
+  renderSpectra();
+}
+
+// A hidden panel keeps its last reading and draws it when it shows again, so it never redraws for nobody.
+let isSpectrumStale = false;
+
+function renderSpectra() {
+  if (document.hidden) {
+    isSpectrumStale = true;
+    return;
+  }
+
+  isSpectrumStale = false;
 
   for (const graph of graphs) graph.renderSpectrum();
 }
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && isSpectrumStale) renderSpectra();
+});
 
 /** @param {import("../shared/messages.js").CaptureState} capture */
 export function applyCaptureState(capture) {
@@ -84,7 +101,7 @@ function applyLevel(message) {
 
   state.spectrumDb = message.spectrumDb.map((levelDb, index) => (previous.length ? blend(previous[index], levelDb, newShare) : levelDb));
 
-  for (const graph of graphs) graph.renderSpectrum();
+  renderSpectra();
 }
 
 // The service worker starts a tab with the stored config, so an open panel sends the A/B and Solo it shows.

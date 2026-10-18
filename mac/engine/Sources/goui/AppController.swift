@@ -364,7 +364,7 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
   }
 
   @objc private func restartEngine() {
-    engine.restart(reason: "Restart engine was chosen in the menu.")
+    engine.restartByHand(reason: "Restart engine was chosen in the menu.")
   }
 
   @objc private func reloadPanel() {

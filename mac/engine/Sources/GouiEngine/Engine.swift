@@ -37,8 +37,12 @@ public final class Engine {
   private static let fadeWaitSeconds = 0.005
   // A new device and then its new rate can arrive together, so a restart waits for them to settle.
   private static let restartSettleSeconds = 0.3
-  // The callbacks run about 90 times a second, even in silence. None for this long means the path hangs.
+  // The callbacks run about 90 times a second, even in silence. No window with one means the path hangs.
   private static let callbackWatchSeconds = 2.0
+  // A path that stopped this soon after it started was not mended by the rebuild, so the next wait grows.
+  private static let steadyRunSeconds = 20.0
+  // The wait before each rebuild. The last one repeats while the path keeps stopping.
+  private static let rebuildWaitsSeconds = [0.3, 2, 5, 15, 60]
   private static let buildQueue = DispatchQueue(label: "goui.engine.build", qos: .userInitiated)
 
   private var sound = RenderSound(preampDb: 0, bands: [])
@@ -58,6 +62,11 @@ public final class Engine {
   private var pendingWatch: Task<Void, Never>?
   private var failedStartCount = 0
   private var watchedCallbackCount: UInt64 = 0
+  // Windows of the watchdog that saw no new callbacks. Two in a row mean the path hangs.
+  private var silentWatchCount = 0
+  // How many rebuilds have come and gone without a path that keeps running.
+  private var rebuildCount = 0
+  private var runningSinceNanoseconds: UInt64 = 0
   private var overloadCount = 0
   private var lastCallbackCount: UInt64 = 0
   private var lastMeterNanoseconds: UInt64 = 0
@@ -96,17 +105,40 @@ public final class Engine {
     pendingStart?.cancel()
     buildTask?.cancel()
     stopPath()
+    rebuildCount = 0
     status = .stopped
   }
 
   public func restart(reason: String) {
+    rebuild(reason: reason, waitSeconds: readRebuildWait())
+  }
+
+  // A person asked for this one, so it starts at once and the waits start over.
+  public func restartByHand(reason: String) {
+    rebuildCount = 0
+    rebuild(reason: reason, waitSeconds: Self.restartSettleSeconds)
+  }
+
+  private func rebuild(reason: String, waitSeconds: Double) {
     guard status != .stopped else { return }
 
-    scheduleStart(afterSeconds: Self.restartSettleSeconds) { [weak self] in
+    scheduleStart(afterSeconds: waitSeconds) { [weak self] in
       self?.stopPath()
-      print("\(reason) Starting again.")
+      print("\(reason) Starting again in \(waitSeconds) s.")
       self?.start()
     }
+  }
+
+  // A path that ran a long time starts over at once, and one that stopped straight away waits longer each time.
+  private func readRebuildWait() -> Double {
+    let ranSeconds = runningSinceNanoseconds == 0 ? 0 : Double(DispatchTime.now().uptimeNanoseconds - runningSinceNanoseconds) / nanosecondsPerSecond
+
+    if ranSeconds >= Self.steadyRunSeconds { rebuildCount = 0 }
+
+    let waitSeconds = Self.rebuildWaitsSeconds[min(rebuildCount, Self.rebuildWaitsSeconds.count - 1)]
+    rebuildCount += 1
+
+    return waitSeconds
   }
 
   // Throws when the sound cannot play, and keeps the one before.
@@ -152,6 +184,7 @@ public final class Engine {
       overloadCount = 0
       lastCallbackCount = 0
       lastMeterNanoseconds = DispatchTime.now().uptimeNanoseconds
+      runningSinceNanoseconds = lastMeterNanoseconds
       status = .running
       failedStartCount = 0
       printSummary(built.summary)
@@ -207,10 +240,18 @@ public final class Engine {
 
     let count = renderReadCallbackCount(render)
     guard count != watchedCallbackCount else {
+      // A device that wakes or settles on a new rate can miss one window, so only the second means a hang.
+      silentWatchCount += 1
+      guard silentWatchCount >= 2 else {
+        watchCallbacks()
+        return
+      }
+
       restart(reason: "The audio callbacks stopped.")
       return
     }
 
+    silentWatchCount = 0
     watchedCallbackCount = count
     watchCallbacks()
   }
@@ -219,6 +260,8 @@ public final class Engine {
     pendingWatch?.cancel()
     built?.teardown.runAll()
     built = nil
+    runningSinceNanoseconds = 0
+    silentWatchCount = 0
   }
 
   private func scheduleStart(afterSeconds delaySeconds: Double, _ action: @escaping @MainActor () -> Void) {

@@ -72,9 +72,12 @@ final class Bridge: NSObject, WKScriptMessageHandlerWithReply {
   }
 
   func sendStatus() {
+    // A panel put away reads the status as it shows again, so a change while it is away need not reach it.
+    guard let webView, webView.window?.isVisible == true else { return }
+
     let detail: [String: Any] = ["type": EventType.status.rawValue, "status": toStatus()]
 
-    webView?.callAsyncJavaScript("window.dispatchEvent(new CustomEvent(\"goui\", { detail }))", arguments: ["detail": detail], in: nil, in: .page)
+    webView.callAsyncJavaScript("window.dispatchEvent(new CustomEvent(\"goui\", { detail }))", arguments: ["detail": detail], in: nil, in: .page)
   }
 
   // The page loads again, so its gouiSets has to be found again.
