@@ -54,6 +54,16 @@ dedicated bypass toggles and global preset management via Sets.
 > In Chrome, audio capture attaches to the active tab upon clicking the extension icon. Re-clicking
 > on another tab transfers audio routing.
 
+## Documentation
+
+- [Using goui](docs/using-goui.md) documents every control across Listen, Tune, Library, and Sets.
+- [goui for the Mac](docs/mac.md) covers menu bar integration, updates, CLI usage, and local state
+  persistence.
+- [Add the extension by hand](docs/install-by-hand.md) guides manual installation of the unpacked
+  extension.
+- [Development](docs/develop.md) details repository setup, available scripts, and the release
+  pipeline.
+
 ## Credits & Licensing
 
 - **AutoEQ:** Created by Jaakko Pasanen (MIT License)

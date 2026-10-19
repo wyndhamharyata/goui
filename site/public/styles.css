@@ -841,6 +841,14 @@ main.help {
   font-size: var(--size-small);
 }
 
+.help .menu-shot {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  border: 1px solid var(--line-1);
+  border-radius: var(--radius-3);
+}
+
 .help .doc-table {
   width: 100%;
   border: 1px solid var(--line-1);
