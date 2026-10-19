@@ -1,30 +1,41 @@
 # goui for the Mac
 
-The Mac app runs all system audio through the same panel from the menu bar. It requires Apple
-silicon and macOS 26 or later.
+The macOS application processes all system audio through a menu bar interface matching the browser
+extension. Requires Apple silicon and macOS 26 or later.
 
-```sh
+```bash
 curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh
 ```
 
-The installer checks your Mac and asks before installing. No admin password is required. It places
-`goui.app` in `~/Applications`, registers a login item, and opens the panel. On first start, macOS
-asks permission to record system audio. Press **Allow**. goui processes the audio in real time and
-stores none of it.
+The user-space installer deploys `goui.app` to `~/Applications`, registers a login item, and
+launches the application without requiring administrative privileges. On initial execution, grant
+the macOS system audio recording permission. Audio is processed live in memory with zero local disk
+persistence.
 
-- Click the menu bar icon to toggle the panel. Right-click for **About goui**, **Restart engine**,
-  **Reload panel**, **Wide panel**, **Sets**, update options and **Quit goui**.
-- **Sets** lists saved Sets and marks the active one. Pick a Set to switch without opening the
-  panel.
-- goui follows the default output device. Other system EQs (such as eqMac or SoundSource) stack on
-  top of goui. Run only one at a time.
-- Spatial Audio and head tracking on AirPods and Beats pause while goui is active.
-- goui is not signed with an Apple Developer ID yet. Engine updates will prompt for audio
-  permission again. Settings stay in `~/Library/Application Support/goui`.
-- Panel-only updates apply automatically. Engine updates show **Update to …** in the menu.
-- goui checks GitHub for updates twice a day and sends no user data.
-- The `goui` CLI supports `start`, `stop`, `restart`, `set "name"`, `logs`, `rollback` and
-  `uninstall`.
+## Operation & Menu Bar Controls
 
-See [goui.mwyndham.dev/mac](https://goui.mwyndham.dev/mac) for details and troubleshooting. See
-[`mac/engine/README.md`](../mac/engine/README.md) for the audio engine.
+- **Interface:** Left-click the menu bar icon to toggle the main panel. Right-click to access engine
+  restart, panel reload, panel width toggles, update configurations, and active Sets.
+- **Sets Menu:** Select any saved Set directly from the context menu to swap active profiles
+  without opening the main UI.
+- **Device Routing:** Automatically tracks changes to the default macOS system output device. To
+  avoid signal degradation, disable competing audio routing software (e.g., eqMac, SoundSource).
+- **CoreAudio Constraints:** Spatial Audio and hardware head-tracking on AirPods and Beats devices
+  are bypassed while goui processes active system audio.
+
+## Updates & CLI
+
+- **Auto-Updates:** Panel assets update automatically in the background. Engine binary updates
+  trigger a menu bar notification (**Update to …**) and re-prompt for macOS audio permissions.
+  GitHub release checks run twice daily with zero telemetry transmission.
+- **Command-Line Tool:** Execute operations directly via the `goui` executable:
+
+```bash
+goui [start | stop | restart | set "name" | logs | rollback | uninstall]
+```
+
+## Storage & Resources
+
+- Configuration state and preset files persist in `~/Library/Application Support/goui`.
+- **Documentation:** [goui.mwyndham.dev/mac](https://goui.mwyndham.dev/mac)
+- **Engine Architecture:** [`mac/engine/README.md`](../mac/engine/README.md)

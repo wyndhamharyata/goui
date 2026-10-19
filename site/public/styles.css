@@ -322,7 +322,7 @@ main.landing .hero-text {
 }
 
 /* How it works. Five steps in one row, with the sliders and the Set spanning the three layers under them. */
-.flow {
+.signal {
   display: grid;
   grid-template-columns: 1fr 40px 1fr 40px 1fr 40px 1fr 40px 1fr;
   row-gap: var(--space-3);
@@ -332,18 +332,18 @@ main.landing .hero-text {
   background: var(--ink-1);
 }
 
-:where(.flow-node, .flow-span) {
+:where(.signal-node, .signal-span) {
   --tone: var(--text-3);
 }
 
-.flow-node,
-.flow-span {
+.signal-node,
+.signal-span {
   position: relative;
   outline: none;
   cursor: help;
 }
 
-.flow-node {
+.signal-node {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -359,24 +359,24 @@ main.landing .hero-text {
   transition: transform 0.2s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
 
-.flow-node b {
+.signal-node b {
   color: var(--text-1);
 }
 
-.flow-node > span {
+.signal-node > span {
   color: var(--text-3);
   font-size: var(--size-body);
 }
 
-.flow-node:hover,
-.flow-node:focus {
+.signal-node:hover,
+.signal-node:focus {
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--tone) 60%, transparent);
   box-shadow: inset 3px 0 0 var(--tone), 0 16px 32px -16px var(--tone);
 }
 
 /* A line with a light that travels along it, the way the sound goes. */
-.flow-arrow {
+.signal-arrow {
   position: relative;
   align-self: center;
   height: 1px;
@@ -385,7 +385,7 @@ main.landing .hero-text {
   overflow: visible;
 }
 
-.flow-arrow::before {
+.signal-arrow::before {
   content: "";
   position: absolute;
   top: -3px;
@@ -395,7 +395,7 @@ main.landing .hero-text {
   border-bottom: 3.5px solid transparent;
 }
 
-.flow-arrow::after {
+.signal-arrow::after {
   content: "";
   position: absolute;
   top: -1.5px;
@@ -405,22 +405,22 @@ main.landing .hero-text {
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 8px var(--accent);
-  animation: flow-travel 2.4s var(--ease) infinite;
+  animation: signal-travel 2.4s var(--ease) infinite;
 }
 
-.flow-arrow:nth-of-type(2)::after {
+.signal-arrow:nth-of-type(2)::after {
   animation-delay: 0.3s;
 }
 
-.flow-arrow:nth-of-type(3)::after {
+.signal-arrow:nth-of-type(3)::after {
   animation-delay: 0.6s;
 }
 
-.flow-arrow:nth-of-type(4)::after {
+.signal-arrow:nth-of-type(4)::after {
   animation-delay: 0.9s;
 }
 
-@keyframes flow-travel {
+@keyframes signal-travel {
   from {
     left: 0;
     opacity: 0;
@@ -441,7 +441,7 @@ main.landing .hero-text {
 }
 
 /* A bracket under Headphone, My ear and Taste. */
-.flow-span {
+.signal-span {
   grid-column: 3 / 8;
   display: flex;
   justify-content: center;
@@ -452,7 +452,7 @@ main.landing .hero-text {
   transition: border-color 0.2s var(--ease);
 }
 
-.flow-span b {
+.signal-span b {
   margin-bottom: calc(-1 * var(--space-3));
   padding: 0 var(--space-3);
   background: var(--ink-1);
@@ -464,32 +464,32 @@ main.landing .hero-text {
   transition: color 0.2s var(--ease);
 }
 
-.flow-span--sliders {
+.signal-span--sliders {
   margin-top: var(--space-2);
 }
 
-.flow-span--set {
+.signal-span--set {
   --tone: var(--accent);
   margin-top: var(--space-4);
 }
 
-.flow-span:hover,
-.flow-span:focus {
+.signal-span:hover,
+.signal-span:focus {
   border-color: var(--tone);
 }
 
-.flow-span--sliders:hover,
-.flow-span--sliders:focus {
+.signal-span--sliders:hover,
+.signal-span--sliders:focus {
   --tone: var(--text-1);
 }
 
-.flow-span:hover b,
-.flow-span:focus b {
+.signal-span:hover b,
+.signal-span:focus b {
   color: var(--tone);
 }
 
 /* The tooltip. Glass over the page, edged in the step's own colour. */
-.flow-tip {
+.signal-tip {
   position: absolute;
   top: calc(100% + var(--space-4));
   left: 50%;
@@ -515,7 +515,7 @@ main.landing .hero-text {
   transition: opacity 0.18s var(--ease), transform 0.22s var(--ease);
 }
 
-.flow-tip::before {
+.signal-tip::before {
   content: "";
   position: absolute;
   top: -6px;
@@ -528,68 +528,68 @@ main.landing .hero-text {
   transform: translateX(-50%) rotate(45deg);
 }
 
-.flow-node:hover,
-.flow-node:focus,
-.flow-span:hover,
-.flow-span:focus {
+.signal-node:hover,
+.signal-node:focus,
+.signal-span:hover,
+.signal-span:focus {
   z-index: 1;
 }
 
-.flow-node:hover .flow-tip,
-.flow-node:focus .flow-tip,
-.flow-span:hover .flow-tip,
-.flow-span:focus .flow-tip {
+.signal-node:hover .signal-tip,
+.signal-node:focus .signal-tip,
+.signal-span:hover .signal-tip,
+.signal-span:focus .signal-tip {
   opacity: 1;
   transform: translate(-50%, 0) scale(1);
 }
 
 /* The end steps keep their tips inside the page. */
-.flow-node--start .flow-tip {
+.signal-node--start .signal-tip {
   left: 0;
   transform: translate(0, -6px) scale(0.97);
 }
 
-.flow-node--end .flow-tip {
+.signal-node--end .signal-tip {
   right: 0;
   left: auto;
   transform: translate(0, -6px) scale(0.97);
 }
 
-.flow-node--start:hover .flow-tip,
-.flow-node--start:focus .flow-tip,
-.flow-node--end:hover .flow-tip,
-.flow-node--end:focus .flow-tip {
+.signal-node--start:hover .signal-tip,
+.signal-node--start:focus .signal-tip,
+.signal-node--end:hover .signal-tip,
+.signal-node--end:focus .signal-tip {
   transform: translate(0, 0) scale(1);
 }
 
-.flow-node--start .flow-tip::before {
+.signal-node--start .signal-tip::before {
   left: var(--space-7);
 }
 
-.flow-node--end .flow-tip::before {
+.signal-node--end .signal-tip::before {
   left: auto;
   right: var(--space-7);
 }
 
-.flow-span .flow-tip {
+.signal-span .signal-tip {
   top: calc(100% + var(--space-5));
 }
 
 /* A narrow screen stacks the steps, and each tip opens under its step. */
 @media (max-width: 820px) {
-  .flow {
+  .signal {
     grid-template-columns: 1fr;
     padding: var(--space-5);
   }
 
-  .flow-arrow {
+  .signal-arrow {
     justify-self: center;
     width: 1px;
     height: 24px;
     margin: 0;
   }
 
-  .flow-arrow::before {
+  .signal-arrow::before {
     top: auto;
     right: auto;
     bottom: -1px;
@@ -600,47 +600,47 @@ main.landing .hero-text {
     border-bottom: 0;
   }
 
-  .flow-arrow::after {
+  .signal-arrow::after {
     left: -1.5px;
-    animation-name: flow-travel-down;
+    animation-name: signal-travel-down;
   }
 
   /* A bracket has nothing to span in one column, so it reads as a band of its own. */
-  .flow-span {
+  .signal-span {
     grid-column: 1;
     padding: var(--space-3);
     border-top: 1px solid var(--line-2);
     border-radius: var(--radius-2);
   }
 
-  .flow-span b {
+  .signal-span b {
     margin: 0;
     padding: 0;
     background: none;
     transform: none;
   }
 
-  .flow-node .flow-tip,
-  .flow-node--start .flow-tip,
-  .flow-node--end .flow-tip {
+  .signal-node .signal-tip,
+  .signal-node--start .signal-tip,
+  .signal-node--end .signal-tip {
     left: 50%;
     right: auto;
     transform: translate(-50%, -6px) scale(0.97);
   }
 
-  .flow-node:hover .flow-tip,
-  .flow-node:focus .flow-tip {
+  .signal-node:hover .signal-tip,
+  .signal-node:focus .signal-tip {
     transform: translate(-50%, 0) scale(1);
   }
 
-  .flow-node--start .flow-tip::before,
-  .flow-node--end .flow-tip::before {
+  .signal-node--start .signal-tip::before,
+  .signal-node--end .signal-tip::before {
     left: 50%;
     right: auto;
   }
 }
 
-@keyframes flow-travel-down {
+@keyframes signal-travel-down {
   from {
     top: 0;
     opacity: 0;
@@ -661,12 +661,12 @@ main.landing .hero-text {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .flow-node,
-  .flow-tip {
+  .signal-node,
+  .signal-tip {
     transition: opacity 0.18s linear;
   }
 
-  .flow-arrow::after {
+  .signal-arrow::after {
     animation: none;
     display: none;
   }
@@ -839,6 +839,83 @@ main.help {
 .help .links code {
   padding: 0 var(--space-1);
   font-size: var(--size-small);
+}
+
+.help .doc-table {
+  width: 100%;
+  border: 1px solid var(--line-1);
+  border-radius: var(--radius-2);
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: var(--space-4);
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: var(--size-body);
+}
+
+.help h2 + .lead + .doc-table {
+  margin-top: 0;
+}
+
+.help .doc-table th,
+.help .doc-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line-1);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.help .doc-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.help .doc-table thead th {
+  background: var(--ink-2);
+  color: var(--text-3);
+  font: 700 var(--size-micro) / 1.4 var(--font-number);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.help .doc-table tbody th {
+  width: 36%;
+  color: var(--text-1);
+  font: 600 var(--size-body) / 1.6 var(--font-ui);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.help .doc-table tbody tr:hover > * {
+  background: var(--ink-2);
+}
+
+.help .doc-table code {
+  padding: 0 var(--space-1);
+  font-size: var(--size-small);
+}
+
+.help .doc-table br + code {
+  display: inline-block;
+  margin-top: var(--space-1);
+}
+
+.help .doc-bullets {
+  margin: 0;
+  padding-left: var(--space-5);
+  color: var(--text-2);
+}
+
+.help .doc-bullets li {
+  margin-bottom: var(--space-2);
+}
+
+.help .doc-bullets li::marker {
+  color: var(--accent);
+}
+
+.help .doc-bullets a {
+  color: var(--accent);
 }
 
 .not-found {

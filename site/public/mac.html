@@ -195,16 +195,18 @@
 
           <section id="sets">
             <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Sets</span><span class="ui-section-header__rule"></span></h2>
-            <ul class="intro-facts">
-              <li>A Set links a headphone preset, ear preset and taste preset with the Bass, Vocals and Treble sliders.</li>
-              <li>Pick a Set on Listen or in Library under Sets.</li>
-              <li>Save each active layer as a preset before saving a Set.</li>
-              <li>Save under an existing Set name to replace it.</li>
-              <li>Editing a preset updates every Set that uses it.</li>
-              <li><span class="ui-badge tone-accent"><span>Menu</span></span>Right-click the menu bar item and pick a Set from the Sets submenu without opening the panel.</li>
-              <li><span class="ui-badge tone-accent"><span>Terminal</span></span>Run <code>goui set "name"</code> from Terminal, a shortcut or a login item.</li>
-              <li>Sets with more than 32 active bands (including the three sliders) cannot be played by the engine.</li>
-            </ul>
+            <p class="lead">
+              A Set links a headphone preset, an ear preset and a taste preset with the Bass, Vocals
+              and Treble sliders. Pick one on Listen or in Library under Sets. Save each active layer as
+              a preset first, then save the Set. Saving under an existing name replaces it. Editing a
+              preset updates every Set that uses it.
+            </p>
+            <p class="lead">
+              To switch Sets without opening the panel, right-click the menu bar item and pick one from
+              the Sets submenu. You can also run <code>goui set "name"</code> from Terminal, a shortcut
+              or a login item. The engine cannot play a Set with more than 32 active bands, counting
+              the three sliders.
+            </p>
             <ol class="guide-steps intro-steps sets-pictures" aria-hidden="true">
               <li class="guide-step">
                 <div class="guide-shot">
@@ -226,17 +228,22 @@
           <section id="menu">
             <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">The menu bar item</span><span class="ui-section-header__rule"></span></h2>
             <p class="lead">Left-click the menu bar icon to toggle the panel. Right-click to open the menu.</p>
-            <div class="ui-stack ui-stack--tight links">
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>About goui</span></span><span class="ui-list-row__detail">Shows the engine and panel versions</span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Restart engine</span></span><span class="ui-list-row__detail">Rebuilds the audio tap and device</span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Reload panel</span></span><span class="ui-list-row__detail">Reloads the panel UI without interrupting audio</span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Wide panel</span></span><span class="ui-list-row__detail">Toggles the 3-column wide layout</span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Sets</span></span><span class="ui-list-row__detail">Lists saved Sets and marks the active one</span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Check for updates…</span></span><span class="ui-list-row__detail">Checks GitHub Releases for a newer version</span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Update to …</span></span><span class="ui-list-row__detail">Appears when an engine update is ready to install</span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Automatic updates</span></span><span class="ui-list-row__detail">Checks for updates twice a day (enabled by default)</span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span>Quit goui</span></span><span class="ui-list-row__detail">Stops goui until next login</span></span></span></div>
-            </div>
+            <table class="doc-table">
+              <thead>
+                <tr><th scope="col">Menu item</th><th scope="col">What it does</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">About goui</th><td>Shows the engine and panel versions</td></tr>
+                <tr><th scope="row">Restart engine</th><td>Rebuilds the audio tap and device</td></tr>
+                <tr><th scope="row">Reload panel</th><td>Reloads the panel UI without interrupting audio</td></tr>
+                <tr><th scope="row">Wide panel</th><td>Toggles the 3-column wide layout</td></tr>
+                <tr><th scope="row">Sets</th><td>Lists saved Sets and marks the active one</td></tr>
+                <tr><th scope="row">Check for updates…</th><td>Checks GitHub Releases for a newer version</td></tr>
+                <tr><th scope="row">Update to …</th><td>Appears when an engine update is ready to install</td></tr>
+                <tr><th scope="row">Automatic updates</th><td>Checks for updates twice a day (on by default)</td></tr>
+                <tr><th scope="row">Quit goui</th><td>Stops goui until next login</td></tr>
+              </tbody>
+            </table>
             <p class="lead">
               Panel-only updates apply automatically in the background. Engine updates show
               <b>Update to …</b> in the menu, restart goui, and prompt for macOS audio permission
@@ -258,13 +265,18 @@
             <p class="lead">Install or update with one command:</p>
             <pre class="install-line"><code>curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh</code></pre>
             <p class="lead">The installer links the <code>goui</code> CLI in <code>~/.local/bin</code>:</p>
-            <div class="ui-stack ui-stack--tight links">
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span><code>goui set "name"</code></span></span><span class="ui-list-row__detail">Loads a Set and exits 0 when active</span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span><code>goui start</code>, <code>goui stop</code>, <code>goui restart</code></span></span><span class="ui-list-row__detail">Manage the background agent</span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span><code>goui logs</code></span></span><span class="ui-list-row__detail">Tails <code>~/Library/Logs/goui.log</code></span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span><code>goui rollback</code></span></span><span class="ui-list-row__detail">Restores the previous version after an update</span></span></span></div>
-              <div class="ui-list-row"><span class="ui-list-row__main"><span class="ui-list-row__text"><span class="ui-list-row__name"><span><code>goui uninstall</code></span></span><span class="ui-list-row__detail">Removes the app while keeping settings in <code>~/Library/Application Support/goui</code></span></span></span></div>
-            </div>
+            <table class="doc-table">
+              <thead>
+                <tr><th scope="col">Command</th><th scope="col">What it does</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row"><code>goui set "name"</code></th><td>Loads a Set and exits 0 when active</td></tr>
+                <tr><th scope="row"><code>goui start</code><br /><code>goui stop</code><br /><code>goui restart</code></th><td>Manage the background agent</td></tr>
+                <tr><th scope="row"><code>goui logs</code></th><td>Tails <code>~/Library/Logs/goui.log</code></td></tr>
+                <tr><th scope="row"><code>goui rollback</code></th><td>Restores the previous version after an update</td></tr>
+                <tr><th scope="row"><code>goui uninstall</code></th><td>Removes the app and keeps settings in <code>~/Library/Application Support/goui</code></td></tr>
+              </tbody>
+            </table>
           </section>
 
           <section id="ear">
@@ -318,10 +330,10 @@
 
           <section id="privacy">
             <h2 class="ui-section-header ui-section-header--eyebrow"><span class="ui-section-header__label">Privacy</span><span class="ui-section-header__rule"></span></h2>
-            <ul class="intro-facts">
-              <li>goui processes system audio in memory and never records, stores or transmits it.</li>
-              <li>Settings, presets and Sets stay locally in <code>~/Library/Application Support/goui</code>.</li>
-              <li>AutoEQ profile downloads and GitHub update checks send no personal data. See the <a href="/privacy">privacy policy</a>.</li>
+            <ul class="doc-bullets">
+              <li>goui processes system audio live in memory, with zero recording, storage, or transmission.</li>
+              <li>All settings, presets, and Sets remain strictly local in <code>~/Library/Application Support/goui</code>.</li>
+              <li>AutoEQ downloads and update checks run anonymously without sending personal data. See the <a href="/privacy">privacy policy</a>.</li>
             </ul>
           </section>
 

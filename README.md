@@ -1,65 +1,66 @@
 # goui
 
-A parametric EQ for one browser tab or the whole Mac. It tunes audio to your headphone, then to
-your ear, then to your taste.
+A parametric equalizer for individual browser tabs or full system audio on macOS. It applies
+corrections sequentially for your headphones, your individual hearing, and your personal tonal
+preferences.
 
-## Install
+## Installation
 
-> The screenshots show `main`. The Chrome Web Store currently has release 0.1.8, which uses the
-> older blue icon and text.
-
-### Chrome and Brave
+**Chrome & Brave:** Install directly from the
+[Web Store](https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap) for
+automatic updates. To load the extension manually, see
+[Add the extension by hand](docs/install-by-hand.md).
 
 <a href="https://chromewebstore.google.com/detail/goui/ghldfngciehgonecnnihpdeghejkndap"><img src="docs/images/chrome-web-store.png" alt="Available in the Chrome Web Store" height="58"></a>
 
-One click installs it. Chrome keeps it updated. To load the unpacked folder instead, see
-[Add the extension by hand](docs/install-by-hand.md).
+**macOS:** Run the following installation script in Terminal:
 
-### Mac
-
-Paste this in Terminal:
-
-```sh
+```bash
 curl -fsSL https://raw.githubusercontent.com/wyndhamharyata/goui/main/mac/install.sh | sh
 ```
 
-Requires Apple silicon and macOS 26 or later. macOS asks to record system audio on first start.
-Press **Allow**. goui processes audio in real time and keeps none of it. Spatial Audio on AirPods
-and Beats pauses while goui is active. Read [goui for the Mac](docs/mac.md) before you install.
+Requires Apple silicon and macOS 26 or later. macOS requests audio capture permissions on initial
+launch to route system audio. Processing occurs in real time without writing audio data to disk.
+Spatial Audio on AirPods and Beats devices is bypassed while active.
 
-## What it does
+## Architecture & Features
 
-goui combines AutoEQ and EQByEar. AutoEQ corrects your headphone or IEM. An EQByEar test tunes to
-your hearing. Your taste goes on top as your own bands.
+goui integrates the AutoEQ database and the EQByEar measurement protocol:
 
-The browser extension runs one tab's audio through the EQ. The Mac app runs all system audio
-through it. Both keep your headphone, ear and taste as three separate layers, each with its own
-switch. Bass, Vocals and Treble adjust the sound across all three. A Set restores all three layers
-and the sliders at once.
+- **Headphone Layer:** Uses AutoEQ target curves to correct frequency response for specific
+  headphone models and IEMs.
+- **My Ear Layer:** Applies a localized compensation curve generated from an in-app EQByEar
+  measurement test.
+- **Taste Layer:** Provides user-defined parametric EQ bands.
+- **Master Controls:** Includes global Bass, Vocals, and Treble sliders that adjust across all
+  three layers simultaneously.
+
+The browser extension processes audio within a single tab context. The macOS application captures
+and processes system-wide audio. Both implementations run all three layers independently with
+dedicated bypass toggles and global preset management via Sets.
 
 ![The sound of a tab passes the headphone layer, then the ear layer, then the taste layer, then reaches you. Bass, Vocals and Treble nudge the sound on top of all three layers.](docs/images/how-it-works.png)
 
-## Start
+## Getting Started
 
-1. Open a tab playing audio and click the goui icon. The side panel opens. On the Mac, click the
-   menu bar icon and press the power button.
-2. In **Library > Headphone**, search for your headphone and pick it.
-3. Optional. Press **Measure my ear** in **Library > My ear** to tune to your hearing.
-4. Hold **A/B** to hear the difference.
+1. Open a tab with active audio output and click the goui extension icon to launch the side panel.
+   On macOS, click the menu bar icon and select power.
+2. Navigate to **Library > Headphone** to search for and select your headphone correction profile.
+3. (Optional) Run **Library > My ear > Measure my ear** to calibrate output to your frequency
+   sensitivity.
+4. Use the **A/B** toggle button to switch between raw and processed audio.
 
-Chrome captures a tab only after you click the icon on that tab. Click the icon on another tab to
-move goui there. Press **?** in the panel for the built-in guide.
+> [!NOTE]
+> In Chrome, audio capture attaches to the active tab upon clicking the extension icon. Re-clicking
+> on another tab transfers audio routing.
 
-## More
+## Credits & Licensing
 
-- [Using goui](docs/using-goui.md) covers every control in Listen, Tune, Library and Sets.
-- [goui for the Mac](docs/mac.md) covers the menu bar, updates and the `goui` command.
-- [Develop](docs/develop.md) covers setup, scripts and releases.
+- **AutoEQ:** Created by Jaakko Pasanen (MIT License)
+- **EQByEar:** Developed by [eqbyear.com](https://eqbyear.com)
+- **Iconography:** Google Material Icons (Apache License 2.0)
+- **Typography:** Atkinson Hyperlegible Next and Mono by the Braille Institute (SIL Open Font
+  License 1.1)
 
-## Credits
-
-AutoEQ by Jaakko Pasanen (MIT). EQByEar at [eqbyear.com](https://eqbyear.com). Google Material
-Icons (Apache 2.0). Atkinson Hyperlegible Next and Mono by the Braille Institute (SIL OFL 1.1).
-Full texts are in `THIRD_PARTY_NOTICES.md`.
-
-goui is MIT licensed. See `LICENSE`.
+Full third-party license texts are located in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+goui is open-source software under the [MIT License](LICENSE).
