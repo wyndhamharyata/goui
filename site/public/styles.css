@@ -321,6 +321,357 @@ main.landing .hero-text {
   border-radius: var(--radius-3);
 }
 
+/* How it works. Five steps in one row, with the sliders and the Set spanning the three layers under them. */
+.flow {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr 40px 1fr 40px 1fr 40px 1fr;
+  row-gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px solid var(--line-1);
+  border-radius: var(--radius-3);
+  background: var(--ink-1);
+}
+
+:where(.flow-node, .flow-span) {
+  --tone: var(--text-3);
+}
+
+.flow-node,
+.flow-span {
+  position: relative;
+  outline: none;
+  cursor: help;
+}
+
+.flow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: 92px;
+  padding: var(--space-4);
+  border: 1px solid var(--line-1);
+  border-radius: var(--radius-2);
+  background: var(--ink-2);
+  text-align: center;
+  box-shadow: inset 3px 0 0 var(--tone);
+  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.flow-node b {
+  color: var(--text-1);
+}
+
+.flow-node > span {
+  color: var(--text-3);
+  font-size: var(--size-body);
+}
+
+.flow-node:hover,
+.flow-node:focus {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--tone) 60%, transparent);
+  box-shadow: inset 3px 0 0 var(--tone), 0 16px 32px -16px var(--tone);
+}
+
+/* A line with a light that travels along it, the way the sound goes. */
+.flow-arrow {
+  position: relative;
+  align-self: center;
+  height: 1px;
+  margin: 0 var(--space-2);
+  background: var(--line-2);
+  overflow: visible;
+}
+
+.flow-arrow::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -1px;
+  border-left: 6px solid var(--line-2);
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+}
+
+.flow-arrow::after {
+  content: "";
+  position: absolute;
+  top: -1.5px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: flow-travel 2.4s var(--ease) infinite;
+}
+
+.flow-arrow:nth-of-type(2)::after {
+  animation-delay: 0.3s;
+}
+
+.flow-arrow:nth-of-type(3)::after {
+  animation-delay: 0.6s;
+}
+
+.flow-arrow:nth-of-type(4)::after {
+  animation-delay: 0.9s;
+}
+
+@keyframes flow-travel {
+  from {
+    left: 0;
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  to {
+    left: calc(100% - 4px);
+    opacity: 0;
+  }
+}
+
+/* A bracket under Headphone, My ear and Taste. */
+.flow-span {
+  grid-column: 3 / 8;
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-3);
+  border: 1px solid var(--line-2);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-1) var(--radius-1);
+  transition: border-color 0.2s var(--ease);
+}
+
+.flow-span b {
+  margin-bottom: calc(-1 * var(--space-3));
+  padding: 0 var(--space-3);
+  background: var(--ink-1);
+  color: var(--text-2);
+  font-size: var(--size-body);
+  font-weight: 600;
+  line-height: 1.5;
+  transform: translateY(50%);
+  transition: color 0.2s var(--ease);
+}
+
+.flow-span--sliders {
+  margin-top: var(--space-2);
+}
+
+.flow-span--set {
+  --tone: var(--accent);
+  margin-top: var(--space-4);
+}
+
+.flow-span:hover,
+.flow-span:focus {
+  border-color: var(--tone);
+}
+
+.flow-span--sliders:hover,
+.flow-span--sliders:focus {
+  --tone: var(--text-1);
+}
+
+.flow-span:hover b,
+.flow-span:focus b {
+  color: var(--tone);
+}
+
+/* The tooltip. Glass over the page, edged in the step's own colour. */
+.flow-tip {
+  position: absolute;
+  top: calc(100% + var(--space-4));
+  left: 50%;
+  z-index: 10;
+  width: max-content;
+  max-width: 280px;
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid color-mix(in srgb, var(--tone) 50%, var(--line-2));
+  border-radius: var(--radius-2);
+  background: color-mix(in srgb, var(--ink-3) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 0 24px 48px -16px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(255 255 255 / 0.03) inset, 0 0 32px -12px var(--tone);
+  color: var(--text-1);
+  font-size: var(--size-label);
+  font-weight: 400;
+  line-height: 1.55;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -6px) scale(0.97);
+  transform-origin: top center;
+  transition: opacity 0.18s var(--ease), transform 0.22s var(--ease);
+}
+
+.flow-tip::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--tone) 50%, var(--line-2));
+  border-left: 1px solid color-mix(in srgb, var(--tone) 50%, var(--line-2));
+  background: var(--ink-3);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.flow-node:hover,
+.flow-node:focus,
+.flow-span:hover,
+.flow-span:focus {
+  z-index: 1;
+}
+
+.flow-node:hover .flow-tip,
+.flow-node:focus .flow-tip,
+.flow-span:hover .flow-tip,
+.flow-span:focus .flow-tip {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+/* The end steps keep their tips inside the page. */
+.flow-node--start .flow-tip {
+  left: 0;
+  transform: translate(0, -6px) scale(0.97);
+}
+
+.flow-node--end .flow-tip {
+  right: 0;
+  left: auto;
+  transform: translate(0, -6px) scale(0.97);
+}
+
+.flow-node--start:hover .flow-tip,
+.flow-node--start:focus .flow-tip,
+.flow-node--end:hover .flow-tip,
+.flow-node--end:focus .flow-tip {
+  transform: translate(0, 0) scale(1);
+}
+
+.flow-node--start .flow-tip::before {
+  left: var(--space-7);
+}
+
+.flow-node--end .flow-tip::before {
+  left: auto;
+  right: var(--space-7);
+}
+
+.flow-span .flow-tip {
+  top: calc(100% + var(--space-5));
+}
+
+/* A narrow screen stacks the steps, and each tip opens under its step. */
+@media (max-width: 820px) {
+  .flow {
+    grid-template-columns: 1fr;
+    padding: var(--space-5);
+  }
+
+  .flow-arrow {
+    justify-self: center;
+    width: 1px;
+    height: 24px;
+    margin: 0;
+  }
+
+  .flow-arrow::before {
+    top: auto;
+    right: auto;
+    bottom: -1px;
+    left: -3px;
+    border-top: 6px solid var(--line-2);
+    border-right: 3.5px solid transparent;
+    border-left: 3.5px solid transparent;
+    border-bottom: 0;
+  }
+
+  .flow-arrow::after {
+    left: -1.5px;
+    animation-name: flow-travel-down;
+  }
+
+  /* A bracket has nothing to span in one column, so it reads as a band of its own. */
+  .flow-span {
+    grid-column: 1;
+    padding: var(--space-3);
+    border-top: 1px solid var(--line-2);
+    border-radius: var(--radius-2);
+  }
+
+  .flow-span b {
+    margin: 0;
+    padding: 0;
+    background: none;
+    transform: none;
+  }
+
+  .flow-node .flow-tip,
+  .flow-node--start .flow-tip,
+  .flow-node--end .flow-tip {
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -6px) scale(0.97);
+  }
+
+  .flow-node:hover .flow-tip,
+  .flow-node:focus .flow-tip {
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  .flow-node--start .flow-tip::before,
+  .flow-node--end .flow-tip::before {
+    left: 50%;
+    right: auto;
+  }
+}
+
+@keyframes flow-travel-down {
+  from {
+    top: 0;
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  to {
+    top: calc(100% - 4px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-node,
+  .flow-tip {
+    transition: opacity 0.18s linear;
+  }
+
+  .flow-arrow::after {
+    animation: none;
+    display: none;
+  }
+}
+
 .install-line {
   margin: 0;
   overflow-x: auto;

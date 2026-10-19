@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const repoFolder = fileURLToPath(new URL("../../", import.meta.url));
 const publicFolder = fileURLToPath(new URL("../public/", import.meta.url));
-const pictureNames = ["how-it-works.png", "install-flow.png", "mac-panel.jpg", "mac-wide.jpg"];
+const pictureNames = ["install-flow.png", "mac-panel.jpg", "mac-wide.jpg"];
 // The Mac page wears the built-in help's design, so it loads the help's own sheets.
 const helpSheetNames = ["guide.css", "intro.css"];
 

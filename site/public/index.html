@@ -55,21 +55,15 @@
           <img src="/images/mac-panel.jpg" alt="The goui panel open under its menu bar item, over Apple Music, with a Set picked, the Sennheiser HD 600 curve and the live spectrum." />
           <div>
             <p>
-              goui runs from the menu bar and opens the same panel as the browser extension. One EQ
-              processes Apple Music, Spotify, calls and games at once.
+              <strong>goui</strong> lives in your menu bar, sharing the exact same panel as the browser
+              extension. A single system-wide EQ processes Apple Music, Spotify, calls, and games all at
+              once. Layer adjustments for your headphones, your ear profile, and your taste, with
+              dedicated Bass, Vocals, and Treble sliders.
             </p>
             <p>
-              Keep separate layers for your headphone, your ear and your taste, plus Bass, Vocals and
-              Treble sliders. Search the AutoEQ database and watch the live spectrum. A native C and
-              Swift engine processes the audio in real time and stores none of it.
-            </p>
-            <p>
-              Right-click the menu bar icon to switch Sets without opening the panel, or run
-              <code>goui set "name"</code> from Terminal.
-            </p>
-            <p>
-              goui starts at login, restarts automatically on crash, and rebuilds the audio path when
-              you switch output devices.
+              Search AutoEQ profiles and watch the live spectrum. Powered by a native C and Swift engine,
+              goui processes audio in real time with zero data stored. Right-click the icon to switch
+              Sets instantly, and seamlessly adapts whenever you switch output devices.
             </p>
           </div>
         </div>
@@ -92,31 +86,65 @@
         <p class="lead">
           Three separate layers for your headphone, your hearing and your taste.
         </p>
-        <div class="two-col">
-          <img src="/images/how-it-works.png" alt="The sound of a tab passes the headphone layer, then the ear layer, then the taste layer, then reaches you. Bass, Vocals and Treble nudge the sound on top of all three layers." />
-          <div>
-            <p>
+        <div class="flow" aria-label="How the sound flows">
+          <div class="flow-node flow-node--start" tabindex="0" aria-describedby="flow-tip-source">
+            <b>Tab audio</b>
+            <span>Any tab, or the whole Mac</span>
+            <p class="flow-tip" id="flow-tip-source" role="tooltip">
+              The extension EQs one browser tab. goui for the Mac EQs all system audio.
+            </p>
+          </div>
+          <span class="flow-arrow" aria-hidden="true"></span>
+          <div class="flow-node tone-headphone" tabindex="0" aria-describedby="flow-tip-headphone">
+            <b>Headphone</b>
+            <span>AutoEQ baseline</span>
+            <p class="flow-tip" id="flow-tip-headphone" role="tooltip">
               Every headphone colours the sound. AutoEQ measures that frequency response and builds a
-              correction profile to make it neutral. That is the Headphone layer.
+              correction profile to make it neutral.
             </p>
-            <p>
-              Your ears have their own response on top of the headphone. An EQByEar test measures
-              what your hearing still needs. That is the My ear layer.
+          </div>
+          <span class="flow-arrow" aria-hidden="true"></span>
+          <div class="flow-node tone-ear" tabindex="0" aria-describedby="flow-tip-ear">
+            <b>My ear</b>
+            <span>EQByEar test</span>
+            <p class="flow-tip" id="flow-tip-ear" role="tooltip">
+              Your ears have their own response on top of the headphone. An EQByEar test measures what
+              your hearing still needs.
             </p>
-            <p>
-              Taste is the third layer for your own custom bands, alongside Bass, Vocals and Treble
-              sliders. Toggle any layer independently.
+          </div>
+          <span class="flow-arrow" aria-hidden="true"></span>
+          <div class="flow-node tone-taste" tabindex="0" aria-describedby="flow-tip-taste">
+            <b>Taste</b>
+            <span>Your own bands</span>
+            <p class="flow-tip" id="flow-tip-taste" role="tooltip">
+              Taste holds your own custom bands. Toggle any of the three layers independently.
             </p>
-            <p>
-              All active bands sum in dB, and the auto preamp offsets the highest boost to prevent
-              clipping.
+          </div>
+          <span class="flow-arrow" aria-hidden="true"></span>
+          <div class="flow-node flow-node--end tone-accent" tabindex="0" aria-describedby="flow-tip-you">
+            <b>You</b>
+            <span>Headphones on</span>
+            <p class="flow-tip" id="flow-tip-you" role="tooltip">
+              All active bands sum in dB. The auto preamp offsets the highest boost to prevent clipping.
             </p>
-            <p>
-              Save a Set to link a headphone preset, ear preset, taste preset and slider values.
-              Updating a preset updates every Set that references it.
+          </div>
+
+          <div class="flow-span flow-span--sliders" tabindex="0" aria-describedby="flow-tip-sliders">
+            <b>Bass, Vocals and Treble</b>
+            <p class="flow-tip" id="flow-tip-sliders" role="tooltip">
+              Three sliders nudge the sound on top of all three layers. They stay put when you switch
+              presets.
+            </p>
+          </div>
+          <div class="flow-span flow-span--set" tabindex="0" aria-describedby="flow-tip-set">
+            <b>Set</b>
+            <p class="flow-tip" id="flow-tip-set" role="tooltip">
+              A Set links a headphone preset, ear preset, taste preset and slider values. Updating a
+              preset updates every Set that references it.
             </p>
           </div>
         </div>
+        <p class="fine">Hover or tap a step to read what it does.</p>
       </section>
 
       <section class="block" id="install">
@@ -145,7 +173,7 @@
           <img src="/images/install-flow.png" alt="Install goui in four steps: download the zip, load the folder, pin goui, click the icon." />
         </div>
         <p class="fine">
-          See the <a href="https://github.com/wyndhamharyata/goui#add-the-extension-by-hand">README</a>
+          See the <a href="https://github.com/wyndhamharyata/goui/blob/main/docs/install-by-hand.md">install guide</a>
           for step-by-step screenshots.
         </p>
       </section>
