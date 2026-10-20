@@ -333,6 +333,9 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
     let configuration = WKWebViewConfiguration()
     let roots = webRoots()
 
+    // The page keeps its storage through the bridge. A store of its own goes with the page, and WebKit ends its network process.
+    configuration.websiteDataStore = .nonPersistent()
+
     configuration.setURLSchemeHandler(WebFileServer(roots: roots), forURLScheme: WebFileServer.scheme)
     configuration.userContentController.addScriptMessageHandler(bridge, contentWorld: .page, name: Bridge.messageHandlerName)
 
