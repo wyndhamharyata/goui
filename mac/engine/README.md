@@ -27,7 +27,7 @@ Filter updates load into an inactive filter chain and crossfade over 20 ms to pr
 | `goui/FloatingPanel.swift` | Floating panel below the menu bar icon |
 | `goui/WebFileServer.swift` | Serves `goui://app/` from updated web files or the app bundle |
 | `goui/Bridge.swift` | WebKit script message handler for panel and Set commands |
-| `goui/WebStorage.swift` | Stores panel state in `~/Library/Application Support/goui/storage.json` |
+| `goui/WebStorage.swift` | Stores panel state in `~/Library/Application Support/goui/storage.json`, and the AutoEQ index in `autoeq-index.json` |
 | `goui/SavedConfig.swift` | Stores engine power state and sound in `config.json` |
 | `Render/Biquad.c` | Web Audio biquad filter coefficients and frequency response |
 | `Render/Render.c` | Real-time audio callback, dual-chain crossfade and peak meters |

@@ -8,7 +8,9 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
   // The panel opens as the popup of one stand-in tab, with the Mac flag, so it shows its power button and names no tab.
   nonisolated static let panelPagePath = "src/panel.html?tab=1&mac=1"
   private static let chromePath = "mac/web/chrome.js"
-  private static let panelHeightPx = 600.0
+  private static let firstPanelHeightPx = 600.0
+  // The panel is hidden most of the time, so after this long hidden its page goes, and WebKit ends the page's process.
+  private static let unloadDelaySeconds = 60.0
   // Wide panel opens at a width a Chrome side panel can take too, so both show the same three columns.
   private static let wideOpenWidthPx = 1100.0
   private static let widthKey = "panelWidth"
@@ -24,6 +26,9 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
   private let engine: Engine
   private let bridge: Bridge
   private var panel: FloatingPanel?
+  // The page's last height, so a panel built again opens at it and not at the first height.
+  private var panelHeightPx = AppController.firstPanelHeightPx
+  private var pageUnload: Task<Void, Never>?
   private var isOpeningAfterInstall = false
   // The page's last answer, so the submenu shows at once while the page answers again. nil until the page first answers.
   private var setList: SetList?
@@ -133,7 +138,8 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
   // The panel saves and deletes Sets, so the submenu shows the last answer at once and asks the page again.
   func menuNeedsUpdate(_ menu: NSMenu) {
     renderSetsMenu()
-    readSetList()
+    // Only the page changes the Sets, so with the page unloaded the last answer still holds.
+    if panel != nil { readSetList() }
   }
 
   private func renderSetsMenu() {
@@ -165,6 +171,7 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
   private func readSetList() {
     guard setListRead == nil else { return }
 
+    _ = readPanel()
     setListRead = Task {
       if let newList = await bridge.readSetList() {
         setList = newList
@@ -186,6 +193,7 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
     pendingSet = request
     guard setApplying == nil else { return }
 
+    _ = readPanel()
     setApplying = Task {
       let isReady = await bridge.waitForPage()
 
@@ -263,14 +271,52 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
     if let panel { return panel }
 
     let savedWidthPx = UserDefaults.standard.double(forKey: Self.widthKey)
-    let size = NSSize(width: max(savedWidthPx, FloatingPanel.narrowWidthPx), height: Self.panelHeightPx)
+    let size = NSSize(width: max(savedWidthPx, FloatingPanel.narrowWidthPx), height: panelHeightPx)
     let newPanel = FloatingPanel(contentView: buildWebView(), size: size)
 
-    bridge.onResize = { [weak newPanel] heightPx in newPanel?.resize(toHeight: heightPx) }
+    bridge.onResize = { [weak self, weak newPanel] heightPx in
+      self?.panelHeightPx = heightPx
+      newPanel?.resize(toHeight: heightPx)
+    }
     newPanel.onWidthChange = { widthPx in UserDefaults.standard.set(widthPx, forKey: Self.widthKey) }
+    newPanel.onHide = { [weak self] in
+      self?.readSetList()
+      self?.scheduleUnload()
+    }
     panel = newPanel
+    // A page built for the menu or goui set goes again a minute later. One built to show stays while it shows.
+    scheduleUnload()
 
     return newPanel
+  }
+
+  // Each hide starts the wait again, so the page goes one minute after the last hide.
+  private func scheduleUnload() {
+    pageUnload?.cancel()
+    pageUnload = Task { [weak self] in
+      try? await Task.sleep(for: .seconds(Self.unloadDelaySeconds))
+      if !Task.isCancelled { self?.unloadPanel() }
+    }
+  }
+
+  // The Sets submenu keeps its last answer, and the engine keeps playing without the page.
+  private func unloadPanel() {
+    guard let oldPanel = panel, !oldPanel.isVisible else { return }
+    guard setApplying == nil, setListRead == nil else { return scheduleUnload() }
+
+    dropPanel()
+    print("goui unloaded the panel's page after a minute out of sight.")
+  }
+
+  // Taking the web view out of the panel lets it go, so WebKit can end the page's process.
+  private func dropPanel() {
+    guard let oldPanel = panel else { return }
+
+    panel = nil
+    oldPanel.onHide = nil
+    oldPanel.orderOut(nil)
+    oldPanel.contentView = nil
+    bridge.forgetPage()
   }
 
   // The panel reads an updated web folder when the app runs from ~/Applications, so a build run from anywhere else keeps its own files.
@@ -297,7 +343,7 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
       print("\(Self.chromePath) is missing from the app, so the panel cannot reach goui.")
     }
 
-    let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: FloatingPanel.narrowWidthPx, height: Self.panelHeightPx), configuration: configuration)
+    let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: FloatingPanel.narrowWidthPx, height: panelHeightPx), configuration: configuration)
 
     webView.navigationDelegate = self
     webView.isInspectable = true
@@ -379,8 +425,7 @@ final class AppController: NSObject, WKNavigationDelegate, NSMenuDelegate {
 
     let wasVisible = oldPanel.isVisible
 
-    oldPanel.orderOut(nil)
-    panel = nil
+    dropPanel()
 
     let newPanel = readPanel()
     guard wasVisible, let button = statusItem.button else { return }

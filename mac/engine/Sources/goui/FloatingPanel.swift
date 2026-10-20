@@ -10,6 +10,7 @@ final class FloatingPanel: NSPanel, NSWindowDelegate {
 
   // Called only when the width changes, not on each change of height the page asks for.
   var onWidthChange: ((Double) -> Void)?
+  var onHide: (() -> Void)?
   private(set) var lastHiddenAt = Date.distantPast
   private var reportedWidthPx: Double
 
@@ -38,6 +39,11 @@ final class FloatingPanel: NSPanel, NSWindowDelegate {
     super.resignKey()
     orderOut(nil)
     lastHiddenAt = Date()
+  }
+
+  override func orderOut(_ sender: Any?) {
+    super.orderOut(sender)
+    onHide?()
   }
 
   // A drag on an edge changes only the width. The height follows the page.

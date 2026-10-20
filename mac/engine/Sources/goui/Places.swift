@@ -5,6 +5,7 @@ enum SupportFile {
   static let folderURL = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Library/Application Support/goui")
   static let configURL = folderURL.appending(path: "config.json")
   static let storageURL = folderURL.appending(path: "storage.json")
+  static let autoEqIndexURL = folderURL.appending(path: "autoeq-index.json")
   static let webURL = folderURL.appending(path: "web")
   static let previousWebURL = folderURL.appending(path: "web.previous")
   static let webVersionURL = folderURL.appending(path: "web-version")
